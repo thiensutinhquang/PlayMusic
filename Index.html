@@ -1,1 +1,4133 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nội dung kênh Multimedia MSTQ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Display:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* Chosen Palette: Warm Neutrals with Subtle Accents */
+        :root {
+            --primary-color: #FFD700; /* Vàng Gold */
+            --secondary-color: #f39c12; /* Cam cho trình phát nhạc */
+            --text-color: #333;
+            --link-color: #555;
+            --link-hover-color: var(--primary-color);
+            --background-color: #f8f8f8;
+            --card-background-color: #fff;
+            --border-color: #eee;
+            --dark-mode-background: #121212;
+            --dark-mode-text: #e0e0e0;
+            --dark-mode-card: #1e1e1e;
+            --dark-mode-border: #333;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.15); /* Giá trị shadow chung */
+            --shadow-dm: 0 2px 10px rgba(0, 0, 0, 0.5); /* Giá trị shadow cho dark mode */
+            --accent-color: #2196F3; /* Màu xanh cho các điểm nhấn */
 
+            /* New custom colors */
+            --custom-bg-blue-dark: #003366;
+            --custom-bg-purple-dream: #6A057F;
+            --custom-bg-forest-green: #228B22;
+
+            --custom-text-yellow: #FFD700;
+            --custom-text-aqua: #00CED1;
+            --custom-text-pink-pastel: #FFB6C1;
+
+            /* New lyrics specific colors */
+            --lyrics-background-color: var(--card-background-color);
+            --lyrics-text-color: var(--text-color);
+            --dark-mode-lyrics-background-color: var(--dark-mode-card);
+            --dark-mode-lyrics-text-color: var(--dark-mode-text);
+        }
+
+        /* Base body styles, will be overridden by custom properties or dark mode */
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            font-size: 16px;
+            scroll-behavior: smooth;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* Dark mode overrides base variables */
+        body.dark-mode {
+            background-color: var(--dark-mode-background);
+            color: var(--dark-mode-text);
+            /* Ensure cards and links also adapt in dark mode */
+            --card-background-color: var(--dark-mode-card);
+            --border-color: var(--dark-mode-border);
+            --shadow: var(--shadow-dm);
+            --link-color: #9cb3ce; /* Adjusted link color for dark mode */
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background-color: var(--card-background-color);
+            padding: 20px 0;
+            border-bottom: 1px solid var(--border-color);
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+
+        body.dark-mode .header {
+            background-color: var(--dark-mode-card);
+            border-bottom: 1px solid var(--dark-mode-border);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .logo {
+            margin-right: 20px;
+            margin-bottom: 10px;
+        }
+
+        .logo h1 {
+            margin: 0;
+            font-size: 2em;
+        }
+
+        .logo h1 a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .navbar ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .navbar li {
+            margin-left: 0;
+        }
+
+        .navbar a {
+            text-decoration: none;
+            color: var(--link-color);
+            transition: color 0.3s ease;
+            font-size: 1em;
+            padding: 5px 10px;
+            display: flex; /* Use flexbox for icon and text alignment */
+            align-items: center;
+            gap: 0.5rem; /* Space between icon and text */
+        }
+
+        .navbar a i {
+            font-size: 1.2em; /* Adjust icon size if needed */
+        }
+
+        body.dark-mode .navbar a {
+            color: var(--dark-mode-text);
+        }
+
+        .navbar a:hover {
+            color: var(--link-hover-color);
+        }
+
+        body.dark-mode .navbar a:hover {
+            color: var(--primary-color);
+        }
+
+        /* Mobile menu specific styles */
+        .hamburger-menu {
+            display: none; /* Hidden by default on desktop */
+            font-size: 1.8em;
+            background: none;
+            border: none;
+            color: var(--text-color);
+            cursor: pointer;
+            padding: 5px;
+            margin-left: 10px;
+        }
+
+        body.dark-mode .hamburger-menu {
+            color: var(--dark-mode-text);
+        }
+
+        .mobile-nav-overlay {
+            display: none; /* Hidden by default */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 999;
+            transition: opacity 0.3s ease-in-out;
+            opacity: 0;
+        }
+
+        .mobile-nav-content {
+            position: fixed;
+            top: 0;
+            right: -250px; /* Hidden by default */
+            width: 250px;
+            height: 100%;
+            background-color: var(--card-background-color);
+            box-shadow: -2px 0 10px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            transition: right 0.3s ease-in-out;
+            padding-top: 20px;
+        }
+
+        body.dark-mode .mobile-nav-content {
+            background-color: var(--dark-mode-card);
+        }
+
+        .mobile-nav-overlay.active {
+            display: block;
+            opacity: 1;
+        }
+
+        .mobile-nav-overlay.active .mobile-nav-content {
+            right: 0; /* Slide in */
+        }
+
+        .mobile-nav-content ul {
+            flex-direction: column;
+            align-items: flex-start;
+            padding: 0 20px;
+        }
+
+        .mobile-nav-content li {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .mobile-nav-content a {
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border-color);
+            width: 100%;
+            display: flex; /* Use flexbox for icon and text alignment */
+            align-items: center;
+            gap: 0.5rem; /* Space between icon and text */
+        }
+
+        .mobile-nav-content a i {
+            font-size: 1.2em; /* Adjust icon size if needed */
+        }
+
+        body.dark-mode .mobile-nav-content a {
+            border-bottom-color: var(--dark-mode-border);
+        }
+
+        .mobile-nav-content a:hover {
+            color: var(--link-hover-color);
+        }
+
+        body.dark-mode .mobile-nav-content a:hover {
+            color: var(--primary-color);
+        }
+
+        .mobile-nav-content .close-mobile-menu {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 1.5em;
+            background: none;
+            border: none;
+            color: var(--text-color);
+            cursor: pointer;
+        }
+
+        body.dark-mode .mobile-nav-content .close-mobile-menu {
+            color: var(--dark-mode-text);
+        }
+
+        .main-content {
+            display: flex;
+            gap: 30px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .main-area {
+            flex: 1 1 70%;
+            min-width: 250px;
+        }
+
+        .sidebar {
+            flex: 1 1 25%;
+            min-width: 200px;
+        }
+
+        .card {
+            background-color: var(--card-background-color);
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            transition: background-color 0.3s, box-shadow 0.3s, border-color 0.3s;
+        }
+
+        body.dark-mode .card {
+            background-color: var(--dark-mode-card);
+            box-shadow: var(--shadow-dm);
+            border: 1px solid var(--dark-mode-border);
+        }
+
+        body.dark-mode .card h2,
+        body.dark-mode .card h3 {
+            color: var(--dark-mode-text);
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .video-item h3 {
+            margin-top: 0;
+            font-size: 1.2em;
+        }
+
+        .video-container {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .chat-container {
+            border: 1px solid var(--border-color);
+            padding: 10px;
+            height: 300px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        body.dark-mode .chat-container {
+            border-color: var(--dark-mode-border);
+        }
+
+        .chat-input {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .chat-input input[type="text"] {
+            flex: 1 1 auto;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 44px;
+            font-size: 1em;
+            min-width: 200px;
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+        }
+
+        body.dark-mode .chat-input input[type="text"] {
+            background-color: #333;
+            color: var(--dark-mode-text);
+            border-color: var(--dark-mode-border);
+        }
+
+        .ask-question textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            min-height: 100px;
+            font-size: 1em;
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+        }
+
+        body.dark-mode .ask-question textarea {
+            background-color: #333;
+            color: var(--dark-mode-text);
+            border-color: var(--dark-mode-border);
+        }
+
+        .button {
+            background-color: var(--primary-color);
+            color: #333;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            font-size: 1em;
+            font-weight: bold;
+        }
+
+        .button:hover {
+            background-color: #e6c000;
+        }
+
+        .widget h3 {
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 5px;
+            margin-top: 0;
+            font-size: 1.2em;
+        }
+
+        .widget ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .widget li a {
+            text-decoration: none;
+            color: var(--link-color);
+            display: block;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 1em;
+            transition: color 0.3s ease, border-color 0.3s;
+        }
+
+        body.dark-mode .widget li a {
+            color: var(--dark-mode-text);
+            border-bottom-color: var(--dark-mode-border);
+        }
+
+        .widget li a:hover {
+            color: var(--link-hover-color);
+        }
+
+        .footer {
+            background-color: #333;
+            color: white;
+            padding: 20px 0;
+            margin-top: 30px;
+            transition: background-color 0.3s;
+        }
+
+        body.dark-mode .footer {
+            background-color: #1a1a1a;
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            text-align: center;
+        }
+
+        .footer-nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .footer-nav li {
+            margin-left: 0;
+        }
+
+        .footer-nav a {
+            text-decoration: none;
+            color: white;
+            transition: color 0.3s ease;
+            font-size: 1em;
+        }
+
+        .footer-nav a:hover {
+            color: var(--primary-color);
+        }
+
+        /* --- BẮT ĐẦU CSS CHO PHẦN ÂM NHẠC NÂNG CẤP --- */
+        .music-list-enhanced {
+            padding: 20px;
+            background-color: var(--card-background-color);
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            transition: background-color 0.3s, box-shadow 0.3s, border-color 0.3s;
+        }
+
+        body.dark-mode .music-list-enhanced {
+            background-color: var(--dark-mode-card);
+            box-shadow: var(--shadow-dm);
+            border: 1px solid var(--dark-mode-border);
+        }
+
+        body.dark-mode .music-list-enhanced h2,
+        body.dark-mode .music-list-enhanced h3,
+        body.dark-mode .music-list-enhanced p,
+        body.dark-mode .music-list-enhanced input::placeholder {
+            color: var(--dark-mode-text);
+        }
+
+        .music-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .music-controls h2 {
+            margin: 0;
+        }
+
+        #now-playing-info {
+            text-align: center;
+            margin-bottom: 15px;
+            font-weight: bold;
+            color: var(--secondary-color);
+            min-height: 1.2em;
+            transition: color 0.3s;
+        }
+
+        body.dark-mode #now-playing-info {
+            color: #f39c12;
+        }
+
+        #music-search {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            font-size: 1em;
+            box-sizing: border-box;
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+        }
+
+        body.dark-mode #music-search {
+            background-color: #333;
+            color: var(--dark-mode-text);
+            border-color: var(--dark-mode-border);
+        }
+
+        /* New styles for the custom filter buttons menu */
+        #menu {
+            display: flex;
+            flex-wrap: wrap; /* Allow items to wrap to next line */
+            justify-content: center; /* Center buttons when wrapped */
+            gap: 0.75rem; /* gap-3 */
+            padding: 0.75rem; /* p-3 */
+            margin-bottom: 1rem; /* Add some margin below the menu */
+        }
+
+        /* Combined styles for category buttons */
+        #menu .category-btn {
+            flex-shrink: 0; /* Prevent buttons from shrinking */
+            background-color: #e0e0e0; /* Keep existing background */
+            color: #333;
+            padding: 0.7rem 1rem; /* Slightly larger default padding */
+            border: 1px solid #ccc; /* Keep existing border */
+            border-radius: 20px; /* Keep existing border-radius */
+            font-size: 1.3em; /* Slightly larger default emoji */
+            transition: background-color 0.3s ease, color 0.3s ease, transform 0.1s ease-out,
+                        border-color 0.3s ease;
+            display: flex; /* For icon and text alignment */
+            align-items: center;
+            justify-content: center;
+            position: relative; /* Needed for ::after tooltip positioning */
+            cursor: pointer; /* Explicitly set cursor */
+        }
+
+        #menu .category-btn:hover {
+            background-color: var(--secondary-color);
+            color: white;
+            border-color: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+
+        #menu .category-btn:active { /* Immediate feedback on touch/click */
+            transform: scale(0.95); /* Slightly shrink for a "pressed" feel */
+            background-color: var(--primary-color); /* Or a slightly darker shade */
+            color: #333;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2); /* Inset shadow for depth */
+        }
+
+        /* Tap feedback for mobile */
+        #menu .category-btn.tap-feedback {
+            transform: scale(0.95);
+            background-color: #f0f0f0; /* Lighter background on tap */
+        }
+        body.dark-mode #menu .category-btn.tap-feedback {
+            background-color: #555; /* Darker background on tap in dark mode */
+        }
+
+        #menu .category-btn.active {
+            background-color: var(--primary-color);
+            color: #333;
+            border-color: var(--primary-color);
+            font-weight: bold;
+            transform: scale(1.1); /* Added scale for active state */
+        }
+
+        body.dark-mode #menu .category-btn {
+            background-color: #444;
+            color: var(--dark-mode-text);
+            border-color: #555;
+        }
+
+        body.dark-mode #menu .category-btn:hover {
+            background-color: var(--secondary-color);
+            color: white;
+            border-color: var(--secondary-color);
+        }
+
+        body.dark-mode #menu .category-btn.active {
+            background-color: var(--primary-color);
+            color: #333;
+            border-color: var(--primary-color);
+        }
+
+        /* New CSS for the menu tooltip (for the tooltipElement div) */
+        .menu-tooltip {
+            position: absolute;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.8em;
+            white-space: nowrap;
+            z-index: 10000; /* Ensure it's on top */
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out;
+            pointer-events: none; /* Allow clicks to pass through */
+            /* transform: translateX(-50%); This will be set by JS based on button position */
+        }
+        body.dark-mode .menu-tooltip {
+            background-color: rgba(255, 255, 255, 0.9);
+            color: #333;
+        }
+
+        #songs-container {
+            max-height: 500px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        #songs-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #songs-container::-webkit-scrollbar-track {
+            background: var(--background-color);
+            border-radius: 4px;
+        }
+
+        body.dark-mode #songs-container::-webkit-scrollbar-track {
+            background: var(--dark-mode-background);
+        }
+
+        #songs-container::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 4px;
+        }
+
+        body.dark-mode #songs-container::-webkit-scrollbar-thumb {
+            background: #555;
+        }
+
+        #songs-container::-webkit-scrollbar-thumb:hover {
+            background: #aaa;
+        }
+
+        body.dark-mode #songs-container::-webkit-scrollbar-thumb:hover {
+            background: #777;
+        }
+
+        .song-item {
+            display: flex;
+            align-items: center; /* Căn giữa theo chiều dọc */
+            padding: 10px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 1em;
+            transition: background-color 0.3s, border-color 0.3s;
+            cursor: pointer;
+        }
+
+        body.dark-mode .song-item {
+            border-bottom-color: var(--dark-mode-border);
+        }
+
+        .song-item:last-child {
+            border-bottom: none;
+        }
+
+        .song-item:nth-child(odd) {
+            background-color: #f0f0f0;
+        }
+
+        body.dark-mode .song-item:nth-child(odd) {
+            background-color: #2a2a2a;
+        }
+
+        .song-item:hover {
+            background-color: #e0e0e0;
+        }
+
+        body.dark-mode .song-item:hover {
+            background-color: #3a3a3a;
+        }
+
+        .song-item.active-song {
+            background-color: #ffe6b0;
+            border-left: 5px solid var(--secondary-color);
+            font-weight: bold;
+            box-shadow: 0 0 10px 3px rgba(255, 215, 0, 0.4); /* Soft glow */
+            transition: background-color 0.3s, border-left 0.3s, box-shadow 0.3s;
+        }
+        body.dark-mode .song-item.active-song {
+            background-color: #4a3a1a;
+            border-left-color: var(--secondary-color);
+            box-shadow: 0 0 10px 3px rgba(255, 215, 0, 0.4); /* Soft glow */
+        }
+
+        .song-item .thumbnail {
+            width: 50px;
+            height: 50px;
+            border-radius: 5px;
+            object-fit: cover;
+            margin-right: 10px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .song-item .song-info {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            margin-right: 10px;
+        }
+
+        .song-item .song-info .title {
+            font-size: 1.1em;
+            color: var(--text-color);
+        }
+        body.dark-mode .song-item .song-info .title {
+            color: var(--dark-mode-text);
+        }
+
+        .song-item .song-info .artist {
+            font-size: 0.9em;
+            color: #666;
+        }
+        body.dark-mode .song-item .song-info .artist {
+            color: #aaa;
+        }
+
+        .song-item .actions {
+            display: flex;
+            gap: 5px;
+            flex-shrink: 0; /* Ngăn các nút bị co lại */
+        }
+
+        .song-item .play-button,
+        .song-item .lyric-button,
+        .song-item .share-button {
+            background-color: transparent;
+            border: none;
+            font-size: 1.2em;
+            cursor: pointer;
+            padding: 5px;
+            transition: color 0.3s ease, transform 0.2s ease;
+            color: #888;
+        }
+
+        .song-item .favorite-button,
+        #popup-favorite-btn { /* Apply styles to both list and popup favorite buttons */
+            background-color: transparent;
+            border: none;
+            font-size: 1.2em;
+            cursor: pointer;
+            padding: 5px;
+            transition: color 0.3s ease, transform 0.2s ease;
+            color: #888; /* Default color */
+        }
+
+        .song-item .play-button:hover {
+            color: var(--secondary-color);
+            transform: scale(1.1);
+        }
+
+        .song-item .favorite-button:hover,
+        #popup-favorite-btn:hover {
+            color: #e53e3e; /* Red on hover */
+            transform: scale(1.1);
+        }
+        /* Style for liked state */
+        .song-item .favorite-button.liked,
+        #popup-favorite-btn.liked {
+            color: #e53e3e; /* Solid red when liked */
+            transform: scale(1.1); /* Slightly larger when liked */
+        }
+
+        .song-item .lyric-button:hover {
+            color: var(--accent-color);
+            transform: scale(1.1);
+        }
+        .song-item .share-button:hover {
+            color: #007bff; /* Màu xanh dương cho nút share */
+            transform: scale(1.1);
+        }
+
+        #audio-player {
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        /* Styles for progress bar */
+        .progress-container {
+            width: 100%;
+            height: 8px;
+            background-color: #e0e0e0;
+            border-radius: 4px;
+            margin-top: 10px;
+            cursor: pointer;
+            overflow: hidden;
+            transition: background-color 0.3s;
+        }
+
+        body.dark-mode .progress-container {
+            background-color: #444;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 40%; /* Default width */
+            background-color: var(--secondary-color);
+            border-radius: 4px;
+            transition: width 0.1s linear;
+        }
+
+        /* Animation for progress bar pulsing - MORE PROMINENT & RED COLOR */
+        @keyframes pulseBeat {
+            0% {
+                box-shadow: 0 0 5px 0px rgba(229, 62, 62, 0.5); /* Red shadow, more transparent */
+                opacity: 0.8;
+            }
+            50% {
+                box-shadow: 0 0 20px 8px rgba(229, 62, 62, 1); /* Larger, stronger red shadow, fully opaque */
+                opacity: 1;
+            }
+            100% {
+                box-shadow: 0 0 5px 0px rgba(229, 62, 62, 0.5); /* Back to smaller red shadow, more transparent */
+                opacity: 0.8;
+            }
+        }
+
+        /* Apply pulseBeat animation when 'pulsing' class is present */
+        .progress-bar.pulsing {
+            animation: pulseBeat 1.2s infinite ease-in-out; /* Slightly faster, adjust timing as needed */
+        }
+
+
+        /* Styles for the integrated music player */
+        #integratedMusicPlayer {
+            /* Inherit card styles */
+            background-color: var(--card-background-color);
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            transition: background-color 0.3s, box-shadow 0.3s, border-color 0.3s;
+            display: flex; /* Use flexbox for internal layout */
+            flex-direction: column; /* Stack elements vertically */
+            gap: 15px; /* Spacing between sections */
+
+            /* Initial state for fade-in effect */
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        /* Animation for fade-in effect */
+        @keyframes fade-in-up {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        #integratedMusicPlayer.fade-in-active {
+            animation: fade-in-up 0.8s ease-out forwards;
+        }
+
+
+        body.dark-mode #integratedMusicPlayer {
+            background-color: var(--dark-mode-card);
+            box-shadow: var(--shadow-dm);
+            border: 1px solid var(--dark-mode-border);
+        }
+
+        #integratedMusicPlayer .player-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #integratedMusicPlayer .player-header h3 {
+            margin: 0;
+            font-size: 1.1em;
+            color: var(--text-color);
+        }
+        body.dark-mode #integratedMusicPlayer .player-header h3 {
+            color: var(--dark-mode-text);
+        }
+
+        #integratedMusicPlayer .player-header-buttons {
+            display: flex;
+            gap: 5px;
+        }
+
+        #integratedMusicPlayer .player-header-buttons button {
+            background-color: transparent;
+            border: none;
+            font-size: 1.1em;
+            cursor: pointer;
+            color: #888;
+            padding: 5px;
+            border-radius: 4px;
+            transition: background-color 0.2s, color 0.2s;
+        }
+        #integratedMusicPlayer .player-header-buttons button:hover {
+            background-color: #eee;
+            color: var(--primary-color);
+        }
+        body.dark-mode #integratedMusicPlayer .player-header-buttons button:hover {
+            background-color: #444;
+            color: var(--primary-color);
+        }
+
+        /* Styles cho phần điều khiển nhạc trong integrated player */
+        #integratedMusicPlayer .player-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        #integratedMusicPlayer .player-controls button {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            font-size: 1.3em;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        /* Hover effect for control buttons */
+        #integratedMusicPlayer .player-controls #popup-prev-btn:hover,
+        #integratedMusicPlayer .player-controls #popup-play-pause-btn:hover,
+        #integratedMusicPlayer .player-controls #popup-next-btn:hover {
+            background-color: #d0820e;
+            transform: scale(1.1) rotate(5deg); /* Scale up and rotate */
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        #integratedMusicPlayer .player-controls button:not(#popup-prev-btn):not(#popup-play-pause-btn):not(#popup-next-btn):hover {
+            background-color: #d0820e;
+            transform: scale(1.1); /* Only scale for other buttons */
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+
+        body.dark-mode #integratedMusicPlayer .player-controls button {
+            background-color: #b7720c;
+        }
+        body.dark-mode #integratedMusicPlayer .player-controls button:hover {
+            background-color: #9c600a;
+        }
+
+        #integratedMusicPlayer .player-controls #popup-play-pause-btn {
+            width: 60px;
+            height: 60px;
+            font-size: 1.8em;
+        }
+
+        #integratedMusicPlayer .player-controls input[type="range"] {
+            width: 100px;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 8px;
+            background: #ddd;
+            border-radius: 5px;
+            outline: none;
+            transition: opacity .2s;
+        }
+
+        #integratedMusicPlayer .player-controls input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--secondary-color);
+            cursor: pointer;
+            box-shadow: 0 0 2px rgba(0,0,0,0.3);
+        }
+
+        #integratedMusicPlayer .player-controls input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--secondary-color);
+            cursor: pointer;
+            box-shadow: 0 0 2px rgba(0,0,0,0.3);
+        }
+
+        /* Style for active control buttons (Repeat/Shuffle) */
+        #integratedMusicPlayer .player-controls button.active-control {
+            background-color: var(--primary-color); /* Highlight color */
+            color: #333; /* Text color for highlight */
+            box-shadow: 0 0 8px rgba(255, 215, 0, 0.5); /* A subtle glow */
+        }
+        body.dark-mode #integratedMusicPlayer .player-controls button.active-control {
+            background-color: var(--primary-color);
+            color: #333; /* Dark mode text for highlighted button */
+        }
+
+        /* For the lyrics content wrapper within integrated player */
+        #integratedMusicPlayer #lyrics-content-wrapper {
+            flex-grow: 1; /* Allow it to take available vertical space */
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* Hide overflow when lyrics are hidden */
+            transition: max-height 0.5s ease-in-out, opacity 0.5s ease-in-out, padding 0.5s ease-in-out; /* Smooth transition */
+        }
+        #integratedMusicPlayer #lyrics-content-wrapper.hidden-lyrics {
+            max-height: 0;
+            opacity: 0;
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+            margin-top: 0 !important;
+            visibility: hidden; /* Hide completely */
+            transition: max-height 0.5s ease-in-out, opacity 0.5s ease-in-out, padding 0.5s ease-in-out, visibility 0.5s step-end;
+        }
+
+        /* Updated popup-lyrics-container for scrollability within integrated player */
+        #integratedMusicPlayer #popup-lyrics-container {
+            max-height: 25vh; /* Max height for scrollable lyrics on mobile */
+            overflow-y: auto; /* Enable vertical scrolling */
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background-color: var(--lyrics-background-color);
+            color: var(--lyrics-text-color);
+            line-height: 1.6;
+            font-size: 0.95rem;
+            white-space: pre-wrap;
+            text-align: center;
+            transition: background-color 0.3s, border-color 0.3s, color 0.3s;
+            flex-grow: 1; /* Allow it to grow within its flex container */
+            margin-top: 15px; /* Spacing from elements above */
+            margin-bottom: 15px; /* Spacing from elements below */
+            padding-right: 8px; /* Ensure content is not hidden by scrollbar */
+            padding-left: 8px; /* Add some left padding */
+        }
+
+        body.dark-mode #integratedMusicPlayer #popup-lyrics-container {
+            background-color: var(--dark-mode-lyrics-background-color);
+            border-color: var(--dark-mode-border);
+            color: var(--dark-mode-lyrics-text-color);
+        }
+
+        /* Custom scrollbar for popup-lyrics-container */
+        #integratedMusicPlayer #popup-lyrics-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #integratedMusicPlayer #popup-lyrics-container::-webkit-scrollbar-track {
+            background: var(--background-color);
+            border-radius: 4px;
+        }
+
+        body.dark-mode #integratedMusicPlayer #popup-lyrics-container::-webkit-scrollbar-track {
+            background: var(--dark-mode-background);
+        }
+
+        #integratedMusicPlayer #popup-lyrics-container::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 4px;
+        }
+
+        body.dark-mode #integratedMusicPlayer #popup-lyrics-container::-webkit-scrollbar-thumb {
+            background: var(--secondary-color);
+        }
+
+        #integratedMusicPlayer #popup-lyrics-container::-webkit-scrollbar-thumb:hover {
+            background: #aaa;
+        }
+
+        body.dark-mode #integratedMusicPlayer #popup-lyrics-container::-webkit-scrollbar-thumb:hover {
+            background: #777;
+        }
+
+        /* Adjust sleep timer and lyrics settings to be compact within integrated player */
+        #integratedMusicPlayer .sleep-timer-options.card {
+            padding: 10px;
+            margin-top: 10px;
+            box-shadow: none; /* Remove shadow for nested card */
+            border: 1px solid var(--border-color); /* Add a subtle border */
+            background-color: var(--background-color); /* Use general background for nested card */
+        }
+        body.dark-mode #integratedMusicPlayer .sleep-timer-options.card {
+            background-color: var(--dark-mode-background);
+            border-color: var(--dark-mode-border);
+        }
+        #integratedMusicPlayer .sleep-timer-options h3 {
+            margin-bottom: 5px;
+        }
+
+        /* Custom styles for Popup Player elements (now integrated) */
+        #integratedMusicPlayer #popup-now-playing-info-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            position: relative;
+            z-index: 10;
+            background-color: var(--card-background-color);
+            border-radius: 0.5rem;
+            box-shadow: var(--shadow);
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+
+        body.dark-mode #integratedMusicPlayer #popup-now-playing-info-wrapper {
+            background-color: var(--dark-mode-card);
+            box-shadow: var(--shadow-dm);
+        }
+
+        #integratedMusicPlayer #popup-album-art {
+            width: 4rem;
+            height: 4rem;
+            border-radius: 9999px;
+            object-fit: cover;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            flex-shrink: 0;
+        }
+
+        #integratedMusicPlayer #popup-now-playing-info-wrapper .flex-col {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            flex-grow: 1;
+            overflow: hidden;
+        }
+
+        #integratedMusicPlayer #popup-song-title,
+        #integratedMusicPlayer #popup-song-artist {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 100%;
+        }
+
+        #integratedMusicPlayer #toggle-playlist-btn {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: var(--primary-color);
+            color: #333;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+        #integratedMusicPlayer #toggle-playlist-btn:hover {
+            background-color: #e6c000;
+            transform: translateY(-50%) scale(1.1);
+        }
+        body.dark-mode #integratedMusicPlayer #toggle-playlist-btn {
+            background-color: var(--primary-color);
+            color: #333;
+        }
+        body.dark-mode #integratedMusicPlayer #toggle-playlist-btn:hover {
+            background-color: #e6c000;
+        }
+
+        /* Animations for playlist button */
+        @keyframes pulse-icon {
+            0% { transform: translateY(-50%) scale(1); opacity: 1; }
+            50% { transform: translateY(-50%) scale(1.1); opacity: 0.8; }
+            100% { opacity: 1; transform: translateY(-50%) scale(1); }
+        }
+        #integratedMusicPlayer #toggle-playlist-btn.blinking-state {
+            animation: pulse-icon 1.5s infinite alternate;
+        }
+
+        @keyframes rotate-disc {
+            from { transform: translateY(-50%) rotate(0deg); }
+            to { transform: translateY(-50%) rotate(360deg); }
+        }
+        #integratedMusicPlayer #toggle-playlist-btn.playing-state {
+            animation: rotate-disc 2s linear infinite;
+        }
+
+        #integratedMusicPlayer #popup-playlist-container {
+            background-color: var(--card-background-color);
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            padding: 15px;
+            margin-top: 15px;
+            max-height: 250px; /* Max height for scrollable playlist */
+            overflow-y: auto;
+            display: none; /* Hidden by default */
+            transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
+        }
+        body.dark-mode #integratedMusicPlayer #popup-playlist-container {
+            background-color: var(--dark-mode-card);
+            box-shadow: var(--shadow-dm);
+        }
+
+        #integratedMusicPlayer #popup-playlist-container.show {
+            display: block;
+            max-height: 250px; /* Adjust as needed */
+        }
+
+        #integratedMusicPlayer #popup-song-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        #integratedMusicPlayer #popup-song-list li {
+            padding: 8px 10px;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        body.dark-mode #integratedMusicPlayer #popup-song-list li {
+            border-bottom-color: var(--dark-mode-border);
+        }
+
+        #integratedMusicPlayer #popup-song-list li:last-child {
+            border-bottom: none;
+        }
+
+        #integratedMusicPlayer #popup-song-list li:hover {
+            background-color: #f0f0f0;
+        }
+        body.dark-mode #integratedMusicPlayer #popup-song-list li:hover {
+            background-color: #3a3a3a;
+        }
+
+        #integratedMusicPlayer #popup-song-list li.active-song-in-list {
+            background-color: #ffe6b0;
+            font-weight: bold;
+            border-left: 3px solid var(--secondary-color);
+            box-shadow: 0 0 8px 2px rgba(255, 215, 0, 0.3); /* Softer glow for smaller list */
+            transition: background-color 0.2s, border-left 0.2s, box-shadow 0.2s;
+        }
+        body.dark-mode #integratedMusicPlayer #popup-song-list li.active-song-in-list {
+            background-color: #4a3a1a;
+            border-left-color: var(--secondary-color);
+            box-shadow: 0 0 8px 2px rgba(255, 215, 0, 0.3); /* Softer glow for smaller list */
+        }
+
+        #integratedMusicPlayer #popup-song-list .song-title-list {
+            color: var(--text-color);
+        }
+        body.dark-mode #integratedMusicPlayer #popup-song-list .song-title-list {
+            color: var(--dark-mode-text);
+        }
+
+        #integratedMusicPlayer #popup-song-list .artist-name-list {
+            font-size: 0.8em;
+            color: #777;
+        }
+        body.dark-mode #integratedMusicPlayer #popup-song-list .artist-name-list {
+            color: #bbb;
+        }
+
+        /* Ensure lyrics container has flexible height */
+        #integratedMusicPlayer #lyrics-content-wrapper {
+            flex-grow: 1; /* Allow it to take available vertical space */
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* Hide overflow when lyrics are hidden */
+        }
+
+        /* Removed popup styles that are no longer applicable */
+        .popup-music-player,
+        .popup-music-player.active,
+        .popup-music-player.dragging,
+        body.dimmed-background::before,
+        body:not(.dimmed-background)::before,
+        #mini-player-icon,
+        #bottom-mini-bar,
+        .popup-music-player.hidden-by-lyrics-popup {
+            display: none !important; /* Hide these completely */
+        }
+
+        /* Adjustments for volume icon/slider visibility on mobile for the integrated player */
+        @media (max-width: 768px) {
+            #integratedMusicPlayer #popup-volume-slider {
+                display: none !important; /* Hide volume slider on small screens */
+            }
+            #integratedMusicPlayer #popup-volume-icon {
+                display: flex !important; /* Show volume icon on small screens */
+            }
+        }
+
+
+        /* Ensure chart container styling requirements are met for future use/consistency */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+            /* Placeholder for chart canvas - not used in this iteration but included for requirement */
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+
+        /* Auto-hide player option */
+        .player-options {
+            margin-top: 10px; /* Adjusted to be closer to theme-selector */
+            padding: 15px;
+            background-color: var(--card-background-color);
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+        body.dark-mode .player-options {
+            background-color: var(--dark-mode-card);
+            box-shadow: var(--shadow-dm);
+        }
+        .player-options h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: var(--text-color);
+        }
+        body.dark-mode .player-options h3 {
+            color: var(--dark-mode-text);
+        }
+        .player-options label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            color: var(--text-color);
+        }
+        body.dark-mode .player-options label {
+            color: var(--dark-mode-text);
+        }
+
+        /* Share Modal Styles */
+        #share-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease-in-out, visibility 0.3s step-end;
+        }
+
+        #share-modal.show {
+            opacity: 1;
+            visibility: visible;
+            transition: opacity 0.3s ease-in-out, visibility 0.3s step-start;
+        }
+
+        #share-modal-content {
+            background-color: var(--card-background-color);
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            transform: translateY(-20px);
+            transition: transform 0.3s ease-out;
+        }
+
+        #share-modal.show #share-modal-content {
+            transform: translateY(0);
+        }
+
+        body.dark-mode #share-modal-content {
+            background-color: var(--dark-mode-card);
+            box-shadow: var(--shadow-dm);
+        }
+
+        #share-modal-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: var(--text-color);
+        }
+        body.dark-mode #share-modal-title {
+            color: var(--dark-mode-text);
+        }
+
+        #share-modal-artist {
+            font-size: 1em;
+            color: #666;
+            margin-bottom: 15px;
+        }
+        body.dark-mode #share-modal-artist {
+            color: #aaa;
+        }
+
+        #share-link-display {
+            background-color: #f0f0f0;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 5px;
+            word-break: break-all;
+            font-size: 0.9em;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        body.dark-mode #share-link-display {
+            background-color: #2a2a2a;
+            border-color: #444;
+            color: var(--dark-mode-text);
+        }
+
+        .share-modal-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .share-modal-buttons button {
+            background-color: var(--primary-color);
+            color: #333;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            font-weight: bold;
+        }
+        .share-modal-buttons button:hover {
+            background-color: #e6c000;
+            transform: translateY(-2px);
+        }
+
+        #share-modal-info {
+            font-size: 0.9em;
+            color: #777;
+            margin-bottom: 20px;
+        }
+        body.dark-mode #share-modal-info {
+            color: #bbb;
+        }
+
+        #share-modal-close-btn {
+            background-color: #ccc;
+            color: #333;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+        #share-modal-close-btn:hover {
+            background-color: #bbb;
+        }
+        body.dark-mode #share-modal-close-btn {
+            background-color: #555;
+            color: var(--dark-mode-text);
+        }
+        body.dark-mode #share-modal-close-btn:hover {
+            background-color: #777;
+        }
+
+
+        /* --- MEDIA QUERIES --- */
+        /* Cho màn hình nhỏ hơn 768px (ví dụ: tablet) */
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            .header-content {
+                flex-direction: row; /* Keep row for logo and controls */
+                justify-content: space-between;
+                align-items: center;
+                padding: 0 15px; /* Add horizontal padding for header content */
+            }
+            .logo {
+                margin-right: 0;
+                margin-bottom: 0; /* Remove bottom margin */
+            }
+            .navbar {
+                display: none; /* Hide desktop navbar on small screens */
+            }
+            .hamburger-menu {
+                display: block; /* Show hamburger on small screens */
+            }
+            .theme-switch {
+                flex-direction: column; /* Stack dark mode and color selectors */
+                align-items: flex-end; /* Align to the right */
+                gap: 0.5rem; /* Reduce gap */
+            }
+            .theme-switch > div {
+                margin-left: 0 !important; /* Remove left margin on mobile */
+            }
+            .mobile-hidden {
+                display: none !important; /* Hide text labels on mobile */
+            }
+            .theme-bg-button,
+            .theme-text-button {
+                width: 28px; /* Slightly smaller on mobile */
+                height: 28px;
+                font-size: 1.1rem;
+            }
+            .main-content {
+                flex-direction: column;
+            }
+            .sidebar {
+                order: -1;
+                width: 100%;
+            }
+            .footer-content {
+                flex-direction: column;
+                text-align: center;
+            }
+            .footer-nav ul {
+                flex-direction: column;
+            }
+            .footer-nav li {
+                margin-bottom: 10px;
+            }
+            .music-controls {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            /* Integrated player adjustments for mobile */
+            #integratedMusicPlayer {
+                padding: 15px;
+            }
+            #integratedMusicPlayer .player-controls button {
+                width: 40px;
+                height: 40px;
+                font-size: 1.1em;
+            }
+            #integratedMusicPlayer .player-controls #popup-play-pause-btn {
+                width: 50px;
+                height: 50px;
+                font-size: 1.5em;
+            }
+            #integratedMusicPlayer #popup-now-playing-info-wrapper {
+                margin-bottom: 10px; /* Adjust margin */
+            }
+            #integratedMusicPlayer #popup-playlist-container {
+                max-height: 200px; /* Max height for scrollable playlist on mobile */
+            }
+
+            /* New: Fullscreen lyrics popup on mobile */
+            #lyrics-fullscreen-popup .lyrics-settings.card {
+                padding: 10px;
+            }
+
+            /* Mobile specific adjustments for menu buttons */
+            #menu {
+                gap: 0.6rem; /* Slightly smaller gap for tablets */
+                padding: 0.6rem;
+            }
+            #menu .category-btn {
+                padding: 0.8rem 1.1rem; /* Larger padding for tablets */
+                font-size: 1.4em; /* Larger emoji */
+                min-width: 75px; /* Ensure a good minimum size */
+                flex-grow: 1; /* Allow buttons to grow to fill space */
+                flex-shrink: 1; /* Allow buttons to shrink if needed */
+                max-width: calc(25% - 0.6rem); /* Max width to encourage 4 per row */
+            }
+        }
+        /* Cho màn hình cực nhỏ (ví dụ: điện thoại) */
+        @media (max-width: 480px) {
+            .logo h1 {
+                font-size: 1.8em;
+            }
+            .navbar a {
+                font-size: 0.9em;
+                padding: 3px 8px;
+            }
+            .main-content {
+                gap: 20px;
+            }
+            .card {
+                padding: 15px;
+            }
+            .song-item {
+                flex-wrap: wrap;
+            }
+            .song-item .thumbnail {
+                width: 40px;
+                height: 40px;
+            }
+            .song-item .song-info {
+                width: calc(100% - 60px);
+                margin-top: 5px;
+            }
+            .song-item .actions {
+                width: 100%;
+                justify-content: flex-end;
+                margin-top: 10px;
+            }
+            /* Integrated player adjustments for very small screens */
+            #integratedMusicPlayer {
+                padding: 15px;
+            }
+            #integratedMusicPlayer .player-controls button {
+                width: 40px;
+                height: 40px;
+                font-size: 1.1em;
+            }
+            #integratedMusicPlayer .player-controls #popup-play-pause-btn {
+                width: 50px;
+                height: 50px;
+                font-size: 1.5em;
+            }
+
+            /* Even smaller adjustments for menu buttons on very small screens */
+            #menu {
+                gap: 0.4rem; /* Even smaller gap for very small phones */
+                padding: 0.4rem;
+            }
+            #menu .category-btn {
+                padding: 0.6rem 0.8rem; /* Adjusted padding for very small screens */
+                font-size: 1.2em; /* Adjusted emoji size */
+                min-width: 60px; /* Smallest minimum width */
+                max-width: calc(25% - 0.4rem); /* Max width to encourage 4 per row */
+            }
+        }
+
+        /* Custom Alert/Message Box Styles */
+        #custom-alert-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000; /* Higher than other elements */
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease-in-out, visibility 0.3s step-end;
+        }
+
+        #custom-alert-modal.show {
+            opacity: 1;
+            visibility: visible;
+            transition: opacity 0.3s ease-in-out, visibility 0.3s step-start;
+        }
+
+        #custom-alert-content {
+            background-color: var(--card-background-color);
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            text-align: center;
+            max-width: 350px;
+            width: 90%;
+            transform: translateY(-20px);
+            transition: transform 0.3s ease-out;
+        }
+
+        #custom-alert-modal.show #custom-alert-content {
+            transform: translateY(0);
+        }
+
+        body.dark-mode #custom-alert-content {
+            background-color: var(--dark-mode-card);
+            box-shadow: var(--shadow-dm);
+        }
+
+        #custom-alert-message {
+            margin-bottom: 20px;
+            font-size: 1.1em;
+            color: var(--text-color);
+        }
+
+        body.dark-mode #custom-alert-message {
+            color: var(--dark-mode-text);
+        }
+
+        #custom-alert-ok-btn {
+            background-color: var(--primary-color);
+            color: #333;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+
+        #custom-alert-ok-btn:hover {
+            background-color: #e6c000;
+        }
+
+        /* Loading Spinner Styles */
+        .loading-spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: var(--secondary-color);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10; /* Ensure it's above other elements */
+            display: none; /* Hidden by default */
+        }
+
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        /* Loading message style */
+        .loading {
+            padding: 1rem;
+            text-align: center;
+            color: #888;
+        }
+
+        /* New CSS for the blinking arrow in the footer */
+        .blinking-arrow {
+            font-size: 1.5em; /* Make it prominent */
+            color: var(--primary-color); /* Use primary color for visibility */
+            margin-left: 10px; /* Space from the text */
+            vertical-align: middle; /* Align with text */
+            animation: blink-arrow 1s infinite alternate; /* Blinking animation */
+            display: inline-block; /* Ensure animation applies correctly */
+        }
+
+        @keyframes blink-arrow {
+            0% { opacity: 0.5; transform: translateY(-5px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        /* New theme color buttons */
+        .theme-bg-button,
+        .theme-text-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.25rem; /* Smaller padding */
+            border-radius: 9999px; /* Fully rounded */
+            transition: transform 0.2s ease, background-color 0.2s ease;
+            display: flex; /* For centering emoji */
+            align-items: center;
+            justify-content: center;
+            width: 32px; /* Fixed width */
+            height: 32px;
+            font-size: 1.25rem; /* Adjust emoji size */
+            flex-shrink: 0; /* Prevent shrinking */
+        }
+
+        .theme-bg-button:hover,
+        .theme-text-button:hover {
+            transform: scale(1.1);
+            background-color: rgba(0, 0, 0, 0.1); /* Subtle hover effect */
+        }
+
+        body.dark-mode .theme-bg-button:hover,
+        body.dark-mode .theme-text-button:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Active state for theme buttons */
+        .theme-bg-button.active-color-bg,
+        .theme-text-button.active-color-text {
+            box-shadow: 0 0 0 2px var(--primary-color); /* Highlight with primary color */
+        }
+
+        @media (max-width: 768px) {
+            .header-content .theme-switch {
+                flex-direction: column; /* Stack dark mode and color selectors */
+                align-items: flex-end; /* Align to the right */
+                gap: 0.5rem; /* Reduce gap */
+            }
+            .header-content .theme-switch > div {
+                margin-left: 0 !important; /* Remove left margin on mobile */
+            }
+            .mobile-hidden {
+                display: none !important; /* Hide text labels on mobile */
+            }
+            .theme-bg-button,
+            .theme-text-button {
+                width: 28px; /* Slightly smaller on mobile */
+                height: 28px;
+                font-size: 1.1rem;
+            }
+        }
+
+        /* Styles for the new fullscreen lyrics popup */
+        #lyrics-fullscreen-popup {
+            position: fixed;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.75);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 5000; /* Higher than other popups */
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease-in-out, visibility 0.3s step-end;
+        }
+        #lyrics-fullscreen-popup.show {
+            opacity: 1;
+            visibility: visible;
+            transition: opacity 0.3s ease-in-out, visibility 0.3s step-start;
+        }
+
+        #lyrics-fullscreen-popup .lyrics-popup-content {
+            background-color: var(--card-background-color);
+            border-radius: 0.5rem;
+            box-shadow: var(--shadow);
+            padding: 1.5rem;
+            width: 90%;
+            max-width: 48rem; /* max-w-3xl */
+            max-height: calc(100vh - 4rem); /* Adjusted to give 2rem top/bottom margin */
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            transform: translateY(-20px);
+            transition: transform 0.3s ease-out;
+            align-items: center;
+        }
+        #lyrics-fullscreen-popup.show .lyrics-popup-content {
+            transform: translateY(0);
+        }
+
+        body.dark-mode #lyrics-fullscreen-popup .lyrics-popup-content {
+            background-color: var(--dark-mode-card);
+            box-shadow: var(--shadow-dm);
+        }
+
+        #lyrics-fullscreen-popup .close-button {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #6b7280; /* gray-500 */
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        #lyrics-fullscreen-popup .close-button:hover {
+            color: #4b5563; /* gray-700 */
+        }
+
+        #lyrics-fullscreen-popup .tab-content {
+            overflow-y: auto;
+            padding: 0.5rem;
+            margin-bottom: 1rem;
+            position: relative; /* Make it relative for arrow positioning */
+            width: 100%; /* Ensure it takes full width of its parent */
+        }
+        #lyrics-fullscreen-popup #full-lyrics-display {
+            font-size: 1.125rem; /* text-lg */
+            line-height: 1.6; /* leading-relaxed */
+            white-space: pre-wrap;
+            text-align: center;
+            overflow: hidden; /* Important: hide overflow for paging */
+            flex-shrink: 0; /* Prevent shrinking */
+            transition: transform 0.4s ease-in-out, opacity 0.4s ease-in-out;
+            will-change: transform, opacity;
+
+            /* NEW: Default font and size for lyrics display */
+            font-family: 'Noto Sans Display', sans-serif;
+            font-size: 18px; /* Default size for better readability */
+        }
+        /* New: classes for smooth transitions */
+        .lyrics-enter-from-right {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        .lyrics-enter-from-left {
+            transform: translateX(-100%);
+            opacity: 0;
+        }
+        .lyrics-exit-to-left {
+            transform: translateX(-100%);
+            opacity: 0;
+        }
+        .lyrics-exit-to-right {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+
+        /* New CSS for the navigation arrows in fullscreen lyrics */
+        .lyrics-nav-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 3em; /* Larger arrow */
+            color: var(--primary-color); /* Gold color */
+            opacity: 0.4; /* Faded */
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.2s;
+            z-index: 10; /* Ensure it's above lyrics text */
+            padding: 0 10px; /* Add some padding for clickable area */
+            display: flex; /* Use flexbox for centering icon */
+            align-items: center;
+            justify-content: center;
+        }
+        .lyrics-nav-arrow:hover {
+            opacity: 0.8;
+            transform: translateY(-50%) scale(1.1);
+        }
+        .lyrics-nav-arrow.disabled {
+            opacity: 0.1;
+            cursor: not-allowed;
+        }
+        .left-arrow {
+            left: 1rem; /* Adjust as needed */
+        }
+        .right-arrow {
+            right: 1rem; /* Adjust as needed */
+        }
+
+        /* NEW: Styles for the Radial Menu */
+        #lyrics-radial-menu-container {
+            position: absolute;
+            bottom: 20px; /* Position at the bottom of the popup */
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 5010; /* Above other popup content */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Central toggle button */
+        #radial-menu-toggle-btn {
+            background-color: var(--primary-color);
+            color: #333;
+            border: none;
+            border-radius: 50%;
+            width: 50px; /* Larger for central button */
+            height: 50px;
+            font-size: 1.8em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+            z-index: 1; /* Ensure it's on top */
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s;
+        }
+        #radial-menu-toggle-btn:hover {
+            transform: scale(1.1) rotate(15deg);
+            background-color: #e6c000;
+        }
+        body.dark-mode #radial-menu-toggle-btn {
+            background-color: var(--primary-color);
+            color: #333;
+        }
+        body.dark-mode #radial-menu-toggle-btn:hover {
+            background-color: #e6c000;
+        }
+
+        /* Container for radial items */
+        #radial-menu-items {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease-out;
+        }
+
+        /* Individual radial items */
+        .radial-item {
+            position: absolute;
+            background-color: var(--card-background-color);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            width: 40px; /* Size for radial items */
+            height: 40px;
+            font-size: 1.4em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0;
+            transform: translate(-50%, -50%) scale(0.5); /* Start small and centered */
+            transition: transform 0.3s ease-out, opacity 0.3s ease-out, background-color 0.2s, color 0.2s, border-color 0.2s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        body.dark-mode .radial-item {
+            background-color: var(--dark-mode-card);
+            color: var(--dark-mode-text);
+            border-color: var(--dark-mode-border);
+        }
+
+        .radial-item:hover {
+            transform: translate(-50%, -50%) scale(1.2); /* Slightly larger on hover */
+            background-color: var(--secondary-color);
+            color: white;
+        }
+        body.dark-mode .radial-item:hover {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+
+        /* Active state for radial menu */
+        #lyrics-radial-menu-container.active #radial-menu-items {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        #lyrics-radial-menu-container.active .radial-item {
+            opacity: 1;
+            transform: translate(-50%, -50%) translate(var(--x), var(--y)) scale(1); /* Position and scale up */
+        }
+
+        /* Specific positioning for each item (set by JS) */
+        /* Will use JS to set --x and --y variables */
+    </style>
+</head>
+<body class="theme-default">
+    <!-- Application Structure Plan:
+    The application maintains its primary blog-like structure for content consumption, with a main content area and a sidebar. The music player, however, evolves into a dynamic, interactive component with two main states:
+    1. Integrated Player: Always visible within the page flow, providing comprehensive music control, detailed song information, sleep timer settings.
+    2. Fullscreen Lyrics Popup: A new, dedicated fullscreen popup for karaoke-style synchronized lyrics, including lyrics display, customization, and theme options. This is activated by a button on the integrated player.
+
+    This integrated structure (player always visible) and the dedicated fullscreen lyrics popup provide flexibility and a better user experience. The integrated player allows deep, immersive engagement with the music and its advanced features (like timers) without requiring an extra click to open. The fullscreen lyrics popup offers an optimized view for reading and customizing lyrics. This design prioritizes user understanding and ease of navigation by offering different interaction levels for the music feature, adapting seamlessly to varying user needs (active engagement vs. background playback).
+    -->
+    <!-- Visualization & Content Choices:
+    - Music List: Presents songs as interactive list items within the main content area. Goal: Inform/Explore available music. Method: HTML list (`.song-item`) dynamically populated. Interaction: Click to play song, separate play/pause button per item, favorite button, lyric button (new, opens fullscreen lyrics popup). Justification: Provides a clear, scannable, and direct interface for selecting and interacting with individual songs.
+    - Main Audio Player: Standard HTML5 `<audio>` element. Goal: Core music playback. Method: Invisible HTML audio element in the DOM. Interaction: Controlled programmatically by JS. Justification: Fundamental component for audio playback.
+    - Integrated Music Player: The central interactive component for music control, now always visible. Goal: Control/Context/Engage. Method: HTML `div` (`#integratedMusicPlayer`) with dynamically updated content (album art, song title, artist, progress bar, time displays, control buttons, volume slider, sleep timer). Interaction: Play/pause, skip next/previous, volume adjustment, "open lyrics" (new: toggles to fullscreen lyrics popup). Justification: Offers a centralized, rich, and highly interactive interface for music management, always accessible.
+    - Fullscreen Lyrics Popup: A new, dedicated popup for lyrics. Goal: Enhance immersion and understanding of song content with customization. Method: HTML `div` (`#lyrics-fullscreen-popup`) with tabs for lyrics, customization, and themes. Interaction: Displays lyrics, allows font size/family changes, theme selection, and has a close button. Justification: Creates an engaging, dynamic karaoke-like experience, making lyrics easily consumable and customizable in a dedicated, large view.
+    - Progress Bar: Displays current playback progress. Goal: Inform (playback position). Method: HTML `div` for container and inner `div` for progress bar. Interaction: Click/drag to seek. Justification: Standard, intuitive visual feedback for audio progress.
+    - Theming/Dark Mode: Allows user customization of the app's visual theme. Goal: Personalization. Method: CSS variables and class toggling via JavaScript. Interaction: Button clicks in the 'Tùy chọn hiển thị' section. Justification: Improves user comfort and satisfaction by catering to aesthetic preferences.
+    CONFIRMATION: NO SVG graphics used. NO Mermaid JS used.
+    -->
+    <header class="header">
+        <div class="container header-content">
+            <div class="logo">
+                <h1><a href="#">Nội dung kênh Multimedia MSTQ</a></h1> <!-- Title of the channel -->
+            </div>
+            <button class="hamburger-menu" id="hamburger-menu">☰</button>
+            <nav class="navbar" id="desktop-navbar">
+                <ul>
+                    <li><a href="https://sites.google.com/view/thiensutinhquang"><i class="fas fa-home"></i> <span>Trang Chủ</span></a></li>
+                    <li><a href="#main-content-area"><i class="fas fa-newspaper"></i> <span>Bài Viết</span></a></li>
+                    <li><a href="#music-section"><i class="fas fa-music"></i> <span>Âm Nhạc</span></a></li>
+                    <li><a href="#footer-section"><i class="fas fa-envelope"></i> <span>Liên Hệ</span></a></li>
+                </ul>
+            </nav>
+            <div class="theme-switch flex items-center gap-2">
+                <span class="text-sm mobile-hidden">Chế độ Tối</span>
+                <label for="darkModeToggle" class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="darkModeToggle" class="sr-only peer">
+                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-yellow-300 dark:peer-focus:ring-yellow-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-yellow-500"></div>
+                </label>
+                <div class="flex items-center gap-2 ml-4">
+                    <span class="text-sm mobile-hidden">Màu nền:</span>
+                    <button class="theme-bg-button text-xl" data-color="var(--custom-bg-blue-dark)" data-label="Xanh đậm">🔵</button>
+                    <button class="theme-bg-button text-xl" data-color="var(--custom-bg-purple-dream)" data-label="Tím mộng mơ">🟣</button>
+                    <button class="theme-bg-button text-xl" data-color="var(--custom-bg-forest-green)" data-label="Xanh rừng">🌿</button>
+                </div>
+                <div class="flex items-center gap-2 ml-2">
+                    <span class="text-sm mobile-hidden">Màu chữ:</span>
+                    <button class="theme-text-button text-xl" data-color="var(--custom-text-yellow)" data-label="Vàng">💛</button>
+                    <button class="theme-text-button text-xl" data-color="var(--custom-text-aqua)" data-label="Xanh ngọc">💎</button>
+                    <button class="theme-text-button text-xl" data-color="var(--custom-text-pink-pastel)" data-label="Hồng pastel">🌸</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="mobile-nav-overlay" id="mobile-nav-overlay">
+        <div class="mobile-nav-content">
+            <button class="close-mobile-menu" id="close-mobile-menu">X</button>
+            <ul>
+                <li><a href="https://sites.google.com/view/thiensutinhquang"><i class="fas fa-home"></i> <span>Trang Chủ</span></a></li>
+                <li><a href="#main-content-area"><i class="fas fa-newspaper"></i> <span>Bài Viết</span></a></li>
+                <li><a href="#music-section"><i class="fas fa-music"></i> <span>Âm Nhạc</span></a></li>
+                <li><a href="#footer-section"><i class="fas fa-envelope"></i> <span>Liên Hệ</span></a></li>
+                </ul>
+        </div>
+    </div>
+
+    <main class="container main-content">
+        <section class="main-area" id="main-content-area">
+            </section>
+
+        <aside class="sidebar" id="sidebar">
+            <div class="widget card">
+                <h3 class="text-lg font-bold mb-3">Video Nổi Bật</h3>
+                <div class="grid-container" id="youtubePlaylistSection">
+                    <div class="video-item">
+                        <h3><a href="https://www.youtube.com/embed/videoseries?si=irypdhATb7h1XJGe&list=PLMZyBvBBcNJraq_FVpxskIz9Y1zKIBlpv" target="_blank">DANH SÁCH TOÀN BỘ VIDEO TRÊN YOUTUBE</a></h3>
+                        <div class="video-container">
+                            <iframe src="https://www.youtube.com/embed/videoseries?si=irypdhATb7h1XJGe&list=PLMZyBvBBcNJraq_FVpxskIz9Y1zKIBlpv" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <section class="music-list-enhanced card" id="music-section">
+                <div class="music-controls">
+                    <h2 class="text-xl font-bold">Danh sách bài hát</h2>
+                    </div>
+
+                <div id="now-playing-info" class="text-lg mb-4">Sẵn sàng phát nhạc.</div>
+
+                <input type="text" id="music-search" placeholder="Tìm kiếm bài hát, nghệ sĩ..." class="w-full p-2 mb-4 border rounded">
+
+                <div id="menu" class="flex flex-wrap justify-center gap-3 p-3">
+                    <button onclick="loadCustomCategory('all')" class="category-btn active" data-label="Tất cả bài hát">🎧</button>
+                    <button onclick="loadCustomCategory('new')" class="category-btn" data-label="Bài hát mới">🆕</button>
+                    <button onclick="loadCustomCategory('hot')" class="category-btn" data-label="Bài nổi bật">🔥</button>
+                    <button onclick="loadCustomCategory('dieu-thu')" class="category-btn" data-label="Ca sỹ Diệu Thu">🎤</button>
+                    <button onclick="loadCustomCategory('others')" class="category-btn" data-label="Ca sỹ khác">👤</button>
+                    <button onclick="loadCustomCategory('phap')" class="category-btn" data-label="Bài pháp">📿</button>
+                    <button onclick="loadCustomCategory('favorites')" class="category-btn" data-label="Yêu thích">❤️</button>
+                </div>
+                <div id="integratedMusicPlayer" class="card">
+                    <h2 class="text-xl font-bold mb-4 text-center">Trình phát nhạc đa năng MSTQ</h2>
+                    <div id="loading-spinner" class="loading-spinner"></div>
+
+                    <div class="player-header">
+                        <h3 id="popup-now-playing-info">Đang phát: Không có bài nào</h3>
+                        <div class="player-header-buttons">
+                            <button id="popup-open-lyrics-btn" class="minimize-button">♫</button>
+                            </div>
+                    </div>
+
+                    <div id="popup-now-playing-info-wrapper" class="flex items-center justify-center gap-4 p-4 mb-4 relative z-10 rounded-lg shadow-md bg-card-background-color">
+                        <img id="popup-album-art" src="https://placehold.co/60x60/cccccc/333333?text=No+Art" alt="Album Art" class="w-16 h-16 rounded-full object-cover shadow-md flex-shrink-0">
+                        <div class="flex flex-col items-start flex-grow overflow-hidden">
+                            <h4 id="popup-song-title" class="text-xl font-bold mb-1 whitespace-nowrap overflow-hidden text-ellipsis w-full"></h4>
+                            <p id="popup-song-artist" class="text-md text-gray-600 mb-2 whitespace-nowrap overflow-hidden text-ellipsis w-full"></p>
+                        </div>
+                        <button id="toggle-playlist-btn" class="absolute right-3 top-1/2 -translate-y-1/2 text-2xl">☰</button>
+                    </div>
+
+                    <div class="progress-container" id="popup-progress-container">
+                        <div class="progress-bar" id="popup-progress-bar"></div>
+                    </div>
+                    <div class="flex justify-between text-sm text-gray-500 mt-1 mb-4">
+                        <span id="popup-current-time">0:00</span>
+                        <span id="popup-duration">0:00</span>
+                    </div>
+
+                    <div class="player-controls">
+                        <button id="popup-repeat-btn" class="button text-xl">🔁</button>
+                        <button id="popup-prev-btn" class="button text-xl">⏮</button>
+                        <button id="popup-play-pause-btn" class="button text-2xl">
+                            <span id="play-icon">▶</span>
+                            <span id="pause-icon" class="hidden">⏸</span>
+                        </button>
+                        <button id="popup-next-btn" class="button text-xl">⏭</button>
+                        <button id="popup-shuffle-btn" class="button text-xl">🔀</button>
+                        <input type="range" id="popup-volume-slider" min="0" max="1" step="0.01" value="1" class="ml-4">
+                        <button id="popup-volume-icon" class="hidden text-xl">🔊</button>
+                        <button id="popup-share-btn" class="button text-xl">📤</button>
+                        <button id="popup-favorite-btn" class="button text-xl">♥</button>
+                        <button id="toggle-lyrics-visibility-btn" class="button text-xl">📝</button>
+                    </div>
+
+                    <div id="popup-playlist-container" class="hidden flex-grow overflow-y-auto mb-4 border-t border-gray-200 dark:border-gray-700 pt-4">
+                        <h5 class="text-md font-semibold mb-2 text-center">Danh sách phát</h5>
+                        <ul id="popup-song-list">
+                            </ul>
+                    </div>
+
+                    <div id="lyrics-content-wrapper" class="flex-grow flex flex-col overflow-hidden">
+                        <div id="popup-lyrics-container" class="mt-4 p-3 border rounded-md bg-gray-50 dark:bg-gray-800 flex-grow overflow-y-auto text-sm whitespace-pre-wrap">
+                            <p>Lời bài hát sẽ xuất hiện ở đây.</p>
+                        </div>
+                    </div>
+
+                    <div class="sleep-timer-options card">
+                        <h3 class="text-lg font-bold">Hẹn giờ</h3>
+                        <div class="sleep-timer-buttons flex flex-wrap justify-center gap-2 mb-3">
+                            <button class="button sleep-timer-btn" data-minutes="15">15p</button>
+                            <button class="button sleep-timer-btn" data-minutes="30">30p</button>
+                            <button class="button sleep-timer-btn" data-minutes="0">Tắt</button>
+                        </div>
+
+                        <div class="custom-timer-compact flex items-center justify-center gap-2 flex-wrap">
+                            <label for="custom-minutes-input" class="text-sm font-medium">Thời gian:</label>
+                            <input type="number" id="custom-minutes-input" value="0" min="0" class="w-20 p-1 border rounded text-center">
+                            <span class="text-sm">phút</span>
+                            <button id="set-custom-sleep-timer-compact" class="button py-1 px-3 text-sm">Đặt</button>
+                            <div id="current-sleep-timer" class="text-sm font-bold text-secondary-color ml-2">Không hẹn giờ</div>
+                        </div>
+                    </div>
+                </div>
+                <div id="songs-container">
+                    <p class="text-center text-gray-500">Đang tải bài hát...</p>
+                </div>
+                <audio id="audio-player" style="display: none;"></audio>
+            </section>
+            <div class="player-options card">
+                <h3 class="text-lg font-bold mb-3">Tùy chọn trình phát</h3>
+                <label for="autoHidePlayer">
+                    <input type="checkbox" id="autoHidePlayer" class="form-checkbox h-5 w-5 text-yellow-600 rounded">
+                    <span>Tự động ẩn trình phát khi chuyển tab</span>
+                </label>
+            </div>
+        </aside>
+    </main>
+
+    <footer class="footer" id="footer-section">
+        <div class="container footer-content">
+            <p class="flex items-center justify-center w-full">
+                Bản quyền MSTQ được bảo lưu
+                <span class="blinking-arrow">↓</span> </p>
+        </div>
+    </footer>
+
+    <div id="lyrics-fullscreen-popup" class="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-5000 hidden">
+        <div class="lyrics-popup-content bg-white rounded-lg shadow-xl p-6 w-11/12 max-w-3xl flex flex-col relative"
+             style="--background-color: var(--card-background-color); --text-color: var(--text-color); --border-color: var(--border-color);"
+             data-theme="light">
+            <button id="close-lyrics-fullscreen" class="close-button">
+                <i class="fas fa-times text-2xl"></i>
+            </button>
+
+            <h2 class="text-2xl font-bold mb-4 text-center" id="lyrics-popup-title">Lời Bài Hát</h2>
+
+            <div id="lyrics-content" class="tab-content overflow-y-auto mb-4 p-2 text-center text-lg leading-relaxed relative">
+                <p id="full-lyrics-display" class="whitespace-pre-wrap"></p>
+                <div class="lyrics-nav-arrow left-arrow" id="lyrics-left-arrow">
+                    <i class="fas fa-chevron-left"></i>
+                </div>
+                <div class="lyrics-nav-arrow right-arrow" id="lyrics-right-arrow">
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            </div>
+
+            <div id="lyrics-radial-menu-container">
+                <button id="radial-menu-toggle-btn">🎚️</button>
+                <div id="radial-menu-items">
+                    <button id="radial-theme-btn" class="radial-item">🎨</button>
+                    <button id="radial-font-btn" class="radial-item">🔤</button>
+                    <button id="radial-font-size-decrease" class="radial-item">🔎➖</button>
+                    <button id="radial-font-size-increase" class="radial-item">🔎➕</button>
+                    <button id="radial-lines-decrease" class="radial-item">➖</button>
+                    <button id="radial-lines-increase" class="radial-item">➕</button>
+                </div>
+            </div>
+
+            <div class="flex justify-center items-center mt-4">
+                <span id="lyrics-page-indicator" class="text-lg font-semibold text-gray-700 dark:text-gray-300">Trang 1 / 1</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="custom-alert-modal">
+        <div id="custom-alert-content">
+            <p id="custom-alert-message"></p>
+            <button id="custom-alert-ok-btn">OK</button>
+        </div>
+    </div>
+
+    <div id="share-modal">
+        <div id="share-modal-content">
+            <h3 id="share-modal-title">Chia sẻ bài hát</h3>
+            <p id="share-modal-artist" class="text-gray-600"></p>
+            <div id="share-link-display" class="text-sm"></div>
+            <div class="share-modal-buttons">
+                <button id="copy-share-link-btn" class="button">Sao chép liên kết</button>
+            </div>
+            <p id="share-modal-info" class="text-xs">Để chia sẻ qua Zalo/Messenger, vui lòng sao chép liên kết và dán vào ứng dụng của bạn.</p>
+            <button id="share-modal-close-btn" class="button">Đóng</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // DOM elements
+        const nowPlayingInfo = document.getElementById('now-playing-info');
+        const musicSearch = document.getElementById('music-search');
+        const songsContainer = document.getElementById('songs-container');
+
+        const integratedMusicPlayer = document.getElementById('integratedMusicPlayer');
+        const popupOpenLyricsBtn = document.getElementById('popup-open-lyrics-btn');
+        const popupNowPlayingInfo = document.getElementById('popup-now-playing-info');
+        const popupSongTitle = document.getElementById('popup-song-title');
+        const popupSongArtist = document.getElementById('popup-song-artist');
+        const popupProgressBar = document.getElementById('popup-progress-bar');
+        const popupProgressContainer = document.getElementById('popup-progress-container');
+        const popupCurrentTime = document.getElementById('popup-current-time');
+        const popupDuration = document.getElementById('popup-duration');
+        const popupPrevBtn = document.getElementById('popup-prev-btn');
+        const popupPlayPauseBtn = document.getElementById('popup-play-pause-btn');
+        const popupNextBtn = document.getElementById('popup-next-btn');
+        const popupVolumeSlider = document.getElementById('popup-volume-slider');
+        const popupVolumeIcon = document.getElementById('popup-volume-icon');
+        const popupShareBtn = document.getElementById('popup-share-btn');
+        const popupFavoriteBtn = document.getElementById('popup-favorite-btn');
+
+        const popupLyricsContainer = document.getElementById('popup-lyrics-container');
+
+        const popupRepeatBtn = document.getElementById('popup-repeat-btn');
+        const popupShuffleBtn = document.getElementById('popup-shuffle-btn');
+
+        const popupAudioPlayer = new Audio();
+
+        const loadingSpinner = document.getElementById('loading-spinner');
+
+        const hamburgerMenu = document.getElementById('hamburger-menu');
+        const mobileNavOverlay = document.getElementById('mobile-nav-overlay');
+        const closeMobileMenu = document.getElementById('close-mobile-menu');
+
+        const customMinutesInputCompact = document.getElementById('custom-minutes-input');
+        const setCustomSleepTimerCompactBtn = document.getElementById('set-custom-sleep-timer-compact');
+        const currentSleepTimerDisplay = document.getElementById('current-sleep-timer');
+        const sleepTimerButtons = document.querySelectorAll('.sleep-timer-btn');
+
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const themeBgButtons = document.querySelectorAll('.theme-bg-button');
+        const themeTextButtons = document.querySelectorAll('.theme-text-button');
+
+        const lyricsContentWrapper = document.getElementById('lyrics-content-wrapper');
+        const toggleLyricsVisibilityBtn = document.getElementById('toggle-lyrics-visibility-btn');
+
+        const customAlertModal = document.getElementById('custom-alert-modal');
+        const customAlertMessage = document.getElementById('custom-alert-message');
+        const customAlertOkBtn = document.getElementById('custom-alert-ok-btn');
+
+        const shareModal = document.getElementById('share-modal');
+        const shareModalTitle = document.getElementById('share-modal-title');
+        const shareModalArtist = document.getElementById('share-modal-artist');
+        const shareLinkDisplay = document.getElementById('share-link-display');
+        const copyShareLinkBtn = document.getElementById('copy-share-link-btn');
+        const shareModalCloseBtn = document.getElementById('share-modal-close-btn');
+
+        const popupAlbumArt = document.getElementById('popup-album-art');
+        const popupNowPlayingInfoWrapper = document.getElementById('popup-now-playing-info-wrapper');
+        const togglePlaylistBtn = document.getElementById('toggle-playlist-btn');
+        const popupPlaylistContainer = document.getElementById('popup-playlist-container');
+        const popupSongList = document.getElementById('popup-song-list');
+
+        // Fullscreen Lyrics Popup elements
+        const lyricsFullscreenPopup = document.getElementById('lyrics-fullscreen-popup');
+        const closeLyricsFullscreenBtn = document.getElementById('close-lyrics-fullscreen');
+        const fullLyricsDisplay = document.getElementById('full-lyrics-display');
+
+        // Lyrics paging and navigation
+        let lyricsPages = [];
+        let currentLyricsPage = 0;
+        const lyricsPageIndicator = document.getElementById('lyrics-page-indicator');
+        const lyricsLeftArrow = document.getElementById('lyrics-left-arrow');
+        const lyricsRightArrow = document.getElementById('lyrics-right-arrow');
+
+        // Radial Menu elements
+        const lyricsRadialMenuContainer = document.getElementById('lyrics-radial-menu-container');
+        const radialMenuToggleBtn = document.getElementById('radial-menu-toggle-btn');
+        const radialMenuItems = document.getElementById('radial-menu-items');
+        const radialThemeBtn = document.getElementById('radial-theme-btn');
+        const radialFontBtn = document.getElementById('radial-font-btn');
+        const lyricsFontSizeDecreaseBtn = document.getElementById('radial-font-size-decrease');
+        const lyricsFontSizeIncreaseBtn = document.getElementById('radial-font-size-increase');
+        const linesPerPageDecreaseBtn = document.getElementById('radial-lines-decrease');
+        const linesPerPageIncreaseBtn = document.getElementById('radial-lines-increase');
+
+        // Global state variables
+        let songData = []; // Stores all fetched songs
+        let currentSongIndex = -1;
+        let isPlaying = false;
+        let sleepTimer = null;
+        let sleepTimerEndTime = null;
+        let sleepTimerInterval = null;
+        let repeatMode = localStorage.getItem('repeatMode') || 'none';
+        let isShuffling = localStorage.getItem('isShuffling') === 'true';
+        let favoriteSongIds = JSON.parse(localStorage.getItem('favoriteSongIds')) || [];
+        let currentFilterCategory = 'all'; // 'all', 'new', 'hot', 'dieu-thu', 'others', 'phap', 'favorites'
+        let customBgColor = localStorage.getItem('customBgColor') || '';
+        let customTextColor = localStorage.getItem('customTextColor') || '';
+        let areLyricsHidden = localStorage.getItem('areLyricsHidden') === 'true';
+
+        // Lyrics customization state
+        const userDefinedLyricsThemes = [
+            { id: 'blue_dark_calm', name: "Xanh Đen Dịu", icon: "👁️", bgColor: "#1e293b", textColor: "#e2e8f0" },
+            { id: 'green_relax', name: "🌿 Xanh lá thư giãn", icon: "🌿", bgColor: "#edf7f1", textColor: "#1e4620" },
+            { id: 'cream_classic', name: "🍂 Kem ấm cổ điển", icon: "🍂", bgColor: "#fef3c7", textColor: "#5a3210" }
+        ];
+        const autoLyricsDayTheme = { id: 'auto_day', name: "Tự động (Sáng)", bgColor: "#FFFFFF", textColor: "#000000" };
+        const autoLyricsNightTheme = { id: 'auto_night', name: "Tự động (Tối)", bgColor: "#1A1A1A", textColor: "#E0E0E0" };
+        let currentLyricsThemeId = localStorage.getItem('lyricsThemeId') || userDefinedLyricsThemes[0].id;
+        let isLyricsAutoModeActive = localStorage.getItem('isLyricsAutoModeActive') === 'true';
+        let isLyricsAutoModeNight = localStorage.getItem('isLyricsAutoModeNight') === 'true';
+        let lyricsFontSize = parseInt(localStorage.getItem('lyricsFontSize')) || 18;
+        let linesPerPage = parseInt(localStorage.getItem('linesPerPage')) || 15;
+
+        const fontOptions = [
+            'Noto Sans Display, sans-serif',
+            'Arial, sans-serif',
+            'Verdana, sans-serif',
+            'Tahoma, sans-serif',
+            "'Times New Roman', serif",
+            "'Segoe UI', sans-serif",
+            "'Roboto', sans-serif",
+            "'Open Sans', sans-serif",
+            "'Be Vietnam Pro', sans-serif",
+            "'Montserrat', sans-serif",
+            "'Lato', sans-serif"
+        ];
+        let currentFontIndex = fontOptions.indexOf(localStorage.getItem('lyricsFontFamily') || 'Noto Sans Display, sans-serif');
+        if (currentFontIndex === -1) currentFontIndex = 0;
+
+        // Audius API configuration
+        const API_KEY = "08c897eb7784e03007e0769d01f2ca1c6a2001b4";
+        const USER_HANDLE = "minhsutinhquang";
+        let audiusDiscoveryHost = localStorage.getItem('audiusDiscoveryHost') || null; // Will fetch if null
+        let audiusDiscoveryHosts = []; // To store a list of available hosts
+
+        // Map custom categories to Audius genres for filtering
+        const genreMap = {
+            'new': "Pop",
+            'hot': "Country",
+            'dieu-thu': "Classical",
+            'others': "Reggae",
+            'phap': "Podcasts"
+        };
+
+        // Event handler for audio player 'canplaythrough'
+        const handleCanPlayThrough = () => {
+            popupAudioPlayer.removeEventListener('canplaythrough', handleCanPlayThrough);
+            popupAudioPlayer.play().then(() => {
+                isPlaying = true;
+                updatePlayPauseButtons();
+                updateNowPlayingInfo();
+                updatePopupPlayerInfo();
+                updateActiveSongItem();
+                renderLyrics(songData[currentSongIndex]);
+                startSleepTimer(null);
+                hideLoadingIndicator();
+                updatePlaylistButtonState();
+                preloadNextSongAudio();
+                popupProgressBar.classList.add('pulsing');
+                updateMediaSession(); // Cập nhật Media Session API khi bài hát có thể phát
+            }).catch(error => {
+                console.error('Error playing audio:', error);
+                if (error.name === "AbortError" && error.message.includes("The play() request was interrupted by a call to pause()")) {
+                    console.warn("Play request aborted by pause() - likely due to new song selection.");
+                } else {
+                    showMessage(`Không thể phát bài hát "${songData[currentSongIndex] ? songData[currentSongIndex].title : 'Unknown'}": ${error.message}. Vui lòng thử lại.`);
+                }
+                popupNowPlayingInfo.textContent = 'Không thể phát bài hát.';
+                isPlaying = false;
+                updatePlayPauseButtons();
+                hideLoadingIndicator();
+                updatePlaylistButtonState();
+                popupProgressBar.classList.remove('pulsing');
+            });
+        };
+
+        // Event handler for audio player errors
+        const handleAudioError = (e) => {
+            let errorMsg = 'Lỗi không xác định khi phát nhạc.';
+            if (e.target.error) {
+                switch (e.target.error.code) {
+                    case e.target.error.MEDIA_ERR_ABORTED: errorMsg = 'Quá trình tải nhạc bị hủy bỏ.'; break;
+                    case e.target.error.MEDIA_ERR_NETWORK: errorMsg = 'Lỗi mạng khi tải nhạc.'; break;
+                    case e.target.error.MEDIA_ERR_DECODE: errorMsg = 'Lỗi giải mã âm thanh.'; break;
+                    case e.target.error.MEDIA_ERR_SRC_NOT_SUPPORTED: errorMsg = 'Định dạng nhạc không được hỗ trợ hoặc đường dẫn không hợp lệ.'; break;
+                    default: errorMsg = `Lỗi không xác định (${e.target.error.code}).`; break;
+                }
+            }
+            console.error('Popup Audio Player Error:', e.target.error ? e.target.error.code : 'Unknown', errorMsg, e);
+            showMessage(`Lỗi phát nhạc: ${errorMsg}. Vui lòng thử lại hoặc chọn bài khác.`);
+            popupNowPlayingInfo.textContent = `Lỗi: ${errorMsg}`;
+            isPlaying = false;
+            updatePlayPauseButtons();
+            hideLoadingIndicator();
+            updatePlaylistButtonState();
+            popupProgressBar.classList.remove('pulsing');
+        };
+
+        // Custom alert/message box functions
+        function showMessage(message) {
+            customAlertMessage.textContent = message;
+            customAlertModal.classList.add('show');
+        }
+
+        function hideMessage() {
+            customAlertModal.classList.remove('show');
+        }
+        customAlertOkBtn.addEventListener('click', hideMessage);
+
+        // Share modal functions
+        function showShareModal(song) {
+            if (!song) {
+                showMessage('Không có bài hát nào đang được chọn để chia sẻ.');
+                return;
+            }
+            const shareableLink = `https://audius.co/track/${song.id}`;
+            shareModalTitle.textContent = `Chia sẻ: ${song.title}`;
+            shareModalArtist.textContent = `Nghệ sĩ: ${song.artist}`;
+            shareLinkDisplay.textContent = shareableLink;
+            shareLinkDisplay.dataset.shareLink = shareableLink;
+            shareModal.classList.add('show');
+        }
+
+        function hideShareModal() {
+            shareModal.classList.remove('show');
+        }
+        shareModalCloseBtn.addEventListener('click', hideShareModal);
+
+        copyShareLinkBtn.addEventListener('click', () => {
+            if (currentSongIndex === -1 || !songData[currentSongIndex]) {
+                showMessage('Không có bài hát nào đang được phát để sao chép thông tin.');
+                return;
+            }
+            const song = songData[currentSongIndex];
+            const shareableLink = `https://audius.co/track/${song.id}`;
+            const textToCopy = `${song.title} - ${song.artist}\n${shareableLink}`;
+            copyToClipboard(textToCopy);
+            showMessage('Đã sao chép tiêu đề và liên kết vào clipboard giờ bạn paste vào các nền tảng nhé!');
+            hideShareModal();
+        });
+
+        function copyToClipboard(text) {
+            const tempInput = document.createElement('textarea');
+            tempInput.value = text;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+        }
+
+        // Lyrics visibility toggle in integrated player
+        function toggleLyricsVisibility() {
+            areLyricsHidden = !areLyricsHidden;
+            localStorage.setItem('areLyricsHidden', areLyricsHidden);
+            updateLyricsVisibilityUI();
+            if (!areLyricsHidden) {
+                popupPlaylistContainer.classList.remove('show');
+            }
+        }
+
+        function updateLyricsVisibilityUI() {
+            if (areLyricsHidden) {
+                lyricsContentWrapper.classList.add('hidden-lyrics');
+                toggleLyricsVisibilityBtn.textContent = '📝 Hiện lời';
+            } else {
+                lyricsContentWrapper.classList.remove('hidden-lyrics');
+                toggleLyricsVisibilityBtn.textContent = '� Ẩn lời';
+            }
+        }
+
+        // Loading indicator functions
+        function showLoadingIndicator() {
+            loadingSpinner.style.display = 'block';
+        }
+
+        function hideLoadingIndicator() {
+            loadingSpinner.style.display = 'none';
+        }
+
+        /**
+         * Fetches a list of available Audius Discovery Provider hosts.
+         * @returns {Promise<Array>} A promise that resolves to an array of host URLs.
+         */
+        async function getAudiusDiscoveryProviderHosts() {
+            try {
+                const response = await fetch('https://api.audius.co');
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch Audius hosts: ${response.statusText}`);
+                }
+                const hosts = await response.json();
+                if (!hosts || !Array.isArray(hosts.data) || hosts.data.length === 0) {
+                    throw new Error('No Audius discovery provider hosts found.');
+                }
+                // Shuffle hosts to distribute load and try different ones on retry
+                for (let i = hosts.data.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [hosts.data[i], hosts.data[j]] = [hosts.data[j], hosts.data[i]];
+                }
+                return hosts.data;
+            } catch (error) {
+                console.error('Error getting Audius Discovery Provider hosts:', error);
+                showMessage(`Không thể kết nối đến máy chủ Audius để lấy danh sách. Vui lòng kiểm tra kết nối internet của bạn.`);
+                return [];
+            }
+        }
+
+        /**
+         * Fetches all tracks associated with a specific Audius user handle.
+         * Includes retry logic for discovery hosts and robust error handling.
+         * @param {string} userHandle - The Audius user handle (e.g., "minhsutinhquang").
+         * @returns {Promise<Array>} A promise that resolves to an array of track objects.
+         */
+        async function fetchTracksForUser(userHandle) {
+            showLoadingIndicator();
+            songsContainer.innerHTML = "<p class='text-center text-gray-500'>Đang tải bài hát...</p>";
+            let tracksData = [];
+            let lastError = null;
+            const MAX_RETRIES = 3; // Number of times to try different hosts
+
+            // If audiusDiscoveryHosts is empty, fetch them
+            if (audiusDiscoveryHosts.length === 0) {
+                audiusDiscoveryHosts = await getAudiusDiscoveryProviderHosts();
+                if (audiusDiscoveryHosts.length === 0) {
+                    const msg = 'Không tìm thấy máy chủ Audius khả dụng để tải bài hát.';
+                    songsContainer.innerHTML = `<p class="text-center text-red-500">${msg}</p>`;
+                    showMessage(msg);
+                    hideLoadingIndicator();
+                    return [];
+                }
+            }
+
+            for (let i = 0; i < MAX_RETRIES && i < audiusDiscoveryHosts.length; i++) {
+                audiusDiscoveryHost = audiusDiscoveryHosts[i];
+                localStorage.setItem('audiusDiscoveryHost', audiusDiscoveryHost); // Save the current working host
+
+                try {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 seconds timeout for each attempt
+
+                    // First, find the user ID from the handle
+                    const userSearchUrl = `${audiusDiscoveryHost}/v1/users/search?query=${userHandle}&app_name=MyMusicWebPlayer&api_key=${API_KEY}`;
+                    const userResponse = await fetch(userSearchUrl, { signal: controller.signal });
+                    if (!userResponse.ok) {
+                        throw new Error(`Lỗi tìm kiếm người dùng '${userHandle}' trên host ${audiusDiscoveryHost}. Mã: ${userResponse.status}`);
+                    }
+                    const userData = await userResponse.json();
+                    if (!userData.data || userData.data.length === 0) {
+                        throw new Error(`Người dùng '${userHandle}' không tìm thấy trên Audius host ${audiusDiscoveryHost}.`);
+                    }
+                    const userId = userData.data[0].id;
+
+                    // Then, fetch tracks for that user ID
+                    // Increased limit to 1000 to fetch more songs
+                    const tracksUrl = `${audiusDiscoveryHost}/v1/users/${userId}/tracks?limit=1000&app_name=MyMusicWebPlayer&api_key=${API_KEY}`;
+                    const tracksResponse = await fetch(tracksUrl, { signal: controller.signal });
+                    clearTimeout(timeoutId); // Clear timeout if fetch completes
+
+                    if (!tracksResponse.ok) {
+                        throw new Error(`Lỗi tải bài hát cho người dùng '${userHandle}' trên host ${audiusDiscoveryHost}. Mã: ${tracksResponse.status}`);
+                    }
+                    const fetchedTracksData = await tracksResponse.json();
+                    if (!fetchedTracksData.data || !Array.isArray(fetchedTracksData.data)) {
+                        throw new Error(`Cấu trúc dữ liệu bài hát không hợp lệ cho người dùng '${userHandle}' trên host ${audiusDiscoveryHost}.`);
+                    }
+                    tracksData = fetchedTracksData.data;
+                    break; // Success, break out of retry loop
+
+                } catch (error) {
+                    clearTimeout(timeoutId); // Ensure timeout is cleared on error too
+                    console.warn(`Thử với host ${audiusDiscoveryHost} thất bại:`, error.message);
+                    lastError = error;
+                    if (error.name === 'AbortError') {
+                        console.warn('Yêu cầu bị hủy do hết thời gian.');
+                    }
+                    // Continue to next host
+                }
+            }
+
+            hideLoadingIndicator();
+
+            if (tracksData.length === 0) {
+                let errorMessage = `Không thể tải bài hát cho người dùng '${userHandle}'. `;
+                if (lastError) {
+                    if (lastError.name === 'AbortError') {
+                        errorMessage += 'Yêu cầu hết thời gian. Vui lòng kiểm tra kết nối internet.';
+                    } else if (lastError.message.includes('Failed to fetch')) {
+                        errorMessage += 'Lỗi mạng. Vui lòng kiểm tra kết nối internet của bạn.';
+                    } else {
+                        errorMessage += `${lastError.message}.`;
+                    }
+                } else {
+                    errorMessage += 'Không có dữ liệu bài hát nào được tìm thấy hoặc tất cả các máy chủ đều không phản hồi.';
+                }
+                songsContainer.innerHTML = `<p class="text-center text-red-500">${errorMessage}</p>`;
+                showMessage(errorMessage);
+                return [];
+            }
+            return tracksData;
+        }
+
+        // Load songs based on custom category
+        async function loadCustomCategory(category) {
+            // 1. Hiển thị trạng thái chọn ngay và phản hồi tải tức thì
+            document.querySelectorAll('#menu .category-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes(`loadCustomCategory('${category}')`)) {
+                    btn.classList.add('active');
+                }
+            });
+
+            songsContainer.innerHTML = "<div class='loading'>Đang tải...</div>";
+            showLoadingIndicator();
+
+            currentFilterCategory = category;
+            let filteredTracks = [];
+
+            // Ensure songData is populated before filtering
+            if (songData.length === 0) {
+                const allFetchedSongs = await fetchTracksForUser(USER_HANDLE);
+                songData = allFetchedSongs.map(track => {
+                    // Robust artwork extraction
+                    let artworkUrl = 'https://placehold.co/150x150/cccccc/333333?text=No+Art';
+                    if (track.artwork) {
+                        artworkUrl = track.artwork['150x150'] || track.artwork.url || artworkUrl;
+                    }
+
+                    return {
+                        id: track.id,
+                        title: track.title,
+                        artist: track.user ? track.user.name : 'Unknown Artist',
+                        artwork: artworkUrl,
+                        audio: track.id,
+                        genre: track.genre || 'Unknown',
+                        duration: track.duration,
+                        description: track.description || '',
+                        isFavorite: favoriteSongIds.includes(track.id),
+                        created_at: track.created_at,
+                        play_count: track.play_count
+                    };
+                });
+            }
+
+            if (category === "favorites") {
+                filteredTracks = songData.filter(song => favoriteSongIds.includes(song.id));
+            } else if (category === "all") {
+                filteredTracks = songData;
+            } else {
+                // For other categories, filter by genre based on genreMap
+                const targetGenre = genreMap[category];
+                if (targetGenre) {
+                    filteredTracks = songData.filter(song => song.genre && song.genre.toLowerCase() === targetGenre.toLowerCase());
+                } else {
+                    // Fallback if category is not in genreMap (shouldn't happen with defined buttons)
+                    filteredTracks = songData;
+                }
+            }
+
+            renderSongs(filteredTracks);
+            renderPopupSongList(filteredTracks);
+            hideLoadingIndicator();
+        }
+
+        // Render songs to the main songs container
+        function renderSongs(tracksToRender) {
+            songsContainer.innerHTML = '';
+            if (tracksToRender.length === 0) {
+                songsContainer.innerHTML = '<p class="text-center text-gray-500">Không tìm thấy bài hát nào trong mục này.</p>';
+                return;
+            }
+            tracksToRender.forEach((song) => {
+                const songItem = document.createElement('div');
+                songItem.classList.add('song-item');
+                // Find the global index in the full songData array for playback
+                const globalIndex = songData.findIndex(s => s.id === song.id);
+                if (globalIndex === currentSongIndex) {
+                    songItem.classList.add('active-song');
+                }
+                songItem.dataset.index = globalIndex; // Store global index for playback
+
+                songItem.innerHTML = `
+                    <img src="${song.artwork}" alt="${song.title}" class="thumbnail">
+                    <div class="song-info">
+                        <span class="title">${song.title}</span>
+                        <span class="artist">${song.artist}</span>
+                    </div>
+                    <div class="actions">
+                        <button class="favorite-button ${song.isFavorite ? 'liked' : ''}" data-id="${song.id}">♥</button>
+                        <button class="lyric-button" data-index="${globalIndex}">♫</button>
+                        <button class="share-button" data-index="${globalIndex}">🔗</button>
+                    </div>
+                `;
+                songsContainer.appendChild(songItem);
+            });
+            addSongEventListeners();
+        }
+
+        // Render songs to the integrated player's popup playlist
+        function renderPopupSongList(songsToRender) {
+            popupSongList.innerHTML = '';
+            if (songsToRender.length === 0) {
+                popupSongList.innerHTML = '<li class="text-center text-gray-500 p-2">Không tìm thấy bài hát nào.</li>';
+                return;
+            }
+            songsToRender.forEach((song) => {
+                const li = document.createElement('li');
+                li.classList.add('p-2', 'hover:bg-gray-100', 'dark:hover:bg-gray-700', 'rounded-md', 'cursor-pointer', 'flex', 'items-center', 'mb-1');
+                const globalIndex = songData.findIndex(s => s.id === song.id); // Get global index
+                li.dataset.index = globalIndex;
+
+                if (globalIndex === currentSongIndex) {
+                    li.classList.add('active-song-in-list');
+                }
+
+                li.innerHTML = `
+                    <span class="song-title-list flex-grow">${song.title}</span>
+                    <span class="artist-name-list">${song.artist}</span>
+                `;
+                li.addEventListener('click', () => {
+                    playSong(globalIndex);
+                    popupPlaylistContainer.classList.remove('show');
+                });
+                popupSongList.appendChild(li);
+            });
+        }
+
+        // Add event listeners to song items and their buttons
+        function addSongEventListeners() {
+            document.querySelectorAll('.song-item').forEach(item => {
+                item.removeEventListener('click', handleSongItemClick);
+                item.addEventListener('click', handleSongItemClick);
+            });
+            document.querySelectorAll('.song-item .lyric-button').forEach(button => {
+                button.removeEventListener('click', handleLyricButtonClick);
+                button.addEventListener('click', handleLyricButtonClick);
+            });
+            document.querySelectorAll('.song-item .share-button').forEach(button => {
+                button.removeEventListener('click', handleShareButtonClick);
+                button.addEventListener('click', handleShareButtonClick);
+            });
+            document.querySelectorAll('.song-item .favorite-button').forEach(button => {
+                button.removeEventListener('click', handleFavoriteButtonClick);
+                button.addEventListener('click', handleFavoriteButtonClick);
+            });
+        }
+
+        function handleSongItemClick(event) {
+            if (event.target.closest('.favorite-button') || event.target.closest('.lyric-button') || event.target.closest('.share-button')) {
+                return;
+            }
+            const index = parseInt(this.dataset.index);
+            if (index === currentSongIndex) {
+                togglePlayPause();
+            } else {
+                playSong(index);
+            }
+        }
+
+        function handleLyricButtonClick(event) {
+            event.stopPropagation();
+            const index = parseInt(event.currentTarget.dataset.index);
+            if (currentSongIndex !== index) {
+                playSong(index);
+            }
+            showLyricsFullscreenPopup();
+            renderLyrics(songData[currentSongIndex]);
+            popupPlaylistContainer.classList.remove('show');
+        }
+
+        function handleShareButtonClick(event) {
+            event.stopPropagation();
+            const index = parseInt(event.currentTarget.dataset.index);
+            showShareModal(songData[index]);
+        }
+
+        function handleFavoriteButtonClick(event) {
+            event.stopPropagation();
+            const songId = event.currentTarget.dataset.id;
+            toggleFavorite(songId);
+        }
+
+        // Toggle favorite status
+        function toggleFavorite(songId) {
+            const song = songData.find(s => s.id === songId);
+            if (song) {
+                song.isFavorite = !song.isFavorite;
+                if (song.isFavorite) {
+                    if (!favoriteSongIds.includes(songId)) {
+                        favoriteSongIds.push(songId);
+                        showMessage(`Đã thêm "${song.title}" vào danh sách yêu thích!`);
+                    }
+                } else {
+                    favoriteSongIds = favoriteSongIds.filter(id => id !== songId);
+                    showMessage(`Đã xóa "${song.title}" khỏi danh sách yêu thích.`);
+                }
+                localStorage.setItem('favoriteSongIds', JSON.stringify(favoriteSongIds));
+                updateFavoriteButtonsUI(songId, song.isFavorite);
+                // If currently viewing favorites, re-render to reflect change
+                if (currentFilterCategory === 'favorites') {
+                    loadCustomCategory('favorites');
+                }
+            }
+        }
+
+        // Update UI for favorite buttons
+        function updateFavoriteButtonsUI(songId, isFavorite) {
+            document.querySelectorAll(`.song-item .favorite-button[data-id="${songId}"]`).forEach(button => {
+                if (isFavorite) {
+                    button.classList.add('liked');
+                } else {
+                    button.classList.remove('liked');
+                }
+            });
+            if (currentSongIndex !== -1 && songData[currentSongIndex].id === songId) {
+                if (isFavorite) {
+                    popupFavoriteBtn.classList.add('liked');
+                } else {
+                    popupFavoriteBtn.classList.remove('liked');
+                }
+            }
+        }
+
+        // Get audio stream URL
+        function getAudioStreamUrl(songId) {
+            if (!audiusDiscoveryHost) {
+                showMessage('Lỗi: Không tìm thấy máy chủ Audius khả dụng.');
+                return null;
+            }
+            return `${audiusDiscoveryHost}/v1/tracks/${songId}/stream?app_name=MyMusicWebPlayer`;
+        }
+
+        // Play a song by its global index
+        async function playSong(index) {
+            if (index < 0 || index >= songData.length) return;
+
+            currentSongIndex = index;
+            const song = songData[currentSongIndex];
+            const streamUrl = getAudioStreamUrl(song.id);
+
+            if (!streamUrl) {
+                showMessage(`Không thể phát bài hát "${song.title}": Không có URL stream.`);
+                return;
+            }
+
+            showLoadingIndicator();
+
+            popupAudioPlayer.pause();
+            popupAudioPlayer.src = ''; // Clear current src
+            popupAudioPlayer.load(); // Load empty to stop any ongoing download
+
+            // Remove previous listeners to prevent duplicates
+            popupAudioPlayer.removeEventListener('canplaythrough', handleCanPlayThrough);
+            popupAudioPlayer.removeEventListener('error', handleAudioError);
+
+            popupAudioPlayer.src = streamUrl;
+            popupAudioPlayer.load(); // Start loading the new source
+
+            // Add listeners for the new source
+            popupAudioPlayer.addEventListener('canplaythrough', handleCanPlayThrough);
+            popupAudioPlayer.addEventListener('error', handleAudioError);
+
+            // Attempt to play immediately if already buffered enough
+            if (popupAudioPlayer.readyState >= 3) { // HAVE_FUTURE_DATA or HAVE_ENOUGH_DATA
+                handleCanPlayThrough();
+            }
+            updateMediaSession(); // Cập nhật Media Session khi bài hát được chọn để phát
+        }
+
+        // Pause current song
+        function pauseSong() {
+            popupAudioPlayer.pause();
+            isPlaying = false;
+            updatePlayPauseButtons();
+            updatePlaylistButtonState();
+            popupProgressBar.classList.remove('pulsing');
+            updateMediaSession(); // Cập nhật Media Session khi tạm dừng
+        }
+
+        // Toggle play/pause
+        function togglePlayPause() {
+            if (isPlaying) {
+                pauseSong();
+            } else {
+                if (popupAudioPlayer.src && popupAudioPlayer.src !== window.location.href) { // Ensure src is set and not default empty
+                    showLoadingIndicator();
+                    // Remove previous listeners to prevent duplicates
+                    popupAudioPlayer.removeEventListener('canplaythrough', handleCanPlayThrough);
+                    popupAudioPlayer.removeEventListener('error', handleAudioError);
+                    // Add listeners for the new source
+                    popupAudioPlayer.addEventListener('canplaythrough', handleCanPlayThrough);
+                    popupAudioPlayer.addEventListener('error', handleAudioError);
+
+                    popupAudioPlayer.play().then(() => {
+                        isPlaying = true;
+                        updatePlayPauseButtons();
+                        hideLoadingIndicator();
+                        updatePlaylistButtonState();
+                        preloadNextSongAudio();
+                        popupProgressBar.classList.add('pulsing');
+                        updateMediaSession(); // Cập nhật Media Session khi tiếp tục phát
+                    }).catch(error => {
+                        console.error('Error resuming playback:', error);
+                        showMessage(`Lỗi khi tiếp tục phát: ${error.message}. Vui lòng thử lại.`);
+                        popupNowPlayingInfo.textContent = 'Lỗi phát nhạc.';
+                        hideLoadingIndicator();
+                        updatePlaylistButtonState();
+                        popupProgressBar.classList.remove('pulsing');
+                    });
+                } else if (songData.length > 0) {
+                    playSong(0); // Play the first song if nothing is loaded
+                } else {
+                    showMessage('Không có bài hát nào để phát. Vui lòng tải danh sách bài hát trước.');
+                }
+            }
+        }
+
+        // Play next song in the list
+        function playNextSong() {
+            if (songData.length === 0) return;
+
+            if (repeatMode === 'one') {
+                popupAudioPlayer.currentTime = 0;
+                popupAudioPlayer.play();
+                updateMediaSession(); // Cập nhật Media Session cho chế độ lặp lại một bài
+                return;
+            }
+
+            let nextIndex;
+            if (isShuffling) {
+                do {
+                    nextIndex = Math.floor(Math.random() * songData.length);
+                } while (nextIndex === currentSongIndex && songData.length > 1);
+            } else {
+                nextIndex = (currentSongIndex + 1) % songData.length;
+            }
+
+            if (repeatMode === 'none' && nextIndex === 0 && currentSongIndex === songData.length - 1) {
+                pauseSong();
+                currentSongIndex = -1;
+                updateNowPlayingInfo();
+                updatePopupPlayerInfo();
+                updateActiveSongItem();
+                updatePlaylistButtonState();
+                popupProgressBar.classList.remove('pulsing');
+                updateMediaSession(); // Cập nhật Media Session khi kết thúc danh sách phát
+                return;
+            }
+            playSong(nextIndex);
+        }
+
+        // Play previous song in the list
+        function playPrevSong() {
+            if (songData.length === 0) return;
+
+            if (repeatMode === 'one') {
+                popupAudioPlayer.currentTime = 0;
+                popupAudioPlayer.play();
+                updateMediaSession(); // Cập nhật Media Session cho chế độ lặp lại một bài
+                return;
+            }
+
+            let prevIndex;
+            if (isShuffling) {
+                do {
+                    prevIndex = Math.floor(Math.random() * songData.length);
+                } while (prevIndex === currentSongIndex && songData.length > 1);
+            } else {
+                prevIndex = (currentSongIndex - 1 + songData.length) % songData.length;
+            }
+            playSong(prevIndex);
+        }
+
+        // Preload the next song's audio
+        function preloadNextSongAudio() {
+            if (songData.length === 0) return;
+
+            let nextIndex;
+            if (isShuffling) {
+                if (songData.length > 1) {
+                    do {
+                        nextIndex = Math.floor(Math.random() * songData.length);
+                    } while (nextIndex === currentSongIndex);
+                } else {
+                    nextIndex = currentSongIndex;
+                }
+            } else {
+                nextIndex = (currentSongIndex + 1) % songData.length;
+            }
+
+            if (repeatMode === 'none' && currentSongIndex === songData.length - 1 && nextIndex === 0) {
+                console.log("Not preloading next song in 'none' repeat mode at end of playlist.");
+                return;
+            }
+
+            const nextSong = songData[nextIndex];
+            if (nextSong) {
+                const nextStreamUrl = getAudioStreamUrl(nextSong.id);
+                if (nextStreamUrl) {
+                    fetch(nextStreamUrl, { method: 'HEAD', mode: 'no-cors' })
+                        .then(() => {
+                            console.log(`Preloaded URL for next song: "${nextSong.title}"`);
+                        })
+                        .catch(error => {
+                            console.warn(`Error preloading URL for song "${nextSong.title}":`, error);
+                        });
+                }
+            }
+        }
+
+        // Update play/pause button icons
+        function updatePlayPauseButtons() {
+            if (isPlaying) {
+                document.getElementById('play-icon').classList.add('hidden');
+                document.getElementById('pause-icon').classList.remove('hidden');
+            } else {
+                document.getElementById('play-icon').classList.remove('hidden');
+                document.getElementById('pause-icon').classList.add('hidden');
+            }
+        }
+
+        // Update now playing info in main section
+        function updateNowPlayingInfo() {
+            if (currentSongIndex !== -1 && songData[currentSongIndex]) {
+                const song = songData[currentSongIndex];
+                nowPlayingInfo.textContent = `Đang phát: ${song.title} - ${song.artist}`;
+            } else {
+                nowPlayingInfo.textContent = 'Sẵn sàng phát nhạc.';
+            }
+        }
+
+        // Update now playing info in integrated player
+        function updatePopupPlayerInfo() {
+            if (currentSongIndex !== -1 && songData[currentSongIndex]) {
+                const song = songData[currentSongIndex];
+                popupNowPlayingInfo.textContent = `Đang phát`;
+                popupAlbumArt.src = song.artwork;
+                popupSongTitle.textContent = song.title;
+                popupSongArtist.textContent = song.artist;
+                updateFavoriteButtonsUI(song.id, song.isFavorite); // Ensure favorite status is updated
+                updatePlaylistButtonState();
+            } else {
+                popupNowPlayingInfo.textContent = 'Sẵn sàng phát nhạc.';
+                popupAlbumArt.src = 'https://placehold.co/150x150/cccccc/333333?text=No+Art';
+                popupSongTitle.textContent = '';
+                popupSongArtist.textContent = '';
+                popupFavoriteBtn.classList.remove('liked');
+                updatePlaylistButtonState();
+            }
+        }
+
+        // Flags and timeouts for user scrolling
+        let isUserScrollingMainPlaylist = false;
+        let mainPlaylistScrollTimeout;
+        let isUserScrollingPopupPlaylist = false;
+        let popupPlaylistScrollTimeout;
+
+        // Update active song item styling and scroll into view
+        function updateActiveSongItem() {
+            document.querySelectorAll('.song-item').forEach((item) => {
+                const globalIndex = parseInt(item.dataset.index);
+                if (globalIndex === currentSongIndex) {
+                    item.classList.add('active-song');
+                    if (!isUserScrollingMainPlaylist) {
+                        item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }
+                } else {
+                    item.classList.remove('active-song');
+                }
+            });
+
+            document.querySelectorAll('#popup-song-list li').forEach((item) => {
+                const globalIndex = parseInt(item.dataset.index);
+                if (globalIndex === currentSongIndex) {
+                    item.classList.add('active-song-in-list');
+                    if (!isUserScrollingPopupPlaylist) {
+                        item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }
+                } else {
+                    item.classList.remove('active-song-in-list');
+                }
+            });
+        }
+
+        // Music search functionality (filters currently displayed songs)
+        musicSearch.addEventListener('input', () => {
+            const searchTerm = musicSearch.value.toLowerCase();
+            let filteredSongs = songData.filter(song => {
+                const matchesSearch = song.title.toLowerCase().includes(searchTerm) ||
+                                      song.artist.toLowerCase().includes(searchTerm);
+                // If a category is active, ensure the search also respects that category's original genre
+                if (currentFilterCategory === 'all') {
+                    return matchesSearch;
+                } else if (currentFilterCategory === 'favorites') {
+                    return matchesSearch && song.isFavorite;
+                } else {
+                    const targetGenre = genreMap[currentFilterCategory];
+                    if (targetGenre) {
+                        return matchesSearch && song.genre && song.genre.toLowerCase() === targetGenre.toLowerCase();
+                    }
+                    return matchesSearch; // Fallback if category is not in genreMap
+                }
+            });
+            renderSongs(filteredSongs);
+            renderPopupSongList(filteredSongs);
+        });
+
+        // Audio player time update
+        popupAudioPlayer.addEventListener('timeupdate', () => {
+            const currentTime = popupAudioPlayer.currentTime;
+            const duration = popupAudioPlayer.duration;
+
+            if (isNaN(duration)) {
+                popupProgressBar.style.width = '0%';
+                popupCurrentTime.textContent = '0:00';
+                popupDuration.textContent = '0:00';
+                return;
+            }
+
+            const progressPercent = (currentTime / duration) * 100;
+            popupProgressBar.style.width = `${progressPercent}%`;
+
+            const formatTime = (seconds) => {
+                const minutes = Math.floor(seconds / 60);
+                const secs = Math.floor(seconds % 60);
+                return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
+            };
+            popupCurrentTime.textContent = formatTime(currentTime);
+            popupDuration.textContent = formatTime(duration);
+        });
+
+        // Audio player ended event
+        popupAudioPlayer.addEventListener('ended', () => {
+            if (repeatMode === 'one') {
+                popupAudioPlayer.currentTime = 0;
+                popupAudioPlayer.play();
+            } else if (repeatMode === 'all') {
+                playNextSong();
+            } else {
+                playNextSong();
+            }
+            if (repeatMode === 'none') {
+                popupProgressBar.classList.remove('pulsing');
+            }
+            updateMediaSession(); // Cập nhật Media Session khi bài hát kết thúc
+        });
+
+        // Audio player state events for loading indicator and pulsing
+        popupAudioPlayer.addEventListener('waiting', showLoadingIndicator);
+        popupAudioPlayer.addEventListener('playing', () => {
+            hideLoadingIndicator();
+            popupProgressBar.classList.add('pulsing');
+        });
+        popupAudioPlayer.addEventListener('pause', () => {
+            popupProgressBar.classList.remove('pulsing');
+        });
+        popupAudioPlayer.addEventListener('canplaythrough', hideLoadingIndicator);
+
+        // Progress bar click to seek
+        popupProgressContainer.addEventListener('click', (e) => {
+            const width = popupProgressContainer.clientWidth;
+            const clickX = e.offsetX;
+            const duration = popupAudioPlayer.duration;
+            popupAudioPlayer.currentTime = (clickX / width) * duration;
+        });
+
+        // Player controls event listeners
+        popupPlayPauseBtn.addEventListener('click', togglePlayPause);
+        popupPrevBtn.addEventListener('click', playPrevSong);
+        popupNextBtn.addEventListener('click', playNextSong);
+        popupShareBtn.addEventListener('click', () => {
+            if (currentSongIndex !== -1 && songData[currentSongIndex]) {
+                showShareModal(songData[currentSongIndex]);
+            } else {
+                showMessage('Vui lòng chọn một bài hát để chia sẻ.');
+            }
+        });
+        popupFavoriteBtn.addEventListener('click', () => {
+            if (currentSongIndex !== -1 && songData[currentSongIndex]) {
+                toggleFavorite(songData[currentSongIndex].id);
+            } else {
+                showMessage('Vui lòng chọn một bài hát để thêm vào yêu thích.');
+            }
+        });
+        popupVolumeSlider.addEventListener('input', (e) => {
+            popupAudioPlayer.volume = e.target.value;
+        });
+        popupOpenLyricsBtn.addEventListener('click', () => {
+            showLyricsFullscreenPopup();
+        });
+        toggleLyricsVisibilityBtn.addEventListener('click', toggleLyricsVisibility);
+
+        // Repeat and Shuffle controls
+        function updateControlButtonsAppearance() {
+            popupRepeatBtn.classList.remove('active-control');
+            if (repeatMode === 'none') {
+                popupRepeatBtn.textContent = '🔁';
+            } else if (repeatMode === 'one') {
+                popupRepeatBtn.textContent = '🔂';
+                popupRepeatBtn.classList.add('active-control');
+            } else if (repeatMode === 'all') {
+                popupRepeatBtn.textContent = '🔁';
+                popupRepeatBtn.classList.add('active-control');
+            }
+
+            if (isShuffling) {
+                popupShuffleBtn.classList.add('active-control');
+            } else {
+                popupShuffleBtn.classList.remove('active-control');
+            }
+        }
+
+        popupRepeatBtn.addEventListener('click', () => {
+            if (repeatMode === 'none') {
+                repeatMode = 'one';
+            } else if (repeatMode === 'one') {
+                repeatMode = 'all';
+            } else {
+                repeatMode = 'none';
+            }
+            localStorage.setItem('repeatMode', repeatMode);
+            updateControlButtonsAppearance();
+            updateMediaSession(); // Cập nhật Media Session khi thay đổi chế độ lặp lại
+        });
+
+        popupShuffleBtn.addEventListener('click', () => {
+            isShuffling = !isShuffling;
+            localStorage.setItem('isShuffling', isShuffling);
+            updateControlButtonsAppearance();
+            updateMediaSession(); // Cập nhật Media Session khi thay đổi chế độ trộn bài
+        });
+
+        // Sleep Timer functions
+        function startSleepTimer(minutes) {
+            clearTimeout(sleepTimer);
+            clearInterval(sleepTimerInterval);
+            if (minutes === 0) {
+                clearSleepTimer();
+                return;
+            }
+
+            const durationMs = minutes * 60 * 1000;
+            sleepTimerEndTime = Date.now() + durationMs;
+
+            sleepTimer = setTimeout(() => {
+                pauseSong();
+                showMessage('Hẹn giờ tắt nhạc đã hết. Trình phát đã dừng.');
+                clearSleepTimer();
+                updateMediaSession(); // Cập nhật Media Session khi hẹn giờ kết thúc
+            }, durationMs);
+
+            updateSleepTimerDisplay();
+            sleepTimerInterval = setInterval(updateSleepTimerDisplay, 1000);
+        }
+
+        function updateSleepTimerDisplay() {
+            if (sleepTimerEndTime) {
+                const timeLeftMs = sleepTimerEndTime - Date.now();
+                if (timeLeftMs <= 0) {
+                    clearSleepTimer();
+                    return;
+                }
+                const totalSeconds = Math.floor(timeLeftMs / 1000);
+                const hours = Math.floor((totalSeconds % 86400) / 3600);
+                const minutes = Math.floor((totalSeconds % 3600) / 60);
+                const seconds = totalSeconds % 60;
+                currentSleepTimerDisplay.textContent = `Còn: ${hours}h ${minutes}m ${seconds}s`;
+            } else {
+                currentSleepTimerDisplay.textContent = 'Không hẹn giờ';
+            }
+        }
+
+        function clearSleepTimer() {
+            clearTimeout(sleepTimer);
+            clearInterval(sleepTimerInterval);
+            sleepTimer = null;
+            sleepTimerEndTime = null;
+            currentSleepTimerDisplay.textContent = 'Không hẹn giờ';
+        }
+
+        sleepTimerButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const minutes = parseInt(button.dataset.minutes);
+                startSleepTimer(minutes);
+            });
+        });
+
+        setCustomSleepTimerCompactBtn.addEventListener('click', () => {
+            const minutes = parseInt(customMinutesInputCompact.value) || 0;
+            if (minutes === 0) {
+                showMessage('Vui lòng đặt thời gian lớn hơn 0 cho hẹn giờ tùy chỉnh.');
+                return;
+            }
+            startSleepTimer(minutes);
+        });
+
+        // Lyrics rendering and pagination
+        function renderLyrics(song) {
+            const description = song.description;
+            popupLyricsContainer.innerHTML = '';
+            if (description && description.trim() !== '') {
+                description.split('\n').forEach(lineText => {
+                    const pPopup = document.createElement('p');
+                    pPopup.classList.add('lyrics-line');
+                    pPopup.textContent = lineText.trim();
+                    popupLyricsContainer.appendChild(pPopup);
+                });
+            } else {
+                popupLyricsContainer.innerHTML = '<p>Không có lời bài hát cho bài hát này từ API.</p>';
+            }
+            popupLyricsContainer.scrollTop = 0;
+
+            paginateLyrics(description);
+            currentLyricsPage = 0;
+            displayCurrentLyricsPage();
+            applyLyricsThemeAndFontStyles();
+        }
+
+        function paginateLyrics(rawLyrics) {
+            lyricsPages = [];
+            if (!rawLyrics || rawLyrics.trim() === '') {
+                lyricsPages.push(['Không có lời bài hát để hiển thị.']);
+                return;
+            }
+
+            const lines = rawLyrics.split('\n').map(line => line.trim()).filter(line => line !== '');
+            let currentPage = [];
+
+            lines.forEach(line => {
+                currentPage.push(line);
+                if (currentPage.length >= linesPerPage) {
+                    lyricsPages.push(currentPage);
+                    currentPage = [];
+                }
+            });
+
+            if (currentPage.length > 0) {
+                lyricsPages.push(currentPage);
+            }
+
+            if (lyricsPages.length === 0) {
+                lyricsPages.push(['Không có lời bài hát để hiển thị.']);
+            }
+        }
+
+        function displayCurrentLyricsPage() {
+            fullLyricsDisplay.innerHTML = '';
+            fullLyricsDisplay.classList.remove('lyrics-enter-from-right', 'lyrics-enter-from-left', 'lyrics-exit-to-left', 'lyrics-exit-to-right');
+
+            const leftArrow = document.getElementById('lyrics-left-arrow');
+            const rightArrow = document.getElementById('lyrics-right-arrow');
+
+            if (lyricsPages.length === 0 || (lyricsPages.length === 1 && lyricsPages[0][0] === 'Không có lời bài hát để hiển thị.')) {
+                fullLyricsDisplay.innerHTML = '<p>Không có lời bài hát để hiển thị.</p>';
+                lyricsPageIndicator.textContent = 'Trang 0 / 0';
+                leftArrow.style.display = 'none';
+                rightArrow.style.display = 'none';
+                return;
+            }
+
+            const pageContent = lyricsPages[currentLyricsPage];
+            pageContent.forEach(lineText => {
+                const p = document.createElement('p');
+                p.classList.add('lyrics-line');
+                p.textContent = lineText;
+                fullLyricsDisplay.appendChild(p);
+            });
+
+            if (lyricsPages.length > 1) {
+                leftArrow.style.display = 'flex';
+                rightArrow.style.display = 'flex';
+
+                if (currentLyricsPage === 0) {
+                    leftArrow.classList.add('disabled');
+                } else {
+                    leftArrow.classList.remove('disabled');
+                }
+
+                if (currentLyricsPage === lyricsPages.length - 1) {
+                    rightArrow.classList.add('disabled');
+                } else {
+                    rightArrow.classList.remove('disabled');
+                }
+            } else {
+                leftArrow.style.display = 'none';
+                rightArrow.style.display = 'none';
+            }
+
+            const progressPercent = ((currentLyricsPage + 1) / lyricsPages.length) * 100;
+            lyricsPageIndicator.textContent = `Trang ${currentLyricsPage + 1} / ${lyricsPages.length} (${Math.round(progressPercent)}% đã đọc)`;
+        }
+
+        function animateLyricsPageChange(direction) {
+            const currentDisplay = fullLyricsDisplay;
+            const isNext = direction === 'next';
+
+            currentDisplay.classList.add(isNext ? 'lyrics-exit-to-left' : 'lyrics-exit-to-right');
+
+            currentDisplay.addEventListener('transitionend', function handler() {
+                currentDisplay.removeEventListener('transitionend', handler);
+
+                if (isNext) {
+                    currentLyricsPage++;
+                } else {
+                    currentLyricsPage--;
+                }
+                displayCurrentLyricsPage();
+
+                currentDisplay.classList.add(isNext ? 'lyrics-enter-from-right' : 'lyrics-enter-from-left');
+                void currentDisplay.offsetWidth;
+                currentDisplay.classList.remove('lyrics-enter-from-right', 'lyrics-enter-from-left');
+            });
+        }
+
+        function goToNextPage() {
+            if (currentLyricsPage < lyricsPages.length - 1) {
+                animateLyricsPageChange('next');
+            }
+        }
+
+        function goToPrevPage() {
+            if (currentLyricsPage > 0) {
+                animateLyricsPageChange('prev');
+            }
+        }
+
+        lyricsLeftArrow.addEventListener('click', () => {
+            if (!lyricsLeftArrow.classList.contains('disabled')) {
+                goToPrevPage();
+            }
+        });
+
+        lyricsRightArrow.addEventListener('click', () => {
+            if (!lyricsRightArrow.classList.contains('disabled')) {
+                goToNextPage();
+            }
+        });
+
+        // Lyrics font size and lines per page controls (via radial menu)
+        lyricsFontSizeIncreaseBtn.addEventListener('click', () => {
+            lyricsFontSize = Math.min(lyricsFontSize + 1, 32);
+            fullLyricsDisplay.style.fontSize = `${lyricsFontSize}px`;
+            saveLyricsPreferences();
+        });
+
+        lyricsFontSizeDecreaseBtn.addEventListener('click', () => {
+            lyricsFontSize = Math.max(lyricsFontSize - 1, 12);
+            fullLyricsDisplay.style.fontSize = `${lyricsFontSize}px`;
+            saveLyricsPreferences();
+        });
+
+        linesPerPageIncreaseBtn.addEventListener('click', () => {
+            linesPerPage = Math.min(linesPerPage + 1, 50);
+            saveLyricsPreferences();
+            if (currentSongIndex !== -1 && songData[currentSongIndex]) {
+                paginateLyrics(songData[currentSongIndex].description);
+                currentLyricsPage = 0;
+                displayCurrentLyricsPage();
+            }
+        });
+
+        linesPerPageDecreaseBtn.addEventListener('click', () => {
+            linesPerPage = Math.max(linesPerPage - 1, 5);
+            saveLyricsPreferences();
+            if (currentSongIndex !== -1 && songData[currentSongIndex]) {
+                paginateLyrics(songData[currentSongIndex].description);
+                currentLyricsPage = 0;
+                displayCurrentLyricsPage();
+            }
+        });
+
+        // Save lyrics preferences to localStorage
+        function saveLyricsPreferences() {
+            localStorage.setItem('lyricsThemeId', currentLyricsThemeId);
+            localStorage.setItem('isLyricsAutoModeActive', isLyricsAutoModeActive);
+            localStorage.setItem('isLyricsAutoModeNight', isLyricsAutoModeNight);
+            localStorage.setItem('lyricsFontSize', lyricsFontSize);
+            localStorage.setItem('lyricsFontFamily', fontOptions[currentFontIndex]);
+            localStorage.setItem('linesPerPage', linesPerPage);
+        }
+
+        // Apply lyrics theme and font styles
+        function applyLyricsThemeAndFontStyles() {
+            const fontSize = lyricsFontSize;
+            const fontFamily = fontOptions[currentFontIndex];
+
+            let activeFullscreenBgColor, activeFullscreenTextColor;
+
+            if (isLyricsAutoModeActive) {
+                if (isLyricsAutoModeNight) {
+                    activeFullscreenBgColor = autoLyricsNightTheme.bgColor;
+                    activeFullscreenTextColor = autoLyricsNightTheme.textColor;
+                } else {
+                    activeFullscreenBgColor = autoLyricsDayTheme.bgColor;
+                    activeFullscreenTextColor = autoLyricsDayTheme.textColor;
+                }
+            } else {
+                const selectedTheme = userDefinedLyricsThemes.find(theme => theme.id === currentLyricsThemeId);
+                if (selectedTheme) {
+                    activeFullscreenBgColor = selectedTheme.bgColor;
+                    activeFullscreenTextColor = selectedTheme.textColor;
+                } else {
+                    activeFullscreenBgColor = '#ffffff';
+                    activeFullscreenTextColor = '#333333';
+                }
+            }
+
+            const lyricsPopupContentDiv = lyricsFullscreenPopup.querySelector('.lyrics-popup-content');
+            if (lyricsPopupContentDiv) {
+                lyricsPopupContentDiv.style.backgroundColor = activeFullscreenBgColor;
+                lyricsPopupContentDiv.style.color = activeFullscreenTextColor;
+            }
+
+            if (fullLyricsDisplay) {
+                fullLyricsDisplay.style.fontSize = `${fontSize}px`;
+                fullLyricsDisplay.style.fontFamily = fontFamily;
+                fullLyricsDisplay.style.color = activeFullscreenTextColor;
+            }
+
+            if (popupLyricsContainer) {
+                popupLyricsContainer.style.backgroundColor = '';
+                popupLyricsContainer.style.color = '';
+                popupLyricsContainer.style.fontSize = '';
+                popupLyricsContainer.style.fontFamily = '';
+
+                const popupHighlightedLines = popupLyricsContainer.querySelectorAll('.lyrics-line.highlighted');
+                popupHighlightedLines.forEach(line => {
+                    const secondaryColorValue = getComputedStyle(document.documentElement).getPropertyValue('--secondary-color').trim();
+                    line.style.color = secondaryColorValue;
+                });
+            }
+
+            if (fullLyricsDisplay) {
+                const fullHighlightedLines = fullLyricsDisplay.querySelectorAll('.lyrics-line.highlighted');
+                fullHighlightedLines.forEach(line => {
+                    line.style.color = activeFullscreenTextColor === '#000000' ? '#FF8C00' :
+                                       (activeFullscreenTextColor === '#FFFFFF' || activeFullscreenTextColor === '#E0E0E0' ? '#FFD700' :
+                                       (activeFullscreenTextColor === '#1e4620' ? '#007500' :
+                                       (activeFullscreenTextColor === '#5a3210' ? '#D2691E' :
+                                       getComputedStyle(document.documentElement).getPropertyValue('--secondary-color').trim())));
+                });
+            }
+        }
+
+        // Custom theme colors for background and text
+        function applyCustomColors() {
+            if (!document.body.classList.contains('dark-mode')) {
+                if (customBgColor) {
+                    document.body.style.setProperty('--background-color', customBgColor);
+                    document.body.style.setProperty('--card-background-color', customBgColor);
+                } else {
+                    document.body.style.removeProperty('--background-color');
+                    document.body.style.removeProperty('--card-background-color');
+                }
+                if (customTextColor) {
+                    document.body.style.setProperty('--text-color', customTextColor);
+                    document.body.style.setProperty('--link-color', customTextColor);
+                } else {
+                    document.body.style.removeProperty('--text-color');
+                    document.body.style.removeProperty('--link-color');
+                }
+            } else {
+                document.body.style.removeProperty('--background-color');
+                document.body.style.removeProperty('--card-background-color');
+                document.body.style.removeProperty('--text-color');
+                document.body.style.removeProperty('--link-color');
+            }
+            updateThemeColorButtonsActiveState();
+        }
+
+        function updateThemeColorButtonsActiveState() {
+            document.querySelectorAll('.theme-bg-button').forEach(button => {
+                if (button.dataset.color === customBgColor) {
+                    button.classList.add('active-color-bg');
+                } else {
+                    button.classList.remove('active-color-bg');
+                }
+            });
+            document.querySelectorAll('.theme-text-button').forEach(button => {
+                if (button.dataset.color === customTextColor) {
+                    button.classList.add('active-color-text');
+                } else {
+                    button.classList.remove('active-color-text');
+                }
+            });
+        }
+
+        themeBgButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                customBgColor = button.dataset.color;
+                localStorage.setItem('customBgColor', customBgColor);
+                if (darkModeToggle.checked) {
+                    darkModeToggle.checked = false;
+                    document.body.classList.remove('dark-mode');
+                    localStorage.setItem('darkMode', false);
+                }
+                applyCustomColors();
+            });
+        });
+
+        themeTextButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                customTextColor = button.dataset.color;
+                localStorage.setItem('customTextColor', customTextColor);
+                if (darkModeToggle.checked) {
+                    darkModeToggle.checked = false;
+                    document.body.classList.remove('dark-mode');
+                    localStorage.setItem('darkMode', false);
+                }
+                applyCustomColors();
+            });
+        });
+
+        // Dark mode toggle
+        darkModeToggle.addEventListener('change', () => {
+            document.body.classList.toggle('dark-mode', darkModeToggle.checked);
+            localStorage.setItem('darkMode', darkModeToggle.checked);
+            applyCustomColors();
+        });
+
+        // Auto-hide player option (logic not fully implemented for demo)
+        const autoHidePlayerToggle = document.getElementById('autoHidePlayer');
+        autoHidePlayerToggle.addEventListener('change', () => {
+            const isChecked = autoHidePlayerToggle.checked;
+            localStorage.setItem('autoHidePlayer', isChecked);
+            if (isChecked) {
+                console.log("Auto-hide player enabled. (Logic not fully implemented for demo)");
+            } else {
+                console.log("Auto-hide player disabled.");
+            }
+        });
+
+        // Mobile navigation menu
+        hamburgerMenu.addEventListener('click', () => {
+            mobileNavOverlay.classList.add('active');
+        });
+
+        closeMobileMenu.addEventListener('click', () => {
+            mobileNavOverlay.classList.remove('active');
+        });
+
+        mobileNavOverlay.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', function (e) {
+                const href = this.getAttribute('href');
+                if (href.startsWith('https://sites.google.com/view/thiensutinhquang')) {
+                    return;
+                }
+                e.preventDefault();
+                const targetId = href;
+                const targetElement = document.querySelector(targetId);
+                if (targetElement) {
+                    targetElement.scrollIntoView({ behavior: 'smooth' });
+                    if (mobileNavOverlay.classList.contains('active')) {
+                        mobileNavOverlay.classList.remove('active');
+                    }
+                } else {
+                    console.warn(`Target element with ID "${targetId.substring(1)}" not found.`);
+                }
+            });
+        });
+
+        // Update playlist button animation state
+        function updatePlaylistButtonState() {
+            if (isPlaying) {
+                togglePlaylistBtn.classList.add('playing-state');
+                togglePlaylistBtn.classList.remove('blinking-state');
+            } else if (currentSongIndex !== -1) {
+                togglePlaylistBtn.classList.remove('playing-state');
+                togglePlaylistBtn.classList.add('blinking-state');
+            } else {
+                togglePlaylistBtn.classList.remove('playing-state');
+                togglePlaylistBtn.classList.remove('blinking-state');
+            }
+        }
+
+        // Fullscreen lyrics popup functions
+        function showLyricsFullscreenPopup() {
+            lyricsFullscreenPopup.classList.add('show');
+            document.body.classList.remove('dimmed-background');
+        }
+
+        function hideLyricsFullscreenPopup() {
+            lyricsFullscreenPopup.classList.remove('show');
+            lyricsRadialMenuContainer.classList.remove('active');
+        }
+        closeLyricsFullscreenBtn.addEventListener('click', hideLyricsFullscreenPopup);
+
+        // Toggle integrated player playlist visibility
+        togglePlaylistBtn.addEventListener('click', () => {
+            popupPlaylistContainer.classList.toggle('show');
+            if (popupPlaylistContainer.classList.contains('show')) {
+                lyricsContentWrapper.classList.add('hidden-lyrics');
+            }
+        });
+
+        // Radial Menu Logic
+        const radialItems = [
+            radialThemeBtn,
+            radialFontBtn,
+            lyricsFontSizeDecreaseBtn,
+            lyricsFontSizeIncreaseBtn,
+            linesPerPageDecreaseBtn,
+            linesPerPageIncreaseBtn
+        ];
+        const radialRadius = 100;
+
+        function positionRadialItems() {
+            const totalItems = radialItems.length;
+            const angleStep = 360 / totalItems;
+            const startAngle = -90;
+
+            radialItems.forEach((item, index) => {
+                const angle = (index * angleStep) + startAngle;
+                const radians = angle * (Math.PI / 180);
+                const x = radialRadius * Math.cos(radians);
+                const y = radialRadius * Math.sin(radians);
+
+                item.style.setProperty('--x', `${x}px`);
+                item.style.setProperty('--y', `${y}px`);
+            });
+        }
+
+        radialMenuToggleBtn.addEventListener('click', () => {
+            lyricsRadialMenuContainer.classList.toggle('active');
+            if (lyricsRadialMenuContainer.classList.contains('active')) {
+                positionRadialItems();
+            }
+        });
+
+        // Lyrics theme cycling logic
+        let currentThemeIndex = 0;
+        const allLyricsThemes = [...userDefinedLyricsThemes, autoLyricsDayTheme, autoLyricsNightTheme];
+
+        radialThemeBtn.addEventListener('click', () => {
+            currentThemeIndex = (currentThemeIndex + 1) % allLyricsThemes.length;
+            const selectedTheme = allLyricsThemes[currentThemeIndex];
+
+            isLyricsAutoModeActive = selectedTheme.id === autoLyricsDayTheme.id || selectedTheme.id === autoLyricsNightTheme.id;
+            isLyricsAutoModeNight = selectedTheme.id === autoLyricsNightTheme.id;
+            currentLyricsThemeId = selectedTheme.id;
+
+            applyLyricsThemeAndFontStyles();
+            saveLyricsPreferences();
+        });
+
+        // Font family cycling logic
+        radialFontBtn.addEventListener('click', () => {
+            currentFontIndex = (currentFontIndex + 1) % fontOptions.length;
+            fullLyricsDisplay.style.fontFamily = fontOptions[currentFontIndex];
+            saveLyricsPreferences();
+        });
+
+        // Tooltip for menu buttons
+        let tooltipElement = null;
+        let longPressTimer = null;
+        const LONG_PRESS_DURATION = 500; // milliseconds
+
+        // Function to create the tooltip element if it doesn't exist
+        function createTooltip() {
+            if (!tooltipElement) {
+                tooltipElement = document.createElement('div');
+                tooltipElement.id = 'menu-tooltip-div';
+                tooltipElement.classList.add('menu-tooltip');
+                document.body.appendChild(tooltipElement);
+            }
+        }
+
+        // Function to show the tooltip
+        function showTooltip(button) {
+            createTooltip();
+            const label = button.dataset.label;
+            tooltipElement.textContent = label;
+
+            const rect = button.getBoundingClientRect();
+            const scrollX = window.scrollX || window.pageXOffset;
+            const scrollY = window.scrollY || window.pageYOffset;
+
+            // Temporarily make visible to measure, then hide
+            tooltipElement.style.visibility = 'hidden';
+            tooltipElement.style.opacity = '0';
+            tooltipElement.style.left = '0px';
+            tooltipElement.style.top = '0px';
+            tooltipElement.style.transform = 'none';
+            void tooltipElement.offsetWidth;
+
+            const tooltipWidth = tooltipElement.offsetWidth;
+            const tooltipHeight = tooltipElement.offsetHeight;
+
+            // Position the tooltip above the button, centered horizontally
+            tooltipElement.style.left = `${rect.left + rect.width / 2 + scrollX}px`;
+            tooltipElement.style.top = `${rect.top - tooltipHeight - 8 + scrollY}px`;
+
+            tooltipElement.style.transform = 'translateX(-50%)';
+            tooltipElement.style.opacity = '1';
+            tooltipElement.style.visibility = 'visible';
+        }
+
+        // Function to hide the tooltip
+        function hideTooltip() {
+            if (tooltipElement) {
+                tooltipElement.style.opacity = '0';
+                tooltipElement.style.visibility = 'hidden';
+            }
+        }
+
+        /**
+         * Cập nhật thông tin và điều khiển cho Media Session API.
+         * Hàm này sẽ được gọi mỗi khi có sự thay đổi về trạng thái phát nhạc (bài hát, play/pause).
+         */
+        function updateMediaSession() {
+            // Kiểm tra xem Media Session API có được hỗ trợ hay không
+            if ('mediaSession' in navigator) {
+                const song = songData[currentSongIndex];
+
+                // Nếu không có bài hát nào đang được phát, xóa Media Session
+                if (!song) {
+                    navigator.mediaSession.metadata = null;
+                    return;
+                }
+
+                // Cập nhật thông tin bài hát (metadata)
+                navigator.mediaSession.metadata = new MediaMetadata({
+                    title: song.title || "Unknown Title",
+                    artist: song.artist || "Unknown Artist",
+                    album: song.artist || "Unknown Album", // Sử dụng artist làm album nếu không có thông tin cụ thể
+                    artwork: [
+                        { src: song.artwork || "https://placehold.co/512x512/cccccc/333333?text=No+Art", sizes: "512x512", type: "image/png" }
+                    ]
+                });
+
+                // Xử lý các nút điều khiển mặc định của trình duyệt/hệ thống
+                // Play/Pause
+                navigator.mediaSession.setActionHandler('play', () => {
+                    if (popupAudioPlayer.paused) { // Chỉ play nếu đang paused
+                        popupAudioPlayer.play();
+                        // Cập nhật UI và Media Session sau khi play
+                        updatePlayPauseButtons();
+                        updateMediaSession();
+                    }
+                });
+                navigator.mediaSession.setActionHandler('pause', () => {
+                    if (!popupAudioPlayer.paused) { // Chỉ pause nếu đang playing
+                        popupAudioPlayer.pause();
+                        // Cập nhật UI và Media Session sau khi pause
+                        updatePlayPauseButtons();
+                        updateMediaSession();
+                    }
+                });
+
+                // Next Track
+                navigator.mediaSession.setActionHandler('nexttrack', () => {
+                    playNextSong();
+                    // updateMediaSession() sẽ được gọi bên trong playNextSong()
+                });
+
+                // Previous Track
+                navigator.mediaSession.setActionHandler('previoustrack', () => {
+                    playPrevSong();
+                    // updateMediaSession() sẽ được gọi bên trong playPrevSong()
+                });
+
+                // Bổ sung các điều khiển tua tới/tua lùi (nếu cần)
+                // navigator.mediaSession.setActionHandler('seekbackward', (event) => {
+                //     const skipTime = event.seekOffset || 10; // Tua lùi 10 giây mặc định
+                //     popupAudioPlayer.currentTime = Math.max(0, popupAudioPlayer.currentTime - skipTime);
+                // });
+                // navigator.mediaSession.setActionHandler('seekforward', (event) => {
+                //     const skipTime = event.seekOffset || 10; // Tua tới 10 giây mặc định
+                //     popupAudioPlayer.currentTime = Math.min(popupAudioPlayer.duration, popupAudioPlayer.currentTime + skipTime);
+                // });
+
+                // Cập nhật vị trí phát nhạc (nếu cần) - thường không cần handler cho việc này, trình duyệt tự động làm.
+                // Tuy nhiên, có thể set vị trí phát ban đầu cho Media Session.
+                if ('setPositionState' in navigator.mediaSession && !isNaN(popupAudioPlayer.duration) && isFinite(popupAudioPlayer.duration)) {
+                    navigator.mediaSession.setPositionState({
+                        duration: popupAudioPlayer.duration,
+                        playbackRate: popupAudioPlayer.playbackRate,
+                        position: popupAudioPlayer.currentTime
+                    });
+                }
+            }
+        }
+
+
+        // Initial setup on DOMContentLoaded
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Call createTooltip once when the DOM is ready
+            createTooltip();
+
+            // Get and store Audius Discovery Host and fetch all songs
+            audiusDiscoveryHosts = await getAudiusDiscoveryProviderHosts();
+            if (audiusDiscoveryHosts.length > 0) {
+                const allFetchedSongs = await fetchTracksForUser(USER_HANDLE);
+                songData = allFetchedSongs.map(track => {
+                    let artworkUrl = 'https://placehold.co/150x150/cccccc/333333?text=No+Art';
+                    if (track.artwork) {
+                        artworkUrl = track.artwork['150x150'] || track.artwork.url || artworkUrl;
+                    }
+                    return {
+                        id: track.id,
+                        title: track.title,
+                        artist: track.user ? track.user.name : 'Unknown Artist',
+                        artwork: artworkUrl,
+                        audio: track.id,
+                        genre: track.genre || 'Unknown',
+                        duration: track.duration,
+                        description: track.description || '',
+                        isFavorite: favoriteSongIds.includes(track.id),
+                        created_at: track.created_at,
+                        play_count: track.play_count
+                    };
+                });
+                loadCustomCategory('all'); // Display all songs by default
+                renderPopupSongList(songData); // Render full songData to popup playlist
+                updatePlaylistButtonState();
+            } else {
+                songsContainer.innerHTML = '<p class="text-center text-red-500">Không thể tải bài hát: Không tìm thấy máy chủ Audius khả dụng.</p>';
+                showMessage('Không thể tải bài hát: Không tìm thấy máy chủ Audius khả dụng. Vui lòng kiểm tra kết nối internet.');
+            }
+
+            // Check volume slider visibility on resize
+            function checkVolumeSliderVisibility() {
+                if (window.innerWidth <= 768) {
+                    popupVolumeSlider.style.display = 'none';
+                    popupVolumeIcon.style.display = 'flex';
+                } else {
+                    popupVolumeSlider.style.display = 'inline-block';
+                    popupVolumeIcon.style.display = 'none';
+                }
+            }
+            checkVolumeSliderVisibility();
+            window.addEventListener('resize', checkVolumeSliderVisibility);
+
+            popupVolumeIcon.addEventListener('click', () => {
+                showMessage(`Âm lượng hiện tại: ${Math.round(popupAudioPlayer.volume * 100)}%\n\nĐể điều chỉnh âm lượng, vui lòng sử dụng thanh trượt khi mở trên máy tính hoặc nút âm lượng của thiết bị.`);
+            });
+
+            // Add scroll event listeners for main and popup playlists
+            songsContainer.addEventListener('scroll', () => {
+                isUserScrollingMainPlaylist = true;
+                clearTimeout(mainPlaylistScrollTimeout);
+                mainPlaylistScrollTimeout = setTimeout(() => {
+                    isUserScrollingMainPlaylist = false;
+                }, 500);
+            });
+
+            popupPlaylistContainer.addEventListener('scroll', () => {
+                isUserScrollingPopupPlaylist = true;
+                clearTimeout(popupPlaylistScrollTimeout);
+                popupPlaylistScrollTimeout = setTimeout(() => {
+                    isUserScrollingPopupPlaylist = false;
+                }, 500);
+            });
+
+            clearSleepTimer();
+            applyLyricsThemeAndFontStyles();
+            updateControlButtonsAppearance();
+            updateLyricsVisibilityUI();
+
+            integratedMusicPlayer.classList.add('fade-in-active');
+
+            // Add event listeners to menu buttons for tooltip and tap feedback
+            document.querySelectorAll('#menu .category-btn').forEach(button => {
+                // Desktop hover
+                button.addEventListener('mouseenter', () => {
+                    showTooltip(button);
+                });
+                button.addEventListener('mouseleave', () => {
+                    hideTooltip();
+                });
+
+                // Mobile long press for tooltip and immediate tap feedback
+                button.addEventListener('touchstart', (e) => {
+                    // Add immediate tap feedback
+                    button.classList.add('tap-feedback');
+
+                    // Start long press timer for tooltip
+                    longPressTimer = setTimeout(() => {
+                        showTooltip(button);
+                        // Prevent default action (click) if long press triggers tooltip
+                        e.preventDefault(); // This prevents the subsequent 'click' event
+                        longPressTimer = null; // Mark as fired
+                    }, LONG_PRESS_DURATION);
+                }, { passive: false }); // Use passive: false to allow preventDefault
+
+                button.addEventListener('touchend', () => {
+                    // Remove tap feedback
+                    button.classList.remove('tap-feedback');
+
+                    // If long press timer was still running, it means it was a short press, so clear it
+                    if (longPressTimer) {
+                        clearTimeout(longPressTimer);
+                        longPressTimer = null;
+                        // The 'click' event will fire naturally after a short 'touchend'
+                        // because e.preventDefault() was not called by the long press timer.
+                    }
+                    hideTooltip();
+                });
+
+                button.addEventListener('touchcancel', () => {
+                    // Remove tap feedback
+                    button.classList.remove('tap-feedback');
+                    clearTimeout(longPressTimer);
+                    longPressTimer = null;
+                    hideTooltip();
+                });
+            });
+
+            // Cập nhật Media Session khi tải trang lần đầu (nếu có bài đang phát hoặc đã chọn)
+            updateMediaSession();
+        });
+    </script>
+</body>
+</html>
+�
