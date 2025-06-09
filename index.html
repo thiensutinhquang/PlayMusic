@@ -686,7 +686,7 @@
     <header class="header">
         <div class="container header-content">
             <div class="logo">
-                <h1><a href="#">Kênh MSTQ</a></h1>
+                <h1><a href="#">ÂM NHẠC TSTQ</a></h1>
             </div>
             
             <div class="header-controls">
@@ -696,9 +696,9 @@
                             <i class="fas fa-home"></i>
                             <span>Trang Chủ</span>
                         </a>
-                        <a href="https://sites.google.com/view/thiensutinhquang/%C3%A2m-nh%E1%BA%A1c" class="new-nav-btn" target="_blank">
-                            <i class="fas fa-music"></i>
-                            <span>Nghe Nhạc</span>
+                        <a href="https://sites.google.com/view/thiensutinhquang/tuy%E1%BB%83n-t%E1%BA%ADp-th%C6%A1" class="new-nav-btn" target="_blank">
+                            <i class="fas fa-book-open"></i>
+                            <span>Kho Thơ</span>
                         </a>
                         <div class="platforms-dropdown">
                             <button id="platforms-toggle-desktop" class="new-nav-btn">
@@ -756,9 +756,9 @@
                     <i class="fas fa-home"></i>
                     <span>Trang Chủ</span>
                 </a>
-                <a href="https://sites.google.com/view/thiensutinhquang/%C3%A2m-nh%E1%BA%A1c" class="new-nav-btn" target="_blank">
-                    <i class="fas fa-music"></i>
-                    <span>Nghe Nhạc</span>
+                <a href="https://sites.google.com/view/thiensutinhquang/tuy%E1%BB%83n-t%E1%BA%ADp-th%C6%A1" class="new-nav-btn" target="_blank">
+                    <i class="fas fa-book-open"></i>
+                    <span>Kho Thơ</span>
                 </a>
                 <div class="platforms-dropdown">
                      <button id="platforms-toggle-mobile" class="new-nav-btn">
@@ -829,7 +829,7 @@
                      <button id="toggle-playlist-btn" class="flex-shrink-0 text-muted-current hover:text-current transition" title="Danh sách phát"><i class="fas fa-list-ol"></i></button>
                 </div>
                 
-                <div id="popup-playlist-container" class="my-4 max-h-48 overflow-y-auto">
+                <div id="popup-playlist-container" class="my-4 max-h-48 overflow-y-auto hidden">
                     <ul id="popup-song-list" class="space-y-1"></ul>
                 </div>
 
@@ -1356,7 +1356,7 @@
                 tempInput.select();
                 try {
                     document.execCommand('copy');
-                    showMessage('Đã sao chép liên kết!');
+                    showMessage('Đã sao chép liên kết! Bây giờ bạn hãy dán vào các nền tảng mạng xã hội. Cần xử lý lh Tịnh Hải.');
                 } catch (err) {
                     console.error('Không thể sao chép: ', err);
                     showMessage('Đã xảy ra lỗi khi sao chép.');
@@ -1397,9 +1397,14 @@
             audioPlayer.addEventListener('pause', () => { isPlaying = false; updateUI(); });
             
             audioPlayer.addEventListener('ended', () => {
-                if (repeatMode === 'one') playSong(currentSongIndex);
-                else if (repeatMode === 'none' && currentSongIndex === songData.length - 1 && !isShuffling) return; 
-                else playNext();
+                if (repeatMode === 'one') {
+                    playSong(currentSongIndex);
+                } else if (repeatMode === 'none' && currentSongIndex === songData.length - 1 && !isShuffling) {
+                    return; 
+                }
+                else {
+                    playNext();
+                }
             });
 
             audioPlayer.addEventListener('timeupdate', () => {
@@ -1426,7 +1431,8 @@
             
             repeatBtn.addEventListener('click', () => {
                 const modes = ['none', 'all', 'one'];
-                repeatMode = modes[(modes.indexOf(repeatMode) + 1) % modes.length];
+                let currentModeIndex = modes.indexOf(repeatMode);
+                repeatMode = modes[(currentModeIndex + 1) % modes.length];
                 localStorage.setItem('repeatMode', repeatMode);
                 repeatBtn.classList.toggle('active-control', repeatMode !== 'none');
                 repeatBtn.innerHTML = repeatMode === 'one' ? '🔂' : '🔁';
@@ -1456,6 +1462,7 @@
             });
             
             document.getElementById('share-modal-close-btn')?.addEventListener('click', () => shareModal.classList.add('hidden'));
+            shareModal.addEventListener('click', (e) => { if(e.target === shareModal) shareModal.classList.add('hidden') });
             document.getElementById('copy-share-link-btn')?.addEventListener('click', () => {
                 copyToClipboard(document.getElementById('share-link-display').value);
                 shareModal.classList.add('hidden');
@@ -1514,8 +1521,7 @@
                 loadCustomCategory('all');
                 updateUI();
                 positionRadialItems();
-                // Show playlist by default
-                popupPlaylistContainer.classList.remove('hidden');
+                popupPlaylistContainer.classList.remove('hidden'); // Show playlist by default
             }
 
             initializeApp();
