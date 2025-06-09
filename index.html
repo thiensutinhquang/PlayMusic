@@ -453,6 +453,12 @@
             border-color: var(--primary-color);
         }
         
+        #popup-playlist-container li.active-song-in-list {
+            background-color: var(--primary-color) !important;
+            color: white !important;
+            font-weight: bold;
+        }
+
         /* ==============================================
         FULLSCREEN LYRICS POPUP
         ==============================================
@@ -823,7 +829,7 @@
                      <button id="toggle-playlist-btn" class="flex-shrink-0 text-muted-current hover:text-current transition" title="Danh sách phát"><i class="fas fa-list-ol"></i></button>
                 </div>
                 
-                <div id="popup-playlist-container" class="hidden my-4 max-h-48 overflow-y-auto">
+                <div id="popup-playlist-container" class="my-4 max-h-48 overflow-y-auto">
                     <ul id="popup-song-list" class="space-y-1"></ul>
                 </div>
 
@@ -965,6 +971,9 @@
             const customAlertMessage = document.getElementById('custom-alert-message');
             const customAlertOkBtn = document.getElementById('custom-alert-ok-btn');
             const presetThemeButtons = document.querySelectorAll('.preset-theme-btn');
+            const togglePlaylistBtn = document.getElementById('toggle-playlist-btn');
+            const popupPlaylistContainer = document.getElementById('popup-playlist-container');
+            const popupSongList = document.getElementById('popup-song-list');
 
             // Global State & Settings
             let songData = [], currentDisplayData = [], lyricsPages = [];
@@ -994,6 +1003,7 @@
             // ==============================================
             // CORE FUNCTIONS
             // ==============================================
+
             const applyTheme = () => {
                 const theme = JSON.parse(localStorage.getItem('themeState')) || { mode: 'light' };
                 body.classList.remove('dark-mode', 'preset-theme');
@@ -1082,7 +1092,22 @@
                     songsContainer.appendChild(songItem);
                 });
                 addSongEventListeners();
+                renderPopupSongList(tracks);
                 updateUI(); 
+            }
+            
+            function renderPopupSongList(songs) {
+                popupSongList.innerHTML = '';
+                if (!songs || songs.length === 0) return;
+                songs.forEach((song) => {
+                    const globalIndex = songData.findIndex(s => s.id === song.id);
+                    const li = document.createElement('li');
+                    li.className = 'p-2 rounded-md cursor-pointer hover:bg-bg-current text-sm truncate';
+                    li.textContent = song.title;
+                    li.dataset.index = globalIndex;
+                    li.addEventListener('click', () => playSong(globalIndex));
+                    popupSongList.appendChild(li);
+                });
             }
 
             function addSongEventListeners() {
@@ -1145,13 +1170,26 @@
                     const indicatorIcon = item.querySelector('.play-indicator i');
                     if (indicatorIcon) indicatorIcon.className = (isActive && isPlaying) ? 'fas fa-pause' : 'fas fa-play';
                 });
+
+                document.querySelectorAll('#popup-song-list li').forEach(item => {
+                    const itemIndex = parseInt(item.dataset.index);
+                    const isActive = itemIndex === currentSongIndex;
+                    item.classList.toggle('active-song-in-list', isActive);
+                    if (isActive && !popupPlaylistContainer.classList.contains('hidden')) {
+                        item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }
+                });
             }
             
             function playNext() {
                 if (songData.length === 0) return;
                 let nextIndex;
                 if (isShuffling) {
-                    nextIndex = Math.floor(Math.random() * songData.length);
+                    let newIndex;
+                    do {
+                        newIndex = Math.floor(Math.random() * songData.length);
+                    } while (songData.length > 1 && newIndex === currentSongIndex);
+                    nextIndex = newIndex;
                 } else {
                     nextIndex = (currentSongIndex >= 0 ? currentSongIndex : -1) + 1;
                     if(nextIndex >= songData.length) nextIndex = 0; 
@@ -1163,7 +1201,11 @@
                  if (songData.length === 0) return;
                  let prevIndex;
                  if (isShuffling) {
-                     prevIndex = Math.floor(Math.random() * songData.length);
+                    let newIndex;
+                    do {
+                        newIndex = Math.floor(Math.random() * songData.length);
+                    } while (songData.length > 1 && newIndex === currentSongIndex);
+                    prevIndex = newIndex;
                  } else {
                      prevIndex = (currentSongIndex <= 0 ? songData.length : currentSongIndex) - 1;
                  }
@@ -1448,6 +1490,16 @@
                 currentLyricsThemeId = lyricsThemes[(currentThemeObjIndex + 1) % lyricsThemes.length].id;
                 applyLyricsThemeAndFontStyles(); saveLyricsPreferences();
             });
+            
+            togglePlaylistBtn.addEventListener('click', () => {
+                popupPlaylistContainer.classList.toggle('hidden');
+                if (!popupPlaylistContainer.classList.contains('hidden')) {
+                    const activeSongInList = popupSongList.querySelector('.active-song-in-list');
+                    if (activeSongInList) {
+                        activeSongInList.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }
+                }
+            });
 
             // ==============================================
             // INITIALIZATION
@@ -1462,6 +1514,8 @@
                 loadCustomCategory('all');
                 updateUI();
                 positionRadialItems();
+                // Show playlist by default
+                popupPlaylistContainer.classList.remove('hidden');
             }
 
             initializeApp();
