@@ -1182,34 +1182,44 @@
             }
             
             function playNext() {
-                if (songData.length === 0) return;
-                let nextIndex;
+                if (currentDisplayData.length === 0) return;
+                const currentDisplayIndex = currentDisplayData.findIndex(s => s.id === songData[currentSongIndex]?.id);
+                let nextDisplayIndex;
                 if (isShuffling) {
                     let newIndex;
                     do {
-                        newIndex = Math.floor(Math.random() * songData.length);
-                    } while (songData.length > 1 && newIndex === currentSongIndex);
-                    nextIndex = newIndex;
+                        newIndex = Math.floor(Math.random() * currentDisplayData.length);
+                    } while (currentDisplayData.length > 1 && newIndex === currentDisplayIndex);
+                    nextDisplayIndex = newIndex;
                 } else {
-                    nextIndex = (currentSongIndex >= 0 ? currentSongIndex : -1) + 1;
-                    if(nextIndex >= songData.length) nextIndex = 0; 
+                    nextDisplayIndex = (currentDisplayIndex >= 0 ? currentDisplayIndex : -1) + 1;
+                    if(nextDisplayIndex >= currentDisplayData.length) nextDisplayIndex = 0;
                 }
-                playSong(nextIndex);
+                const nextSong = currentDisplayData[nextDisplayIndex];
+                if(nextSong) {
+                    const globalIndex = songData.findIndex(s => s.id === nextSong.id);
+                    playSong(globalIndex);
+                }
             }
             
             function playPrev() {
-                 if (songData.length === 0) return;
-                 let prevIndex;
+                 if (currentDisplayData.length === 0) return;
+                 const currentDisplayIndex = currentDisplayData.findIndex(s => s.id === songData[currentSongIndex]?.id);
+                 let prevDisplayIndex;
                  if (isShuffling) {
                     let newIndex;
                     do {
-                        newIndex = Math.floor(Math.random() * songData.length);
-                    } while (songData.length > 1 && newIndex === currentSongIndex);
-                    prevIndex = newIndex;
+                        newIndex = Math.floor(Math.random() * currentDisplayData.length);
+                    } while (currentDisplayData.length > 1 && newIndex === currentDisplayIndex);
+                    prevDisplayIndex = newIndex;
                  } else {
-                     prevIndex = (currentSongIndex <= 0 ? songData.length : currentSongIndex) - 1;
+                     prevDisplayIndex = (currentDisplayIndex <= 0 ? currentDisplayData.length : currentDisplayIndex) - 1;
                  }
-                playSong(prevIndex);
+                 const prevSong = currentDisplayData[prevDisplayIndex];
+                 if(prevSong) {
+                     const globalIndex = songData.findIndex(s => s.id === prevSong.id);
+                     playSong(globalIndex);
+                 }
             }
 
             function startSleepTimer(minutes) {
