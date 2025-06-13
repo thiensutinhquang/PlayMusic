@@ -277,9 +277,13 @@
             object-fit: cover;
             box-shadow: var(--shadow-lg);
             border: 2px solid var(--card-bg-current);
-            transition: transform 0.8s ease-in-out;
+            transition: transform 0.8s ease-in-out, opacity 0.5s ease;
         }
         
+        .fade-out {
+            opacity: 0 !important;
+        }
+
         #popup-album-art.spinning {
              animation: spin 8s linear infinite;
         }
@@ -321,13 +325,6 @@
         .player-controls button:hover, #popup-share-btn:hover, #popup-open-lyrics-btn:hover {
             background-color: var(--bg-current);
             color: var(--text-current);
-        }
-        
-        .player-controls button:active, #popup-share-btn:active {
-            transform: scale(0.9);
-            background-color: var(--primary-hover);
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
-            color: white;
         }
         
         .player-controls #popup-play-pause-btn {
@@ -496,6 +493,36 @@
             font-weight: bold;
         }
 
+        .progress-container {
+            height: 4px;
+            background-color: var(--border-current);
+            cursor: pointer;
+            transition: height 0.2s ease;
+        }
+        .progress-container:hover {
+            height: 8px;
+        }
+        
+        .progress-bar {
+            background-color: var(--primary-color);
+            height: 100%;
+            border-radius: 9999px;
+            transition: width 0.1s linear;
+        }
+        
+        #progress-tooltip {
+            position: absolute;
+            background-color: #333;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            bottom: 15px; /* Position above the bar */
+            transform: translateX(-50%);
+            pointer-events: none; /* So it doesn't interfere with mouse events on the bar */
+            white-space: nowrap;
+        }
+
         /* ==============================================
         FULLSCREEN LYRICS POPUP
         ==============================================
@@ -602,9 +629,9 @@
             color: var(--text-current);
             border: 1px solid var(--border-current);
             border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            font-size: 1.4em;
+            width: 36px;
+            height: 36px;
+            font-size: 1.2em;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -873,7 +900,7 @@
                      <button id="toggle-playlist-btn" class="flex-shrink-0 text-muted-current hover:text-current transition" title="Danh sách phát"><i class="fas fa-list-ol"></i></button>
                 </div>
                 
-                <div id="popup-playlist-container" class="hidden my-4 max-h-48 overflow-y-auto">
+                <div id="popup-playlist-container" class="my-4 max-h-48 overflow-y-auto hidden">
                     <ul id="popup-song-list" class="space-y-1"></ul>
                 </div>
 
@@ -1494,7 +1521,7 @@
                 repeatMode = modes[(currentModeIndex + 1) % modes.length];
                 localStorage.setItem('repeatMode', repeatMode);
                 repeatBtn.classList.toggle('active-control', repeatMode !== 'none');
-                repeatBtn.innerHTML = repeatMode === 'one' ? '🔂' : '🔁';
+                repeatBtn.innerHTML = repeatMode === 'one' ? '🔂' : '�';
             });
             
             sleepTimerButtons.forEach(button => button.addEventListener('click', () => startSleepTimer(parseInt(button.dataset.minutes))));
@@ -1575,3 +1602,4 @@
     </script>
 </body>
 </html>
+�
