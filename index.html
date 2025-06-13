@@ -289,7 +289,7 @@
             to { transform: rotate(360deg); }
         }
         
-        .player-controls button, #popup-open-lyrics-btn {
+        .player-controls button, #popup-share-btn, #popup-open-lyrics-btn {
             background-color: transparent;
             color: var(--text-muted-current);
             border: none;
@@ -299,14 +299,31 @@
             cursor: pointer;
             transition: var(--transition-fast);
             display: flex; align-items: center; justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .player-controls button .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.4);
+            transform: scale(0);
+            animation: ripple-effect 0.6s linear;
+        }
+        
+        @keyframes ripple-effect {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
         }
 
-        .player-controls button:hover, #popup-open-lyrics-btn:hover {
+        .player-controls button:hover, #popup-share-btn:hover, #popup-open-lyrics-btn:hover {
             background-color: var(--bg-current);
             color: var(--text-current);
         }
         
-        .player-controls button:active {
+        .player-controls button:active, #popup-share-btn:active {
             transform: scale(0.9);
             background-color: var(--primary-hover);
             box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
@@ -607,7 +624,7 @@
         MODAL & RESPONSIVE
         ==============================================
         */
-        #share-modal, #custom-alert-modal {
+        #custom-alert-modal {
             position: fixed; inset: 0;
             background-color: rgba(0,0,0,0.5);
             backdrop-filter: blur(4px);
@@ -615,10 +632,10 @@
             z-index: 6000;
             opacity: 0; visibility: hidden; transition: opacity 0.3s;
         }
-        #share-modal.show, #custom-alert-modal.show {
+        #custom-alert-modal.show {
             opacity: 1; visibility: visible;
         }
-        #share-modal-content, #custom-alert-content {
+        #custom-alert-content {
              background-color: var(--card-bg-current);
              padding: 1.5rem;
              border-radius: 12px;
@@ -783,7 +800,7 @@
                     <i class="fas fa-video"></i>
                     <span>Xem video</span>
                 </a>
-                <a href="https://sites.google.com/view/thiensutinhquang/tuy%E1%BB%83n-t%E1%BA%ADp-th%C6%A1" class="new-nav-btn" target="_blank">
+                <a href="https://sites.google.com/view/thiensutinhquang/tuy%E1%BB%83n-t%E1%BA%ADp-th%C6%AƠ" class="new-nav-btn" target="_blank">
                     <i class="fas fa-book-open"></i>
                     <span>Kho Thơ</span>
                 </a>
@@ -856,7 +873,7 @@
                      <button id="toggle-playlist-btn" class="flex-shrink-0 text-muted-current hover:text-current transition" title="Danh sách phát"><i class="fas fa-list-ol"></i></button>
                 </div>
                 
-                <div id="popup-playlist-container" class="my-4 max-h-48 overflow-y-auto hidden">
+                <div id="popup-playlist-container" class="hidden my-4 max-h-48 overflow-y-auto">
                     <ul id="popup-song-list" class="space-y-1"></ul>
                 </div>
 
@@ -883,7 +900,6 @@
                 
                  <div class="flex items-center gap-4 mt-4">
                     <button id="popup-favorite-btn" title="Yêu thích"><i class="far fa-heart"></i></button>
-                    <button id="popup-share-btn" title="Chia sẻ"><i class="fas fa-share-alt"></i></button>
                     <button id="popup-open-lyrics-btn" title="Mở lời bài hát"><i class="fas fa-file-alt"></i></button>
                     <div class="flex items-center gap-2 flex-grow">
                          <i class="fas fa-volume-down"></i>
@@ -933,18 +949,6 @@
         </div>
     </div>
     
-    <div id="share-modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-[6000]">
-        <div id="share-modal-content" class="bg-[var(--card-bg-current)] p-6 rounded-lg shadow-lg text-center w-11/12 max-w-sm">
-            <h3 id="share-modal-title" class="font-bold text-lg mb-2">Chia sẻ bài hát</h3>
-            <p id="share-modal-artist" class="text-muted-current mb-4"></p>
-            <textarea id="share-link-display" readonly class="w-full p-2 border border-border-current rounded bg-bg-current mb-4 h-24 resize-none"></textarea>
-            <p class="text-xs text-muted-current mb-4">Để chia sẻ qua Zalo/Messenger, vui lòng sao chép liên kết và dán vào ứng dụng của bạn.</p>
-            <div class="flex justify-center gap-4">
-                <button id="copy-share-link-btn" class="new-nav-btn active">Sao chép</button>
-                <button id="share-modal-close-btn" class="new-nav-btn">Đóng</button>
-            </div>
-        </div>
-    </div>
      <div id="custom-alert-modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-[9999]">
         <div id="custom-alert-content" class="bg-[var(--card-bg-current)] p-6 rounded-lg shadow-lg text-center w-11/12 max-w-sm">
             <p id="custom-alert-message" class="mb-4"></p>
@@ -993,8 +997,6 @@
             const volumeSlider = document.getElementById('popup-volume-slider');
             const volumePercentage = document.getElementById('volume-percentage');
             const favoriteBtn = document.getElementById('popup-favorite-btn');
-            const shareBtn = document.getElementById('popup-share-btn');
-            const shareModal = document.getElementById('share-modal');
             const customAlertModal = document.getElementById('custom-alert-modal');
             const customAlertMessage = document.getElementById('custom-alert-message');
             const customAlertOkBtn = document.getElementById('custom-alert-ok-btn');
@@ -1086,8 +1088,22 @@
 
             async function fetchAudiusData() {
                 try {
-                    const response = await fetch('https://api.audius.co');
-                    const hosts = (await response.json()).data;
+                    let hosts;
+                    try {
+                        const response = await fetch('https://api.audius.co');
+                        if (!response.ok) throw new Error('Failed to fetch host list');
+                        hosts = (await response.json()).data;
+                    } catch (e) {
+                        console.warn("Could not fetch Audius host list, using fallback.", e.message);
+                        hosts = [
+                            'https://discoveryprovider.audius.co',
+                            'https://discoveryprovider2.audius.co',
+                            'https://discoveryprovider3.audius.co',
+                            'https://dn-dn.audius.co',
+                            'https://discoveryprovider.audius.prod-us-west-2.staked.cloud'
+                        ];
+                    }
+                    
                     audiusDiscoveryHost = hosts[Math.floor(Math.random() * hosts.length)];
 
                     const userResponse = await fetch(`${audiusDiscoveryHost}/v1/users/search?query=${USER_HANDLE}&app_name=MSTQPlayer`);
@@ -1370,30 +1386,6 @@
                 customAlertModal.classList.add('hidden');
             }
             
-            function showShareModal(song) {
-                if (!song) { showMessage('Không có bài hát nào đang được chọn.'); return; }
-                document.getElementById('share-modal-title').textContent = `Chia sẻ: ${song.title}`;
-                document.getElementById('share-modal-artist').textContent = song.artist;
-                document.getElementById('share-link-display').value = `${song.title} - ${song.artist}\nhttps://audius.co/track/${song.id}`;
-                shareModal.classList.remove('hidden');
-                shareModal.classList.add('show');
-            }
-            
-            function copyToClipboard(text) {
-                const tempInput = document.createElement('textarea');
-                tempInput.value = text;
-                document.body.appendChild(tempInput);
-                tempInput.select();
-                try {
-                    document.execCommand('copy');
-                    showMessage('Đã sao chép liên kết! Bây giờ bạn hãy dán vào các nền tảng mạng xã hội. Cần xử lý lh Tịnh Hải.');
-                } catch (err) {
-                    console.error('Không thể sao chép: ', err);
-                    showMessage('Đã xảy ra lỗi khi sao chép.');
-                }
-                document.body.removeChild(tempInput);
-            }
-            
             async function requestWakeLock() {
                 if ('wakeLock' in navigator) {
                     try {
@@ -1467,10 +1459,9 @@
             audioPlayer.addEventListener('ended', () => {
                 if (repeatMode === 'one') {
                     playSong(currentSongIndex);
-                } else if (repeatMode === 'none' && currentSongIndex === songData.length - 1 && !isShuffling) {
-                    return; 
-                }
-                else {
+                } else if (repeatMode === 'all') {
+                     playNext();
+                } else if (currentSongIndex < currentDisplayData.length - 1) {
                     playNext();
                 }
             });
@@ -1523,19 +1514,6 @@
                 }
             });
             
-            shareBtn.addEventListener('click', () => {
-                if (currentSongIndex !== -1) {
-                    showShareModal(songData[currentSongIndex]);
-                }
-            });
-            
-            document.getElementById('share-modal-close-btn')?.addEventListener('click', () => shareModal.classList.add('hidden'));
-            shareModal.addEventListener('click', (e) => { if(e.target === shareModal) shareModal.classList.add('hidden') });
-            document.getElementById('copy-share-link-btn')?.addEventListener('click', () => {
-                copyToClipboard(document.getElementById('share-link-display').value);
-                shareModal.classList.add('hidden');
-            });
-
             // Lyrics Popup Listeners
             popupOpenLyricsBtn.addEventListener('click', showLyricsFullscreenPopup);
             viewMoreLyricsBtn.addEventListener('click', showLyricsFullscreenPopup);
