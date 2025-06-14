@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Nội dung kênh Multimedia MSTQ</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;700&display=swap" rel="stylesheet">
     <!-- Fuse.js for fuzzy search -->
     <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2"></script>
@@ -107,7 +107,7 @@
             box-shadow: var(--shadow-md);
             border: 1px solid var(--border-current);
             transition: var(--transition-fast);
-            padding: 1.5rem;
+            padding: 1.25rem 1.5rem; /* Consistent padding */
         }
         
         /* ==============================================
@@ -179,9 +179,9 @@
             background-color: var(--bg-current);
         }
         
-        .platforms-dropdown { position: relative; }
+        .platforms-dropdown, .theme-dropdown { position: relative; }
         
-        .platforms-menu {
+        .platforms-menu, .theme-menu {
             display: none;
             position: absolute;
             top: calc(100% + 10px);
@@ -197,7 +197,12 @@
             transition: opacity 0.3s ease, transform 0.3s ease;
         }
         
-        .platforms-menu.show {
+        .theme-menu {
+            padding: 1rem;
+            width: auto;
+        }
+        
+        .platforms-menu.show, .theme-menu.show {
             display: block;
             opacity: 1;
             transform: translateY(0);
@@ -219,7 +224,7 @@
             color: #fff;
         }
         
-        .platforms-menu a .fab, .platforms-menu a .zalo-svg {
+        .platforms-menu a i, .platforms-menu a .zalo-svg {
             font-size: 1.25rem;
             width: 20px; text-align: center;
         }
@@ -251,7 +256,7 @@
         .main-content {
             display: grid;
             grid-template-columns: 1fr;
-            gap: 1.5rem;
+            gap: 2rem; /* Increased gap */
             margin-top: 2rem;
         }
         
@@ -261,7 +266,7 @@
             }
             .sidebar-column {
                 position: sticky;
-                top: 80px; /* Header height + some margin */
+                top: 90px; /* Header height + some margin */
                 align-self: start;
             }
         }
@@ -299,7 +304,7 @@
             border: none;
             border-radius: 50%;
             width: 44px; height: 44px;
-            font-size: 1rem;
+            font-size: 1.5rem;
             cursor: pointer;
             transition: var(--transition-fast);
             display: flex; align-items: center; justify-content: center;
@@ -331,7 +336,7 @@
             width: 56px; height: 56px;
             background-color: var(--primary-color);
             color: white;
-            font-size: 1.5rem;
+            font-size: 1.75rem;
         }
 
         .player-controls #popup-play-pause-btn:hover {
@@ -349,7 +354,7 @@
         .song-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-            gap: 1rem;
+            gap: 1.25rem;
         }
 
         .song-grid-item {
@@ -434,7 +439,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.2rem;
+            font-size: 1.5rem;
             opacity: 0;
             transition: var(--transition-slow);
             pointer-events: none;
@@ -498,6 +503,7 @@
             background-color: var(--border-current);
             cursor: pointer;
             transition: height 0.2s ease;
+            position: relative;
         }
         .progress-container:hover {
             height: 8px;
@@ -517,10 +523,14 @@
             padding: 4px 8px;
             border-radius: 4px;
             font-size: 12px;
-            bottom: 15px; /* Position above the bar */
+            bottom: 20px; /* Position above the bar */
             transform: translateX(-50%);
             pointer-events: none; /* So it doesn't interfere with mouse events on the bar */
             white-space: nowrap;
+            display:none;
+        }
+        .progress-container:hover #progress-tooltip {
+            display: block;
         }
 
         /* ==============================================
@@ -756,28 +766,28 @@
                 <nav class="desktop-nav">
                     <div class="new-nav-container">
                         <a href="https://sites.google.com/view/thiensutinhquang" class="new-nav-btn" target="_blank">
-                            <i class="fas fa-home"></i>
+                            <i class="ph-bold ph-house"></i>
                             <span>Trang Chủ</span>
                         </a>
                         <a href="https://thiensutinhquang.github.io/Playlist-YouTube/" class="new-nav-btn" target="_blank">
-                           <i class="fas fa-video"></i>
+                           <i class="ph-bold ph-video"></i>
                            <span>Xem video</span>
                         </a>
                         <a href="https://sites.google.com/view/thiensutinhquang/tuy%E1%BB%83n-t%E1%BA%ADp-th%C6%A1" class="new-nav-btn" target="_blank">
-                            <i class="fas fa-book-open"></i>
+                            <i class="ph-bold ph-book-open"></i>
                             <span>Kho Thơ</span>
                         </a>
                         <div class="platforms-dropdown">
                             <button id="platforms-toggle-desktop" class="new-nav-btn">
-                                <i class="fas fa-share-alt"></i>
+                                <i class="ph-bold ph-share-network"></i>
                                 <span>Các Nền Tảng</span>
-                                <i class="fas fa-chevron-down ml-2 text-xs opacity-50"></i>
+                                <i class="ph-bold ph-caret-down ml-2"></i>
                             </button>
                             <div id="platforms-menu-desktop" class="platforms-menu">
-                                <a href="https://www.youtube.com/channel/UCLdLj1-g4TI5lSmWeD60mnA" target="_blank"><i class="fab fa-youtube" style="color: #FF0000;"></i> YouTube</a>
-                                <a href="https://www.tiktok.com/@minhsutinhquang" target="_blank"><i class="fab fa-tiktok" style="color: #000000;"></i> TikTok</a>
-                                <a href="https://www.facebook.com/phatphapnhiemmauTinhQuang" target="_blank"><i class="fab fa-facebook" style="color: #1877F2;"></i> Facebook</a>
-                                <a href="https://t.me/Giaoly_phap_don_ngo" target="_blank"><i class="fab fa-telegram-plane" style="color: #24A1DE;"></i> Telegram</a>
+                                <a href="https://www.youtube.com/channel/UCLdLj1-g4TI5lSmWeD60mnA" target="_blank"><i class="ph-bold ph-youtube-logo" style="color: #FF0000;"></i> YouTube</a>
+                                <a href="https://www.tiktok.com/@minhsutinhquang" target="_blank"><i class="ph-bold ph-tiktok-logo" style="color: #000000;"></i> TikTok</a>
+                                <a href="https://www.facebook.com/phatphapnhiemmauTinhQuang" target="_blank"><i class="ph-bold ph-facebook-logo" style="color: #1877F2;"></i> Facebook</a>
+                                <a href="https://t.me/Giaoly_phap_don_ngo" target="_blank"><i class="ph-bold ph-telegram-logo" style="color: #24A1DE;"></i> Telegram</a>
                                 <a href="https://zalo.me/g/dukrae245" target="_blank">
                                     <svg class="zalo-svg" height="24px" width="24px" viewBox="0 0 48 48">
                                         <path d="M48 31.968c0 4.416-3.584 8-8 8H8c-4.416 0-8-3.584-8-8V8c0-4.416 3.584-8 8-8h32c4.416 0 8 3.584 8 8v23.968z" style="fill:#0068ff"></path><path d="M22.208 19.328c-.416-2.048-2.688-3.552-5.92-3.552-4.256 0-7.328 2.4-7.328 5.76 0 3.264 2.816 5.664 6.784 5.664a7.13 7.13 0 002.56-.416l-.8-3.328a3.91 3.91 0 01-1.728.32c-1.856 0-2.816-1.152-2.816-2.208 0-1.216.992-2.208 2.816-2.208 1.44 0 2.272.8 2.496 1.888l3.936.032zm-1.888 7.392l-1.152-4.8c-.128-.544-.608-1.024-1.216-1.024h-.032c-.64 0-1.152.48-1.28 1.056l-1.152 4.768c-.768.16-1.472.256-2.112.256-4.256 0-7.328-2.4-7.328-5.76 0-3.264 2.816-5.664 6.784-5.664 3.232 0 5.504 1.504 5.92 3.552L13.6 26.688c.864 0 1.696-.096 2.528-.256h.032c.16 0 .32.032.48.032.064 0 .128 0 .192-.032zm18.336-1.568H29.36v-1.312h8.32c.544 0 .8.416.512.864l-3.616 5.216h-4.928l4.096-5.768zM29.36 17.536h9.856v1.312h-9.856V17.536z" style="fill:#fff"></path>
@@ -789,27 +799,35 @@
                     </div>
                 </nav>
                 
-                <div class="flex items-center gap-4">
-                    <div id="preset-themes" class="hidden sm:flex items-center gap-1">
-                        <button class="preset-theme-btn" title="Mạnh mẽ" data-bg="var(--preset-bg-blue-dark)" data-text="var(--preset-text-yellow)" style="background: linear-gradient(45deg, var(--preset-bg-blue-dark) 50%, var(--preset-text-yellow) 50%);"></button>
-                        <button class="preset-theme-btn" title="Dịu nhẹ" data-bg="var(--preset-bg-purple-dream)" data-text="var(--preset-text-pink-pastel)" style="background: linear-gradient(45deg, var(--preset-bg-purple-dream) 50%, var(--preset-text-pink-pastel) 50%);"></button>
-                        <button class="preset-theme-btn" title="Tươi mát" data-bg="var(--preset-bg-forest-green)" data-text="var(--preset-text-aqua)" style="background: linear-gradient(45deg, var(--preset-bg-forest-green) 50%, var(--preset-text-aqua) 50%);"></button>
-                        <button class="preset-theme-btn" title="Hiện đại" data-bg="var(--preset-bg-forest-green)" data-text="var(--preset-text-yellow)" style="background: linear-gradient(45deg, var(--preset-bg-forest-green) 50%, var(--preset-text-yellow) 50%);"></button>
-                        <button class="preset-theme-btn" title="Ấm áp" data-bg="var(--preset-bg-purple-dream)" data-text="var(--preset-text-yellow)" style="background: linear-gradient(45deg, var(--preset-bg-purple-dream) 50%, var(--preset-text-yellow) 50%);"></button>
-                        <button class="preset-theme-btn" title="Trang nhã" data-bg="var(--preset-bg-blue-dark)" data-text="var(--preset-text-aqua)" style="background: linear-gradient(45deg, var(--preset-bg-blue-dark) 50%, var(--preset-text-aqua) 50%);"></button>
-                    </div>
-                    <div class="theme-switch flex items-center gap-2">
-                        <i class="fas fa-sun text-yellow-500"></i>
-                        <label for="darkModeToggle" class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" id="darkModeToggle" class="sr-only peer">
-                            <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary-color/50 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-primary-color"></div>
-                        </label>
-                        <i class="fas fa-moon text-slate-400"></i>
+                <div class="flex items-center gap-2">
+                     <div id="desktop-theme-controls" class="theme-dropdown hidden lg:block">
+                        <button id="theme-toggle-desktop" class="new-nav-btn">
+                            <i class="ph-bold ph-palette"></i>
+                            <span>Giao diện</span>
+                        </button>
+                        <div id="theme-menu-desktop" class="theme-menu">
+                             <div id="preset-themes" class="grid grid-cols-6 gap-2 mb-4">
+                                <button class="preset-theme-btn" title="Mạnh mẽ" data-bg="var(--preset-bg-blue-dark)" data-text="var(--preset-text-yellow)" style="background: linear-gradient(45deg, var(--preset-bg-blue-dark) 50%, var(--preset-text-yellow) 50%);"></button>
+                                <button class="preset-theme-btn" title="Dịu nhẹ" data-bg="var(--preset-bg-purple-dream)" data-text="var(--preset-text-pink-pastel)" style="background: linear-gradient(45deg, var(--preset-bg-purple-dream) 50%, var(--preset-text-pink-pastel) 50%);"></button>
+                                <button class="preset-theme-btn" title="Tươi mát" data-bg="var(--preset-bg-forest-green)" data-text="var(--preset-text-aqua)" style="background: linear-gradient(45deg, var(--preset-bg-forest-green) 50%, var(--preset-text-aqua) 50%);"></button>
+                                <button class="preset-theme-btn" title="Hiện đại" data-bg="var(--preset-bg-forest-green)" data-text="var(--preset-text-yellow)" style="background: linear-gradient(45deg, var(--preset-bg-forest-green) 50%, var(--preset-text-yellow) 50%);"></button>
+                                <button class="preset-theme-btn" title="Ấm áp" data-bg="var(--preset-bg-purple-dream)" data-text="var(--preset-text-yellow)" style="background: linear-gradient(45deg, var(--preset-bg-purple-dream) 50%, var(--preset-text-yellow) 50%);"></button>
+                                <button class="preset-theme-btn" title="Trang nhã" data-bg="var(--preset-bg-blue-dark)" data-text="var(--preset-text-aqua)" style="background: linear-gradient(45deg, var(--preset-bg-blue-dark) 50%, var(--preset-text-aqua) 50%);"></button>
+                            </div>
+                            <div class="theme-switch flex items-center gap-2 justify-center">
+                                <i class="ph-bold ph-sun text-yellow-500"></i>
+                                <label for="darkModeToggle" class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="darkModeToggle" class="sr-only peer">
+                                    <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary-color/50 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-primary-color"></div>
+                                </label>
+                                <i class="ph-bold ph-moon text-slate-400"></i>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 <button class="hamburger-menu" id="hamburger-menu">
-                    <i class="fas fa-bars"></i>
+                    <i class="ph-bold ph-list"></i>
                 </button>
             </div>
         </div>
@@ -817,37 +835,56 @@
 
     <div class="mobile-nav-overlay" id="mobile-nav-overlay">
         <div class="mobile-nav-content">
-            <button class="close-mobile-menu" id="close-mobile-menu">&times;</button>
+            <button class="close-mobile-menu" id="close-mobile-menu"><i class="ph-bold ph-x"></i></button>
             <div class="new-nav-container">
                  <a href="https://sites.google.com/view/thiensutinhquang" class="new-nav-btn" target="_blank">
-                    <i class="fas fa-home"></i>
+                    <i class="ph-bold ph-house"></i>
                     <span>Trang Chủ</span>
                 </a>
                  <a href="https://thiensutinhquang.github.io/Playlist-YouTube/" class="new-nav-btn" target="_blank">
-                    <i class="fas fa-video"></i>
+                    <i class="ph-bold ph-video"></i>
                     <span>Xem video</span>
                 </a>
                 <a href="https://sites.google.com/view/thiensutinhquang/tuy%E1%BB%83n-t%E1%BA%ADp-th%C6%AƠ" class="new-nav-btn" target="_blank">
-                    <i class="fas fa-book-open"></i>
+                    <i class="ph-bold ph-book-open"></i>
                     <span>Kho Thơ</span>
                 </a>
                 <div class="platforms-dropdown">
                      <button id="platforms-toggle-mobile" class="new-nav-btn">
-                        <i class="fas fa-share-alt"></i>
+                        <i class="ph-bold ph-share-network"></i>
                         <span>Các Nền Tảng</span>
-                        <i class="fas fa-chevron-down ml-2 text-xs"></i>
+                        <i class="ph-bold ph-caret-down ml-2"></i>
                     </button>
                     <div id="platforms-menu-mobile" class="platforms-menu">
-                           <a href="https://www.youtube.com/channel/UCLdLj1-g4TI5lSmWeD60mnA" target="_blank"><i class="fab fa-youtube" style="color: #FF0000;"></i> YouTube</a>
-                           <a href="https://www.tiktok.com/@minhsutinhquang" target="_blank"><i class="fab fa-tiktok" style="color: #000000;"></i> TikTok</a>
-                           <a href="https://www.facebook.com/phatphapnhiemmauTinhQuang" target="_blank"><i class="fab fa-facebook" style="color: #1877F2;"></i> Facebook</a>
-                           <a href="https://t.me/Giaoly_phap_don_ngo" target="_blank"><i class="fab fa-telegram-plane" style="color: #24A1DE;"></i> Telegram</a>
+                           <a href="https://www.youtube.com/channel/UCLdLj1-g4TI5lSmWeD60mnA" target="_blank"><i class="ph-bold ph-youtube-logo" style="color: #FF0000;"></i> YouTube</a>
+                           <a href="https://www.tiktok.com/@minhsutinhquang" target="_blank"><i class="ph-bold ph-tiktok-logo" style="color: #000000;"></i> TikTok</a>
+                           <a href="https://www.facebook.com/phatphapnhiemmauTinhQuang" target="_blank"><i class="ph-bold ph-facebook-logo" style="color: #1877F2;"></i> Facebook</a>
+                           <a href="https://t.me/Giaoly_phap_don_ngo" target="_blank"><i class="ph-bold ph-telegram-logo" style="color: #24A1DE;"></i> Telegram</a>
                            <a href="https://zalo.me/g/dukrae245" target="_blank">
                                 <svg class="zalo-svg" height="24px" width="24px" viewBox="0 0 48 48">
                                     <path d="M48 31.968c0 4.416-3.584 8-8 8H8c-4.416 0-8-3.584-8-8V8c0-4.416 3.584-8 8-8h32c4.416 0 8 3.584 8 8v23.968z" style="fill:#0068ff"></path><path d="M22.208 19.328c-.416-2.048-2.688-3.552-5.92-3.552-4.256 0-7.328 2.4-7.328 5.76 0 3.264 2.816 5.664 6.784 5.664a7.13 7.13 0 002.56-.416l-.8-3.328a3.91 3.91 0 01-1.728.32c-1.856 0-2.816-1.152-2.816-2.208 0-1.216.992-2.208 2.816-2.208 1.44 0 2.272.8 2.496 1.888l3.936.032zm-1.888 7.392l-1.152-4.8c-.128-.544-.608-1.024-1.216-1.024h-.032c-.64 0-1.152.48-1.28 1.056l-1.152 4.768c-.768.16-1.472.256-2.112.256-4.256 0-7.328-2.4-7.328-5.76 0-3.264 2.816-5.664 6.784-5.664 3.232 0 5.504 1.504 5.92 3.552L13.6 26.688c.864 0 1.696-.096 2.528-.256h.032c.16 0 .32.032.48.032.064 0 .128 0 .192-.032zm18.336-1.568H29.36v-1.312h8.32c.544 0 .8.416.512.864l-3.616 5.216h-4.928l4.096-5.768zM29.36 17.536h9.856v1.312h-9.856V17.536z" style="fill:#fff"></path>
                                 </svg>
                                 <span>Zalo</span>
                            </a>
+                    </div>
+                </div>
+                 <div class="theme-dropdown">
+                    <button id="mobile-theme-menu" class="new-nav-btn">
+                        <i class="ph-bold ph-palette"></i>
+                        <span>Giao diện</span>
+                    </button>
+                    <div id="mobile-theme-options" class="hidden pl-8 pt-2 space-y-4">
+                        <div id="mobile-preset-themes" class="grid grid-cols-6 gap-2">
+                            <!-- Preset buttons will be cloned here -->
+                        </div>
+                         <div class="theme-switch flex items-center gap-2">
+                             <i class="ph-bold ph-sun text-yellow-500"></i>
+                            <label for="darkModeToggleMobile" class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="darkModeToggleMobile" class="sr-only peer">
+                                <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary-color/50 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-primary-color"></div>
+                            </label>
+                            <i class="ph-bold ph-moon text-slate-400"></i>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -879,7 +916,7 @@
                  <div class="flex justify-between items-center mb-4">
                     <h2 class="text-xl font-bold">Lời Bài Hát</h2>
                     <button id="view-more-lyrics-btn" class="new-nav-btn text-xs">
-                        <i class="fas fa-expand-alt"></i>
+                        <i class="ph-bold ph-corners-out"></i>
                         <span>Xem rõ hơn</span>
                     </button>
                 </div>
@@ -897,7 +934,7 @@
                         <h4 id="popup-song-title" class="font-bold truncate">Chọn một bài hát</h4>
                         <p id="popup-song-artist" class="text-sm text-muted-current truncate">Để bắt đầu nghe nhạc</p>
                     </div>
-                     <button id="toggle-playlist-btn" class="flex-shrink-0 text-muted-current hover:text-current transition" title="Danh sách phát"><i class="fas fa-list-ol"></i></button>
+                     <button id="toggle-playlist-btn" class="flex-shrink-0 text-muted-current hover:text-current transition" title="Danh sách phát"><i class="ph-bold ph-list-music"></i></button>
                 </div>
                 
                 <div id="popup-playlist-container" class="my-4 max-h-48 overflow-y-auto hidden">
@@ -905,8 +942,9 @@
                 </div>
 
                 <div class="space-y-2 mb-4">
-                    <div class="progress-container" id="popup-progress-container">
+                    <div class="progress-container relative" id="popup-progress-container">
                         <div class="progress-bar" id="popup-progress-bar" style="width: 0%"></div>
+                        <div id="progress-tooltip">0:00</div>
                     </div>
                     <div class="flex justify-between text-xs text-muted-current">
                         <span id="popup-current-time">0:00</span>
@@ -915,21 +953,21 @@
                 </div>
 
                 <div class="player-controls flex items-center justify-around">
-                    <button id="popup-shuffle-btn" title="Trộn bài"><i class="fas fa-random"></i></button>
-                    <button id="popup-prev-btn" title="Bài trước"><i class="fas fa-step-backward"></i></button>
+                    <button id="popup-shuffle-btn" title="Trộn bài"><i class="ph-bold ph-shuffle"></i></button>
+                    <button id="popup-prev-btn" title="Bài trước"><i class="ph-bold ph-skip-back"></i></button>
                     <button id="popup-play-pause-btn" title="Phát/Dừng">
-                        <i id="play-icon" class="fas fa-play"></i>
-                        <i id="pause-icon" class="fas fa-pause hidden"></i>
+                        <i class="ph-bold ph-play" id="play-icon"></i>
+                        <i class="ph-bold ph-pause hidden" id="pause-icon"></i>
                     </button>
-                    <button id="popup-next-btn" title="Bài kế tiếp"><i class="fas fa-step-forward"></i></button>
-                    <button id="popup-repeat-btn" title="Lặp lại">🔁</button>
+                    <button id="popup-next-btn" title="Bài kế tiếp"><i class="ph-bold ph-skip-forward"></i></button>
+                    <button id="popup-repeat-btn" title="Lặp lại"><i class="ph-bold ph-repeat"></i></button>
                 </div>
                 
                  <div class="flex items-center gap-4 mt-4">
-                    <button id="popup-favorite-btn" title="Yêu thích"><i class="far fa-heart"></i></button>
-                    <button id="popup-open-lyrics-btn" title="Mở lời bài hát"><i class="fas fa-file-alt"></i></button>
+                    <button id="popup-favorite-btn" title="Yêu thích"><i class="ph-bold ph-heart"></i></button>
+                    <button id="popup-open-lyrics-btn" title="Mở lời bài hát"><i class="ph-bold ph-file-text"></i></button>
                     <div class="flex items-center gap-2 flex-grow">
-                         <i class="fas fa-volume-down"></i>
+                         <i class="ph-bold ph-speaker-high"></i>
                          <input type="range" id="popup-volume-slider" min="0" max="1" step="0.01" value="1" class="w-full">
                          <span id="volume-percentage" class="text-xs w-8 text-center">100</span>
                     </div>
@@ -952,12 +990,12 @@
     
     <div id="lyrics-fullscreen-popup" class="hidden">
         <div class="lyrics-popup-content">
-            <button id="close-lyrics-fullscreen" class="close-button"><i class="fas fa-times"></i></button>
+            <button id="close-lyrics-fullscreen" class="close-button"><i class="ph-bold ph-x"></i></button>
             <h2 id="lyrics-popup-title" class="text-2xl font-bold mb-4 text-center">Lời Bài Hát</h2>
             <div id="lyrics-content" class="flex-grow relative">
                  <div id="full-lyrics-display" class="h-full overflow-y-auto text-center"></div>
-                 <div class="lyrics-nav-arrow left-arrow" id="lyrics-left-arrow"><i class="fas fa-chevron-left"></i></div>
-                 <div class="lyrics-nav-arrow right-arrow" id="lyrics-right-arrow"><i class="fas fa-chevron-right"></i></div>
+                 <div class="lyrics-nav-arrow left-arrow" id="lyrics-left-arrow"><i class="ph-bold ph-caret-left"></i></div>
+                 <div class="lyrics-nav-arrow right-arrow" id="lyrics-right-arrow"><i class="ph-bold ph-caret-right"></i></div>
             </div>
              <div class="flex justify-center items-center mt-4">
                 <span id="lyrics-page-indicator" class="text-lg font-semibold"></span>
@@ -985,6 +1023,9 @@
     
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
+            // All the JavaScript logic from the previous turn, with fixes for the repeat button and share modal.
+            // The script is extensive, so it's kept in its entirety here.
+            
             // DOM Elements
             const body = document.body;
             const darkModeToggle = document.getElementById('darkModeToggle');
@@ -1027,10 +1068,11 @@
             const customAlertModal = document.getElementById('custom-alert-modal');
             const customAlertMessage = document.getElementById('custom-alert-message');
             const customAlertOkBtn = document.getElementById('custom-alert-ok-btn');
-            const presetThemeButtons = document.querySelectorAll('.preset-theme-btn');
+            const presetThemeButtons = document.querySelectorAll('#desktop-theme-controls .preset-theme-btn');
             const togglePlaylistBtn = document.getElementById('toggle-playlist-btn');
             const popupPlaylistContainer = document.getElementById('popup-playlist-container');
             const popupSongList = document.getElementById('popup-song-list');
+            const progressTooltip = document.getElementById('progress-tooltip');
 
             // Global State & Settings
             let songData = [], currentDisplayData = [], lyricsPages = [];
@@ -1063,6 +1105,9 @@
             // ==============================================
 
             const applyTheme = () => {
+                if (navigator.vibrate) {
+                    navigator.vibrate(50);
+                }
                 const theme = JSON.parse(localStorage.getItem('themeState')) || { mode: 'light' };
                 body.classList.remove('dark-mode', 'preset-theme');
                 document.querySelectorAll('.preset-theme-btn').forEach(b => b.classList.remove('active'));
@@ -1070,16 +1115,19 @@
                 if (theme.mode === 'dark') {
                     body.classList.add('dark-mode');
                     darkModeToggle.checked = true;
+                    document.getElementById('darkModeToggleMobile').checked = true;
                 } else if (theme.mode === 'preset') {
                     body.classList.add('preset-theme');
                     const root = document.documentElement;
                     root.style.setProperty('--preset-bg-current', theme.bg);
                     root.style.setProperty('--preset-text-current', theme.text);
                     darkModeToggle.checked = false;
+                    document.getElementById('darkModeToggleMobile').checked = false;
                     const activeBtn = document.querySelector(`.preset-theme-btn[data-bg="${theme.bg}"][data-text="${theme.text}"]`);
                     if (activeBtn) activeBtn.classList.add('active');
                 } else { // light mode
                     darkModeToggle.checked = false;
+                     document.getElementById('darkModeToggleMobile').checked = false;
                 }
             };
 
@@ -1092,6 +1140,11 @@
                 const platformsMenuDesktop = document.getElementById('platforms-menu-desktop');
                 const platformsToggleMobile = document.getElementById('platforms-toggle-mobile');
                 const platformsMenuMobile = document.getElementById('platforms-menu-mobile');
+                const themeToggleDesktop = document.getElementById('theme-toggle-desktop');
+                const themeMenuDesktop = document.getElementById('theme-menu-desktop');
+                const mobileThemeMenu = document.getElementById('mobile-theme-menu');
+                const mobileThemeOptions = document.getElementById('mobile-theme-options');
+                let themeMenuTimeout;
 
                 if(hamburgerMenu) hamburgerMenu.addEventListener('click', () => mobileNavOverlay.classList.add('active'));
                 if(closeMobileMenu) closeMobileMenu.addEventListener('click', () => mobileNavOverlay.classList.remove('active'));
@@ -1106,9 +1159,33 @@
                     e.stopPropagation();
                     platformsMenuMobile.classList.toggle('show');
                 });
+                 if (themeToggleDesktop) {
+                    themeToggleDesktop.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const isShown = themeMenuDesktop.classList.toggle('show');
+                        if (navigator.vibrate) navigator.vibrate(20);
+                        clearTimeout(themeMenuTimeout);
+                        if (isShown) {
+                            themeMenuTimeout = setTimeout(() => {
+                                themeMenuDesktop.classList.remove('show');
+                            }, 7000);
+                        }
+                    });
+                }
+                if (mobileThemeMenu) {
+                    mobileThemeMenu.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        mobileThemeOptions.classList.toggle('hidden');
+                        if (navigator.vibrate) navigator.vibrate(20);
+                    });
+                }
+
                 window.addEventListener('click', () => {
                     if (platformsMenuDesktop && platformsMenuDesktop.classList.contains('show')) {
                         platformsMenuDesktop.classList.remove('show');
+                    }
+                     if (themeMenuDesktop && themeMenuDesktop.classList.contains('show')) {
+                        themeMenuDesktop.classList.remove('show');
                     }
                 });
             };
@@ -1160,7 +1237,7 @@
                     const songItem = document.createElement('div');
                     songItem.className = 'song-grid-item';
                     songItem.dataset.displayIndex = displayIndex; 
-                    songItem.innerHTML = `<img src="${song.artwork}" alt="${song.title}" class="artwork"><div class="info"><p class="title">${song.title}</p></div><div class="play-indicator"><i class="fas fa-play"></i></div>`;
+                    songItem.innerHTML = `<img src="${song.artwork}" alt="${song.title}" class="artwork"><div class="info"><p class="title">${song.title}</p></div><div class="play-indicator"><i class="ph-bold ph-play"></i></div>`;
                     songsContainer.appendChild(songItem);
                 });
                 addSongEventListeners();
@@ -1207,11 +1284,24 @@
 
             function playSong(index) {
                 if (index < 0 || index >= songData.length) return;
-                currentSongIndex = index;
-                const song = songData[index];
-                audioPlayer.src = `${audiusDiscoveryHost}/v1/tracks/${song.id}/stream?app_name=MSTQPlayer`;
-                audioPlayer.play().catch(e => console.error("Playback error:", e));
-                updateMediaSession();
+
+                const previousSongInfo = document.getElementById('popup-now-playing-info-wrapper');
+                previousSongInfo.classList.add('fade-out');
+
+                setTimeout(() => {
+                    currentSongIndex = index;
+                    const song = songData[index];
+                    audioPlayer.src = `${audiusDiscoveryHost}/v1/tracks/${song.id}/stream?app_name=MSTQPlayer`;
+                    audioPlayer.play().catch(e => console.error("Playback error:", e));
+                    updateMediaSession();
+
+                    popupSongTitle.textContent = song.title;
+                    popupSongArtist.textContent = song.artist;
+                    popupAlbumArt.src = song.artwork;
+
+                    previousSongInfo.classList.remove('fade-out');
+                    updateUI();
+                }, 300);
             }
             
             function updateUI() {
@@ -1241,7 +1331,7 @@
                     const isActive = song && itemSong.id === song.id;
                     item.classList.toggle('active-song', isActive);
                     const indicatorIcon = item.querySelector('.play-indicator i');
-                    if (indicatorIcon) indicatorIcon.className = (isActive && isPlaying) ? 'fas fa-pause' : 'fas fa-play';
+                    if (indicatorIcon) indicatorIcon.className = (isActive && isPlaying) ? 'ph-bold ph-pause pulsing-icon' : 'ph-bold ph-play';
                 });
 
                 document.querySelectorAll('#popup-song-list li').forEach(item => {
@@ -1398,7 +1488,7 @@
             function updateFavoriteButtonsUI(songId, isFavorite) {
                 if (songData[currentSongIndex]?.id === songId) {
                     favoriteBtn.classList.toggle('liked', isFavorite);
-                    favoriteBtn.querySelector('i').className = isFavorite ? 'fas fa-heart' : 'far fa-heart';
+                    favoriteBtn.innerHTML = isFavorite ? '<i class="ph-fill ph-heart"></i>' : '<i class="ph-bold ph-heart"></i>';
                 }
             }
             
@@ -1459,6 +1549,11 @@
                 localStorage.setItem('themeState', JSON.stringify(theme));
                 applyTheme();
             });
+            document.getElementById('darkModeToggleMobile')?.addEventListener('change', (e) => {
+                 const theme = { mode: e.target.checked ? 'dark' : 'light' };
+                localStorage.setItem('themeState', JSON.stringify(theme));
+                applyTheme();
+            });
 
             presetThemeButtons.forEach(button => {
                 button.addEventListener('click', () => {
@@ -1471,6 +1566,24 @@
                     applyTheme();
                 });
             });
+             document.querySelectorAll('#mobile-preset-themes .preset-theme-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    e.stopPropagation(); // prevent closing the menu
+                     const theme = {
+                        mode: 'preset',
+                        bg: button.dataset.bg,
+                        text: button.dataset.text
+                    };
+                    localStorage.setItem('themeState', JSON.stringify(theme));
+                    applyTheme();
+                })
+             });
+             
+             document.getElementById('mobile-theme-menu')?.addEventListener('click', (e) => {
+                 e.stopPropagation();
+                document.getElementById('mobile-theme-options').classList.toggle('hidden');
+             });
+
 
             customAlertOkBtn.addEventListener('click', hideMessage);
             
@@ -1505,6 +1618,13 @@
             progressContainer.addEventListener('click', (e) => {
                 if(audioPlayer.duration) audioPlayer.currentTime = (e.offsetX / progressContainer.clientWidth) * audioPlayer.duration;
             });
+             progressContainer.addEventListener('mousemove', (e) => {
+                if (audioPlayer.duration) {
+                    const hoverTime = (e.offsetX / progressContainer.clientWidth) * audioPlayer.duration;
+                    progressTooltip.textContent = new Date(hoverTime * 1000).toISOString().substr(14, 5);
+                    progressTooltip.style.left = `${e.offsetX}px`;
+                }
+            });
             
             nextBtn.addEventListener('click', playNext);
             prevBtn.addEventListener('click', playPrev);
@@ -1521,7 +1641,7 @@
                 repeatMode = modes[(currentModeIndex + 1) % modes.length];
                 localStorage.setItem('repeatMode', repeatMode);
                 repeatBtn.classList.toggle('active-control', repeatMode !== 'none');
-                repeatBtn.innerHTML = repeatMode === 'one' ? '🔂' : '�';
+                repeatBtn.innerHTML = repeatMode === 'one' ? '<i class="ph-bold ph-repeat-once"></i>' : '<i class="ph-bold ph-repeat"></i>';
             });
             
             sleepTimerButtons.forEach(button => button.addEventListener('click', () => startSleepTimer(parseInt(button.dataset.minutes))));
@@ -1589,12 +1709,32 @@
                 setupNavEvents();
                 shuffleBtn.classList.toggle('active-control', isShuffling);
                 repeatBtn.classList.toggle('active-control', repeatMode !== 'none');
-                repeatBtn.innerHTML = repeatMode === 'one' ? '🔂' : '🔁';
+                repeatBtn.innerHTML = repeatMode === 'one' ? '<i class="ph-bold ph-repeat-once"></i>' : '<i class="ph-bold ph-repeat"></i>';
                 await fetchAudiusData();
                 loadCustomCategory('all');
                 updateUI();
                 positionRadialItems();
                 popupPlaylistContainer.classList.remove('hidden'); // Show playlist by default
+                
+                // Clone preset themes to mobile menu
+                const desktopPresets = document.getElementById('preset-themes');
+                const mobilePresetsContainer = document.getElementById('mobile-preset-themes');
+                if (desktopPresets && mobilePresetsContainer) {
+                    mobilePresetsContainer.innerHTML = desktopPresets.innerHTML;
+                    // Re-add event listeners for cloned mobile buttons
+                    mobilePresetsContainer.querySelectorAll('.preset-theme-btn').forEach(button => {
+                         button.addEventListener('click', (e) => {
+                             e.stopPropagation();
+                             const theme = {
+                                 mode: 'preset',
+                                 bg: button.dataset.bg,
+                                 text: button.dataset.text
+                             };
+                             localStorage.setItem('themeState', JSON.stringify(theme));
+                             applyTheme();
+                         });
+                    });
+                }
             }
 
             initializeApp();
@@ -1602,4 +1742,3 @@
     </script>
 </body>
 </html>
-�
