@@ -298,7 +298,7 @@
             to { transform: rotate(360deg); }
         }
         
-        .player-controls button, #popup-share-btn, #popup-open-lyrics-btn {
+        .player-controls button, #popup-open-lyrics-btn {
             background-color: transparent;
             color: var(--text-muted-current);
             border: none;
@@ -327,7 +327,7 @@
             }
         }
 
-        .player-controls button:hover, #popup-share-btn:hover, #popup-open-lyrics-btn:hover {
+        .player-controls button:hover, #popup-open-lyrics-btn:hover {
             background-color: var(--bg-current);
             color: var(--text-current);
         }
@@ -1122,7 +1122,7 @@
             const customAlertModal = document.getElementById('custom-alert-modal');
             const customAlertMessage = document.getElementById('custom-alert-message');
             const customAlertOkBtn = document.getElementById('custom-alert-ok-btn');
-            const presetThemeButtons = document.querySelectorAll('.preset-theme-btn');
+            const presetThemeButtons = document.querySelectorAll('#preset-themes-desktop .preset-theme-btn');
             const togglePlaylistBtn = document.getElementById('toggle-playlist-btn');
             const popupPlaylistContainer = document.getElementById('popup-playlist-container');
             const popupSongList = document.getElementById('popup-song-list');
