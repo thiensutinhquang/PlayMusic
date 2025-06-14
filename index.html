@@ -298,7 +298,7 @@
             to { transform: rotate(360deg); }
         }
         
-        .player-controls button, #popup-open-lyrics-btn {
+        .player-controls button, #popup-share-btn, #popup-open-lyrics-btn {
             background-color: transparent;
             color: var(--text-muted-current);
             border: none;
@@ -327,7 +327,7 @@
             }
         }
 
-        .player-controls button:hover, #popup-open-lyrics-btn:hover {
+        .player-controls button:hover, #popup-share-btn:hover, #popup-open-lyrics-btn:hover {
             background-color: var(--bg-current);
             color: var(--text-current);
         }
@@ -1122,7 +1122,7 @@
             const customAlertModal = document.getElementById('custom-alert-modal');
             const customAlertMessage = document.getElementById('custom-alert-message');
             const customAlertOkBtn = document.getElementById('custom-alert-ok-btn');
-            const presetThemeButtons = document.querySelectorAll('#preset-themes-desktop .preset-theme-btn');
+            const presetThemeButtons = document.querySelectorAll('.preset-theme-btn');
             const togglePlaylistBtn = document.getElementById('toggle-playlist-btn');
             const popupPlaylistContainer = document.getElementById('popup-playlist-container');
             const popupSongList = document.getElementById('popup-song-list');
@@ -1160,7 +1160,7 @@
 
             const applyTheme = () => {
                 if (navigator.vibrate) {
-                    navigator.vibrate(50);
+                    navigator.vibrate(20);
                 }
                 const theme = JSON.parse(localStorage.getItem('themeState')) || { mode: 'light' };
                 body.classList.remove('dark-mode', 'preset-theme');
@@ -1177,8 +1177,8 @@
                     root.style.setProperty('--preset-text-current', theme.text);
                     darkModeToggle.checked = false;
                     document.getElementById('darkModeToggleMobile').checked = false;
-                    const activeBtn = document.querySelector(`.preset-theme-btn[data-bg="${theme.bg}"][data-text="${theme.text}"]`);
-                    if (activeBtn) activeBtn.classList.add('active');
+                    const activeButtons = document.querySelectorAll(`.preset-theme-btn[data-bg="${theme.bg}"][data-text="${theme.text}"]`);
+                    activeButtons.forEach(btn => btn.classList.add('active'));
                 } else { // light mode
                     darkModeToggle.checked = false;
                      document.getElementById('darkModeToggleMobile').checked = false;
@@ -1499,12 +1499,12 @@
             };
             
              function positionRadialItems() {
-                const angleStep = 90 / (radialItems.length -1);
+                const angleStep = 150 / (radialItems.length -1);
                 radialItems.forEach((item, index) => {
                     const angle = (index * angleStep) ;
                     const radians = angle * (Math.PI / 180);
-                    item.style.setProperty('--x', `${60 * Math.cos(radians)}px`);
-                    item.style.setProperty('--y', `${60 * Math.sin(radians)}px`);
+                    item.style.setProperty('--x', `${70 * Math.cos(radians)}px`);
+                    item.style.setProperty('--y', `${70 * Math.sin(radians)}px`);
                 });
             };
 
@@ -1725,18 +1725,23 @@
             // Radial Menu Listeners
             radialMenuToggleBtn.addEventListener('click', () => radialMenuContainer.classList.toggle('active'));
             document.getElementById('radial-font-size-increase').addEventListener('click', () => {
+                if (navigator.vibrate) { navigator.vibrate(20); }
                 lyricsFontSize++; applyLyricsThemeAndFontStyles(); saveLyricsPreferences();
             });
              document.getElementById('radial-font-size-decrease').addEventListener('click', () => {
+                if (navigator.vibrate) { navigator.vibrate(20); }
                 lyricsFontSize = Math.max(12, lyricsFontSize - 1); applyLyricsThemeAndFontStyles(); saveLyricsPreferences();
             });
             document.getElementById('radial-lines-increase').addEventListener('click', () => {
+                if (navigator.vibrate) { navigator.vibrate(20); }
                 linesPerPage++; paginateLyrics(songData[currentSongIndex]?.description || ''); saveLyricsPreferences();
             });
              document.getElementById('radial-lines-decrease').addEventListener('click', () => {
+                 if (navigator.vibrate) { navigator.vibrate(20); }
                 linesPerPage = Math.max(1, linesPerPage - 1); paginateLyrics(songData[currentSongIndex]?.description || ''); saveLyricsPreferences();
             });
              document.getElementById('radial-font-btn').addEventListener('click', () => {
+                if (navigator.vibrate) { navigator.vibrate(20); }
                 currentFontIndex = (currentFontIndex + 1) % fontOptions.length; applyLyricsThemeAndFontStyles(); saveLyricsPreferences();
             });
             document.getElementById('radial-theme-btn').addEventListener('click', () => {
