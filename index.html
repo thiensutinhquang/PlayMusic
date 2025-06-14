@@ -751,7 +751,65 @@
 
         @media (max-width: 768px) {
              .logo h1 { font-size: 1.25rem; }
-             .song-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 0.75rem;}
+            .song-grid {
+                display: flex;
+                flex-direction: column;
+                gap: 0.5rem; /* Tighter spacing for list view */
+            }
+
+            .song-grid-item {
+                display: flex;
+                align-items: center;
+                aspect-ratio: auto;
+                padding: 0.5rem;
+                border-radius: 8px;
+            }
+            
+            .song-grid-item::after {
+                display: none; /* Remove overlay on mobile */
+            }
+
+            .song-grid-item .artwork {
+                width: 48px;
+                height: 48px;
+                border-radius: 6px;
+                flex-shrink: 0;
+                transform: none !important; /* Override hover scale */
+            }
+
+            .song-grid-item .info {
+                position: static;
+                transform: none;
+                opacity: 1;
+                padding: 0 0.75rem;
+                color: var(--text-current); /* Use standard text color */
+                flex-grow: 1;
+                overflow: hidden;
+            }
+
+            .song-grid-item .info .title {
+                font-size: 0.9rem;
+                color: var(--text-current);
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            
+            /* Hide the play indicator by default in list view to save space */
+            .song-grid-item .play-indicator {
+               display: none;
+            }
+
+            /* Highlight the active song in the list */
+            .song-grid-item.active-song {
+                background-color: var(--primary-color);
+            }
+
+            .song-grid-item.active-song .info .title,
+            .song-grid-item.active-song .info {
+                color: white;
+                font-weight: bold;
+            }
         }
     </style>
 </head>
@@ -796,36 +854,32 @@
                                 </a>
                             </div>
                         </div>
-                    </div>
-                </nav>
-                
-                <div class="flex items-center gap-2">
-                     <div id="desktop-theme-controls" class="theme-dropdown hidden lg:block">
-                        <button id="theme-toggle-desktop" class="new-nav-btn">
-                            <i class="ph-bold ph-palette"></i>
-                            <span>Giao diện</span>
-                        </button>
-                        <div id="theme-menu-desktop" class="theme-menu">
-                             <div id="preset-themes" class="grid grid-cols-6 gap-2 mb-4">
-                                <button class="preset-theme-btn" title="Mạnh mẽ" data-bg="var(--preset-bg-blue-dark)" data-text="var(--preset-text-yellow)" style="background: linear-gradient(45deg, var(--preset-bg-blue-dark) 50%, var(--preset-text-yellow) 50%);"></button>
-                                <button class="preset-theme-btn" title="Dịu nhẹ" data-bg="var(--preset-bg-purple-dream)" data-text="var(--preset-text-pink-pastel)" style="background: linear-gradient(45deg, var(--preset-bg-purple-dream) 50%, var(--preset-text-pink-pastel) 50%);"></button>
-                                <button class="preset-theme-btn" title="Tươi mát" data-bg="var(--preset-bg-forest-green)" data-text="var(--preset-text-aqua)" style="background: linear-gradient(45deg, var(--preset-bg-forest-green) 50%, var(--preset-text-aqua) 50%);"></button>
-                                <button class="preset-theme-btn" title="Hiện đại" data-bg="var(--preset-bg-forest-green)" data-text="var(--preset-text-yellow)" style="background: linear-gradient(45deg, var(--preset-bg-forest-green) 50%, var(--preset-text-yellow) 50%);"></button>
-                                <button class="preset-theme-btn" title="Ấm áp" data-bg="var(--preset-bg-purple-dream)" data-text="var(--preset-text-yellow)" style="background: linear-gradient(45deg, var(--preset-bg-purple-dream) 50%, var(--preset-text-yellow) 50%);"></button>
-                                <button class="preset-theme-btn" title="Trang nhã" data-bg="var(--preset-bg-blue-dark)" data-text="var(--preset-text-aqua)" style="background: linear-gradient(45deg, var(--preset-bg-blue-dark) 50%, var(--preset-text-aqua) 50%);"></button>
-                            </div>
-                            <div class="theme-switch flex items-center gap-2 justify-center">
-                                <i class="ph-bold ph-sun text-yellow-500"></i>
-                                <label for="darkModeToggle" class="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" id="darkModeToggle" class="sr-only peer">
-                                    <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary-color/50 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-primary-color"></div>
-                                </label>
-                                <i class="ph-bold ph-moon text-slate-400"></i>
+                         <div id="desktop-theme-controls" class="theme-dropdown hidden lg:block">
+                            <button id="theme-toggle-desktop" class="new-nav-btn">
+                                <i class="ph-bold ph-palette"></i>
+                                <span>Giao diện</span>
+                            </button>
+                            <div id="theme-menu-desktop" class="theme-menu">
+                                 <div id="preset-themes-desktop" class="grid grid-cols-6 gap-2 mb-4">
+                                    <button class="preset-theme-btn" title="Mạnh mẽ" data-bg="var(--preset-bg-blue-dark)" data-text="var(--preset-text-yellow)" style="background: linear-gradient(45deg, var(--preset-bg-blue-dark) 50%, var(--preset-text-yellow) 50%);"></button>
+                                    <button class="preset-theme-btn" title="Dịu nhẹ" data-bg="var(--preset-bg-purple-dream)" data-text="var(--preset-text-pink-pastel)" style="background: linear-gradient(45deg, var(--preset-bg-purple-dream) 50%, var(--preset-text-pink-pastel) 50%);"></button>
+                                    <button class="preset-theme-btn" title="Tươi mát" data-bg="var(--preset-bg-forest-green)" data-text="var(--preset-text-aqua)" style="background: linear-gradient(45deg, var(--preset-bg-forest-green) 50%, var(--preset-text-aqua) 50%);"></button>
+                                    <button class="preset-theme-btn" title="Hiện đại" data-bg="var(--preset-bg-forest-green)" data-text="var(--preset-text-yellow)" style="background: linear-gradient(45deg, var(--preset-bg-forest-green) 50%, var(--preset-text-yellow) 50%);"></button>
+                                    <button class="preset-theme-btn" title="Ấm áp" data-bg="var(--preset-bg-purple-dream)" data-text="var(--preset-text-yellow)" style="background: linear-gradient(45deg, var(--preset-bg-purple-dream) 50%, var(--preset-text-yellow) 50%);"></button>
+                                    <button class="preset-theme-btn" title="Trang nhã" data-bg="var(--preset-bg-blue-dark)" data-text="var(--preset-text-aqua)" style="background: linear-gradient(45deg, var(--preset-bg-blue-dark) 50%, var(--preset-text-aqua) 50%);"></button>
+                                </div>
+                                <div class="theme-switch flex items-center gap-2 justify-center">
+                                    <i class="ph-bold ph-sun text-yellow-500"></i>
+                                    <label for="darkModeToggle" class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" id="darkModeToggle" class="sr-only peer">
+                                        <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary-color/50 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-primary-color"></div>
+                                    </label>
+                                    <i class="ph-bold ph-moon text-slate-400"></i>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-
+                </nav>
                 <button class="hamburger-menu" id="hamburger-menu">
                     <i class="ph-bold ph-list"></i>
                 </button>
@@ -1068,7 +1122,7 @@
             const customAlertModal = document.getElementById('custom-alert-modal');
             const customAlertMessage = document.getElementById('custom-alert-message');
             const customAlertOkBtn = document.getElementById('custom-alert-ok-btn');
-            const presetThemeButtons = document.querySelectorAll('#desktop-theme-controls .preset-theme-btn');
+            const presetThemeButtons = document.querySelectorAll('.preset-theme-btn');
             const togglePlaylistBtn = document.getElementById('toggle-playlist-btn');
             const popupPlaylistContainer = document.getElementById('popup-playlist-container');
             const popupSongList = document.getElementById('popup-song-list');
@@ -1717,7 +1771,7 @@
                 popupPlaylistContainer.classList.remove('hidden'); // Show playlist by default
                 
                 // Clone preset themes to mobile menu
-                const desktopPresets = document.getElementById('preset-themes');
+                const desktopPresets = document.getElementById('preset-themes-desktop');
                 const mobilePresetsContainer = document.getElementById('mobile-preset-themes');
                 if (desktopPresets && mobilePresetsContainer) {
                     mobilePresetsContainer.innerHTML = desktopPresets.innerHTML;
