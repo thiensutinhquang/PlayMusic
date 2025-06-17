@@ -298,7 +298,7 @@
             to { transform: rotate(360deg); }
         }
         
-        .player-controls button, #popup-share-btn, #popup-open-lyrics-btn {
+        .player-controls button, #popup-open-lyrics-btn {
             background-color: transparent;
             color: var(--text-muted-current);
             border: none;
@@ -327,7 +327,7 @@
             }
         }
 
-        .player-controls button:hover, #popup-share-btn:hover, #popup-open-lyrics-btn:hover {
+        .player-controls button:hover, #popup-open-lyrics-btn:hover {
             background-color: var(--bg-current);
             color: var(--text-current);
         }
@@ -1077,9 +1077,6 @@
     
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
-            // All the JavaScript logic from the previous turn, with fixes for the repeat button and share modal.
-            // The script is extensive, so it's kept in its entirety here.
-            
             // DOM Elements
             const body = document.body;
             const darkModeToggle = document.getElementById('darkModeToggle');
