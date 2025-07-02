@@ -470,15 +470,6 @@
             z-index: 3;
         }
 
-        .song-grid-item.active-song .play-indicator, .song-grid-item:hover .play-indicator {
-             opacity: 1;
-             transform: translate(-50%, -50%) scale(1);
-        }
-        
-        .play-indicator .pulsing-icon {
-            animation: pulse-icon 1.5s infinite;
-        }
-
         @keyframes pulse-icon {
             0%, 100% { transform: scale(1); }
             50% { transform: scale(1.2); }
@@ -1036,64 +1027,6 @@
         </div>
     </header>
 
-    <div class="mobile-nav-overlay" id="mobile-nav-overlay">
-        <div class="mobile-nav-content">
-            <button class="close-mobile-menu" id="close-mobile-menu"><i class="ph-bold ph-x"></i></button>
-            <div class="new-nav-container">
-                 <a href="https://sites.google.com/view/thiensutinhquang" class="new-nav-btn" target="_blank">
-                    <i class="ph-bold ph-house"></i>
-                    <span>Trang Chủ</span>
-                </a>
-                 <a href="https://thiensutinhquang.github.io/Playlist-YouTube/" class="new-nav-btn" target="_blank">
-                    <i class="ph-bold ph-video"></i>
-                    <span>Xem video</span>
-                </a>
-                <a href="https://sites.google.com/view/thiensutinhquang/tuy%E1%BB%83n-t%E1%BA%ADp-th%C6%AƠ" class="new-nav-btn" target="_blank">
-                    <i class="ph-bold ph-book-open"></i>
-                    <span>Kho Thơ</span>
-                </a>
-                <div class="platforms-dropdown">
-                     <button id="platforms-toggle-mobile" class="new-nav-btn">
-                        <i class="ph-bold ph-share-network"></i>
-                        <span>Các Nền Tảng</span>
-                        <i class="ph-bold ph-caret-down ml-2"></i>
-                    </button>
-                    <div id="platforms-menu-mobile" class="platforms-menu">
-                           <a href="https://www.youtube.com/channel/UCLdLj1-g4TI5lSmWeD60mnA" target="_blank"><i class="ph-bold ph-youtube-logo" style="color: #FF0000;"></i> YouTube</a>
-                           <a href="https://www.tiktok.com/@minhsutinhquang" target="_blank"><i class="ph-bold ph-tiktok-logo" style="color: #000000;"></i> TikTok</a>
-                           <a href="https://www.facebook.com/phatphapnhiemmauTinhQuang" target="_blank"><i class="ph-bold ph-facebook-logo" style="color: #1877F2;"></i> Facebook</a>
-                           <a href="https://t.me/Giaoly_phap_don_ngo" target="_blank"><i class="ph-bold ph-telegram-logo" style="color: #24A1DE;"></i> Telegram</a>
-                           <a href="https://zalo.me/g/dukrae245" target="_blank">
-                                <svg class="zalo-svg" height="24px" width="24px" viewBox="0 0 48 48">
-                                    <path d="M48 31.968c0 4.416-3.584 8-8 8H8c-4.416 0-8-3.584-8-8V8c0-4.416 3.584-8 8-8h32c4.416 0 8 3.584 8 8v23.968z" style="fill:#0068ff"></path><path d="M22.208 19.328c-.416-2.048-2.688-3.552-5.92-3.552-4.256 0-7.328 2.4-7.328 5.76 0 3.264 2.816 5.664 6.784 5.664a7.13 7.13 0 002.56-.416l-.8-3.328a3.91 3.91 0 01-1.728.32c-1.856 0-2.816-1.152-2.816-2.208 0-1.216.992-2.208 2.816-2.208 1.44 0 2.272.8 2.496 1.888l3.936.032zm-1.888 7.392l-1.152-4.8c-.128-.544-.608-1.024-1.216-1.024h-.032c-.64 0-1.152.48-1.28 1.056l-1.152 4.768c-.768.16-1.472.256-2.112.256-4.256 0-7.328-2.4-7.328-5.76 0-3.264 2.816-5.664 6.784-5.664 3.232 0 5.504 1.504 5.92 3.552L13.6 26.688c.864 0 1.696-.096 2.528-.256h.032c.16 0 .32.032.48.032.064 0 .128 0 .192-.032zm18.336-1.568H29.36v-1.312h8.32c.544 0 .8.416.512.864l-3.616 5.216h-4.928l4.096-5.768zM29.36 17.536h9.856v1.312h-9.856V17.536z" style="fill:#fff"></path>
-                                    </svg>
-                                    <span>Zalo</span>
-                                </a>
-                            </div>
-                        </div>
-                 <div class="theme-dropdown">
-                    <button id="mobile-theme-menu" class="new-nav-btn">
-                        <i class="ph-bold ph-palette"></i>
-                        <span>Giao diện</span>
-                    </button>
-                    <div id="mobile-theme-options" class="hidden pl-8 pt-2 space-y-4">
-                        <div id="mobile-preset-themes" class="grid grid-cols-6 gap-2">
-                            <!-- Preset buttons will be rendered here by JS -->
-                        </div>
-                         <div class="theme-switch flex items-center gap-2">
-                             <i class="ph-bold ph-sun text-yellow-500"></i>
-                            <label for="darkModeToggleMobile" class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" id="darkModeToggleMobile" class="sr-only peer">
-                                <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary-color/50 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-primary-color"></div>
-                            </label>
-                            <i class="ph-bold ph-moon text-slate-400"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </header>
-
     <main class="container main-content">
         <div class="main-column space-y-6">
              <div class="card" id="music-section">
@@ -1595,6 +1528,44 @@
                     console.error("fetchAudiusData: Lỗi khi tải dữ liệu Audius:", error); // Debug log
                     songsContainer.innerHTML = `<p class="text-center text-red-500 col-span-full">Lỗi khi tải danh sách nhạc: ${error.message}</p>`;
                     showMessage(`Lỗi tải nhạc: ${error.message}. Vui lòng kiểm tra kết nối mạng hoặc thử lại sau.`);
+                    
+                    // Fallback to dummy data if API fetch fails
+                    console.log("fetchAudiusData: Falling back to dummy data.");
+                    songData = [
+                        {
+                            id: "dummy1",
+                            title: "Bài Hát Giả Định 1",
+                            artist: "Nghệ Sĩ Giả Định",
+                            artwork: "https://placehold.co/150x150/f59e0b/ffffff?text=DUMMY1",
+                            duration: 180,
+                            description: "Đây là lời bài hát giả định số 1.\nBạn có thể thay đổi nó để kiểm tra tính năng lời bài hát.",
+                            isFavorite: false,
+                            genre: "Pop"
+                        },
+                        {
+                            id: "dummy2",
+                            title: "Bài Hát Giả Định 2",
+                            artist: "Nghệ Sĩ Giả Định",
+                            artwork: "https://placehold.co/150x150/3b82f6/ffffff?text=DUMMY2",
+                            duration: 240,
+                            description: "Lời bài hát giả định số 2.\nThử phát nhạc và xem lời nhé!",
+                            isFavorite: true,
+                            genre: "Country"
+                        },
+                        {
+                            id: "dummy3",
+                            title: "Bài Hát Giả Định 3",
+                            artist: "Nghệ Sĩ Giả Định",
+                            artwork: "https://placehold.co/150x150/ef4444/ffffff?text=DUMMY3",
+                            duration: 200,
+                            description: "Đây là bài hát thứ ba trong danh sách giả định.",
+                            isFavorite: false,
+                            genre: "Classical"
+                        }
+                    ];
+                    // Re-render songs with dummy data
+                    renderSongs(songData);
+                    showMessage("Đã tải dữ liệu giả định do lỗi kết nối API Audius.");
                 }
             }
 
@@ -1669,7 +1640,11 @@
                 setTimeout(() => {
                     currentSongIndex = index;
                     const song = songData[index];
-                    audioPlayer.src = `${audiusDiscoveryHost}/v1/tracks/${song.id}/stream?app_name=MSTQPlayer`;
+                    // IMPORTANT: Dummy data songs cannot be streamed from Audius.
+                    // If using dummy data, audioPlayer.src will need to be a local/mock audio file,
+                    // or this part will fail silently. For now, it will attempt to stream from Audius
+                    // even with dummy data, which will likely fail.
+                    audioPlayer.src = `${audiusDiscoveryHost}/v1/tracks/${song.id}/stream?app_name=MSTQPlayer`; 
                     audioPlayer.play().catch(e => console.error("playSong: Playback error:", e)); // Debug log
                     updateMediaSession();
 
