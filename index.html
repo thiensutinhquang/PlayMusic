@@ -799,6 +799,41 @@
             animation: achievement-glow 1.5s ease-out;
         }
 
+        /* Custom Tooltip for Achievement Button */
+        .custom-tooltip {
+            position: absolute;
+            bottom: 100%; /* Position above the button */
+            left: 50%;
+            transform: translateX(-50%);
+            margin-bottom: 8px; /* Space between button and tooltip */
+            padding: 8px 12px;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out;
+            z-index: 20;
+        }
+
+        .custom-tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 5px;
+            border-style: solid;
+            border-color: rgba(0, 0, 0, 0.8) transparent transparent transparent;
+        }
+
+        .custom-tooltip.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
         /* ==============================================
         RESPONSIVE
         ==============================================
@@ -894,6 +929,7 @@
             }
 
             .song-grid-item {
+                position: relative; /* Added for correct positioning of play indicator in list view */
                 display: flex;
                 align-items: center;
                 aspect-ratio: auto;
@@ -1043,8 +1079,12 @@
                         <button onclick="loadCustomCategory('favorites')" class="new-nav-btn text-xs">❤️ Yêu thích</button>
                      </div>
                 </div>
-                <div id="songs-container" class="song-grid">
-                    <p class="text-center text-muted-current col-span-full">Đang tải bài hát...</p>
+                <div id="songs-container" class="song-grid relative"> <!-- Added position:relative for loader -->
+                    <div class="loader" id="initial-loader">
+                        <div class="spinner"></div>
+                        <p class="text-center text-muted-current ml-4">Đang tải bài hát...</p>
+                    </div>
+                    <!-- Songs will be appended here -->
                 </div>
                 <audio id="audio-player" style="display: none;"></audio>
             </div>
@@ -1124,11 +1164,15 @@
                     </div>
                     <div id="current-sleep-timer" class="text-xs text-muted-current mt-2">Không hẹn giờ</div>
                 </div>
-                 <div class="mt-4 border-t border-border-current pt-4">
-                    <button id="simulate-achievement-btn" class="new-nav-btn text-xs w-full justify-center">
+                 <div class="relative mt-4 border-t border-border-current pt-4">
+                    <button id="simulate-achievement-btn" class="new-nav-btn text-xs w-full justify-center" aria-describedby="achievement-tooltip">
                         <i class="ph-bold ph-star"></i>
                         <span>Mô phỏng Thành tích</span>
                     </button>
+                    <div id="achievement-tooltip" role="tooltip" class="custom-tooltip hidden">
+                        Nhấn để kích hoạt hiệu ứng thành tích trên logo.
+                        <div class="absolute w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800" style="bottom: -4px; left: 50%; transform: translateX(-50%);"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1223,6 +1267,8 @@
             const simulateAchievementBtn = document.getElementById('simulate-achievement-btn');
             const logoInHeader = document.querySelector('.header .logo img');
             const playerChakraGlow = document.getElementById('player-chakra-glow');
+            const achievementTooltip = document.getElementById('achievement-tooltip'); // New: Get tooltip element
+            const initialLoader = document.getElementById('initial-loader'); // Added: Reference to the initial loader
 
 
             // Mobile theme menu specific elements
@@ -1315,16 +1361,21 @@
 
             // Function to close mobile theme options
             function closeMobileThemeOptions() {
-                mobileThemeOptions.classList.add('hidden');
+                // Re-fetch the element right before using it, as a last resort
+                const currentMobileThemeOptions = document.getElementById('mobile-theme-options');
+                currentMobileThemeOptions?.classList?.add('hidden'); // Use optional chaining
             }
 
             // Function to close desktop theme options
             function closeDesktopThemeOptions() {
-                desktopThemeMenu.classList.remove('show');
+                // Re-fetch the element right before using it, as a last resort
+                const currentDesktopThemeMenu = document.getElementById('theme-menu-desktop');
+                currentDesktopThemeMenu?.classList?.remove('show'); // Use optional chaining
             }
 
             // Function to render preset theme buttons dynamically
             function renderPresetThemes(container, onThemeChangeCallback) {
+                if (!container) return; // Added check for container existence
                 container.innerHTML = ''; // Clear existing buttons
                 presetThemes.forEach(preset => {
                     const btn = document.createElement('button');
@@ -1363,6 +1414,7 @@
 
             // Function to focus on the current theme preset when menu opens
             function focusCurrentThemePreset(container) {
+                if (!container) return; // Added check for container existence
                 const theme = JSON.parse(localStorage.getItem('themeState'));
                 if (theme && theme.mode === 'preset') {
                     const btn = [...container.querySelectorAll('.preset-theme-btn')].find(b =>
@@ -1396,23 +1448,30 @@
                 });
                 if(platformsToggleDesktop) platformsToggleDesktop.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    platformsMenuDesktop.classList.toggle('show');
+                    platformsMenuDesktop?.classList?.toggle('show'); // Use optional chaining
                 });
                 if(platformsToggleMobile) platformsToggleMobile.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    platformsMenuMobile.classList.toggle('show');
+                    platformsMenuMobile?.classList?.toggle('show'); // Use optional chaining
                 });
                 
                 // Desktop theme menu click listener
                 if (themeToggleDesktop) {
                     themeToggleDesktop.addEventListener('click', (e) => {
                         e.stopPropagation();
-                        const isShown = desktopThemeMenu.classList.toggle('show');
-                        if (navigator.vibrate) navigator.vibrate(20);
-                        clearTimeout(desktopThemeAutoCloseTimer);
-                        if (isShown) {
-                            desktopThemeAutoCloseTimer = setTimeout(closeDesktopThemeOptions, 7000);
-                            focusCurrentThemePreset(desktopThemeMenu.querySelector('#preset-themes-desktop'));
+                        // Re-fetch the element right before using it, as a last resort
+                        const currentDesktopThemeMenu = document.getElementById('theme-menu-desktop');
+                        if (currentDesktopThemeMenu) { // Only check element existence here
+                            // Use optional chaining for classList.toggle to prevent error if classList is null
+                            const isShown = currentDesktopThemeMenu.classList?.toggle('show'); 
+                            if (navigator.vibrate) navigator.vibrate(20);
+                            clearTimeout(desktopThemeAutoCloseTimer);
+                            if (isShown) {
+                                desktopThemeAutoCloseTimer = setTimeout(closeDesktopThemeOptions, 7000);
+                                focusCurrentThemePreset(currentDesktopThemeMenu.querySelector('#preset-themes-desktop'));
+                            }
+                        } else {
+                            console.warn("desktopThemeMenu is null when themeToggleDesktop is clicked.");
                         }
                     });
                 }
@@ -1421,28 +1480,39 @@
                 if (mobileThemeMenu) {
                     mobileThemeMenu.addEventListener('click', (e) => {
                         e.stopPropagation();
-                        const isHidden = mobileThemeOptions.classList.toggle('hidden'); // Toggle and get current state
-                        if (navigator.vibrate) navigator.vibrate(20);
+                        // Re-fetch the element right before using it, as a last resort
+                        const currentMobileThemeOptions = document.getElementById('mobile-theme-options');
+                        if (currentMobileThemeOptions) { // Only check element existence here
+                            // Use optional chaining for classList.toggle to prevent error if classList is null
+                            const isHidden = currentMobileThemeOptions.classList?.toggle('hidden');
+                            if (navigator.vibrate) navigator.vibrate(20);
 
-                        clearTimeout(mobileThemeAutoCloseTimer); // Clear any existing timer
-                        if (!isHidden) { // If menu is now shown
-                            mobileThemeAutoCloseTimer = setTimeout(closeMobileThemeOptions, 7000);
-                            focusCurrentThemePreset(mobileThemeOptions.querySelector('#mobile-preset-themes'));
+                            clearTimeout(mobileThemeAutoCloseTimer);
+                            if (!isHidden) {
+                                mobileThemeAutoCloseTimer = setTimeout(closeMobileThemeOptions, 7000);
+                                focusCurrentThemePreset(currentMobileThemeOptions.querySelector('#mobile-preset-themes'));
+                            }
+                        } else {
+                            console.warn("mobileThemeOptions is null when mobileThemeMenu is clicked.");
                         }
                     });
                 }
 
                 // Global click listener to hide menus when clicking outside
                 window.addEventListener('click', (e) => {
-                    if (platformsMenuDesktop && platformsMenuDesktop.classList.contains('show') && !platformsMenuDesktop.contains(e.target) && e.target !== platformsToggleDesktop) {
+                    if (platformsMenuDesktop?.classList?.contains('show') && !platformsMenuDesktop.contains(e.target) && e.target !== platformsToggleDesktop) { // Use optional chaining
                         platformsMenuDesktop.classList.remove('show');
                     }
-                    if (desktopThemeMenu && desktopThemeMenu.classList.contains('show') && !desktopThemeMenu.contains(e.target) && e.target !== themeToggleDesktop) {
+                    // Re-fetch desktopThemeMenu for global click listener
+                    const currentDesktopThemeMenu = document.getElementById('theme-menu-desktop');
+                    if (currentDesktopThemeMenu?.classList?.contains('show') && !currentDesktopThemeMenu.contains(e.target) && e.target !== themeToggleDesktop) { // Use optional chaining
                         closeDesktopThemeOptions();
                     }
                     // Hide mobile theme options if clicking outside
-                    if (!mobileThemeOptions.classList.contains('hidden')) {
-                        if (!mobileThemeOptions.contains(e.target) && e.target !== mobileThemeMenu) {
+                    // Re-fetch mobileThemeOptions for global click listener
+                    const currentMobileThemeOptions = document.getElementById('mobile-theme-options');
+                    if (currentMobileThemeOptions?.classList && !currentMobileThemeOptions.classList.contains('hidden')) { // Use optional chaining for classList
+                        if (!currentMobileThemeOptions.contains(e.target) && e.target !== mobileThemeMenu) {
                             closeMobileThemeOptions();
                         }
                     }
@@ -1514,7 +1584,7 @@
                         id: track.id,
                         title: track.title,
                         artist: track.user ? track.user.name : 'Unknown Artist',
-                        artwork: track.artwork ? (track.artwork['480x480'] || track.artwork.url) : `https://placehold.co/150x150/1e293b/f1f5f9?text=${track.title.charAt(0)}`,
+                        artwork: track.artwork ? (track.artwork['480x480'] || track.artwork.url) : `https://placehold.co/150x150/1e293b/f1f5f9?text=${track.title.charAt(0)}}`,
                         duration: track.duration,
                         description: track.description || '',
                         isFavorite: favoriteSongIds.includes(track.id),
@@ -1578,8 +1648,20 @@
 
             function renderSongs(tracks) {
                 console.log('renderSongs: Attempting to render songs. Tracks count:', tracks ? tracks.length : 0); // Debug log
+                
+                // Hide the loader once we are ready to render songs
+                if (initialLoader) {
+                    initialLoader.classList.add('hidden');
+                }
+
                 currentDisplayData = tracks; 
-                songsContainer.innerHTML = !tracks || tracks.length === 0 ? '<p class="text-center text-muted-current col-span-full">Không có bài hát nào.</p>' : '';
+                songsContainer.innerHTML = ''; // Clear previous content (including the loader if it wasn't hidden by class)
+
+                if (!tracks || tracks.length === 0) {
+                    songsContainer.innerHTML = '<p class="text-center text-muted-current col-span-full">Không có bài hát nào.</p>';
+                    return;
+                }
+
                 tracks.forEach((song, displayIndex) => {
                     const songItem = document.createElement('div');
                     songItem.className = 'song-grid-item';
@@ -1671,22 +1753,22 @@
                 isPlaying = !audioPlayer.paused;
 
                 if (song) {
-                    popupSongTitle.textContent = song.title;
-                    popupSongArtist.textContent = song.artist;
-                    popupAlbumArt.src = song.artwork;
+                    if (popupSongTitle) popupSongTitle.textContent = song.title; // Added check
+                    if (popupSongArtist) popupSongArtist.textContent = song.artist; // Added check
+                    if (popupAlbumArt) popupAlbumArt.src = song.artwork; // Added check
                     if(mainLyricsContainer) mainLyricsContainer.innerHTML = song.description ? song.description.split('\n').map(line => `<p>${line}</p>`).join('') : '<p class="text-muted-current">Không có lời bài hát.</p>';
                     updateFavoriteButtonsUI(song.id, favoriteSongIds.includes(song.id));
                 } else {
-                    popupSongTitle.textContent = "Chọn một bài hát";
-                    popupSongArtist.textContent = "Để bắt đầu nghe nhạc";
-                    popupAlbumArt.src = "https://github.com/thiensutinhquang/Admin/blob/main/sukien/images/logo.png?raw=true"; // Default logo
+                    if (popupSongTitle) popupSongTitle.textContent = "Chọn một bài hát"; // Added check
+                    if (popupSongArtist) popupSongArtist.textContent = "Để bắt đầu nghe nhạc"; // Added check
+                    if (popupAlbumArt) popupAlbumArt.src = "https://github.com/thiensutinhquang/Admin/blob/main/sukien/images/logo.png?raw=true"; // Default logo // Added check
                     if(mainLyricsContainer) mainLyricsContainer.innerHTML = '<p class="text-muted-current">Lời bài hát sẽ được hiển thị ở đây.</p>';
                 }
 
-                playIcon.classList.toggle('hidden', isPlaying);
-                pauseIcon.classList.toggle('hidden', !isPlaying);
-                popupAlbumArt.classList.toggle('spinning', isPlaying);
-                playerChakraGlow.classList.toggle('playing', isPlaying); // Apply chakra glow when playing
+                if (playIcon) playIcon.classList.toggle('hidden', isPlaying); // Added check
+                if (pauseIcon) pauseIcon.classList.toggle('hidden', !isPlaying); // Added check
+                if (popupAlbumArt) popupAlbumArt.classList.toggle('spinning', isPlaying); // Added check
+                if (playerChakraGlow) playerChakraGlow.classList.toggle('playing', isPlaying); // Apply chakra glow when playing // Added check
                 
                 document.querySelectorAll('.song-grid-item').forEach(item => {
                     const itemSong = currentDisplayData[parseInt(item.dataset.displayIndex)];
@@ -1701,7 +1783,7 @@
                     const itemIndex = parseInt(item.dataset.index);
                     const isActive = itemIndex === currentSongIndex;
                     item.classList.toggle('active-song-in-list', isActive);
-                    if (isActive && !popupPlaylistContainer.classList.contains('hidden')) {
+                    if (isActive && popupPlaylistContainer && !popupPlaylistContainer.classList.contains('hidden')) { // Added check for popupPlaylistContainer
                         item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                     }
                 });
@@ -1745,7 +1827,8 @@
                 console.log('startSleepTimer: Setting sleep timer for', minutes, 'minutes.'); // Debug log
                 clearTimeout(sleepTimer); clearInterval(sleepTimerInterval);
                 if (minutes === 0) {
-                    currentSleepTimerDisplay.textContent = 'Không hẹn giờ'; return;
+                    if (currentSleepTimerDisplay) currentSleepTimerDisplay.textContent = 'Không hẹn giờ'; // Added check
+                    return;
                 }
                 sleepTimerEndTime = Date.now() + minutes * 60 * 1000;
                 sleepTimer = setTimeout(() => {
@@ -1763,14 +1846,14 @@
                 if (timeLeftMs <= 0) { clearSleepTimer(); return; }
                 const minutes = Math.floor((timeLeftMs / 1000) / 60);
                 const seconds = Math.floor((timeLeftMs / 1000) % 60);
-                currentSleepTimerDisplay.textContent = `Còn: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+                if (currentSleepTimerDisplay) currentSleepTimerDisplay.textContent = `Còn: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`; // Added check
             }
 
             function clearSleepTimer() {
                 console.log('clearSleepTimer: Clearing sleep timer.'); // Debug log
                 clearTimeout(sleepTimer); clearInterval(sleepTimerInterval);
                 sleepTimer = sleepTimerEndTime = sleepTimerInterval = null;
-                currentSleepTimerDisplay.textContent = 'Không hẹn giờ';
+                if (currentSleepTimerDisplay) currentSleepTimerDisplay.textContent = 'Không hẹn giờ'; // Added check
             }
             
             // Lyrics Popup Functions
@@ -1781,17 +1864,17 @@
                     showMessage("Vui lòng chọn một bài hát để xem lời.");
                     return;
                 }
-                lyricsPopupTitle.textContent = song.title;
+                if (lyricsPopupTitle) lyricsPopupTitle.textContent = song.title; // Added check
                 paginateLyrics(song.description);
                 applyLyricsThemeAndFontStyles();
-                lyricsFullscreenPopup.classList.remove('hidden');
-                lyricsFullscreenPopup.classList.add('show');
+                if (lyricsFullscreenPopup) lyricsFullscreenPopup.classList.remove('hidden'); // Added check
+                if (lyricsFullscreenPopup) lyricsFullscreenPopup.classList.add('show'); // Added check
             }
 
             function hideLyricsFullscreenPopup() {
                 console.log('hideLyricsFullscreenPopup: Closing lyrics popup.'); // Debug log
-                 lyricsFullscreenPopup.classList.remove('show');
-                 lyricsFullscreenPopup.classList.add('hidden');
+                if (lyricsFullscreenPopup) lyricsFullscreenPopup.classList.remove('show'); // Added check
+                if (lyricsFullscreenPopup) lyricsFullscreenPopup.classList.add('hidden'); // Added check
             }
 
             function paginateLyrics(text) {
@@ -1808,22 +1891,24 @@
             function displayCurrentLyricsPage() {
                 console.log('displayCurrentLyricsPage: Displaying current lyrics page.'); // Debug log
                 if (!lyricsPages || lyricsPages.length === 0) return;
-                fullLyricsDisplay.innerHTML = lyricsPages[currentLyricsPage].map(line => `<p>${line}</p>`).join('');
-                lyricsPageIndicator.textContent = `Trang ${currentLyricsPage + 1} / ${lyricsPages.length}`;
-                lyricsLeftArrow.style.display = lyricsPages.length > 1 ? 'flex' : 'none';
-                lyricsRightArrow.style.display = lyricsPages.length > 1 ? 'flex' : 'none';
-                lyricsLeftArrow.classList.toggle('disabled', currentLyricsPage === 0);
-                lyricsRightArrow.classList.toggle('disabled', currentLyricsPage === lyricsPages.length - 1);
+                if (fullLyricsDisplay) fullLyricsDisplay.innerHTML = lyricsPages[currentLyricsPage].map(line => `<p>${line}</p>`).join(''); // Added check
+                if (lyricsPageIndicator) lyricsPageIndicator.textContent = `Trang ${currentLyricsPage + 1} / ${lyricsPages.length}`; // Added check
+                if (lyricsLeftArrow) lyricsLeftArrow.style.display = lyricsPages.length > 1 ? 'flex' : 'none'; // Added check
+                if (lyricsRightArrow) lyricsRightArrow.style.display = lyricsPages.length > 1 ? 'flex' : 'none'; // Added check
+                if (lyricsLeftArrow) lyricsLeftArrow.classList.toggle('disabled', currentLyricsPage === 0); // Added check
+                if (lyricsRightArrow) lyricsRightArrow.classList.toggle('disabled', currentLyricsPage === lyricsPages.length - 1); // Added check
             };
             
              function positionRadialItems() {
-                const angleStep = 150 / (radialItems.length -1);
-                radialItems.forEach((item, index) => {
-                    const angle = (index * angleStep) ;
-                    const radians = angle * (Math.PI / 180);
-                    item.style.setProperty('--x', `${70 * Math.cos(radians)}px`);
-                    item.style.setProperty('--y', `${70 * Math.sin(radians)}px`);
-                });
+                // Fixed: Check if radialItems exists and has length before iterating
+                if (radialItems && radialItems.length > 0) { 
+                    const angleStep = 150 / (radialItems.length -1);
+                    radialItems.forEach((item, index) => {
+                        const radians = angleStep * index * (Math.PI / 180); // Fixed: radians was not defined
+                        item.style.setProperty('--x', `${70 * Math.cos(radians)}px`);
+                        item.style.setProperty('--y', `${70 * Math.sin(radians)}px`);
+                    });
+                }
             };
 
             function saveLyricsPreferences() {
@@ -1837,11 +1922,15 @@
             function applyLyricsThemeAndFontStyles() {
                 console.log('applyLyricsThemeAndFontStyles: Applying lyrics theme and font styles.'); // Debug log
                 const theme = lyricsThemes.find(t => t.id === currentLyricsThemeId) || lyricsThemes[0];
-                const popupContent = lyricsFullscreenPopup.querySelector('.lyrics-popup-content');
-                popupContent.style.backgroundColor = theme.bgColor;
-                popupContent.style.color = theme.textColor;
-                fullLyricsDisplay.style.fontSize = `${lyricsFontSize}px`;
-                fullLyricsDisplay.style.fontFamily = fontOptions[currentFontIndex];
+                const popupContent = lyricsFullscreenPopup ? lyricsFullscreenPopup.querySelector('.lyrics-popup-content') : null; // Added check
+                if (popupContent) { // Added check
+                    popupContent.style.backgroundColor = theme.bgColor;
+                    popupContent.style.color = theme.textColor;
+                }
+                if (fullLyricsDisplay) { // Added check
+                    fullLyricsDisplay.style.fontSize = `${lyricsFontSize}px`;
+                    fullLyricsDisplay.style.fontFamily = fontOptions[currentFontIndex];
+                }
             }
             
             function toggleFavorite(songId) {
@@ -1862,22 +1951,22 @@
             
             function updateFavoriteButtonsUI(songId, isFavorite) {
                 if (songData[currentSongIndex]?.id === songId) {
-                    favoriteBtn.classList.toggle('liked', isFavorite);
-                    favoriteBtn.innerHTML = isFavorite ? '<i class="ph-fill ph-heart"></i>' : '<i class="ph-bold ph-heart"></i>';
+                    if (favoriteBtn) favoriteBtn.classList.toggle('liked', isFavorite); // Added check
+                    if (favoriteBtn) favoriteBtn.innerHTML = isFavorite ? '<i class="ph-fill ph-heart"></i>' : '<i class="ph-bold ph-heart"></i>'; // Added check
                 }
             }
             
             function showMessage(message) {
                 console.log('showMessage: Displaying custom alert:', message); // Debug log
-                customAlertMessage.textContent = message;
-                customAlertModal.classList.remove('hidden');
-                customAlertModal.classList.add('show');
+                if (customAlertMessage) customAlertMessage.textContent = message; // Added check
+                if (customAlertModal) customAlertModal.classList.remove('hidden'); // Added check
+                if (customAlertModal) customAlertModal.classList.add('show'); // Added check
             }
 
             function hideMessage() {
                 console.log('hideMessage: Hiding custom alert.'); // Debug log
-                customAlertModal.classList.remove('show');
-                customAlertModal.classList.add('hidden');
+                if (customAlertModal) customAlertModal.classList.remove('show'); // Added check
+                if (customAlertModal) customAlertModal.classList.add('hidden'); // Added check
             }
             
             async function requestWakeLock() {
@@ -1941,12 +2030,14 @@
             // ==============================================
             // EVENT LISTENERS
             // ==============================================
-            darkModeToggle.addEventListener('change', () => {
-                console.log('darkModeToggle: Change event detected.'); // Debug log
-                const theme = { mode: darkModeToggle.checked ? 'dark' : 'light' };
-                localStorage.setItem('themeState', JSON.stringify(theme));
-                applyTheme();
-            });
+            if (darkModeToggle) { // Added check
+                darkModeToggle.addEventListener('change', () => {
+                    console.log('darkModeToggle: Change event detected.'); // Debug log
+                    const theme = { mode: darkModeToggle.checked ? 'dark' : 'light' };
+                    localStorage.setItem('themeState', JSON.stringify(theme));
+                    applyTheme();
+                });
+            }
             // Fixed: Check if darkModeToggleMobile exists before adding event listener
             if (darkModeToggleMobile) { 
                 darkModeToggleMobile.addEventListener('change', (e) => {
@@ -1959,132 +2050,188 @@
                 });
             }
 
-            customAlertOkBtn.addEventListener('click', hideMessage);
+            if (customAlertOkBtn) customAlertOkBtn.addEventListener('click', hideMessage); // Added check
             
-            playPauseBtn.addEventListener('click', () => {
-                console.log('playPauseBtn: Click detected.'); // Debug log
-                if (currentSongIndex === -1 && songData.length > 0) playSong(0);
-                else if (audioPlayer.paused) audioPlayer.play();
-                else audioPlayer.pause();
-            });
+            if (playPauseBtn) { // Added check
+                playPauseBtn.addEventListener('click', () => {
+                    console.log('playPauseBtn: Click detected.'); // Debug log
+                    if (currentSongIndex === -1 && songData.length > 0) playSong(0);
+                    else if (audioPlayer.paused) audioPlayer.play();
+                    else audioPlayer.pause();
+                });
+            }
 
-            audioPlayer.addEventListener('play', () => { isPlaying = true; updateUI(); requestWakeLock(); updateMediaSession(); });
-            audioPlayer.addEventListener('pause', () => { isPlaying = false; updateUI(); releaseWakeLock(); updateMediaSession();});
-            
-            audioPlayer.addEventListener('ended', () => {
-                console.log('audioPlayer: Song ended.'); // Debug log
-                if (repeatMode === 'one') {
-                    playSong(currentSongIndex);
-                } else if (repeatMode === 'all') {
-                     playNext();
-                } else if (currentSongIndex < currentDisplayData.length - 1) {
-                    playNext();
-                }
-            });
+            if (audioPlayer) { // Added check
+                audioPlayer.addEventListener('play', () => { isPlaying = true; updateUI(); requestWakeLock(); updateMediaSession(); });
+                audioPlayer.addEventListener('pause', () => { isPlaying = false; updateUI(); releaseWakeLock(); updateMediaSession();});
+                
+                audioPlayer.addEventListener('ended', () => {
+                    console.log('audioPlayer: Song ended.'); // Debug log
+                    if (repeatMode === 'one') {
+                        playSong(currentSongIndex);
+                    } else if (repeatMode === 'all') {
+                         playNext();
+                    } else if (currentSongIndex < currentDisplayData.length - 1) {
+                        playNext();
+                    }
+                });
 
-            audioPlayer.addEventListener('timeupdate', () => {
-                const { currentTime, duration } = audioPlayer;
-                if(duration) {
-                    progressBar.style.width = `${(currentTime / duration) * 100}%`;
-                    currentTimeEl.textContent = new Date(currentTime * 1000).toISOString().substr(14, 5);
-                    durationEl.textContent = new Date(duration * 1000).toISOString().substr(14, 5);
-                }
-            });
+                audioPlayer.addEventListener('timeupdate', () => {
+                    const { currentTime, duration } = audioPlayer;
+                    if(duration) {
+                        if (progressBar) progressBar.style.width = `${(currentTime / duration) * 100}%`; // Added check
+                        if (currentTimeEl) currentTimeEl.textContent = new Date(currentTime * 1000).toISOString().substr(14, 5); // Added check
+                        if (durationEl) durationEl.textContent = new Date(duration * 1000).toISOString().substr(14, 5); // Added check
+                    }
+                });
+            }
             
-            progressContainer.addEventListener('click', (e) => {
-                if(audioPlayer.duration) audioPlayer.currentTime = (e.offsetX / progressContainer.clientWidth) * audioPlayer.duration;
-            });
-             progressContainer.addEventListener('mousemove', (e) => {
-                if (audioPlayer.duration) {
-                    const hoverTime = (e.offsetX / progressContainer.clientWidth) * audioPlayer.duration;
-                    progressTooltip.textContent = new Date(hoverTime * 1000).toISOString().substr(14, 5);
-                    progressTooltip.style.left = `${e.offsetX}px`;
-                }
-            });
+            if (progressContainer) { // Added check
+                progressContainer.addEventListener('click', (e) => {
+                    if(audioPlayer.duration) audioPlayer.currentTime = (e.offsetX / progressContainer.clientWidth) * audioPlayer.duration;
+                });
+                progressContainer.addEventListener('mousemove', (e) => {
+                    if (audioPlayer.duration) {
+                        const hoverTime = (e.offsetX / progressContainer.clientWidth) * audioPlayer.duration;
+                        if (progressTooltip) progressTooltip.textContent = new Date(hoverTime * 1000).toISOString().substr(14, 5); // Added check
+                        if (progressTooltip) progressTooltip.style.left = `${e.offsetX}px`; // Added check
+                    }
+                });
+            }
             
-            nextBtn.addEventListener('click', playNext);
-            prevBtn.addEventListener('click', playPrev);
+            if (nextBtn) nextBtn.addEventListener('click', playNext); // Added check
+            if (prevBtn) prevBtn.addEventListener('click', playPrev); // Added check
 
-            shuffleBtn.addEventListener('click', () => {
-                console.log('shuffleBtn: Click detected. Shuffling:', !isShuffling); // Debug log
-                isShuffling = !isShuffling;
-                localStorage.setItem('isShuffling', isShuffling);
-                shuffleBtn.classList.toggle('active-control', isShuffling);
-            });
+            if (shuffleBtn) { // Added check
+                shuffleBtn.addEventListener('click', () => {
+                    console.log('shuffleBtn: Click detected. Shuffling:', !isShuffling); // Debug log
+                    isShuffling = !isShuffling;
+                    localStorage.setItem('isShuffling', isShuffling);
+                    shuffleBtn.classList.toggle('active-control', isShuffling);
+                });
+            }
             
-            repeatBtn.addEventListener('click', () => {
-                console.log('repeatBtn: Click detected. Current repeat mode:', repeatMode); // Debug log
-                const modes = ['none', 'all', 'one'];
-                let currentModeIndex = modes.indexOf(repeatMode);
-                repeatMode = modes[(currentModeIndex + 1) % modes.length];
-                localStorage.setItem('repeatMode', repeatMode);
-                repeatBtn.classList.toggle('active-control', repeatMode !== 'none');
-                repeatBtn.innerHTML = repeatMode === 'one' ? '<i class="ph-bold ph-repeat-once"></i>' : '<i class="ph-bold ph-repeat"></i>';
-            });
+            if (repeatBtn) { // Added check
+                repeatBtn.addEventListener('click', () => {
+                    console.log('repeatBtn: Click detected. Current repeat mode:', repeatMode); // Debug log
+                    const modes = ['none', 'all', 'one'];
+                    let currentModeIndex = modes.indexOf(repeatMode);
+                    repeatMode = modes[(currentModeIndex + 1) % modes.length];
+                    localStorage.setItem('repeatMode', repeatMode);
+                    repeatBtn.classList.toggle('active-control', repeatMode !== 'none');
+                    repeatBtn.innerHTML = repeatMode === 'one' ? '<i class="ph-bold ph-repeat-once"></i>' : '<i class="ph-bold ph-repeat"></i>';
+                });
+            }
             
-            sleepTimerButtons.forEach(button => button.addEventListener('click', () => startSleepTimer(parseInt(button.dataset.minutes))));
-            setCustomSleepTimerBtn.addEventListener('click', () => {
-                const minutes = parseInt(customMinutesInput.value);
-                if (!isNaN(minutes) && minutes > 0) startSleepTimer(minutes);
+            sleepTimerButtons.forEach(button => { // No need for individual check, as it's a querySelectorAll
+                button.addEventListener('click', () => startSleepTimer(parseInt(button.dataset.minutes)));
             });
+            if (setCustomSleepTimerBtn) { // Added check
+                setCustomSleepTimerBtn.addEventListener('click', () => {
+                    const minutes = parseInt(customMinutesInput.value);
+                    if (!isNaN(minutes) && minutes > 0) startSleepTimer(minutes);
+                });
+            }
 
-            volumeSlider.addEventListener('input', (e) => {
-                audioPlayer.volume = e.target.value;
-                volumePercentage.textContent = Math.round(e.target.value * 100);
-            });
+            if (volumeSlider) { // Added check
+                volumeSlider.addEventListener('input', (e) => {
+                    audioPlayer.volume = e.target.value;
+                    if (volumePercentage) volumePercentage.textContent = Math.round(e.target.value * 100); // Added check
+                });
+            }
             
-            favoriteBtn.addEventListener('click', () => {
-                if (currentSongIndex !== -1) {
-                    toggleFavorite(songData[currentSongIndex].id);
-                }
-            });
+            if (favoriteBtn) { // Added check
+                favoriteBtn.addEventListener('click', () => {
+                    if (currentSongIndex !== -1) {
+                        toggleFavorite(songData[currentSongIndex].id);
+                    }
+                });
+            }
             
             // Lyrics Popup Listeners
-            popupOpenLyricsBtn.addEventListener('click', showLyricsFullscreenPopup);
-            viewMoreLyricsBtn.addEventListener('click', showLyricsFullscreenPopup);
-            closeLyricsFullscreenBtn.addEventListener('click', hideLyricsFullscreenPopup);
-            lyricsLeftArrow.addEventListener('click', () => { if(currentLyricsPage > 0) { currentLyricsPage--; displayCurrentLyricsPage(); } });
-            lyricsRightArrow.addEventListener('click', () => { if(currentLyricsPage < lyricsPages.length - 1) { currentLyricsPage++; displayCurrentLyricsPage(); } });
+            if (popupOpenLyricsBtn) popupOpenLyricsBtn.addEventListener('click', showLyricsFullscreenPopup); // Added check
+            if (viewMoreLyricsBtn) viewMoreLyricsBtn.addEventListener('click', showLyricsFullscreenPopup); // Added check
+            if (closeLyricsFullscreenBtn) closeLyricsFullscreenBtn.addEventListener('click', hideLyricsFullscreenPopup); // Added check
+            if (lyricsLeftArrow) lyricsLeftArrow.addEventListener('click', () => { if(currentLyricsPage > 0) { currentLyricsPage--; displayCurrentLyricsPage(); } }); // Added check
+            if (lyricsRightArrow) lyricsRightArrow.addEventListener('click', () => { if(currentLyricsPage < lyricsPages.length - 1) { currentLyricsPage++; displayCurrentLyricsPage(); } } ); // Added check
             
             // Radial Menu Listeners
-            radialMenuToggleBtn.addEventListener('click', () => radialMenuContainer.classList.toggle('active'));
-            document.getElementById('radial-font-size-increase').addEventListener('click', () => {
+            if (radialMenuToggleBtn) radialMenuToggleBtn.addEventListener('click', () => { // Added check
+                if (radialMenuContainer) radialMenuContainer.classList.toggle('active'); // Added check
+            });
+            // Fixed: Check if elements exist before adding listeners
+            const radialFontSizeIncrease = document.getElementById('radial-font-size-increase');
+            const radialFontSizeDecrease = document.getElementById('radial-font-size-decrease');
+            const radialLinesIncrease = document.getElementById('radial-lines-increase');
+            const radialLinesDecrease = document.getElementById('radial-lines-decrease');
+            const radialFontBtn = document.getElementById('radial-font-btn');
+            const radialThemeBtn = document.getElementById('radial-theme-btn');
+
+            if (radialFontSizeIncrease) radialFontSizeIncrease.addEventListener('click', () => {
                 if (navigator.vibrate) { navigator.vibrate(20); }
                 lyricsFontSize++; applyLyricsThemeAndFontStyles(); saveLyricsPreferences();
             });
-             document.getElementById('radial-font-size-decrease').addEventListener('click', () => {
+            if (radialFontSizeDecrease) radialFontSizeDecrease.addEventListener('click', () => {
                 if (navigator.vibrate) { navigator.vibrate(20); }
                 lyricsFontSize = Math.max(12, lyricsFontSize - 1); applyLyricsThemeAndFontStyles(); saveLyricsPreferences();
             });
-            document.getElementById('radial-lines-increase').addEventListener('click', () => {
+            if (radialLinesIncrease) radialLinesIncrease.addEventListener('click', () => {
                 if (navigator.vibrate) { navigator.vibrate(20); }
                 linesPerPage++; paginateLyrics(songData[currentSongIndex]?.description || ''); saveLyricsPreferences();
             });
-             document.getElementById('radial-lines-decrease').addEventListener('click', () => {
-                 if (navigator.vibrate) { navigator.vibrate(20); }
+            if (radialLinesDecrease) radialLinesDecrease.addEventListener('click', () => {
+                if (navigator.vibrate) { navigator.vibrate(20); }
                 linesPerPage = Math.max(1, linesPerPage - 1); paginateLyrics(songData[currentSongIndex]?.description || ''); saveLyricsPreferences();
             });
-             document.getElementById('radial-font-btn').addEventListener('click', () => {
+            if (radialFontBtn) radialFontBtn.addEventListener('click', () => {
                 if (navigator.vibrate) { navigator.vibrate(20); }
                 currentFontIndex = (currentFontIndex + 1) % fontOptions.length; applyLyricsThemeAndFontStyles(); saveLyricsPreferences();
             });
-            document.getElementById('radial-theme-btn').addEventListener('click', () => {
+            if (radialThemeBtn) radialThemeBtn.addEventListener('click', () => {
                 let currentThemeObjIndex = lyricsThemes.findIndex(t => t.id === currentLyricsThemeId);
                 currentLyricsThemeId = lyricsThemes[(currentThemeObjIndex + 1) % lyricsThemes.length].id;
                 applyLyricsThemeAndFontStyles(); saveLyricsPreferences();
             });
             
-            togglePlaylistBtn.addEventListener('click', () => {
-                popupPlaylistContainer.classList.toggle('hidden');
-                if (!popupPlaylistContainer.classList.contains('hidden')) {
-                    const activeSongInList = popupSongList.querySelector('.active-song-in-list');
-                    if (activeSongInList) {
-                        activeSongInList.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            if (togglePlaylistBtn) { // Added check
+                togglePlaylistBtn.addEventListener('click', () => {
+                    if (popupPlaylistContainer) popupPlaylistContainer.classList.toggle('hidden'); // Added check
+                    if (popupPlaylistContainer && !popupPlaylistContainer.classList.contains('hidden')) {
+                        const activeSongInList = popupSongList ? popupSongList.querySelector('.active-song-in-list') : null; // Added check
+                        if (activeSongInList) {
+                            activeSongInList.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                        }
                     }
-                }
-            });
+                });
+            }
 
-            simulateAchievementBtn.addEventListener('click', simulateAchievementAnimation);
+            if (simulateAchievementBtn) simulateAchievementBtn.addEventListener('click', simulateAchievementAnimation); // Added check
+
+            // New: Event listener for the custom tooltip
+            if (simulateAchievementBtn && achievementTooltip) {
+                simulateAchievementBtn.addEventListener('click', (e) => {
+                    e.stopPropagation(); // Prevent document click from immediately closing
+                    simulateAchievementAnimation(); // Existing animation call
+
+                    // Toggle tooltip visibility
+                    if (achievementTooltip) achievementTooltip.classList.toggle('show'); // Added check
+                    if (achievementTooltip && achievementTooltip.classList.contains('show')) {
+                        // Optional: Set a timeout to hide the tooltip after a few seconds
+                        setTimeout(() => {
+                            if (achievementTooltip) achievementTooltip.classList.remove('show'); // Added check
+                        }, 3000); // Hide after 3 seconds
+                    }
+                });
+
+                // Hide tooltip when clicking anywhere else on the document
+                document.addEventListener('click', (e) => {
+                    if (achievementTooltip && achievementTooltip.classList.contains('show')) {
+                        if (!simulateAchievementBtn.contains(e.target) && !achievementTooltip.contains(e.target)) {
+                            achievementTooltip.classList.remove('show');
+                        }
+                    }
+                });
+            }
 
 
             // ==============================================
@@ -2094,15 +2241,15 @@
                 console.log('initializeApp: Starting application initialization.'); // Debug log
                 // Hide splash screen after a delay
                 setTimeout(() => {
-                    splashScreen.classList.add('hidden');
+                    if (splashScreen) splashScreen.classList.add('hidden'); // Added check
                     console.log('initializeApp: Splash screen hidden.'); // Debug log
                 }, 2000); // Show splash for 2 seconds
 
                 applyTheme();
                 setupNavEvents();
-                shuffleBtn.classList.toggle('active-control', isShuffling);
-                repeatBtn.classList.toggle('active-control', repeatMode !== 'none');
-                repeatBtn.innerHTML = repeatMode === 'one' ? '<i class="ph-bold ph-repeat-once"></i>' : '<i class="ph-bold ph-repeat"></i>';
+                if (shuffleBtn) shuffleBtn.classList.toggle('active-control', isShuffling); // Added check
+                if (repeatBtn) repeatBtn.classList.toggle('active-control', repeatMode !== 'none'); // Added check
+                if (repeatBtn) repeatBtn.innerHTML = repeatMode === 'one' ? '<i class="ph-bold ph-repeat-once"></i>' : '<i class="ph-bold ph-repeat"></i>'; // Added check
                 
                 // Fetch and render data
                 await fetchAudiusData();
@@ -2111,7 +2258,7 @@
                 
                 updateUI();
                 positionRadialItems();
-                popupPlaylistContainer.classList.remove('hidden'); // Show playlist by default
+                if (popupPlaylistContainer) popupPlaylistContainer.classList.remove('hidden'); // Show playlist by default // Added check
                 
                 // Render preset themes for both desktop and mobile
                 const desktopPresetsContainer = document.getElementById('preset-themes-desktop');
