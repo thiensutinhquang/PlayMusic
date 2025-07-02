@@ -747,6 +747,20 @@
              .mobile-nav-content .platforms-menu.show {
                 display: block;
              }
+
+            /* CSS hiệu ứng cho mobile-theme-options */
+            #mobile-theme-options {
+                transition: opacity 0.2s, transform 0.2s;
+                opacity: 0;
+                transform: translateY(-16px) scale(0.98);
+                pointer-events: none; /* Ngăn chặn sự kiện khi ẩn */
+            }
+            #mobile-theme-options:not(.hidden) {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+                pointer-events: auto; /* Cho phép sự kiện khi hiển thị */
+                z-index: 30; /* Đảm bảo hiển thị trên các phần tử khác */
+            }
         }
 
         @media (max-width: 768px) {
@@ -789,7 +803,6 @@
 
             .song-grid-item .info .title {
                 font-size: 0.9rem;
-                color: var(--text-current);
                 white-space: nowrap;
                 overflow: hidden;
                 text-overflow: ellipsis;
@@ -831,7 +844,7 @@
                            <i class="ph-bold ph-video"></i>
                            <span>Xem video</span>
                         </a>
-                        <a href="https://sites.google.com/view/thiensutinhquang/tuy%E1%BB%83n-t%E1%BA%ADp-th%C6%A1" class="new-nav-btn" target="_blank">
+                        <a href="https://sites.google.com/view/thiensutinhquang/tuy%E1%BB%83n-t%E1%BA%ADp-th%C6%AƠ" class="new-nav-btn" target="_blank">
                             <i class="ph-bold ph-book-open"></i>
                             <span>Kho Thơ</span>
                         </a>
@@ -861,12 +874,7 @@
                             </button>
                             <div id="theme-menu-desktop" class="theme-menu">
                                  <div id="preset-themes-desktop" class="grid grid-cols-6 gap-2 mb-4">
-                                    <button class="preset-theme-btn" title="Mạnh mẽ" data-bg="var(--preset-bg-blue-dark)" data-text="var(--preset-text-yellow)" style="background: linear-gradient(45deg, var(--preset-bg-blue-dark) 50%, var(--preset-text-yellow) 50%);"></button>
-                                    <button class="preset-theme-btn" title="Dịu nhẹ" data-bg="var(--preset-bg-purple-dream)" data-text="var(--preset-text-pink-pastel)" style="background: linear-gradient(45deg, var(--preset-bg-purple-dream) 50%, var(--preset-text-pink-pastel) 50%);"></button>
-                                    <button class="preset-theme-btn" title="Tươi mát" data-bg="var(--preset-bg-forest-green)" data-text="var(--preset-text-aqua)" style="background: linear-gradient(45deg, var(--preset-bg-forest-green) 50%, var(--preset-text-aqua) 50%);"></button>
-                                    <button class="preset-theme-btn" title="Hiện đại" data-bg="var(--preset-bg-forest-green)" data-text="var(--preset-text-yellow)" style="background: linear-gradient(45deg, var(--preset-bg-forest-green) 50%, var(--preset-text-yellow) 50%);"></button>
-                                    <button class="preset-theme-btn" title="Ấm áp" data-bg="var(--preset-bg-purple-dream)" data-text="var(--preset-text-yellow)" style="background: linear-gradient(45deg, var(--preset-bg-purple-dream) 50%, var(--preset-text-yellow) 50%);"></button>
-                                    <button class="preset-theme-btn" title="Trang nhã" data-bg="var(--preset-bg-blue-dark)" data-text="var(--preset-text-aqua)" style="background: linear-gradient(45deg, var(--preset-bg-blue-dark) 50%, var(--preset-text-aqua) 50%);"></button>
+                                    <!-- Preset buttons will be rendered here by JS -->
                                 </div>
                                 <div class="theme-switch flex items-center gap-2 justify-center">
                                     <i class="ph-bold ph-sun text-yellow-500"></i>
@@ -929,7 +937,7 @@
                     </button>
                     <div id="mobile-theme-options" class="hidden pl-8 pt-2 space-y-4">
                         <div id="mobile-preset-themes" class="grid grid-cols-6 gap-2">
-                            <!-- Preset buttons will be cloned here -->
+                            <!-- Preset buttons will be rendered here by JS -->
                         </div>
                          <div class="theme-switch flex items-center gap-2">
                              <i class="ph-bold ph-sun text-yellow-500"></i>
@@ -1062,7 +1070,7 @@
                     <button id="radial-font-size-decrease" class="radial-item" title="Giảm cỡ chữ">🔎➖</button>
                     <button id="radial-font-size-increase" class="radial-item" title="Tăng cỡ chữ">🔎➕</button>
                     <button id="radial-lines-decrease" class="radial-item" title="Giảm số dòng">➖</button>
-                    <button id="radial-lines-increase" class="radial-item" title="Tăng số dòng">➕</button>
+                    <button id="radial-lines-increase" class="radial-item" title="Tăng số chữ">➕</button>
                 </div>
             </div>
         </div>
@@ -1119,11 +1127,18 @@
             const customAlertModal = document.getElementById('custom-alert-modal');
             const customAlertMessage = document.getElementById('custom-alert-message');
             const customAlertOkBtn = document.getElementById('custom-alert-ok-btn');
-            const presetThemeButtons = document.querySelectorAll('.preset-theme-btn');
             const togglePlaylistBtn = document.getElementById('toggle-playlist-btn');
             const popupPlaylistContainer = document.getElementById('popup-playlist-container');
             const popupSongList = document.getElementById('popup-song-list');
             const progressTooltip = document.getElementById('progress-tooltip');
+
+            // Mobile theme menu specific elements
+            const mobileThemeMenu = document.getElementById('mobile-theme-menu');
+            const mobileThemeOptions = document.getElementById('mobile-theme-options');
+            const desktopThemeMenu = document.getElementById('theme-menu-desktop'); // Desktop theme menu
+            const themeToggleDesktop = document.getElementById('theme-toggle-desktop'); // Desktop theme toggle button
+            let mobileThemeAutoCloseTimer; // Timer for mobile theme menu auto-close
+            let desktopThemeAutoCloseTimer; // Timer for desktop theme menu auto-close
 
             // Global State & Settings
             let songData = [], currentDisplayData = [], lyricsPages = [];
@@ -1151,6 +1166,15 @@
                 { id: 'sepia', name: "Vàng Cổ", bgColor: "#fbf3e5", textColor: "#5a4628" },
             ];
 
+            const presetThemes = [
+                { title: "Mạnh mẽ", bg: "var(--preset-bg-blue-dark)", text: "var(--preset-text-yellow)", style: "background:linear-gradient(45deg,var(--preset-bg-blue-dark) 50%,var(--preset-text-yellow) 50%);" },
+                { title: "Dịu nhẹ", bg: "var(--preset-bg-purple-dream)", text: "var(--preset-text-pink-pastel)", style: "background:linear-gradient(45deg,var(--preset-bg-purple-dream) 50%,var(--preset-text-pink-pastel) 50%);" },
+                { title: "Tươi mát", bg: "var(--preset-bg-forest-green)", text: "var(--preset-text-aqua)", style: "background:linear-gradient(45deg,var(--preset-bg-forest-green) 50%,var(--preset-text-aqua) 50%);" },
+                { title: "Hiện đại", bg: "var(--preset-bg-forest-green)", text: "var(--preset-text-yellow)", style: "background:linear-gradient(45deg,var(--preset-bg-forest-green) 50%,var(--preset-text-yellow) 50%);" },
+                { title: "Ấm áp", bg: "var(--preset-bg-purple-dream)", text: "var(--preset-text-yellow)", style: "background:linear-gradient(45deg,var(--preset-bg-purple-dream) 50%,var(--preset-text-yellow) 50%);" },
+                { title: "Trang nhã", bg: "var(--preset-bg-blue-dark)", text: "var(--preset-text-aqua)", style: "background:linear-gradient(45deg,var(--preset-bg-blue-dark) 50%,var(--preset-text-aqua) 50%);" }
+            ];
+
             // ==============================================
             // CORE FUNCTIONS
             // ==============================================
@@ -1161,6 +1185,7 @@
                 }
                 const theme = JSON.parse(localStorage.getItem('themeState')) || { mode: 'light' };
                 body.classList.remove('dark-mode', 'preset-theme');
+                // Remove active class from all preset buttons (both desktop and mobile)
                 document.querySelectorAll('.preset-theme-btn').forEach(b => b.classList.remove('active'));
 
                 if (theme.mode === 'dark') {
@@ -1174,14 +1199,74 @@
                     root.style.setProperty('--preset-text-current', theme.text);
                     darkModeToggle.checked = false;
                     document.getElementById('darkModeToggleMobile').checked = false;
+                    // Add active class to the selected preset buttons
                     const activeButtons = document.querySelectorAll(`.preset-theme-btn[data-bg="${theme.bg}"][data-text="${theme.text}"]`);
                     activeButtons.forEach(btn => btn.classList.add('active'));
                 } else { // light mode
                     darkModeToggle.checked = false;
-                     document.getElementById('darkModeToggleMobile').checked = false;
+                    document.getElementById('darkModeToggleMobile').checked = false;
                 }
             };
 
+            // Function to close mobile theme options
+            function closeMobileThemeOptions() {
+                mobileThemeOptions.classList.add('hidden');
+            }
+
+            // Function to close desktop theme options
+            function closeDesktopThemeOptions() {
+                desktopThemeMenu.classList.remove('show');
+            }
+
+            // Function to render preset theme buttons dynamically
+            function renderPresetThemes(container, onThemeChangeCallback) {
+                container.innerHTML = ''; // Clear existing buttons
+                presetThemes.forEach(preset => {
+                    const btn = document.createElement('button');
+                    btn.className = 'preset-theme-btn';
+                    btn.title = preset.title;
+                    btn.dataset.bg = preset.bg;
+                    btn.dataset.text = preset.text;
+                    btn.setAttribute('aria-label', preset.title); // Accessibility
+                    btn.tabIndex = 0; // Make focusable
+                    btn.style = preset.style;
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        onThemeChangeCallback && onThemeChangeCallback(preset);
+                    });
+                    container.appendChild(btn);
+                });
+            }
+
+            // Function to change theme (called by preset buttons)
+            function changeTheme(preset) {
+                const theme = { mode: 'preset', bg: preset.bg, text: preset.text };
+                localStorage.setItem('themeState', JSON.stringify(theme));
+                applyTheme();
+                if (navigator.vibrate) navigator.vibrate(20);
+                // Auto-close menus after selecting a preset
+                closeDesktopThemeOptions();
+                closeMobileThemeOptions();
+            }
+
+            // Function to focus on the current theme preset when menu opens
+            function focusCurrentThemePreset(container) {
+                const theme = JSON.parse(localStorage.getItem('themeState'));
+                if (theme && theme.mode === 'preset') {
+                    const btn = [...container.querySelectorAll('.preset-theme-btn')].find(b =>
+                        b.dataset.bg === theme.bg && b.dataset.text === theme.text
+                    );
+                    btn?.focus();
+                } else {
+                    // If not preset theme, focus on the dark mode toggle or first preset
+                    const darkModeToggleEl = container.querySelector('input[type="checkbox"]');
+                    if (darkModeToggleEl) {
+                        darkModeToggleEl.focus();
+                    } else {
+                        container.querySelector('.preset-theme-btn')?.focus();
+                    }
+                }
+            }
 
             const setupNavEvents = () => {
                 const hamburgerMenu = document.getElementById('hamburger-menu');
@@ -1191,12 +1276,7 @@
                 const platformsMenuDesktop = document.getElementById('platforms-menu-desktop');
                 const platformsToggleMobile = document.getElementById('platforms-toggle-mobile');
                 const platformsMenuMobile = document.getElementById('platforms-menu-mobile');
-                const themeToggleDesktop = document.getElementById('theme-toggle-desktop');
-                const themeMenuDesktop = document.getElementById('theme-menu-desktop');
-                const mobileThemeMenu = document.getElementById('mobile-theme-menu');
-                const mobileThemeOptions = document.getElementById('mobile-theme-options');
-                let themeMenuTimeout;
-
+                
                 if(hamburgerMenu) hamburgerMenu.addEventListener('click', () => mobileNavOverlay.classList.add('active'));
                 if(closeMobileMenu) closeMobileMenu.addEventListener('click', () => mobileNavOverlay.classList.remove('active'));
                 if(mobileNavOverlay) mobileNavOverlay.addEventListener('click', (e) => {
@@ -1210,33 +1290,49 @@
                     e.stopPropagation();
                     platformsMenuMobile.classList.toggle('show');
                 });
-                 if (themeToggleDesktop) {
+                
+                // Desktop theme menu click listener
+                if (themeToggleDesktop) {
                     themeToggleDesktop.addEventListener('click', (e) => {
                         e.stopPropagation();
-                        const isShown = themeMenuDesktop.classList.toggle('show');
+                        const isShown = desktopThemeMenu.classList.toggle('show');
                         if (navigator.vibrate) navigator.vibrate(20);
-                        clearTimeout(themeMenuTimeout);
+                        clearTimeout(desktopThemeAutoCloseTimer);
                         if (isShown) {
-                            themeMenuTimeout = setTimeout(() => {
-                                themeMenuDesktop.classList.remove('show');
-                            }, 7000);
+                            desktopThemeAutoCloseTimer = setTimeout(closeDesktopThemeOptions, 7000);
+                            focusCurrentThemePreset(desktopThemeMenu.querySelector('#preset-themes-desktop'));
                         }
                     });
                 }
+
+                // Mobile theme menu click listener
                 if (mobileThemeMenu) {
                     mobileThemeMenu.addEventListener('click', (e) => {
                         e.stopPropagation();
-                        mobileThemeOptions.classList.toggle('hidden');
+                        const isHidden = mobileThemeOptions.classList.toggle('hidden'); // Toggle and get current state
                         if (navigator.vibrate) navigator.vibrate(20);
+
+                        clearTimeout(mobileThemeAutoCloseTimer); // Clear any existing timer
+                        if (!isHidden) { // If menu is now shown
+                            mobileThemeAutoCloseTimer = setTimeout(closeMobileThemeOptions, 7000);
+                            focusCurrentThemePreset(mobileThemeOptions.querySelector('#mobile-preset-themes'));
+                        }
                     });
                 }
 
-                window.addEventListener('click', () => {
-                    if (platformsMenuDesktop && platformsMenuDesktop.classList.contains('show')) {
+                // Global click listener to hide menus when clicking outside
+                window.addEventListener('click', (e) => {
+                    if (platformsMenuDesktop && platformsMenuDesktop.classList.contains('show') && !platformsMenuDesktop.contains(e.target) && e.target !== platformsToggleDesktop) {
                         platformsMenuDesktop.classList.remove('show');
                     }
-                     if (themeMenuDesktop && themeMenuDesktop.classList.contains('show')) {
-                        themeMenuDesktop.classList.remove('show');
+                    if (desktopThemeMenu && desktopThemeMenu.classList.contains('show') && !desktopThemeMenu.contains(e.target) && e.target !== themeToggleDesktop) {
+                        closeDesktopThemeOptions();
+                    }
+                    // Hide mobile theme options if clicking outside
+                    if (!mobileThemeOptions.classList.contains('hidden')) {
+                        if (!mobileThemeOptions.contains(e.target) && e.target !== mobileThemeMenu) {
+                            closeMobileThemeOptions();
+                        }
                     }
                 });
             };
@@ -1604,37 +1700,9 @@
                  const theme = { mode: e.target.checked ? 'dark' : 'light' };
                 localStorage.setItem('themeState', JSON.stringify(theme));
                 applyTheme();
+                if (navigator.vibrate) navigator.vibrate(20); // Vibrate on change
+                setTimeout(closeMobileThemeOptions, 500); // Auto-close after selecting
             });
-
-            presetThemeButtons.forEach(button => {
-                button.addEventListener('click', () => {
-                    const theme = {
-                        mode: 'preset',
-                        bg: button.dataset.bg,
-                        text: button.dataset.text
-                    };
-                    localStorage.setItem('themeState', JSON.stringify(theme));
-                    applyTheme();
-                });
-            });
-             document.querySelectorAll('#mobile-preset-themes .preset-theme-btn').forEach(button => {
-                button.addEventListener('click', (e) => {
-                    e.stopPropagation(); // prevent closing the menu
-                     const theme = {
-                        mode: 'preset',
-                        bg: button.dataset.bg,
-                        text: button.dataset.text
-                    };
-                    localStorage.setItem('themeState', JSON.stringify(theme));
-                    applyTheme();
-                })
-             });
-             
-             document.getElementById('mobile-theme-menu')?.addEventListener('click', (e) => {
-                 e.stopPropagation();
-                document.getElementById('mobile-theme-options').classList.toggle('hidden');
-             });
-
 
             customAlertOkBtn.addEventListener('click', hideMessage);
             
@@ -1772,24 +1840,15 @@
                 positionRadialItems();
                 popupPlaylistContainer.classList.remove('hidden'); // Show playlist by default
                 
-                // Clone preset themes to mobile menu
-                const desktopPresets = document.getElementById('preset-themes-desktop');
+                // Render preset themes for both desktop and mobile
+                const desktopPresetsContainer = document.getElementById('preset-themes-desktop');
                 const mobilePresetsContainer = document.getElementById('mobile-preset-themes');
-                if (desktopPresets && mobilePresetsContainer) {
-                    mobilePresetsContainer.innerHTML = desktopPresets.innerHTML;
-                    // Re-add event listeners for cloned mobile buttons
-                    mobilePresetsContainer.querySelectorAll('.preset-theme-btn').forEach(button => {
-                         button.addEventListener('click', (e) => {
-                             e.stopPropagation();
-                             const theme = {
-                                 mode: 'preset',
-                                 bg: button.dataset.bg,
-                                 text: button.dataset.text
-                             };
-                             localStorage.setItem('themeState', JSON.stringify(theme));
-                             applyTheme();
-                         });
-                    });
+                
+                if (desktopPresetsContainer) {
+                    renderPresetThemes(desktopPresetsContainer, changeTheme);
+                }
+                if (mobilePresetsContainer) {
+                    renderPresetThemes(mobilePresetsContainer, changeTheme);
                 }
             }
 
