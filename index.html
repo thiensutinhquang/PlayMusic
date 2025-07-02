@@ -585,7 +585,8 @@
             position: absolute;
             top: 1rem; right: 1rem;
             background: none; border: none; font-size: 1.5rem;
-            color: var(--text-muted-current); cursor: pointer;
+            color: var(--text-muted-current); 
+            cursor: pointer;
             transition: var(--transition-fast);
         }
         #lyrics-fullscreen-popup .close-button:hover {
@@ -1173,6 +1174,8 @@
             // DOM Elements
             const body = document.body;
             const darkModeToggle = document.getElementById('darkModeToggle');
+            // Ensure mobile dark mode toggle is correctly referenced
+            const darkModeToggleMobile = document.getElementById('darkModeToggleMobile'); 
             const songsContainer = document.getElementById('songs-container');
             const mainLyricsContainer = document.getElementById('lyrics-content-main');
             const popupSongTitle = document.getElementById('popup-song-title');
@@ -1283,8 +1286,8 @@
 
                 if (theme.mode === 'dark') {
                     body.classList.add('dark-mode');
-                    darkModeToggle.checked = true;
-                    document.getElementById('darkModeToggleMobile').checked = true;
+                    if (darkModeToggle) darkModeToggle.checked = true; // Fixed: Check if element exists
+                    if (darkModeToggleMobile) darkModeToggleMobile.checked = true; // Fixed: Check if element exists
                 } else if (theme.mode === 'preset') {
                     body.classList.add('preset-theme');
                     const root = document.documentElement;
@@ -1299,14 +1302,14 @@
                         body.classList.add('tinhquang-theme');
                     }
 
-                    darkModeToggle.checked = false;
-                    document.getElementById('darkModeToggleMobile').checked = false;
+                    if (darkModeToggle) darkModeToggle.checked = false; // Fixed: Check if element exists
+                    if (darkModeToggleMobile) darkModeToggleMobile.checked = false; // Fixed: Check if element exists
                     // Add active class to the selected preset buttons
                     const activeButtons = document.querySelectorAll(`.preset-theme-btn[data-bg="${theme.bg}"][data-text="${theme.text}"]`);
                     activeButtons.forEach(btn => btn.classList.add('active'));
                 } else { // light mode
-                    darkModeToggle.checked = false;
-                    document.getElementById('darkModeToggleMobile').checked = false;
+                    if (darkModeToggle) darkModeToggle.checked = false; // Fixed: Check if element exists
+                    if (darkModeToggleMobile) darkModeToggleMobile.checked = false; // Fixed: Check if element exists
                 }
             };
 
@@ -1448,6 +1451,7 @@
 
             async function fetchAudiusData() {
                 console.log('fetchAudiusData: Starting data fetch.'); // Debug log
+                let fetchedSuccessfully = false; // Flag to track if API fetch was successful
                 try {
                     let hosts;
                     try {
@@ -1518,7 +1522,8 @@
                     }));
 
                     console.log('fetchAudiusData: Songs fetched:', songData.length); // Debug log
-
+                    fetchedSuccessfully = true; // Mark as successful
+                    
                     if (songData.length === 0) {
                         songsContainer.innerHTML = '<p class="text-center text-muted-current col-span-full">Không có bài hát nào được tìm thấy cho người dùng này.</p>';
                     }
@@ -1529,43 +1534,45 @@
                     songsContainer.innerHTML = `<p class="text-center text-red-500 col-span-full">Lỗi khi tải danh sách nhạc: ${error.message}</p>`;
                     showMessage(`Lỗi tải nhạc: ${error.message}. Vui lòng kiểm tra kết nối mạng hoặc thử lại sau.`);
                     
-                    // Fallback to dummy data if API fetch fails
-                    console.log("fetchAudiusData: Falling back to dummy data.");
-                    songData = [
-                        {
-                            id: "dummy1",
-                            title: "Bài Hát Giả Định 1",
-                            artist: "Nghệ Sĩ Giả Định",
-                            artwork: "https://placehold.co/150x150/f59e0b/ffffff?text=DUMMY1",
-                            duration: 180,
-                            description: "Đây là lời bài hát giả định số 1.\nBạn có thể thay đổi nó để kiểm tra tính năng lời bài hát.",
-                            isFavorite: false,
-                            genre: "Pop"
-                        },
-                        {
-                            id: "dummy2",
-                            title: "Bài Hát Giả Định 2",
-                            artist: "Nghệ Sĩ Giả Định",
-                            artwork: "https://placehold.co/150x150/3b82f6/ffffff?text=DUMMY2",
-                            duration: 240,
-                            description: "Lời bài hát giả định số 2.\nThử phát nhạc và xem lời nhé!",
-                            isFavorite: true,
-                            genre: "Country"
-                        },
-                        {
-                            id: "dummy3",
-                            title: "Bài Hát Giả Định 3",
-                            artist: "Nghệ Sĩ Giả Định",
-                            artwork: "https://placehold.co/150x150/ef4444/ffffff?text=DUMMY3",
-                            duration: 200,
-                            description: "Đây là bài hát thứ ba trong danh sách giả định.",
-                            isFavorite: false,
-                            genre: "Classical"
-                        }
-                    ];
-                    // Re-render songs with dummy data
-                    renderSongs(songData);
-                    showMessage("Đã tải dữ liệu giả định do lỗi kết nối API Audius.");
+                } finally {
+                    // Always ensure songData is populated, either from API or dummy data
+                    // This block runs regardless of whether an error occurred in try/catch.
+                    if (!fetchedSuccessfully || songData.length === 0) { // If fetch failed OR no songs were returned
+                        console.log("fetchAudiusData: Falling back to dummy data.");
+                        songData = [
+                            {
+                                id: "dummy1",
+                                title: "Bài Hát Giả Định 1",
+                                artist: "Nghệ Sĩ Giả Định",
+                                artwork: "https://placehold.co/150x150/f59e0b/ffffff?text=DUMMY1",
+                                duration: 180,
+                                description: "Đây là lời bài hát giả định số 1.\nBạn có thể thay đổi nó để kiểm tra tính năng lời bài hát.",
+                                isFavorite: false,
+                                genre: "Pop"
+                            },
+                            {
+                                id: "dummy2",
+                                title: "Bài Hát Giả Định 2",
+                                artist: "Nghệ Sĩ Giả Định",
+                                artwork: "https://placehold.co/150x150/3b82f6/ffffff?text=DUMMY2",
+                                duration: 240,
+                                description: "Lời bài hát giả định số 2.\nThử phát nhạc và xem lời nhé!",
+                                isFavorite: true,
+                                genre: "Country"
+                            },
+                            {
+                                id: "dummy3",
+                                title: "Bài Hát Giả Định 3",
+                                artist: "Nghệ Sĩ Giả Định",
+                                artwork: "https://placehold.co/150x150/ef4444/ffffff?text=DUMMY3",
+                                duration: 200,
+                                description: "Đây là bài hát thứ ba trong danh sách giả định.",
+                                isFavorite: false,
+                                genre: "Classical"
+                            }
+                        ];
+                        showMessage("Đã tải dữ liệu giả định do lỗi kết nối API Audius hoặc không có bài hát.");
+                    }
                 }
             }
 
@@ -1940,14 +1947,17 @@
                 localStorage.setItem('themeState', JSON.stringify(theme));
                 applyTheme();
             });
-            document.getElementById('darkModeToggleMobile')?.addEventListener('change', (e) => {
-                console.log('darkModeToggleMobile: Change event detected.'); // Debug log
-                 const theme = { mode: e.target.checked ? 'dark' : 'light' };
-                localStorage.setItem('themeState', JSON.stringify(theme));
-                applyTheme();
-                if (navigator.vibrate) navigator.vibrate(20); // Vibrate on change
-                setTimeout(closeMobileThemeOptions, 500); // Auto-close after selecting
-            });
+            // Fixed: Check if darkModeToggleMobile exists before adding event listener
+            if (darkModeToggleMobile) { 
+                darkModeToggleMobile.addEventListener('change', (e) => {
+                    console.log('darkModeToggleMobile: Change event detected.'); // Debug log
+                    const theme = { mode: e.target.checked ? 'dark' : 'light' };
+                    localStorage.setItem('themeState', JSON.stringify(theme));
+                    applyTheme();
+                    if (navigator.vibrate) navigator.vibrate(20); // Vibrate on change
+                    setTimeout(closeMobileThemeOptions, 500); // Auto-close after selecting
+                });
+            }
 
             customAlertOkBtn.addEventListener('click', hideMessage);
             
@@ -2096,6 +2106,7 @@
                 
                 // Fetch and render data
                 await fetchAudiusData();
+                console.log('initializeApp: songData length after fetchAudiusData:', songData.length); // Debug log
                 loadCustomCategory('all'); // This will render the songs
                 
                 updateUI();
