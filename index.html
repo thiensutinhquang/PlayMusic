@@ -865,152 +865,75 @@
         }
 
         /* ==============================================
-        RESPONSIVE
+        SVG Specific Animations (for LOGOvectorFULL.svg)
         ==============================================
         */
-        @media (max-width: 1024px) {
-            .desktop-nav { display: none; }
-            .hamburger-menu {
-                display: block;
-                color: var(--text-current);
-            }
-            .mobile-nav-overlay {
-                display: none;
-                position: fixed;
-                top: 0; left: 0;
-                width: 100%; height: 100%;
-                background-color: rgba(0, 0, 0, 0.5);
-                backdrop-filter: blur(4px);
-                z-index: 1010;
-                opacity: 0;
-                transition: opacity var(--transition-fast);
-            }
-            .mobile-nav-overlay.active {
-                display: block;
-                opacity: 1;
-            }
-            .mobile-nav-content {
-                position: fixed;
-                top: 0; right: -280px;
-                width: 280px; height: 100%;
-                background-color: var(--card-bg-current);
-                box-shadow: var(--shadow-lg);
-                z-index: 1020;
-                padding: 4rem 1.5rem 1.5rem;
-                display: flex; flex-direction: column;
-                transition: right 0.3s ease-in-out;
-            }
-            .mobile-nav-overlay.active .mobile-nav-content {
-                right: 0;
-            }
-            .mobile-nav-content .close-mobile-menu {
-                position: absolute;
-                top: 1rem; right: 1.5rem;
-                font-size: 1.5rem; background: none; border: none;
-                color: var(--text-muted-current); cursor: pointer;
-            }
-            .mobile-nav-content .new-nav-container {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 0.5rem;
-            }
-             .mobile-nav-content .new-nav-btn {
-                padding: 0.8rem;
-                font-size: 1rem;
-                justify-content: flex-start;
-             }
-             .mobile-nav-content .platforms-menu {
-                 position: static;
-                 display: none;
-                 opacity: 1;
-                 transform: none;
-                 box-shadow: none;
-                 border: none;
-                 width: 100%;
-                 margin-top: 0.5rem;
-                 padding-left: 1rem;
-                 background-color: transparent;
-             }
-             .mobile-nav-content .platforms-menu.show {
-                display: block;
-             }
 
-            /* CSS hiệu ứng cho mobile-theme-options */
-            #mobile-theme-options {
-                transition: opacity 0.2s, transform 0.2s;
-                opacity: 0;
-                transform: translateY(-16px) scale(0.98);
-                pointer-events: none; /* Ngăn chặn sự kiện khi ẩn */
-            }
-            #mobile-theme-options:not(.hidden) {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-                pointer-events: auto; /* Cho phép sự kiện khi hiển thị */
-                z-index: 30; /* Đảm bảo hiển thị trên các phần tử khác */
-            }
+        /* Initial state for SVG text/elements (hidden/faded) */
+        #logo-text-tinhquang,
+        #logo-text-trucchichantam,
+        #chakra-system,
+        #chakra-crown,
+        #energy-flow-line,
+        #human-body { /* Assuming human-body is also part of SVG */
+            opacity: 0;
+            transition: opacity 0.5s ease-out, filter 0.5s ease-out;
+            filter: brightness(0.5); /* Slightly dim initially */
         }
 
-        @media (max-width: 768px) {
-             .logo h1 { font-size: 1.25rem; }
-            .song-grid {
-                display: flex;
-                flex-direction: column;
-                gap: 0.5rem; /* Tighter spacing for list view */
-            }
+        /* Animation for text fade-in on app load */
+        @keyframes text-fade-in {
+            0% { opacity: 0; transform: translateY(10px); filter: brightness(0.5); }
+            100% { opacity: 1; transform: translateY(0); filter: brightness(1); }
+        }
 
-            .song-grid-item {
-                position: relative; /* Added for correct positioning of play indicator in list view */
-                display: flex;
-                align-items: center;
-                aspect-ratio: auto;
-                padding: 0.5rem;
-                border-radius: 8px;
-            }
-            
-            .song-grid-item::after {
-                display: none; /* Remove overlay on mobile */
-            }
+        /* Animation for overall chakra system glow */
+        @keyframes chakra-system-pulse {
+            0%, 100% { filter: drop-shadow(0 0 0px rgba(255, 215, 0, 0.0)); opacity: 0.8; }
+            50% { filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.8)) drop-shadow(0 0 30px rgba(255, 165, 0, 0.5)); opacity: 1; }
+        }
 
-            .song-grid-item .artwork {
-                width: 48px;
-                height: 48px;
-                border-radius: 6px;
-                flex-shrink: 0;
-                transform: none !important; /* Override hover scale */
-            }
+        /* Animation for energy flow line (assuming it's a path) */
+        @keyframes energy-flow {
+            0% { stroke-dashoffset: 100%; opacity: 0; }
+            50% { opacity: 1; }
+            100% { stroke-dashoffset: 0%; opacity: 1; }
+        }
 
-            .song-grid-item .info {
-                position: static;
-                transform: none;
-                opacity: 1;
-                padding: 0 0.75rem;
-                color: var(--text-current); /* Use standard text color */
-                flex-grow: 1;
-                overflow: hidden;
-            }
+        /* Animation for chakra-crown (wisdom eye) */
+        @keyframes chakra-crown-glow {
+            0%, 100% { filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.5)); }
+            50% { filter: drop-shadow(0 0 25px rgba(255, 255, 255, 1)) drop-shadow(0 0 50px rgba(255, 255, 255, 0.7)); }
+        }
 
-            .song-grid-item .info .title {
-                font-size: 0.9rem;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-            }
-            
-            /* Hide the play indicator by default in list view to save space */
-            .song-grid-item .play-indicator {
-               display: none;
-            }
+        /* Active states when music is playing */
+        body.music-playing #chakra-system {
+            animation: chakra-system-pulse 2s infinite ease-in-out;
+        }
 
-            /* Highlight the active song in the list */
-            .song-grid-item.active-song {
-                background-color: var(--primary-color);
-            }
+        body.music-playing #chakra-crown {
+            animation: chakra-crown-glow 2.5s infinite ease-in-out;
+        }
 
-            .song-grid-item.active-song .info .title,
-            .song-grid-item.active-song .info {
-                color: white;
-                font-weight: bold;
-            }
+        body.music-playing #energy-flow-line {
+            animation: energy-flow 3s linear infinite;
+            /* Ensure stroke is visible and has a dasharray for the animation to work */
+            stroke: #FFD700; /* Golden color for energy flow */
+            stroke-width: 5;
+            stroke-linecap: round;
+        }
+        /* Initial visibility for SVG elements after app loads */
+        body.app-loaded #logo-text-tinhquang {
+            animation: text-fade-in 1s ease-out forwards;
+            animation-delay: 0.5s; /* Delay for subtle effect */
+        }
+        body.app-loaded #logo-text-trucchichantam {
+            animation: text-fade-in 1s ease-out forwards;
+            animation-delay: 1s; /* Delay for subtle effect */
+        }
+        body.app-loaded #human-body {
+            opacity: 1; /* Make human body visible when app loads */
+            filter: brightness(1);
         }
     </style>
 </head>
@@ -1018,8 +941,8 @@
     <!-- Splash Screen -->
     <div id="splash-screen">
         <div id="splash-logo-container">
-            <img id="splash-logo" src="https://github.com/thiensutinhquang/PlayMusic/blob/main/LOGOvector.svg?raw=true" alt="MSTQ Logo">
-            <!-- Optional: SVG elements for chakra animation if using SVG logo -->
+            <!-- Using the full SVG logo -->
+            <img id="splash-logo" src="https://github.com/thiensutinhquang/PlayMusic/blob/main/LOGOvectorFULL.svg?raw=true" alt="MSTQ Logo">
         </div>
     </div>
 
@@ -1027,7 +950,8 @@
         <div class="container header-content">
             <div class="logo">
                 <a href="#">
-                    <img src="https://github.com/thiensutinhquang/PlayMusic/blob/main/LOGOvector.svg?raw=true" alt="MSTQ Logo" class="logo-breathe">
+                    <!-- Using the full SVG logo -->
+                    <img src="https://github.com/thiensutinhquang/PlayMusic/blob/main/LOGOvectorFULL.svg?raw=true" alt="MSTQ Logo" class="logo-breathe">
                     <h1>ÂM NHẠC TSTQ</h1>
                 </a>
             </div>
@@ -1137,7 +1061,7 @@
             <div class="card" id="integratedMusicPlayer">
                  <div id="popup-now-playing-info-wrapper" class="flex items-center gap-4 mb-4">
                     <div class="relative">
-                        <img id="popup-album-art" src="https://github.com/thiensutinhquang/PlayMusic/blob/main/LOGOvector.svg?raw=true" alt="Album Art">
+                        <img id="popup-album-art" src="https://github.com/thiensutinhquang/PlayMusic/blob/main/LOGOvectorFULL.svg?raw=true" alt="Album Art">
                         <div class="chakra-glow-overlay" id="player-chakra-glow"></div>
                     </div>
                     <div class="flex-grow overflow-hidden">
@@ -1300,6 +1224,25 @@
             const achievementTooltip = document.getElementById('achievement-tooltip'); // New: Get tooltip element
             const initialLoader = document.getElementById('initial-loader'); // Added: Reference to the initial loader
 
+            // SVG elements by ID (assuming they exist in the SVG file)
+            let logoTextTinhQuang, logoTextTrucChiChanTam, chakraSystem, chakraCrown, energyFlowLine, humanBody;
+
+            // Function to get SVG elements after SVG is loaded
+            const getSvgElements = () => {
+                const svgObject = document.getElementById('splash-logo') || document.querySelector('.logo img');
+                if (svgObject && svgObject.contentDocument) {
+                    const svgDoc = svgObject.contentDocument;
+                    logoTextTinhQuang = svgDoc.getElementById('logo-text-tinhquang');
+                    logoTextTrucChiChanTam = svgDoc.getElementById('logo-text-trucchichantam');
+                    chakraSystem = svgDoc.getElementById('chakra-system');
+                    chakraCrown = svgDoc.getElementById('chakra-crown');
+                    energyFlowLine = svgDoc.getElementById('energy-flow-line');
+                    humanBody = svgDoc.getElementById('human-body');
+                    console.log('SVG elements fetched:', { logoTextTinhQuang, logoTextTrucChiChanTam, chakraSystem, chakraCrown, energyFlowLine, humanBody });
+                } else {
+                    console.warn('SVG contentDocument not available yet or SVG element not found.');
+                }
+            };
 
             // Mobile theme menu specific elements
             const mobileThemeMenu = document.getElementById('mobile-theme-menu');
@@ -1810,7 +1753,7 @@
                 } else {
                     if (popupSongTitle) popupSongTitle.textContent = "Chọn một bài hát"; // Added check
                     if (popupSongArtist) popupSongArtist.textContent = "Để bắt đầu nghe nhạc"; // Added check
-                    if (popupAlbumArt) popupAlbumArt.src = "https://github.com/thiensutinhquang/Admin/blob/main/sukien/images/logo.png?raw=true"; // Default logo // Added check
+                    if (popupAlbumArt) popupAlbumArt.src = "https://github.com/thiensutinhquang/PlayMusic/blob/main/LOGOvectorFULL.svg?raw=true"; // Default logo // Added check
                     if(mainLyricsContainer) mainLyricsContainer.innerHTML = '<p class="text-muted-current">Lời bài hát sẽ được hiển thị ở đây.</p>';
                 }
 
@@ -2075,6 +2018,46 @@
                 }
             }
 
+            // Function to activate SVG elements when music plays
+            function activateSvgElementsForMusic() {
+                console.log('Activating SVG elements for music playback.');
+                // Get SVG elements again to ensure they are loaded
+                getSvgElements(); 
+
+                if (chakraSystem) {
+                    safeAddClass(chakraSystem, 'active-chakra-system');
+                    console.log('Chakra system activated.');
+                }
+                if (chakraCrown) {
+                    safeAddClass(chakraCrown, 'active-chakra-crown');
+                    console.log('Chakra crown activated.');
+                }
+                if (energyFlowLine) {
+                    safeAddClass(energyFlowLine, 'active-energy-flow');
+                    console.log('Energy flow line activated.');
+                }
+                // Add class to body to trigger music-playing specific CSS
+                safeAddClass(body, 'music-playing'); 
+            }
+
+            // Function to deactivate SVG elements when music pauses/stops
+            function deactivateSvgElementsForMusic() {
+                console.log('Deactivating SVG elements for music playback.');
+                // Get SVG elements again to ensure they are loaded
+                getSvgElements(); 
+                
+                if (chakraSystem) {
+                    safeRemoveClass(chakraSystem, 'active-chakra-system');
+                }
+                if (chakraCrown) {
+                    safeRemoveClass(chakraCrown, 'active-chakra-crown');
+                }
+                if (energyFlowLine) {
+                    safeRemoveClass(energyFlowLine, 'active-energy-flow');
+                }
+                safeRemoveClass(body, 'music-playing');
+            }
+
 
             // ==============================================
             // EVENT LISTENERS
@@ -2111,11 +2094,24 @@
             }
 
             if (audioPlayer) { // Added check
-                audioPlayer.addEventListener('play', () => { isPlaying = true; updateUI(); requestWakeLock(); updateMediaSession(); });
-                audioPlayer.addEventListener('pause', () => { isPlaying = false; updateUI(); releaseWakeLock(); updateMediaSession();});
+                audioPlayer.addEventListener('play', () => { 
+                    isPlaying = true; 
+                    updateUI(); 
+                    requestWakeLock(); 
+                    updateMediaSession();
+                    activateSvgElementsForMusic(); // Activate SVG animations on play
+                });
+                audioPlayer.addEventListener('pause', () => { 
+                    isPlaying = false; 
+                    updateUI(); 
+                    releaseWakeLock(); 
+                    updateMediaSession();
+                    deactivateSvgElementsForMusic(); // Deactivate SVG animations on pause
+                });
                 
                 audioPlayer.addEventListener('ended', () => {
                     console.log('audioPlayer: Song ended.'); // Debug log
+                    deactivateSvgElementsForMusic(); // Deactivate SVG animations on end
                     if (repeatMode === 'one') {
                         playSong(currentSongIndex);
                     } else if (repeatMode === 'all') {
@@ -2263,11 +2259,11 @@
                     simulateAchievementAnimation(); // Existing animation call
 
                     // Toggle tooltip visibility
-                    if (achievementTooltip) safeToggleClass(achievementTooltip, 'show'); // Use safeToggleClass
+                    if (achievementTooltip) safeToggleClass(achievementTooltip, 'show'); // Added check
                     if (achievementTooltip && achievementTooltip.classList.contains('show')) {
                         // Optional: Set a timeout to hide the tooltip after a few seconds
                         setTimeout(() => {
-                            if (achievementTooltip) safeRemoveClass(achievementTooltip, 'show'); // Use safeRemoveClass
+                            if (achievementTooltip) safeRemoveClass(achievementTooltip, 'show'); // Added check
                         }, 3000); // Hide after 3 seconds
                     }
                 });
@@ -2301,7 +2297,21 @@
                 loadCustomCategory('all'); // This will render the songs
                 
                 updateUI();
-                positionRadialItems();
+                
+                // Get SVG elements AFTER they are loaded by the browser
+                const splashLogoObject = document.getElementById('splash-logo');
+                if (splashLogoObject && splashLogoObject.contentDocument) {
+                    // This ensures SVG is fully loaded before trying to get its internal elements
+                    splashLogoObject.addEventListener('load', getSvgElements);
+                    getSvgElements(); // Try to get them immediately if already loaded
+                } else {
+                    // Fallback for cases where SVG might not be loaded as contentDocument immediately
+                    console.warn("SVG contentDocument not immediately available for splash-logo. Animations on SVG internal elements might be delayed.");
+                    // Attempt to get elements after a short delay if not immediately available
+                    setTimeout(getSvgElements, 1000); 
+                }
+
+                positionRadialItems(); // This now relies on radialItems being populated by getSvgElements
                 if (popupPlaylistContainer) safeRemoveClass(popupPlaylistContainer, 'hidden'); // Show playlist by default // Use safeRemoveClass
                 
                 // Render preset themes for both desktop and mobile
@@ -2316,10 +2326,12 @@
                 }
 
                 // Hide splash screen AFTER all content is loaded and rendered, with a small buffer
+                // This ensures content is visible before splash disappears.
                 setTimeout(() => {
                     if (splashScreen) safeAddClass(splashScreen, 'hidden');
                     console.log('initializeApp: Splash screen hidden AFTER content load.');
-                }, 500); // 500ms buffer after content is rendered
+                    safeAddClass(body, 'app-loaded'); // Add class to body to trigger initial SVG text animations
+                }, 1000); // Increased buffer to 1 second after content is rendered for better UX
                 
                 console.log('initializeApp: Application initialization complete.'); // Debug log
             }
