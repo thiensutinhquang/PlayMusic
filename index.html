@@ -744,28 +744,46 @@
             content: '';
             position: absolute;
             inset: 0;
+            /* Enhanced radial gradients for more stars and colors */
             background: 
-                radial-gradient(2px 2px at 20px 30px, #eee, rgba(0,0,0,0)),
-                radial-gradient(2px 2px at 40px 70px, #eee, rgba(0,0,0,0)),
-                radial-gradient(2px 2px at 70px 10px, #eee, rgba(0,0,0,0)),
-                radial-gradient(2px 2px at 100px 50px, #eee, rgba(0,0,0,0)),
-                radial-gradient(2px 2px at 120px 80px, #eee, rgba(0,0,0,0));
-            background-size: 150px 150px;
-            animation: move-stars 100s linear infinite;
+                radial-gradient(2px 2px at 20px 30px, #fff, rgba(0,0,0,0)),
+                radial-gradient(3px 3px at 40px 70px, #fff, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 70px 10px, #aaa, rgba(0,0,0,0)),
+                radial-gradient(1px 1px at 100px 50px, #ff0, rgba(0,0,0,0)),
+                radial-gradient(4px 4px at 120px 80px, #fff, rgba(0,0,0,0)),
+                radial-gradient(5px 5px at 150px 100px, #ffcc00, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 200px 150px, #ff6347, rgba(0,0,0,0)),
+                radial-gradient(3px 3px at 50px 100px, #a6a6ff, rgba(0,0,0,0)), /* New color star */
+                radial-gradient(4px 4px at 150px 80px, #ffb3ff, rgba(0,0,0,0)), /* New color star */
+                radial-gradient(2px 2px at 250px 200px, #f1c40f, rgba(0,0,0,0)), /* New color star */
+                radial-gradient(2px 2px at 100px 300px, #1abc9c, rgba(0,0,0,0)), /* New color star */
+                radial-gradient(3px 3px at 300px 400px, #3498db, rgba(0,0,0,0)), /* New color star */
+                radial-gradient(5px 5px at 400px 500px, #9b59b6, rgba(0,0,0,0)), /* New color star */
+                radial-gradient(1px 1px at 500px 600px, #e74c3c, rgba(0,0,0,0));
+            background-size: 150px 150px; /* Base size for star pattern */
+            /* Combined animations for movement and twinkling */
+            animation: move-stars 200s linear infinite, twinkle-stars 2s infinite alternate; 
         }
 
         @keyframes move-stars {
-            from { background-position: 0 0; }
-            to { background-position: 100% 100%; }
+            0% { background-position: 0 0; }
+            100% { background-position: 100% 100%; }
         }
 
-        /* Chakra light effect (simplified for JPG) */
+        /* New twinkling animation */
+        @keyframes twinkle-stars {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        /* Chakra light effect (stronger) */
         .chakra-glow-overlay {
             position: absolute;
             inset: 0;
-            background: radial-gradient(circle at center, rgba(255,255,255,0.3) 0%, transparent 70%);
+            /* Stronger glow with increased opacity and larger initial scale */
+            background: radial-gradient(circle at center, rgba(255,255,255,0.6) 0%, transparent 70%);
             opacity: 0;
-            animation: chakra-pulse 2s infinite ease-in-out;
+            animation: chakra-pulse 1.5s infinite ease-in-out; /* Faster pulse */
             pointer-events: none;
         }
 
@@ -774,16 +792,28 @@
         }
 
         @keyframes chakra-pulse {
-            0% { transform: scale(1); opacity: 0; }
-            50% { transform: scale(1.2); opacity: 0.8; }
-            100% { transform: scale(1); opacity: 0; }
+            0% { transform: scale(0.8); opacity: 0; } /* Start smaller, fully transparent */
+            50% { transform: scale(1.3); opacity: 1; } /* Expand more, fully opaque */
+            100% { transform: scale(0.8); opacity: 0; } /* Shrink, fade out */
         }
 
-        /* Breathing animation for logo */
+        /* Breathing animation for logo (enhanced with color pulse and stronger glow) */
         @keyframes breathe {
-            0% { transform: scale(1); filter: brightness(1); }
-            50% { transform: scale(1.07); filter: brightness(1.12); }
-            100% { transform: scale(1); filter: brightness(1); }
+            0% { 
+                transform: scale(1); 
+                filter: brightness(1) hue-rotate(0deg); 
+                box-shadow: 0 0 0px 0px rgba(255, 215, 0, 0); /* Start with no shadow */
+            }
+            50% { 
+                transform: scale(1.07); 
+                filter: brightness(1.12) hue-rotate(15deg); 
+                box-shadow: 0 0 20px 10px rgba(255, 215, 0, 0.7); /* Strong golden glow at peak */
+            }
+            100% { 
+                transform: scale(1); 
+                filter: brightness(1) hue-rotate(0deg); 
+                box-shadow: 0 0 0px 0px rgba(255, 215, 0, 0); /* End with no shadow */
+            }
         }
         .logo-breathe {
             animation: breathe 4s infinite ease-in-out;
@@ -988,7 +1018,7 @@
     <!-- Splash Screen -->
     <div id="splash-screen">
         <div id="splash-logo-container">
-            <img id="splash-logo" src="https://github.com/thiensutinhquang/Admin/blob/main/sukien/images/logo.png?raw=true" alt="MSTQ Logo">
+            <img id="splash-logo" src="https://github.com/thiensutinhquang/PlayMusic/blob/main/LOGOvector.svg?raw=true" alt="MSTQ Logo">
             <!-- Optional: SVG elements for chakra animation if using SVG logo -->
         </div>
     </div>
@@ -997,7 +1027,7 @@
         <div class="container header-content">
             <div class="logo">
                 <a href="#">
-                    <img src="https://github.com/thiensutinhquang/Admin/blob/main/sukien/images/logo.png?raw=true" alt="MSTQ Logo" class="logo-breathe">
+                    <img src="https://github.com/thiensutinhquang/PlayMusic/blob/main/LOGOvector.svg?raw=true" alt="MSTQ Logo" class="logo-breathe">
                     <h1>ÂM NHẠC TSTQ</h1>
                 </a>
             </div>
@@ -1072,7 +1102,7 @@
                      <div id="menu" class="flex flex-wrap justify-center gap-2">
                         <button onclick="loadCustomCategory('all')" class="new-nav-btn text-xs active">🎧 Tất cả</button>
                         <button onclick="loadCustomCategory('new')" class="new-nav-btn text-xs">🆕 Mới</button>
-                        <button onclick="loadCustomCategory('hot')" class="new-nav-btn text-xs">🔥 Nổi bật</button>
+                        <button onclick="loadCustomCategory('hot')" class="new-nav-btn text-xs">� Nổi bật</button>
                         <button onclick="loadCustomCategory('dieu-thu')" class="new-nav-btn text-xs">🎤 Diệu Thu</button>
                         <button onclick="loadCustomCategory('others')" class="new-nav-btn text-xs">👤 Khác</button>
                         <button onclick="loadCustomCategory('phap')" class="new-nav-btn text-xs">📿 Pháp</button>
@@ -1107,7 +1137,7 @@
             <div class="card" id="integratedMusicPlayer">
                  <div id="popup-now-playing-info-wrapper" class="flex items-center gap-4 mb-4">
                     <div class="relative">
-                        <img id="popup-album-art" src="https://github.com/thiensutinhquang/Admin/blob/main/sukien/images/logo.png?raw=true" alt="Album Art">
+                        <img id="popup-album-art" src="https://github.com/thiensutinhquang/PlayMusic/blob/main/LOGOvector.svg?raw=true" alt="Album Art">
                         <div class="chakra-glow-overlay" id="player-chakra-glow"></div>
                     </div>
                     <div class="flex-grow overflow-hidden">
@@ -1359,18 +1389,39 @@
                 }
             };
 
+            // Helper function for safe classList operations
+            function safeToggleClass(element, className, force) {
+                if (element && element.classList) {
+                    if (force !== undefined) {
+                        element.classList.toggle(className, force);
+                    } else {
+                        element.classList.toggle(className);
+                    }
+                }
+            }
+
+            function safeAddClass(element, className) {
+                if (element && element.classList) {
+                    element.classList.add(className);
+                }
+            }
+
+            function safeRemoveClass(element, className) {
+                if (element && element.classList) {
+                    element.classList.remove(className);
+                }
+            }
+
             // Function to close mobile theme options
             function closeMobileThemeOptions() {
-                // Re-fetch the element right before using it, as a last resort
                 const currentMobileThemeOptions = document.getElementById('mobile-theme-options');
-                currentMobileThemeOptions?.classList?.add('hidden'); // Use optional chaining
+                safeAddClass(currentMobileThemeOptions, 'hidden');
             }
 
             // Function to close desktop theme options
             function closeDesktopThemeOptions() {
-                // Re-fetch the element right before using it, as a last resort
                 const currentDesktopThemeMenu = document.getElementById('theme-menu-desktop');
-                currentDesktopThemeMenu?.classList?.remove('show'); // Use optional chaining
+                safeRemoveClass(currentDesktopThemeMenu, 'show');
             }
 
             // Function to render preset theme buttons dynamically
@@ -1441,18 +1492,18 @@
                 const platformsToggleMobile = document.getElementById('platforms-toggle-mobile');
                 const platformsMenuMobile = document.getElementById('platforms-menu-mobile');
                 
-                if(hamburgerMenu) hamburgerMenu.addEventListener('click', () => mobileNavOverlay.classList.add('active'));
-                if(closeMobileMenu) closeMobileMenu.addEventListener('click', () => mobileNavOverlay.classList.remove('active'));
+                if(hamburgerMenu) hamburgerMenu.addEventListener('click', () => safeAddClass(mobileNavOverlay, 'active'));
+                if(closeMobileMenu) closeMobileMenu.addEventListener('click', () => safeRemoveClass(mobileNavOverlay, 'active'));
                 if(mobileNavOverlay) mobileNavOverlay.addEventListener('click', (e) => {
-                    if (e.target === mobileNavOverlay) mobileNavOverlay.classList.remove('active');
+                    if (e.target === mobileNavOverlay) safeRemoveClass(mobileNavOverlay, 'active');
                 });
                 if(platformsToggleDesktop) platformsToggleDesktop.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    platformsMenuDesktop?.classList?.toggle('show'); // Use optional chaining
+                    safeToggleClass(platformsMenuDesktop, 'show');
                 });
                 if(platformsToggleMobile) platformsToggleMobile.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    platformsMenuMobile?.classList?.toggle('show'); // Use optional chaining
+                    safeToggleClass(platformsMenuMobile, 'show');
                 });
                 
                 // Desktop theme menu click listener
@@ -1461,12 +1512,11 @@
                         e.stopPropagation();
                         // Re-fetch the element right before using it, as a last resort
                         const currentDesktopThemeMenu = document.getElementById('theme-menu-desktop');
-                        if (currentDesktopThemeMenu) { // Only check element existence here
-                            // Use optional chaining for classList.toggle to prevent error if classList is null
-                            const isShown = currentDesktopThemeMenu.classList?.toggle('show'); 
+                        if (currentDesktopThemeMenu) { 
+                            safeToggleClass(currentDesktopThemeMenu, 'show'); 
                             if (navigator.vibrate) navigator.vibrate(20);
                             clearTimeout(desktopThemeAutoCloseTimer);
-                            if (isShown) {
+                            if (currentDesktopThemeMenu.classList.contains('show')) { // Check actual state after toggle
                                 desktopThemeAutoCloseTimer = setTimeout(closeDesktopThemeOptions, 7000);
                                 focusCurrentThemePreset(currentDesktopThemeMenu.querySelector('#preset-themes-desktop'));
                             }
@@ -1482,13 +1532,12 @@
                         e.stopPropagation();
                         // Re-fetch the element right before using it, as a last resort
                         const currentMobileThemeOptions = document.getElementById('mobile-theme-options');
-                        if (currentMobileThemeOptions) { // Only check element existence here
-                            // Use optional chaining for classList.toggle to prevent error if classList is null
-                            const isHidden = currentMobileThemeOptions.classList?.toggle('hidden');
+                        if (currentMobileThemeOptions) { 
+                            safeToggleClass(currentMobileThemeOptions, 'hidden');
                             if (navigator.vibrate) navigator.vibrate(20);
 
                             clearTimeout(mobileThemeAutoCloseTimer);
-                            if (!isHidden) {
+                            if (!currentMobileThemeOptions.classList.contains('hidden')) { 
                                 mobileThemeAutoCloseTimer = setTimeout(closeMobileThemeOptions, 7000);
                                 focusCurrentThemePreset(currentMobileThemeOptions.querySelector('#mobile-preset-themes'));
                             }
@@ -1500,18 +1549,18 @@
 
                 // Global click listener to hide menus when clicking outside
                 window.addEventListener('click', (e) => {
-                    if (platformsMenuDesktop?.classList?.contains('show') && !platformsMenuDesktop.contains(e.target) && e.target !== platformsToggleDesktop) { // Use optional chaining
-                        platformsMenuDesktop.classList.remove('show');
+                    if (platformsMenuDesktop?.classList?.contains('show') && !platformsMenuDesktop.contains(e.target) && e.target !== platformsToggleDesktop) { 
+                        safeRemoveClass(platformsMenuDesktop, 'show');
                     }
                     // Re-fetch desktopThemeMenu for global click listener
                     const currentDesktopThemeMenu = document.getElementById('theme-menu-desktop');
-                    if (currentDesktopThemeMenu?.classList?.contains('show') && !currentDesktopThemeMenu.contains(e.target) && e.target !== themeToggleDesktop) { // Use optional chaining
+                    if (currentDesktopThemeMenu?.classList?.contains('show') && !currentDesktopThemeMenu.contains(e.target) && e.target !== themeToggleDesktop) { 
                         closeDesktopThemeOptions();
                     }
                     // Hide mobile theme options if clicking outside
                     // Re-fetch mobileThemeOptions for global click listener
                     const currentMobileThemeOptions = document.getElementById('mobile-theme-options');
-                    if (currentMobileThemeOptions?.classList && !currentMobileThemeOptions.classList.contains('hidden')) { // Use optional chaining for classList
+                    if (currentMobileThemeOptions?.classList && !currentMobileThemeOptions.classList.contains('hidden')) { 
                         if (!currentMobileThemeOptions.contains(e.target) && e.target !== mobileThemeMenu) {
                             closeMobileThemeOptions();
                         }
@@ -1584,7 +1633,7 @@
                         id: track.id,
                         title: track.title,
                         artist: track.user ? track.user.name : 'Unknown Artist',
-                        artwork: track.artwork ? (track.artwork['480x480'] || track.artwork.url) : `https://placehold.co/150x150/1e293b/f1f5f9?text=${track.title.charAt(0)}}`,
+                        artwork: track.artwork ? (track.artwork['480x480'] || track.artwork.url) : `https://placehold.co/150x150/1e293b/f1f5f9?text=${track.title.charAt(0)}`, 
                         duration: track.duration,
                         description: track.description || '',
                         isFavorite: favoriteSongIds.includes(track.id),
@@ -1867,14 +1916,14 @@
                 if (lyricsPopupTitle) lyricsPopupTitle.textContent = song.title; // Added check
                 paginateLyrics(song.description);
                 applyLyricsThemeAndFontStyles();
-                if (lyricsFullscreenPopup) lyricsFullscreenPopup.classList.remove('hidden'); // Added check
-                if (lyricsFullscreenPopup) lyricsFullscreenPopup.classList.add('show'); // Added check
+                if (lyricsFullscreenPopup) safeRemoveClass(lyricsFullscreenPopup, 'hidden'); // Use safeRemoveClass
+                if (lyricsFullscreenPopup) safeAddClass(lyricsFullscreenPopup, 'show'); // Use safeAddClass
             }
 
             function hideLyricsFullscreenPopup() {
                 console.log('hideLyricsFullscreenPopup: Closing lyrics popup.'); // Debug log
-                if (lyricsFullscreenPopup) lyricsFullscreenPopup.classList.remove('show'); // Added check
-                if (lyricsFullscreenPopup) lyricsFullscreenPopup.classList.add('hidden'); // Added check
+                if (lyricsFullscreenPopup) safeRemoveClass(lyricsFullscreenPopup, 'show'); // Use safeRemoveClass
+                if (lyricsFullscreenPopup) safeAddClass(lyricsFullscreenPopup, 'hidden'); // Use safeAddClass
             }
 
             function paginateLyrics(text) {
@@ -2013,15 +2062,15 @@
             function simulateAchievementAnimation() {
                 console.log('simulateAchievementAnimation: Simulating achievement.'); // Debug log
                 if (logoInHeader) {
-                    logoInHeader.classList.add('achievement-active');
+                    safeAddClass(logoInHeader, 'achievement-active');
                     setTimeout(() => {
-                        logoInHeader.classList.remove('achievement-active');
+                        safeRemoveClass(logoInHeader, 'achievement-active');
                     }, 1500); // Match animation duration
                 }
                 if (popupAlbumArt) {
-                    popupAlbumArt.classList.add('achievement-active');
+                    safeAddClass(popupAlbumArt, 'achievement-active');
                     setTimeout(() => {
-                        popupAlbumArt.classList.remove('achievement-active');
+                        safeRemoveClass(popupAlbumArt, 'achievement-active');
                     }, 1500);
                 }
             }
@@ -2107,7 +2156,7 @@
                     console.log('shuffleBtn: Click detected. Shuffling:', !isShuffling); // Debug log
                     isShuffling = !isShuffling;
                     localStorage.setItem('isShuffling', isShuffling);
-                    shuffleBtn.classList.toggle('active-control', isShuffling);
+                    safeToggleClass(shuffleBtn, 'active-control', isShuffling); // Use safeToggleClass
                 });
             }
             
@@ -2118,7 +2167,7 @@
                     let currentModeIndex = modes.indexOf(repeatMode);
                     repeatMode = modes[(currentModeIndex + 1) % modes.length];
                     localStorage.setItem('repeatMode', repeatMode);
-                    repeatBtn.classList.toggle('active-control', repeatMode !== 'none');
+                    safeToggleClass(repeatBtn, 'active-control', repeatMode !== 'none'); // Use safeToggleClass
                     repeatBtn.innerHTML = repeatMode === 'one' ? '<i class="ph-bold ph-repeat-once"></i>' : '<i class="ph-bold ph-repeat"></i>';
                 });
             }
@@ -2157,7 +2206,7 @@
             
             // Radial Menu Listeners
             if (radialMenuToggleBtn) radialMenuToggleBtn.addEventListener('click', () => { // Added check
-                if (radialMenuContainer) radialMenuContainer.classList.toggle('active'); // Added check
+                safeToggleClass(radialMenuContainer, 'active'); // Use safeToggleClass
             });
             // Fixed: Check if elements exist before adding listeners
             const radialFontSizeIncrease = document.getElementById('radial-font-size-increase');
@@ -2195,7 +2244,7 @@
             
             if (togglePlaylistBtn) { // Added check
                 togglePlaylistBtn.addEventListener('click', () => {
-                    if (popupPlaylistContainer) popupPlaylistContainer.classList.toggle('hidden'); // Added check
+                    if (popupPlaylistContainer) safeToggleClass(popupPlaylistContainer, 'hidden'); // Use safeToggleClass
                     if (popupPlaylistContainer && !popupPlaylistContainer.classList.contains('hidden')) {
                         const activeSongInList = popupSongList ? popupSongList.querySelector('.active-song-in-list') : null; // Added check
                         if (activeSongInList) {
@@ -2214,11 +2263,11 @@
                     simulateAchievementAnimation(); // Existing animation call
 
                     // Toggle tooltip visibility
-                    if (achievementTooltip) achievementTooltip.classList.toggle('show'); // Added check
+                    if (achievementTooltip) safeToggleClass(achievementTooltip, 'show'); // Use safeToggleClass
                     if (achievementTooltip && achievementTooltip.classList.contains('show')) {
                         // Optional: Set a timeout to hide the tooltip after a few seconds
                         setTimeout(() => {
-                            if (achievementTooltip) achievementTooltip.classList.remove('show'); // Added check
+                            if (achievementTooltip) safeRemoveClass(achievementTooltip, 'show'); // Use safeRemoveClass
                         }, 3000); // Hide after 3 seconds
                     }
                 });
@@ -2227,7 +2276,7 @@
                 document.addEventListener('click', (e) => {
                     if (achievementTooltip && achievementTooltip.classList.contains('show')) {
                         if (!simulateAchievementBtn.contains(e.target) && !achievementTooltip.contains(e.target)) {
-                            achievementTooltip.classList.remove('show');
+                            safeRemoveClass(achievementTooltip, 'show'); // Use safeRemoveClass
                         }
                     }
                 });
@@ -2239,16 +2288,11 @@
             // ==============================================
             async function initializeApp() {
                 console.log('initializeApp: Starting application initialization.'); // Debug log
-                // Hide splash screen after a delay
-                setTimeout(() => {
-                    if (splashScreen) splashScreen.classList.add('hidden'); // Added check
-                    console.log('initializeApp: Splash screen hidden.'); // Debug log
-                }, 2000); // Show splash for 2 seconds
-
+                
                 applyTheme();
                 setupNavEvents();
-                if (shuffleBtn) shuffleBtn.classList.toggle('active-control', isShuffling); // Added check
-                if (repeatBtn) repeatBtn.classList.toggle('active-control', repeatMode !== 'none'); // Added check
+                if (shuffleBtn) safeToggleClass(shuffleBtn, 'active-control', isShuffling); // Use safeToggleClass
+                if (repeatBtn) safeToggleClass(repeatBtn, 'active-control', repeatMode !== 'none'); // Use safeToggleClass
                 if (repeatBtn) repeatBtn.innerHTML = repeatMode === 'one' ? '<i class="ph-bold ph-repeat-once"></i>' : '<i class="ph-bold ph-repeat"></i>'; // Added check
                 
                 // Fetch and render data
@@ -2258,7 +2302,7 @@
                 
                 updateUI();
                 positionRadialItems();
-                if (popupPlaylistContainer) popupPlaylistContainer.classList.remove('hidden'); // Show playlist by default // Added check
+                if (popupPlaylistContainer) safeRemoveClass(popupPlaylistContainer, 'hidden'); // Show playlist by default // Use safeRemoveClass
                 
                 // Render preset themes for both desktop and mobile
                 const desktopPresetsContainer = document.getElementById('preset-themes-desktop');
@@ -2270,6 +2314,13 @@
                 if (mobilePresetsContainer) {
                     renderPresetThemes(mobilePresetsContainer, changeTheme);
                 }
+
+                // Hide splash screen AFTER all content is loaded and rendered, with a small buffer
+                setTimeout(() => {
+                    if (splashScreen) safeAddClass(splashScreen, 'hidden');
+                    console.log('initializeApp: Splash screen hidden AFTER content load.');
+                }, 500); // 500ms buffer after content is rendered
+                
                 console.log('initializeApp: Application initialization complete.'); // Debug log
             }
 
@@ -2278,3 +2329,4 @@
     </script>
 </body>
 </html>
+�
