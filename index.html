@@ -848,16 +848,10 @@
         }
         .song-list-item .title {
             font-weight: 600;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
         }
         .song-list-item .artist {
             font-size: 0.875rem;
             color: var(--text-muted-current);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
         }
         .song-list-item.active-song .title {
             color: var(--primary-color);
@@ -887,6 +881,37 @@
         @keyframes pulse-icon {
             from { transform: scale(1); opacity: 1; }
             to { transform: scale(1.2); opacity: 0.7; }
+        }
+
+        /* Marquee Effect for long text */
+        .title-artist-wrapper {
+            overflow: hidden;
+            width: 100%;
+            display: block;
+        }
+        .marquee-text {
+            white-space: nowrap;
+            display: inline-block;
+        }
+        .is-scrolling > .marquee-text {
+            animation: marquee-animation var(--marquee-duration) linear infinite;
+        }
+        .song-list-item:hover .is-scrolling > .marquee-text,
+        .song-list-item.active-song .is-scrolling > .marquee-text,
+        .now-playing-info .is-scrolling > .marquee-text {
+            animation-play-state: running;
+        }
+        .is-scrolling > .marquee-text {
+            animation-play-state: paused;
+        }
+
+        @keyframes marquee-animation {
+            from {
+                transform: translateX(0);
+            }
+            to {
+                transform: translateX(-50%);
+            }
         }
 
         /* ==============================================
@@ -1509,8 +1534,12 @@
         <div class="now-playing-info" id="popup-now-playing-info-wrapper">
             <img id="popup-album-art" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" alt="Album Art" class="animate-pulse">
             <div class="text-info">
-                <h4 id="popup-song-title" class="font-bold truncate">Chưa có nhạc</h4>
-                <p id="popup-song-artist" class="text-sm text-muted-current truncate">Vui lòng chọn bài hát</p>
+                <div class="title-artist-wrapper">
+                    <h4 id="popup-song-title" class="font-bold marquee-text">Chưa có nhạc</h4>
+                </div>
+                <div class="title-artist-wrapper">
+                     <p id="popup-song-artist" class="text-sm text-muted-current marquee-text">Vui lòng chọn bài hát</p>
+                </div>
             </div>
             <button id="toggle-playlist-btn" title="Danh sách phát" aria-label="Hiển thị hoặc ẩn danh sách phát" class="ml-4 text-xl text-muted-current hover:text-current">
                 <i class="ph-bold ph-list-music"></i>
@@ -2400,7 +2429,6 @@
 
         /**
          * Render danh sách bài hát vào DOM chính.
-         * @param {Array<Object>} tracks - Mảng các đối tượng bài hát để hiển thị.
          */
         function renderSongs(tracks) {
             currentDisplayData = tracks; 
@@ -2417,8 +2445,12 @@
                     <div class="song-info">
                         <img src="${song.artwork}" alt="${song.title}" class="artwork">
                         <div class="title-artist">
-                            <p class="title">${song.title}</p>
-                            <p class="artist">${song.artist}</p>
+                            <div class="title-artist-wrapper">
+                                <p class="title marquee-text">${song.title}</p>
+                            </div>
+                            <div class="title-artist-wrapper">
+                                <p class="artist marquee-text">${song.artist}</p>
+                            </div>
                         </div>
                     </div>
                     <button class="lyrics-button" data-song-id="${song.id}" aria-label="Xem lời bài hát">
@@ -2431,11 +2463,11 @@
             addSongEventListeners();
             renderPopupSongList(tracks); // Re-render popup playlist
             updateUI(); 
+            setupMarquees();
         }
         
         /**
          * Render danh sách bài hát trong popup playlist.
-         * @param {Array<Object>} songs - Mảng các đối tượng bài hát để hiển thị.
          */
         function renderPopupSongList(songs) {
             popupSongList.innerHTML = '';
@@ -2446,8 +2478,17 @@
             songs.forEach((song) => {
                 const globalIndex = songData.findIndex(s => s.id === song.id);
                 const li = document.createElement('li');
-                li.className = 'p-2 rounded-md cursor-pointer hover:bg-bg-current text-sm truncate';
-                li.innerHTML = `<div class="song-info-text"><p class="font-semibold truncate">${song.title}</p><p class="artist-text truncate">${song.artist}</p></div>`;
+                li.className = 'p-2 rounded-md cursor-pointer hover:bg-bg-current text-sm';
+                li.innerHTML = `
+                    <div class="song-info-text">
+                        <div class="title-artist-wrapper">
+                           <p class="font-semibold marquee-text">${song.title}</p>
+                        </div>
+                        <div class="title-artist-wrapper">
+                           <p class="artist-text marquee-text">${song.artist}</p>
+                        </div>
+                    </div>
+                `;
                 li.dataset.index = globalIndex;
                 li.addEventListener('click', () => playSong(globalIndex));
                 popupSongList.appendChild(li);
@@ -2524,7 +2565,9 @@
 
             // Add fade-out effect to current song info
             const previousSongInfo = document.getElementById('popup-now-playing-info-wrapper');
-            previousSongInfo.classList.add('fade-out');
+            if (previousSongInfo) { // Check if the element exists
+                previousSongInfo.classList.add('fade-out');
+            }
 
             setTimeout(() => {
                 currentSongIndex = index;
@@ -2539,9 +2582,12 @@
                 popupAlbumArt.src = song.artwork;
                 popupAlbumArt.classList.remove('animate-pulse'); // Stop pulse when art is loaded
 
-                previousSongInfo.classList.remove('fade-out'); // Remove fade-out after content update
+                if (previousSongInfo) { // Check if the element exists
+                    previousSongInfo.classList.remove('fade-out'); // Remove fade-out after content update
+                }
                 updateMediaSession();
                 updateUI();
+                setupMarquees();
             }, 300); // Wait for fade-out to complete
         }
         
@@ -2605,6 +2651,7 @@
             } else {
                 deactivateLogoAnimations(); 
             }
+            setupMarquees();
         }
         
         /**
@@ -3059,6 +3106,38 @@
             const currentCategory = currentCategoryButton ? currentCategoryButton.dataset.category : 'all';
             loadCustomCategory(currentCategory);
         });
+
+        function setupMarquees() {
+            document.querySelectorAll('.title-artist-wrapper').forEach(wrapper => {
+                const textEl = wrapper.querySelector('.marquee-text');
+                if (!textEl) return;
+
+                // Reset any previous marquee setup
+                if (wrapper.dataset.originalHtml) {
+                    textEl.innerHTML = wrapper.dataset.originalHtml;
+                } else {
+                    wrapper.dataset.originalHtml = textEl.innerHTML;
+                }
+                wrapper.classList.remove('is-scrolling');
+                wrapper.style.removeProperty('--marquee-duration');
+
+                // Check for overflow after a short delay to allow rendering
+                setTimeout(() => {
+                    const isOverflowing = textEl.scrollWidth > wrapper.clientWidth;
+
+                    if (isOverflowing) {
+                        wrapper.classList.add('is-scrolling');
+                        const scrollWidth = textEl.scrollWidth;
+                        const duration = scrollWidth / 50; // Speed: 50px per second
+                        
+                        // Duplicate the content for a seamless loop
+                        textEl.innerHTML += `<span style="display: inline-block; width: 2rem;"></span>` + wrapper.dataset.originalHtml;
+                        
+                        wrapper.style.setProperty('--marquee-duration', `${duration * 2}s`);
+                    }
+                }, 100); 
+            });
+        }
 
 
         // ==============================================
