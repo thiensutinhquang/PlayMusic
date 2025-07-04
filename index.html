@@ -28,6 +28,7 @@
             --text-light: #1e293b; /* Slate 800 */
             --text-muted-light: #475569; /* Slate 600 - Đã điều chỉnh để tăng độ tương phản */
             --border-light: #e2e8f0; /* Slate 200 */
+            --logo-bg-light: #f8fafc; /* Slightly off-white for logo background */
 
             /* Màu cho chế độ Tối */
             --bg-dark: #0f172a; /* Slate 900 */
@@ -35,6 +36,7 @@
             --text-dark: #e2e8f0; /* Slate 200 */
             --text-muted-dark: #94a3b8; /* Slate 400 */
             --border-dark: #334155; /* Slate 700 */
+            --logo-bg-dark: #111827; /* Darker shade for logo background */
 
             /* Đổ bóng */
             --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
@@ -54,6 +56,7 @@
             --text-current: var(--text-light);
             --text-muted-current: var(--text-muted-light);
             --border-current: var(--border-light);
+            --logo-bg-current: var(--logo-bg-light);
         }
 
         body.dark-mode {
@@ -62,6 +65,7 @@
             --text-current: var(--text-dark);
             --text-muted-current: var(--text-muted-dark);
             --border-current: var(--border-dark);
+            --logo-bg-current: var(--logo-bg-dark);
         }
 
         /* Preset themes */
@@ -71,6 +75,7 @@
             --text-current: #FFD700;
             --text-muted-current: #AAAAAA;
             --border-current: #0055AA;
+            --logo-bg-current: #002244;
         }
         html[data-theme="gentle"] {
             --bg-current: #6A057F;
@@ -78,6 +83,7 @@
             --text-current: #FFB6C1;
             --text-muted-current: #E0E0E0;
             --border-current: #8C2B9F;
+            --logo-bg-current: #5A046F;
         }
         html[data-theme="fresh"] {
             --bg-current: #228B22;
@@ -85,6 +91,7 @@
             --text-current: #00CED1;
             --text-muted-current: #BBEEFF;
             --border-current: #44AA44;
+            --logo-bg-current: #1A7A1A;
         }
         html[data-theme="modern"] {
             --bg-current: #228B22;
@@ -92,6 +99,7 @@
             --text-current: #FFD700;
             --text-muted-current: #FFDD77;
             --border-current: #44AA44;
+            --logo-bg-current: #1A7A1A;
         }
         html[data-theme="warm"] {
             --bg-current: #6A057F;
@@ -99,6 +107,7 @@
             --text-current: #FFD700;
             --text-muted-current: #FFDD77;
             --border-current: #8C2B9F;
+            --logo-bg-current: #5A046F;
         }
         html[data-theme="elegant"] {
             --bg-current: #003366;
@@ -106,6 +115,7 @@
             --text-current: #00CED1;
             --text-muted-current: #BBEEFF;
             --border-current: #0055AA;
+            --logo-bg-current: #002244;
         }
         html[data-theme="tinhquang"] {
             --bg-current: #1a0b2a;
@@ -113,6 +123,7 @@
             --text-current: #FFD700;
             --text-muted-current: #e0e0e0;
             --border-current: #4a2a6a;
+            --logo-bg-current: #100818;
         }
         
         /* ==============================================
@@ -181,41 +192,58 @@
             max-width: 200px;
             width: 20%;
             min-width: 100px;
+            position: relative; /* Thêm position relative cho pseudo-element */
+            /* Loại bỏ overflow: hidden và border-radius: 50% để không cắt chữ */
+            background-color: var(--logo-bg-current); /* Nền cho logo */
+            transition: background-color var(--transition-fast);
+            padding: 10px; /* Thêm padding để tạo không gian cho hiệu ứng glow */
+            box-sizing: content-box; /* Đảm bảo padding không ảnh hưởng đến kích thước tổng */
+            border-radius: 12px; /* Bo tròn nhẹ container */
         }
-
+        
         #header-logo-placeholder {
             width: 100%;
             height: 100%;
             display: flex;
             align-items: center;
             justify-content: center;
-            /* Thêm transition cho hiệu ứng glow */
-            transition: filter 0.3s ease-in-out;
+            position: relative; /* Thêm position relative cho pseudo-element */
+            overflow: hidden; /* QUAN TRỌNG: Để cắt hiệu ứng glow bên trong vùng này */
         }
         #header-logo-placeholder svg {
             width: 100%;
             height: 100%;
             object-fit: contain;
+            position: relative; /* Đảm bảo SVG nằm trên pseudo-element */
+            z-index: 1; /* Đảm bảo SVG nằm trên pseudo-element */
         }
 
-        /* Hiệu ứng Chakra Glow CỰC MẠNH cho Logo Header */
-        #header-logo-placeholder.chakra-glow-strong svg {
-            filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.8)) 
-                    drop-shadow(0 0 10px rgba(255, 255, 255, 0.7)) 
-                    drop-shadow(0 0 15px rgba(255, 255, 255, 0.6)) 
-                    drop-shadow(0 0 20px rgba(255, 255, 255, 0.5));
-            animation: strong-white-glow 1.5s infinite alternate;
+        /* Hiệu ứng Chakra Glow CỰC MẠNH cho Logo Header (luôn bật) */
+        #header-logo-placeholder::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 400%; /* Tăng kích thước để tỏa rộng hơn nữa */
+            height: 400%; /* Tăng kích thước để tỏa rộng hơn nữa */
+            border-radius: 50%; /* Vẫn giữ hình tròn cho hiệu ứng glow */
+            /* Điều chỉnh gradient để có ánh sáng mạnh nhất */
+            background: radial-gradient(circle, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0.9) 20%, rgba(255, 255, 255, 0) 60%);
+            z-index: -1; /* Nằm phía sau nội dung SVG */
+            animation: radiant-glow 1.5s infinite alternate ease-in-out; /* Tốc độ nhanh hơn một chút */
         }
 
-        @keyframes strong-white-glow {
-            from {
-                filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.8));
+        @keyframes radiant-glow {
+            0% {
+                transform: translate(-50%, -50%) scale(0.4); /* Bắt đầu nhỏ hơn để hiệu ứng phóng to rõ rệt */
+                opacity: 0.8; /* Opacity cao hơn khi bắt đầu */
+                filter: blur(15px); /* Thêm blur mạnh hơn */
             }
-            to {
-                filter: drop-shadow(0 0 8px rgba(255, 255, 255, 1)) 
-                        drop-shadow(0 0 16px rgba(255, 255, 255, 0.9)) 
-                        drop-shadow(0 0 24px rgba(255, 255, 255, 0.8)) 
-                        drop-shadow(0 0 32px rgba(255, 255, 255, 0.7));
+            100% {
+                transform: translate(-50%, -50%) scale(1.6); /* Tỏa ra mạnh hơn */
+                opacity: 1; /* Opacity tối đa */
+                filter: blur(40px); /* Blur mạnh nhất khi tỏa ra */
             }
         }
 
@@ -417,13 +445,15 @@
         ============================================== */
         
         /* Hiệu ứng Logo Header khi nhạc phát */
-        #header-logo-placeholder #human-body.breathing-effect { animation: breathe 4s infinite ease-in-out; }
+        #header-logo-placeholder #human-body.breathing-effect { 
+            animation: breathe 2s infinite alternate ease-in-out; /* Tăng biên độ nhịp thở */
+        }
         #header-logo-placeholder #chakra-system.energy-flow-active { stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: flow-animation 3s linear infinite; }
         #header-logo-placeholder #logo-text-trucchichantam.highlight-text { fill: gold; }
 
         @keyframes breathe {
-            0%, 100% { transform: scale(1); transform-origin: center; }
-            50% { transform: scale(1.03); transform-origin: center; }
+            0%, 100% { transform: scale(0.95); transform-origin: center; } /* Bắt đầu nhỏ hơn */
+            50% { transform: scale(1.05); transform-origin: center; } /* Phóng to hơn */
         }
         @keyframes flow-animation {
             from { stroke-dashoffset: 1000; }
@@ -776,9 +806,6 @@
         }
         .song-list-item:hover .index-number {
             opacity: 0;
-        }
-        .song-list-item:hover .play-button {
-            opacity: 1;
         }
         .song-list-item.active-song .index-number {
             opacity: 0;
@@ -1600,7 +1627,7 @@
 
         // Logo elements (will be cached after SVG injection)
         let logoElements = {};
-        const headerLogoPlaceholder = document.getElementById('header-logo-placeholder'); // Thêm tham chiếu đến placeholder logo header
+        const headerLogoContainer = document.querySelector('.header-logo-container'); // Changed from headerLogoPlaceholder to container
 
         // ==============================================
         // Global State & Settings
@@ -1609,7 +1636,7 @@
         const API_KEY = "08c897eb7784e03007e0769d01f2ca1c6a2001b4";
         const USER_HANDLE = "minhsutinhquang";
         let audiusDiscoveryHost = null; // Will be fetched dynamically
-        const genreMap = {'new':"Pop",'hot':"Country",'dieu-thu':"Classical",'others':"Reggae",'phap':"Podcasts"};
+        const genreMap = { 'new': "Pop", 'hot': "Country", 'dieu-thu': "Classical", 'others': "Reggae", 'phap': "Podcasts" };
 
         let songData = []; // Initialize as empty, will be populated by fetchAudiusData
         let currentDisplayData = []; // Songs currently displayed in the main list (filtered by category/search)
@@ -1737,8 +1764,7 @@
             if (logoElements.humanBody) logoElements.humanBody.classList.add('breathing-effect');
             if (logoElements.chakraSystem) logoElements.chakraSystem.classList.add('energy-flow-active');
             if (logoElements.trucChiChanTamText) logoElements.trucChiChanTamText.classList.add('highlight-text');
-            // Thêm class chakra-glow-strong cho logo header
-            headerLogoPlaceholder.classList.add('chakra-glow-strong');
+            // Hiệu ứng glow trên logo header đã được xử lý bằng CSS cố định, không cần bật/tắt ở đây.
         }
 
         /**
@@ -1748,8 +1774,7 @@
             if (logoElements.humanBody) logoElements.humanBody.classList.remove('breathing-effect');
             if (logoElements.chakraSystem) logoElements.chakraSystem.classList.remove('energy-flow-active');
             if (logoElements.trucChiChanTamText) logoElements.trucChiChanTamText.classList.remove('highlight-text');
-            // Xóa class chakra-glow-strong khỏi logo header
-            headerLogoPlaceholder.classList.remove('chakra-glow-strong');
+            // Hiệu ứng glow trên logo header đã được xử lý bằng CSS cố định, không cần bật/tắt ở đây.
         }
 
         /**
@@ -2318,11 +2343,11 @@
                 }
             });
 
-            // Update logo animations
+            // Update logo animations (other than the permanent glow)
             if (isPlaying) {
-                activateLogoAnimations();
+                activateLogoAnimations(); 
             } else {
-                deactivateLogoAnimations();
+                deactivateLogoAnimations(); 
             }
         }
         
