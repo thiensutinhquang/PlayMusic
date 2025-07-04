@@ -199,13 +199,12 @@
             max-width: 200px;
             width: 20%;
             min-width: 100px;
-            position: relative; /* Thêm position relative cho pseudo-element */
-            /* Loại bỏ overflow: hidden và border-radius: 50% để không cắt chữ */
-            background-color: var(--logo-bg-current); /* Nền cho logo */
+            position: relative; 
+            background-color: var(--logo-bg-current); 
             transition: background-color var(--transition-fast);
-            padding: 10px; /* Thêm padding để tạo không gian cho hiệu ứng glow */
-            box-sizing: content-box; /* Đảm bảo padding không ảnh hưởng đến kích thước tổng */
-            border-radius: 12px; /* Bo tròn nhẹ container */
+            padding: 10px; 
+            box-sizing: content-box; 
+            border-radius: 12px; 
         }
         
         #header-logo-placeholder {
@@ -214,16 +213,28 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            position: relative; /* Thêm position relative cho pseudo-element */
-            overflow: hidden; /* QUAN TRỌNG: Để cắt hiệu ứng glow bên trong vùng này */
+            position: relative; 
+            overflow: hidden; 
         }
         #header-logo-placeholder svg {
             width: 100%;
             height: 100%;
             object-fit: contain;
-            position: relative; /* Đảm bảo SVG nằm trên pseudo-element */
-            z-index: 1; /* Đảm bảo SVG nằm trên pseudo-element */
+            position: relative; 
+            z-index: 1; 
         }
+
+        /* NEW: Higgs Field Canvas Style */
+        #higgs-field-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* Allow clicks to go through to the logo */
+            z-index: 2; /* Place it above the SVG but below any potential UI elements */
+        }
+
 
         /* Hiệu ứng Chakra Glow CỰC MẠNH cho Logo Header (luôn bật) */
         #header-logo-placeholder::before {
@@ -232,25 +243,24 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 400%; /* Tăng kích thước để tỏa rộng hơn nữa */
-            height: 400%; /* Tăng kích thước để tỏa rộng hơn nữa */
-            border-radius: 50%; /* Vẫn giữ hình tròn cho hiệu ứng glow */
-            /* Điều chỉnh gradient để có ánh sáng mạnh nhất */
+            width: 400%; 
+            height: 400%; 
+            border-radius: 50%; 
             background: radial-gradient(circle, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0.9) 20%, rgba(255, 255, 255, 0) 60%);
-            z-index: -1; /* Nằm phía sau nội dung SVG */
-            animation: radiant-glow 1.5s infinite alternate ease-in-out; /* Tốc độ nhanh hơn một chút */
+            z-index: 0; /* Behind the SVG and canvas */
+            animation: radiant-glow 1.5s infinite alternate ease-in-out; 
         }
 
         @keyframes radiant-glow {
             0% {
-                transform: translate(-50%, -50%) scale(0.4); /* Bắt đầu nhỏ hơn để hiệu ứng phóng to rõ rệt */
-                opacity: 0.8; /* Opacity cao hơn khi bắt đầu */
-                filter: blur(15px); /* Thêm blur mạnh hơn */
+                transform: translate(-50%, -50%) scale(0.4); 
+                opacity: 0.8; 
+                filter: blur(15px); 
             }
             100% {
-                transform: translate(-50%, -50%) scale(1.6); /* Tỏa ra mạnh hơn */
-                opacity: 1; /* Opacity tối đa */
-                filter: blur(40px); /* Blur mạnh nhất khi tỏa ra */
+                transform: translate(-50%, -50%) scale(1.6); 
+                opacity: 1; 
+                filter: blur(40px); 
             }
         }
 
@@ -504,7 +514,7 @@
         TRÌNH PHÁT NHẠC - THANH ĐIỀU KHIỂN DƯỚI
         ============================================== */
         #player-bar {
-            position: fixed; /* Đã được sửa để cố định */
+            position: fixed; /* Đã được sửa thành fixed */
             bottom: 0; left: 0; right: 0;
             height: 90px;
             background-color: rgba(255, 255, 255, 0.7);
@@ -1299,7 +1309,10 @@
         <div class="container header-layout-wrapper">
             <div class="header-logo-container">
                 <a href="#">
-                    <div id="header-logo-placeholder"></div>
+                    <div id="header-logo-placeholder">
+                        <!-- NEW: Canvas for Higgs Field Effect -->
+                        <canvas id="higgs-field-canvas"></canvas>
+                    </div>
                 </a>
             </div>
             <div class="header-main-content">
@@ -1853,7 +1866,8 @@
                 if (!response.ok) throw new Error('Không tải được SVG');
                 const svgText = await response.text();
                 document.getElementById('splash-logo-placeholder').innerHTML = svgText;
-                document.getElementById('header-logo-placeholder').innerHTML = svgText;
+                // Add an empty canvas for the effect, the rest is handled in JS
+                document.getElementById('header-logo-placeholder').innerHTML = svgText + '<canvas id="higgs-field-canvas"></canvas>';
             } catch (error) {
                 console.error("Lỗi tải SVG:", error);
                 // Fallback to a simple text logo if SVG fails to load
@@ -1939,6 +1953,100 @@
                 navigator.mediaSession.setActionHandler('nexttrack', playNext);
             }
         }
+
+        // ==============================================
+        // HIGGS FIELD EFFECT
+        // ==============================================
+        const initHiggsField = () => {
+            const canvas = document.getElementById('higgs-field-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const logoContainer = canvas.parentElement;
+            let particles = [];
+            let animationFrameId;
+
+            const resizeCanvas = () => {
+                canvas.width = logoContainer.offsetWidth;
+                canvas.height = logoContainer.offsetHeight;
+            };
+
+            class Particle {
+                constructor() {
+                    this.reset();
+                }
+
+                reset() {
+                    this.x = Math.random() * canvas.width;
+                    this.y = Math.random() * canvas.height;
+                    this.vx = (Math.random() - 0.5) * 0.8;
+                    this.vy = (Math.random() - 0.5) * 0.8;
+                    this.radius = Math.random() * 1.5 + 0.5;
+                    this.life = Math.random() * 200 + 100;
+                    this.initialLife = this.life;
+                }
+
+                update() {
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    this.life--;
+
+                    if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height || this.life <= 0) {
+                        this.reset();
+                    }
+                }
+
+                draw() {
+                    ctx.beginPath();
+                    // Create a flashing effect
+                    const flash = Math.abs(Math.sin((this.initialLife - this.life) * 0.1));
+                    const opacity = flash * 0.9;
+                    const glow = flash * 15;
+
+                    ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
+                    ctx.shadowColor = 'white';
+                    ctx.shadowBlur = glow;
+                    
+                    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            const createParticles = () => {
+                particles = [];
+                const particleCount = Math.floor((canvas.width * canvas.height) / 2000); // Adjust density based on area
+                for (let i = 0; i < particleCount; i++) {
+                    particles.push(new Particle());
+                }
+            };
+
+            const animate = () => {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles.forEach(p => {
+                    p.update();
+                    p.draw();
+                });
+                // Reset shadow after drawing all particles
+                ctx.shadowBlur = 0;
+                animationFrameId = requestAnimationFrame(animate);
+            };
+            
+            // Initialization
+            resizeCanvas();
+            createParticles();
+            
+            // Stop any previous animation loop before starting a new one
+            if(animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+            }
+            animate();
+
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                resizeCanvas();
+                createParticles();
+            });
+        };
+
 
         // ==============================================
         // THEME MANAGEMENT
@@ -2932,6 +3040,7 @@
             // Load and inject SVG logo
             await loadAndInjectSVG();
             cacheLogoElements(); // Re-cache logo elements after SVG injection
+            initHiggsField(); // NEW: Initialize the particle effect
 
             applyTheme(); // Apply saved theme or default
             setupNavEvents(); // Setup navigation and dropdowns
