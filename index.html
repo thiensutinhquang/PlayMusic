@@ -612,7 +612,8 @@
             bottom: 90px; /* Đặt ngay trên player bar */
             left: 0;
             right: 0;
-            background-color: var(--card-bg-current);
+            background-color: rgba(255, 255, 255, 0.9); /* Slightly transparent */
+            backdrop-filter: blur(8px);
             border-top-left-radius: 12px;
             border-top-right-radius: 12px;
             box-shadow: var(--shadow-lg);
@@ -625,6 +626,9 @@
             visibility: hidden;
             transition: all 0.3s ease-out;
             padding: 1rem;
+        }
+        body.dark-mode #popup-playlist-container {
+            background-color: rgba(15, 23, 42, 0.9);
         }
         #popup-playlist-container.show {
             transform: translateY(0);
@@ -1053,7 +1057,9 @@
         .mobile-nav-content .nav-item {
             width: 100%;
             justify-content: flex-start;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.75rem; /* Increased spacing */
+            font-size: 1.1rem; /* Slightly larger font */
+            padding: 0.8rem 1.2rem; /* Increased padding */
         }
         .mobile-nav-content .dropdown-container {
             width: 100%;
@@ -1061,6 +1067,8 @@
         .mobile-nav-content .dropdown-toggle {
             width: 100%;
             justify-content: flex-start;
+            font-size: 1.1rem; /* Slightly larger font */
+            padding: 0.8rem 1.2rem; /* Increased padding */
         }
         .mobile-nav-content .dropdown-menu {
             position: static; /* Make it flow naturally in mobile menu */
@@ -1074,7 +1082,10 @@
             transform: translateY(0); /* No transform */
         }
         .mobile-nav-content .dropdown-menu a {
-            padding-left: 2.5rem; /* Indent dropdown items */
+            padding-left: 3rem; /* Slightly more indent */
+            font-size: 1rem; /* Consistent font size */
+            padding-top: 0.6rem;
+            padding-bottom: 0.6rem;
         }
         
         @media (max-width: 1024px) {
