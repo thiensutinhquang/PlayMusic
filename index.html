@@ -515,19 +515,18 @@
         TRÌNH PHÁT NHẠC - THANH ĐIỀU KHIỂN DƯỚI
         ============================================== */
         #player-bar {
-            position: fixed; /* Đã được sửa thành fixed */
+            position: fixed;
             bottom: 0; left: 0; right: 0;
             height: 90px;
             background-color: rgba(255, 255, 255, 0.7);
             backdrop-filter: blur(10px);
             border-top: 1px solid var(--border-current);
             z-index: 1001;
-            padding: 0 2rem;
-            display: grid;
-            grid-template-columns: 1fr 2fr 1fr;
+            padding: 0 1.5rem;
+            display: grid; 
+            grid-template-columns: 3.5fr 2fr 1.2fr; 
             align-items: center;
-            gap: 2rem;
-            /* Đã loại bỏ 'position: relative;' khỏi đây */
+            gap: 1rem;
         }
         body.dark-mode #player-bar {
             background-color: rgba(15, 23, 42, 0.7);
@@ -537,20 +536,21 @@
             display: flex;
             align-items: center;
             gap: 1rem;
-            min-width: 0;
-            opacity: 1; /* Default state */
-            transition: opacity 0.3s ease-out; /* Add transition for fade effect */
+            min-width: 0; 
+            opacity: 1; 
+            transition: opacity 0.3s ease-out;
         }
         #player-bar .now-playing-info.fade-out {
             opacity: 0;
         }
-
+        
         #player-bar .now-playing-info img {
             width: 56px;
             height: 56px;
             border-radius: 8px;
             object-fit: cover;
-            transition: transform 0.3s ease-out, box-shadow 0.3s ease-out; /* Smooth transition for spinning and glow */
+            transition: transform 0.3s ease-out, box-shadow 0.3s ease-out; 
+            flex-shrink: 0;
         }
         #player-bar .now-playing-info img.spinning {
             animation: spin 8s linear infinite;
@@ -581,6 +581,7 @@
 
         #player-bar .now-playing-info .text-info {
             min-width: 0;
+            flex-grow: 1;
         }
 
         #player-bar .player-controls-main {
@@ -588,6 +589,7 @@
             flex-direction: column;
             align-items: center;
             gap: 0.5rem;
+            min-width: 0;
         }
         #player-bar .player-buttons {
             display: flex;
@@ -617,7 +619,6 @@
             align-items: center;
             gap: 0.75rem;
             width: 100%;
-            max-width: 500px;
         }
         #player-bar .progress-container { 
             flex-grow: 1; 
@@ -777,6 +778,9 @@
         /* ==============================================
         GIAO DIỆN DANH SÁCH NHẠC (LIST VIEW) - CẢI TIẾN
         ============================================== */
+        #music-section {
+            position: relative; /* Needed for positioning scroll buttons */
+        }
         .song-list-container {
             display: flex;
             flex-direction: column;
@@ -912,6 +916,50 @@
             to {
                 transform: translateX(-50%);
             }
+        }
+        
+        /* Scroll Navigation Buttons */
+        #scroll-nav-container {
+            position: absolute;
+            top: 50%;
+            right: 10px; /* Position inside the card */
+            transform: translateY(-50%);
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        #scroll-nav-container button {
+            width: 36px;
+            height: 36px;
+            background-color: rgba(0, 0, 0, 0.3);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: var(--shadow-md);
+            transition: all 0.2s;
+            backdrop-filter: blur(4px);
+        }
+
+        #scroll-nav-container button:hover {
+            background-color: var(--primary-color);
+            color: white;
+            transform: scale(1.1);
+        }
+
+        #scroll-nav-container button i {
+            font-size: 1.25rem;
+        }
+
+        @media (max-width: 768px) {
+             #scroll-nav-container {
+                right: 5px; /* Adjust for smaller screens */
+             }
         }
 
         /* ==============================================
@@ -1292,41 +1340,51 @@
             .main-title { font-size: 1.5rem; } /* Further adjust title size for smaller mobile */
             
             #player-bar {
-                grid-template-columns: auto 1fr;
-                padding: 0.5rem 1rem;
-                height: auto; /* Allow height to adjust for stacked elements */
-                flex-wrap: wrap; /* Allow items to wrap */
-                justify-content: center;
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto;
+                height: auto;
+                gap: 0.5rem;
+                padding: 0.75rem 1rem;
             }
             #player-bar .now-playing-info {
-                width: 100%; /* Take full width */
-                justify-content: center; /* Center info */
-                order: 2; /* Move to second row */
-                margin-top: 0.5rem;
+                grid-column: 1 / -1;
+                order: 1;
             }
             #player-bar .player-controls-main {
-                width: 100%; /* Take full width */
-                order: 1; /* Move to first row */
-                padding-bottom: 0.5rem;
-            }
-            #player-bar .player-buttons {
-                justify-content: center;
-                width: 100%;
-            }
-            #player-bar .progress-section {
-                width: 100%;
-                max-width: none; /* Remove max-width on mobile */
+                grid-column: 1 / -1;
+                order: 2;
             }
             #player-bar .player-actions-right { 
-                display: none; /* Hide auxiliary controls on small mobile */
+                display: none; 
             }
 
             #queue-sidebar {
                 width: 100%; /* Full width on tiny screens */
             }
             #lyrics-radial-menu-container {
-                bottom: 100px; /* Adjust for mobile player bar */
+                bottom: 110px; /* Adjust for taller mobile player bar */
                 right: 10px;
+            }
+
+            .song-list-header,
+            .song-list-item {
+                /* STT | Bài hát (lớn nhất) | Thời lượng (nhỏ) */
+                grid-template-columns: 24px 1fr auto; 
+                gap: 0.75rem; 
+            }
+
+            /* Ẩn cột "Lời bài hát" trên mobile */
+            .song-list-header span:nth-child(3),
+            .song-list-item .lyrics-button {
+                display: none;
+            }
+            
+            .song-list-item .song-info {
+                gap: 0.75rem; /* Giảm khoảng cách giữa ảnh và chữ */
+            }
+
+            .song-list-item .duration {
+                font-size: 0.8rem; /* Đảm bảo chữ không quá nhỏ */
             }
         }
     </style>
@@ -1545,10 +1603,10 @@
             <img id="popup-album-art" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" alt="Album Art" class="animate-pulse">
             <div class="text-info">
                 <div class="title-artist-wrapper">
-                    <h4 id="popup-song-title" class="font-bold marquee-text">Chưa có nhạc</h4>
+                    <h4 id="popup-song-title" class="font-bold marquee-text">Chọn một bài hát</h4>
                 </div>
                 <div class="title-artist-wrapper">
-                     <p id="popup-song-artist" class="text-sm text-muted-current marquee-text">Vui lòng chọn bài hát</p>
+                     <p id="popup-song-artist" class="text-sm text-muted-current marquee-text">Để bắt đầu nghe nhạc</p>
                 </div>
             </div>
             <button id="toggle-playlist-btn" title="Danh sách phát" aria-label="Hiển thị hoặc ẩn danh sách phát" class="ml-4 text-xl text-muted-current hover:text-current">
@@ -2481,7 +2539,6 @@
             renderPopupSongList(tracks); // Re-render popup playlist
             updateUI(); 
             setupMarquees();
-            updateScrollButtonsVisibility(); // NEW: Check visibility after rendering
         }
         
         /**
@@ -2586,27 +2643,35 @@
             if (previousSongInfo) { // Check if the element exists
                 previousSongInfo.classList.add('fade-out');
             }
+            
+            // FIX: Pause before changing src to avoid interruption error
+            audioPlayer.pause();
 
             setTimeout(() => {
                 currentSongIndex = index;
                 const song = songData[index];
-                // Use Audius stream URL
+                
                 audioPlayer.src = `${audiusDiscoveryHost}/v1/tracks/${song.id}/stream?app_name=MSTQPlayer`;
-                audioPlayer.play().catch(e => console.error("Playback error:", e, "Could not play song."));
+                
+                const playPromise = audioPlayer.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(error => {
+                        console.error("Playback error:", error, "Could not play song.");
+                        // The 'pause' event listener will handle the UI update to show the play icon.
+                    });
+                }
 
-                // Update player bar info immediately for responsiveness
-                popupSongTitle.textContent = song.title;
-                popupSongArtist.textContent = song.artist;
+                // Update UI elements
                 popupAlbumArt.src = song.artwork;
-                popupAlbumArt.classList.remove('animate-pulse'); // Stop pulse when art is loaded
+                popupAlbumArt.classList.remove('animate-pulse');
 
-                if (previousSongInfo) { // Check if the element exists
-                    previousSongInfo.classList.remove('fade-out'); // Remove fade-out after content update
+                if (previousSongInfo) {
+                    previousSongInfo.classList.remove('fade-out');
                 }
                 updateMediaSession();
                 updateUI();
                 setupMarquees();
-            }, 300); // Wait for fade-out to complete
+            }, 300);
         }
         
         /**
@@ -2618,16 +2683,27 @@
 
             // Update player bar info
             if (song) {
-                popupSongTitle.textContent = song.title;
-                popupSongArtist.textContent = song.artist;
+                const displayIndex = currentDisplayData.findIndex(s => s.id === song.id);
+                
+                // CORRECTED LOGIC:
+                // Top line: "Đang nghe bài [number]"
+                if (displayIndex !== -1) {
+                    popupSongTitle.textContent = `Đang nghe bài ${displayIndex + 1}`;
+                } else {
+                    popupSongTitle.textContent = "Đang phát"; // Fallback
+                }
+                
+                // Bottom line: Song Title
+                popupSongArtist.textContent = song.title;
+                
                 popupAlbumArt.src = song.artwork;
-                popupAlbumArt.classList.remove('animate-pulse'); // Stop pulse when art is loaded
+                popupAlbumArt.classList.remove('animate-pulse');
                 updateFavoriteButtonsUI(song.id, favoriteSongIds.includes(song.id));
             } else {
                 popupSongTitle.textContent = "Chọn một bài hát";
                 popupSongArtist.textContent = "Để bắt đầu nghe nhạc";
-                popupAlbumArt.src = "https://placehold.co/64x64/1e293b/f1f5f9?text=MSTQ"; // Placeholder
-                popupAlbumArt.classList.add('animate-pulse'); // Add pulse for placeholder
+                popupAlbumArt.src = "https://placehold.co/64x64/1e293b/f1f5f9?text=MSTQ";
+                popupAlbumArt.classList.add('animate-pulse');
                 favoriteBtn.classList.remove('liked');
                 favoriteBtn.innerHTML = '<i class="ph-bold ph-heart"></i>';
             }
@@ -3157,14 +3233,6 @@
             });
         }
 
-        function updateScrollButtonsVisibility() {
-            if (!musicSection || !scrollNavContainer) return;
-
-            const isOverflowing = musicSection.scrollHeight > window.innerHeight;
-            
-            scrollNavContainer.classList.toggle('visible', isOverflowing);
-        }
-
         // ==============================================
         // INITIALIZATION
         // ==============================================
@@ -3240,9 +3308,6 @@
             scrollToBottomBtn.addEventListener('click', () => {
                 musicSection.scrollIntoView({ behavior: 'smooth', block: 'end' });
             });
-            
-            window.addEventListener('resize', updateScrollButtonsVisibility);
-            updateScrollButtonsVisibility(); // Initial check
 
             // Hide splash screen after delay
             const splashScreen = document.getElementById('splash-screen');
