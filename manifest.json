@@ -1,6 +1,6 @@
 {
-  "name": "Âm Nhạc MSTQ",
-  "short_name": "MSTQ Music",
+  "name": "MUSIC",
+  "short_name": "Nhạc",
   "description": "Thư viện nhạc của MSTQ",
   "start_url": "/PlayMusic/index.html",
   "display": "standalone",
