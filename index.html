@@ -4,6 +4,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Play Nhạc MSTQ</title>
+
+    <!-- PWA Manifest & Theme -->
+    <link rel="manifest" href="https://thiensutinhquang.github.io/PlayMusic/manifest.json">
+    <meta name="theme-color" content="#f59e0b">
+    <link rel="apple-touch-icon" href="https://thiensutinhquang.github.io/PlayMusic/images/icons/icon-192x192.png">
+
+
     <!-- Libraries -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
@@ -1510,12 +1517,12 @@
         <div class="player-actions-right">
              <button id="popup-favorite-btn" title="Yêu thích" aria-label="Thêm vào mục yêu thích"><i class="ph-bold ph-heart"></i></button>
              <button id="popup-open-lyrics-btn" title="Mở lời bài hát" aria-label="Mở lời bài hát toàn màn hình" class="text-muted-current hover:text-current">
-                <i class="ph-bold ph-file-text text-xl"></i>
+                 <i class="ph-bold ph-file-text text-xl"></i>
              </button>
              <div class="volume-container">
-                <i class="ph-bold ph-speaker-high"></i>
-                <input type="range" id="popup-volume-slider" min="0" max="1" step="0.01" value="1" class="w-full h-1 bg-border-current rounded-lg appearance-none cursor-pointer" aria-label="Điều chỉnh âm lượng">
-                <span id="volume-percentage" class="text-xs text-muted-current w-6 text-right">100</span>
+                 <i class="ph-bold ph-speaker-high"></i>
+                 <input type="range" id="popup-volume-slider" min="0" max="1" step="0.01" value="1" class="w-full h-1 bg-border-current rounded-lg appearance-none cursor-pointer" aria-label="Điều chỉnh âm lượng">
+                 <span id="volume-percentage" class="text-xs text-muted-current w-6 text-right">100</span>
              </div>
         </div>
     </div>
@@ -1560,6 +1567,115 @@
     </div>
     
     <script>
+    // --- PWA Service Worker Logic ---
+    // Normally this would be in a separate sw.js file, but for a self-contained
+    // single-file app, we define it as a string and register it via a Blob.
+    const swCode = `
+        const CACHE_NAME = 'mstq-music-cache-v2';
+        // Add the base URL of your GitHub Pages site to the URLs to cache.
+        const BASE_URL = 'https://thiensutinhquang.github.io/PlayMusic/';
+        const urlsToCache = [
+            BASE_URL,
+            BASE_URL + 'index.html',
+            'https://cdn.tailwindcss.com',
+            'https://unpkg.com/@phosphor-icons/web',
+            'https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap',
+            'https://cdn.jsdelivr.net/npm/fuse.js@6.6.2',
+            'https://raw.githubusercontent.com/thiensutinhquang/PlayMusic/main/LOGOvectorFULL.svg',
+            BASE_URL + 'images/icons/icon-192x192.png',
+            BASE_URL + 'images/icons/icon-512x512.png'
+        ];
+
+        self.addEventListener('install', event => {
+            event.waitUntil(
+                caches.open(CACHE_NAME)
+                    .then(cache => {
+                        console.log('Opened cache');
+                        // Use addAll, which handles requests and responses automatically.
+                        // For cross-origin requests (like CDNs), they are stored as opaque responses.
+                        return cache.addAll(urlsToCache);
+                    })
+                    .catch(error => {
+                        console.error('Failed to cache resources during install:', error);
+                    })
+            );
+        });
+
+        self.addEventListener('fetch', event => {
+            // For Audius API calls and other external resources not in cache, always go to the network.
+            if (event.request.url.includes('audius.co') || event.request.url.includes('audius.prod-us-west-2.staked.cloud')) {
+                event.respondWith(fetch(event.request));
+                return;
+            }
+            
+            event.respondWith(
+                caches.match(event.request)
+                    .then(response => {
+                        // Cache hit - return response
+                        if (response) {
+                            return response;
+                        }
+
+                        // Not in cache, go to network
+                        return fetch(event.request).then(
+                            networkResponse => {
+                                // Check if we received a valid response
+                                if (!networkResponse || networkResponse.status !== 200 && networkResponse.type !== 'opaque') {
+                                    return networkResponse;
+                                }
+
+                                // Clone the response to cache it
+                                const responseToCache = networkResponse.clone();
+
+                                caches.open(CACHE_NAME)
+                                    .then(cache => {
+                                        cache.put(event.request, responseToCache);
+                                    });
+
+                                return networkResponse;
+                            }
+                        ).catch(error => {
+                            console.log('Fetch failed; returning offline page instead.', error);
+                            // Optional: return an offline fallback page if fetch fails
+                        });
+                    })
+            );
+        });
+
+        self.addEventListener('activate', event => {
+          const cacheWhitelist = [CACHE_NAME];
+          event.waitUntil(
+            caches.keys().then(cacheNames => {
+              return Promise.all(
+                cacheNames.map(cacheName => {
+                  if (cacheWhitelist.indexOf(cacheName) === -1) {
+                    console.log('Deleting old cache:', cacheName);
+                    return caches.delete(cacheName);
+                  }
+                })
+              );
+            })
+          );
+        });
+    `;
+
+    // --- Register Service Worker ---
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            const blob = new Blob([swCode], { type: 'application/javascript' });
+            const swUrl = URL.createObjectURL(blob);
+
+            navigator.serviceWorker.register(swUrl)
+                .then(registration => {
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                })
+                .catch(error => {
+                    console.log('ServiceWorker registration failed: ', error);
+                });
+        });
+    }
+
+
     document.addEventListener('DOMContentLoaded', async () => {
         // ==============================================
         // DOM Elements
@@ -2046,7 +2162,7 @@
                 if (mobileThemeOptions && mobileThemeOptions.classList.contains('show') && !mobileThemeOptions.contains(e.target) && e.target !== document.getElementById('theme-toggle-mobile')) {
                     closeMobileThemeOptions();
                 }
-                   // Hide mobile timer menu
+                  // Hide mobile timer menu
                 const timerMenuMobile = document.getElementById('timer-menu-mobile');
                 const timerToggleMobile = document.getElementById('timer-toggle-mobile');
                 if (timerMenuMobile && timerMenuMobile.classList.contains('show') && !timerMenuMobile.contains(e.target) && e.target !== timerToggleMobile) {
