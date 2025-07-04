@@ -1,0 +1,1 @@
+icon-192x192.png, icon-512x512.png.  Đảm bảo bạn có cả phiên bản maskable (để icon có thể thích ứng với các hình dạng khác nhau trên Android). 
