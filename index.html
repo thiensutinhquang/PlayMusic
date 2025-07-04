@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Play Nhạc MSTQ - Thiên Sứ Tinh Quang</title>
+    <title>Play Nhạc MSTQ</title>
     <!-- Libraries -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
@@ -26,7 +26,7 @@
             --bg-light: #f1f5f9; /* Slate 100 */
             --card-bg-light: #ffffff;
             --text-light: #1e293b; /* Slate 800 */
-            --text-muted-light: #64748b; /* Slate 500 */
+            --text-muted-light: #475569; /* Slate 600 - Đã điều chỉnh để tăng độ tương phản */
             --border-light: #e2e8f0; /* Slate 200 */
 
             /* Màu cho chế độ Tối */
@@ -63,6 +63,57 @@
             --text-muted-current: var(--text-muted-dark);
             --border-current: var(--border-dark);
         }
+
+        /* Preset themes */
+        html[data-theme="strong"] {
+            --bg-current: #003366;
+            --card-bg-current: #004488;
+            --text-current: #FFD700;
+            --text-muted-current: #AAAAAA;
+            --border-current: #0055AA;
+        }
+        html[data-theme="gentle"] {
+            --bg-current: #6A057F;
+            --card-bg-current: #7B1A8F;
+            --text-current: #FFB6C1;
+            --text-muted-current: #E0E0E0;
+            --border-current: #8C2B9F;
+        }
+        html[data-theme="fresh"] {
+            --bg-current: #228B22;
+            --card-bg-current: #339B33;
+            --text-current: #00CED1;
+            --text-muted-current: #BBEEFF;
+            --border-current: #44AA44;
+        }
+        html[data-theme="modern"] {
+            --bg-current: #228B22;
+            --card-bg-current: #339B33;
+            --text-current: #FFD700;
+            --text-muted-current: #FFDD77;
+            --border-current: #44AA44;
+        }
+        html[data-theme="warm"] {
+            --bg-current: #6A057F;
+            --card-bg-current: #7B1A8F;
+            --text-current: #FFD700;
+            --text-muted-current: #FFDD77;
+            --border-current: #8C2B9F;
+        }
+        html[data-theme="elegant"] {
+            --bg-current: #003366;
+            --card-bg-current: #004488;
+            --text-current: #00CED1;
+            --text-muted-current: #BBEEFF;
+            --border-current: #0055AA;
+        }
+        html[data-theme="tinhquang"] {
+            --bg-current: #1a0b2a;
+            --card-bg-current: #2a1b4a;
+            --text-current: #FFD700;
+            --text-muted-current: #e0e0e0;
+            --border-current: #4a2a6a;
+        }
         
         /* ==============================================
         PHONG CÁCH CƠ BẢN & TOÀN CỤC
@@ -94,52 +145,217 @@
         }
         
         /* ==============================================
-        HEADER & ĐIỀU HƯỚNG
+        HEADER & ĐIỀU HƯỚNG MỚI
         ============================================== */
         .header {
             background-color: rgba(255, 255, 255, 0.7);
             border-bottom: 1px solid var(--border-current);
-            padding: 0.5rem 0;
             position: sticky;
             top: 0;
             z-index: 1000;
             backdrop-filter: blur(8px);
-            height: 140px; /* Tăng chiều cao header để chứa logo lớn */
+            display: flex; /* Make header a flex container to stack main content and mobile controls */
+            flex-direction: column; 
+            align-items: center; /* Center content horizontally */
+            padding: 1rem 0; /* Overall padding for the header */
+            height: auto; /* Allow height to adjust */
         }
         
         body.dark-mode .header { background-color: rgba(15, 23, 42, 0.7); }
 
-        .header-content { display: flex; justify-content: space-between; align-items: center; }
+        .header-layout-wrapper { /* This wraps logo and main content (title + nav) */
+            display: flex;
+            align-items: stretch; /* Make children stretch to fill height */
+            justify-content: space-between; /* Push logo left, main content center, hamburger right */
+            width: 100%; /* Take full width of container */
+            gap: 1.5rem; /* Space between logo and main content */
+            padding: 0 1.5rem; /* Apply horizontal padding here */
+        }
+
+        .header-logo-container {
+            flex-shrink: 0; /* Prevent logo from shrinking */
+            display: flex;
+            align-items: center; /* Vertically center logo content if it doesn't stretch */
+            justify-content: center; /* Horizontally center logo content */
+            max-width: 200px; /* Max width for logo container */
+            width: 20%; /* Allow logo to take a percentage of width */
+            min-width: 100px; /* Minimum width for logo */
+        }
+
+        #header-logo-placeholder {
+            width: 100%;
+            height: 100%; /* This will make it stretch vertically within header-logo-container */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #header-logo-placeholder svg {
+            width: 100%;
+            height: 100%;
+            object-fit: contain; /* Maintain aspect ratio */
+        }
+
+        .header-main-content { /* This holds main title and desktop nav */
+            flex-grow: 1; /* Allow this section to take available space */
+            display: flex;
+            flex-direction: column; /* Stack title and nav vertically */
+            align-items: center; /* Center title and nav rows horizontally */
+            text-align: center; /* Center text within title */
+            justify-content: center; /* Vertically center content if it doesn't fill height */
+        }
+
+        .main-title {
+            font-size: 2.5rem; /* Larger font size for main title */
+            font-weight: 800; /* Extra bold */
+            color: var(--primary-color); /* Primary color for emphasis */
+            margin: 0.5rem 0; /* Adjust margin */
+            width: 100%; /* Ensure it takes full width for centering */
+        }
         
-        .logo { display: flex; align-items: center; gap: 1.5rem; }
-        .logo h1 { margin: 0; font-size: 1.8rem; font-weight: 700; }
-        .logo a { color: var(--text-current); text-decoration: none; transition: var(--transition-fast); display: flex; align-items: center; gap: 1.5rem; }
-        .logo a:hover { color: var(--primary-color); }
-        
-        .new-nav-btn {
+        /* New Navigation Item Styling */
+        .nav-item {
+            display: inline-flex; 
+            align-items: center; 
+            gap: 0.5rem; 
+            background-color: transparent;
+            color: var(--text-muted-current); 
+            padding: 0.6rem 1rem; 
+            border-radius: 8px;
+            text-decoration: none; 
+            font-weight: 500; 
+            font-size: 0.95rem; 
+            border: 2px solid transparent; 
+            transition: var(--transition-fast); 
+            white-space: nowrap;
+        }
+        .nav-item:hover { 
+            color: var(--text-current); 
+            background-color: var(--bg-current); 
+            transform: translateY(-2px); 
+        }
+        .nav-item:active { transform: scale(0.95); }
+
+        /* Active state for navigation links */
+        .nav-item.active { 
+            color: var(--primary-color); 
+            font-weight: 700; 
+            background-color: var(--bg-current); 
+            border-color: var(--primary-color); 
+        }
+
+        /* Dropdown specific styles */
+        .dropdown-container { position: relative; }
+        .dropdown-toggle {
             display: inline-flex; align-items: center; gap: 0.5rem; background-color: transparent;
             color: var(--text-muted-current); padding: 0.6rem 1rem; border-radius: 8px;
             text-decoration: none; font-weight: 500; font-size: 0.95rem; border: 2px solid transparent;
             transition: var(--transition-fast); white-space: nowrap;
+            cursor: pointer; 
         }
-        .new-nav-btn:hover { color: var(--text-current); background-color: var(--bg-current); transform: translateY(-2px); }
-        .new-nav-btn:active { transform: scale(0.95); }
-        .new-nav-btn.active { color: var(--primary-color); font-weight: 700; background-color: var(--bg-current); }
-        
-        .platforms-dropdown, .theme-dropdown { position: relative; }
-        
-        .platforms-menu, .theme-menu {
-            display: none; position: absolute; top: calc(100% + 10px); right: 0;
-            background-color: var(--card-bg-current); border-radius: 8px; box-shadow: var(--shadow-lg);
-            border: 1px solid var(--border-current); width: 220px; z-index: 1010;
-            opacity: 0; transform: translateY(10px); transition: opacity 0.3s ease, transform 0.3s ease;
+        .dropdown-toggle:hover { color: var(--text-current); background-color: var(--bg-current); transform: translateY(-2px); }
+        .dropdown-toggle:active { transform: scale(0.95); }
+        .dropdown-toggle.active { 
+            color: var(--primary-color); 
+            font-weight: 700; 
+            background-color: var(--bg-current); 
+            border-color: var(--primary-color);
         }
-        .theme-menu { padding: 1rem; width: auto; }
-        .platforms-menu.show, .theme-menu.show { display: block; opacity: 1; transform: translateY(0); }
-        .platforms-menu a { display: flex; align-items: center; gap: 1rem; padding: 0.75rem 1rem; color: var(--text-muted-current); text-decoration: none; transition: var(--transition-fast); font-size: 0.95rem; }
-        .platforms-menu a:hover { background-color: var(--primary-color); color: #fff; }
-        .platforms-menu a i { font-size: 1.25rem; width: 20px; text-align: center; }
+
+        .dropdown-toggle .ph-caret-down {
+            transition: transform 0.2s ease-in-out;
+        }
+        .dropdown-toggle.open .ph-caret-down {
+            transform: rotate(180deg);
+        }
+
+        .dropdown-menu {
+            display: none; 
+            position: absolute; 
+            top: calc(100% + 10px); 
+            right: 0;
+            background-color: var(--card-bg-current); 
+            border-radius: 8px; 
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border-current); 
+            width: 220px; 
+            z-index: 1010;
+            opacity: 0; 
+            transform: translateY(10px); 
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            padding: 0.5rem; 
+        }
+        .dropdown-menu.show { display: block; opacity: 1; transform: translateY(0); }
         
+        .dropdown-menu a { 
+            display: flex; 
+            align-items: center; 
+            gap: 1rem; 
+            padding: 0.75rem 1rem; 
+            color: var(--text-muted-current); 
+            text-decoration: none; 
+            transition: var(--transition-fast); 
+            font-size: 0.95rem;
+            border-radius: 6px; 
+        }
+        .dropdown-menu a:hover { background-color: var(--primary-color); color: #fff; }
+        .dropdown-menu a i, .dropdown-menu a svg { font-size: 1.25rem; width: 20px; height: 20px; text-align: center; }
+
+        /* Preset Theme Buttons */
+        .preset-theme-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: 2px solid var(--border-current);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: var(--shadow-sm);
+        }
+        .preset-theme-btn:hover {
+            transform: scale(1.05);
+            box-shadow: var(--shadow-md);
+        }
+        .preset-theme-btn.active {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.4); 
+        }
+
+        /* Timer Action Buttons */
+        .timer-action-btn {
+            width: 100%;
+            padding: 0.75rem 1rem; 
+            border-radius: 8px; 
+            font-weight: 600; 
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+            text-align: center;
+            display: block; 
+            color: white; 
+            margin-top: 0.5rem; /* Add some margin top for spacing */
+        }
+        .timer-action-btn.bg-primary-color {
+            background-color: var(--primary-color);
+        }
+        .timer-action-btn.bg-primary-color:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        .timer-action-btn.bg-danger-color {
+            background-color: var(--danger-color);
+        }
+        .timer-action-btn.bg-danger-color:hover {
+            background-color: #dc2626; 
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        /* Input field in light mode */
+        body:not(.dark-mode) input[type="number"] {
+            color: var(--text-light); 
+            background-color: #f8fafc; 
+            border-color: #cbd5e1; 
+        }
+
         /* ==============================================
         MÀN HÌNH CHÀO (SPLASH SCREEN)
         ============================================== */
@@ -196,7 +412,16 @@
         /* ==============================================
         NỘI DUNG CHÍNH
         ============================================== */
-        .main-content { display: grid; grid-template-columns: 1fr; gap: 2rem; margin-top: 2rem; }
+        .main-content { 
+            display: grid; 
+            grid-template-columns: 1fr; 
+            gap: 2rem; 
+            margin-top: 2rem; 
+            max-width: none; 
+            width: 100%; 
+            padding-left: 1.5rem; 
+            padding-right: 1.5rem; 
+        }
         
         /* ==============================================
         TRÌNH PHÁT NHẠC - THANH ĐIỀU KHIỂN DƯỚI
@@ -443,90 +668,40 @@
         
         @media (max-width: 1024px) {
             .desktop-nav { display: none; }
-            .hamburger-menu {
-                display: block;
-                color: var(--text-current);
-                background: none; border: none; font-size: 1.75rem; cursor: pointer;
+            .header-layout-wrapper {
+                flex-direction: row; /* Keep row for mobile */
+                justify-content: space-between;
+                align-items: center;
+                padding: 0 1rem;
             }
-            .mobile-nav-overlay {
-                display: none;
-                position: fixed;
-                top: 0; left: 0;
-                width: 100%; height: 100%;
-                background-color: rgba(0, 0, 0, 0.5);
-                backdrop-filter: blur(4px);
-                z-index: 1010;
-                opacity: 0;
-                transition: opacity var(--transition-fast);
+            .header-logo-container {
+                width: 80px; /* Smaller logo on mobile */
+                max-width: 80px;
+                min-width: 60px;
             }
-            .mobile-nav-overlay.active {
-                display: block;
-                opacity: 1;
+            .header-main-content {
+                display: none; /* Hide desktop content on mobile */
             }
-            .mobile-nav-content {
-                position: fixed;
-                top: 0; right: -280px;
-                width: 280px; height: 100%;
-                background-color: var(--card-bg-current);
-                box-shadow: var(--shadow-lg);
-                z-index: 1020;
-                padding: 4rem 1.5rem 1.5rem;
-                display: flex; flex-direction: column;
-                transition: right 0.3s ease-in-out;
+            .hamburger-menu-wrapper {
+                display: block; /* Show hamburger on mobile */
             }
-            .mobile-nav-overlay.active .mobile-nav-content {
-                right: 0;
+            .header .main-title { 
+                display: none; /* Ensure main title is hidden on mobile */
             }
-            .mobile-nav-content .close-mobile-menu {
-                position: absolute;
-                top: 1rem; right: 1.5rem;
-                font-size: 1.5rem; background: none; border: none;
-                color: var(--text-muted-current); cursor: pointer;
-            }
-            .mobile-nav-content .new-nav-container {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 0.5rem;
-            }
-             .mobile-nav-content .new-nav-btn {
-                padding: 0.8rem;
-                font-size: 1rem;
-                justify-content: flex-start;
-             }
-             .mobile-nav-content .platforms-menu {
-                 position: static;
-                 display: none;
-                 opacity: 1;
-                 transform: none;
-                 box-shadow: none;
-                 border: none;
-                 width: 100%;
-                 margin-top: 0.5rem;
-                 padding-left: 1rem;
-                 background-color: transparent;
-             }
-             .mobile-nav-content .platforms-menu.show {
-                display: block;
-             }
-
-            #mobile-theme-options {
-                transition: opacity 0.2s, transform 0.2s;
-                opacity: 0;
-                transform: translateY(-16px) scale(0.98);
-                pointer-events: none;
-            }
-            #mobile-theme-options:not(.hidden) {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-                pointer-events: auto;
-                z-index: 30;
+            .header .desktop-nav {
+                display: none; /* Ensure desktop nav is hidden on mobile */
             }
         }
 
         @media (max-width: 768px) {
-            .header { height: 90px; }
-            #header-logo-placeholder { width: 72px !important; height: 72px !important; }
-            .logo h1 { font-size: 1.25rem; }
+            .header { 
+                height: auto; 
+                padding-top: 0.5rem;
+                padding-bottom: 0.5rem;
+            }
+            /* Adjust logo size for smaller screens */
+            .header-logo-container { width: 60px !important; max-width: 60px !important; } 
+            .main-title { font-size: 1.8rem; } /* Adjust title size for mobile (though hidden for now) */
             
             #player-bar {
                 grid-template-columns: auto 1fr;
@@ -559,56 +734,143 @@
 
     <!-- Header -->
     <header class="header">
-        <div class="container header-content">
-            <div class="logo">
+        <div class="container header-layout-wrapper">
+            <div class="header-logo-container">
                 <a href="#">
-                    <div id="header-logo-placeholder" style="width: 120px; height: 120px;"></div>
-                    <h1>PLAY NHẠC MSTQ</h1>
+                    <div id="header-logo-placeholder"></div>
                 </a>
             </div>
-            
-            <div class="header-controls">
-                <nav class="desktop-nav flex items-center gap-2">
-                    <a href="https://sites.google.com/view/thiensutinhquang" class="new-nav-btn" target="_blank"><i class="ph-bold ph-house"></i><span>Trang Chủ</span></a>
-                    <a href="https://thiensutinhquang.github.io/playtholientuc/" class="new-nav-btn" target="_blank"><i class="ph-bold ph-book-open"></i><span>Kho Thơ</span></a>
-                    <div class="platforms-dropdown">
-                        <button id="platforms-toggle-desktop" class="new-nav-btn"><i class="ph-bold ph-share-network"></i><span>Nền Tảng</span><i class="ph-bold ph-caret-down ml-2"></i></button>
-                        <div id="platforms-menu-desktop" class="platforms-menu"></div>
+            <div class="header-main-content">
+                <h1 class="main-title">PLAY NHẠC MSTQ</h1>
+                <!-- Desktop Navigation - Reorganized into 2 rows -->
+                <nav class="desktop-nav flex flex-col items-center w-full">
+                    <div class="flex items-center justify-center gap-2 mb-2"> <!-- Top row -->
+                        <a href="https://sites.google.com/view/thiensutinhquang" class="nav-item group active" target="_blank">
+                            <i class="ph-bold ph-house text-2xl"></i>
+                            <span class="ml-2">Trang Chủ</span>
+                        </a>
+                        <a href="https://thiensutinhquang.github.io/Playlist-YouTube/" class="nav-item group" target="_blank">
+                            <i class="ph-bold ph-video text-2xl"></i>
+                            <span class="ml-2">Xem video</span>
+                        </a>
+                        <a href="https://thiensutinhquang.github.io/playtholientuc/" class="nav-item group" target="_blank">
+                            <i class="ph-bold ph-book-open text-2xl"></i>
+                            <span class="ml-2">Kho Thơ</span>
+                        </a>
                     </div>
-                    <div class="theme-dropdown">
-                        <button id="theme-toggle-desktop" class="new-nav-btn"><i class="ph-bold ph-palette"></i><span>Giao diện</span></button>
-                        <div id="theme-menu-desktop" class="theme-menu">
-                             <div class="flex items-center gap-2 justify-center">
-                                 <i class="ph-bold ph-sun text-yellow-500"></i>
-                                 <label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" id="darkModeToggle" class="sr-only peer"><div class="w-11 h-6 bg-slate-200 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-color"></div></label>
-                                 <i class="ph-bold ph-moon text-slate-400"></i>
-                             </div>
+                    <div class="flex items-center justify-center gap-2"> <!-- Bottom row -->
+                        <!-- Platforms Dropdown -->
+                        <div class="dropdown-container" id="platforms-dropdown-desktop">
+                            <button class="dropdown-toggle group" id="platforms-toggle-desktop">
+                                <i class="ph-bold ph-globe text-2xl"></i>
+                                <span class="ml-2">Các Nền Tảng</span>
+                                <i class="ph-bold ph-caret-down ml-2 transition-transform duration-200"></i>
+                            </button>
+                            <div class="dropdown-menu" id="platforms-menu-desktop"></div>
+                        </div>
+
+                        <!-- Theme Dropdown -->
+                        <div class="dropdown-container" id="theme-dropdown-desktop">
+                            <button class="dropdown-toggle group" id="theme-toggle-desktop">
+                                <i class="ph-bold ph-palette text-2xl"></i>
+                                <span class="ml-2">Giao diện</span>
+                                <i class="ph-bold ph-caret-down ml-2 transition-transform duration-200"></i>
+                            </button>
+                            <div class="dropdown-menu" id="theme-menu-desktop">
+                                 <div id="preset-themes-desktop" class="grid grid-cols-4 gap-2 mb-4"></div>
+                                 <div class="flex items-center gap-2 justify-center">
+                                     <i class="ph-bold ph-sun text-yellow-500"></i>
+                                     <label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" id="darkModeToggle" class="sr-only peer"><div class="w-11 h-6 bg-slate-200 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-color"></div></label>
+                                     <i class="ph-bold ph-moon text-slate-400"></i>
+                                 </div>
+                            </div>
+                        </div>
+
+                        <!-- Timer Dropdown -->
+                        <div class="dropdown-container" id="timer-dropdown-desktop">
+                            <button class="dropdown-toggle group" id="timer-toggle-desktop">
+                                <i class="ph-bold ph-hourglass text-2xl"></i>
+                                <span class="ml-2">Hẹn giờ</span>
+                                <i class="ph-bold ph-caret-down ml-2 transition-transform duration-200"></i>
+                            </button>
+                            <div class="dropdown-menu" id="timer-menu-desktop">
+                                <div class="p-4">
+                                    <label for="timer-minutes-desktop" class="block text-sm font-medium mb-2 text-current">Số phút:</label>
+                                    <input type="number" id="timer-minutes-desktop" min="1" value="30" class="w-full p-2 rounded-md bg-bg-current border border-border-current mb-2 text-current">
+                                    <button id="start-timer-btn-desktop" class="timer-action-btn bg-primary-color text-white py-2 rounded-md hover:bg-primary-hover transition-colors mb-2">Bắt đầu</button>
+                                    <button id="cancel-timer-btn-desktop" class="timer-action-btn bg-danger-color text-white py-2 rounded-md hover:opacity-80 transition-opacity hidden">Hủy hẹn giờ</button>
+                                    <p id="timer-display-desktop" class="text-center text-lg font-bold mt-2 text-current">00:00</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </nav>
+            </div>
+            <div class="hamburger-menu-wrapper"> <!-- For mobile only -->
                 <button class="hamburger-menu" id="hamburger-menu"><i class="ph-bold ph-list"></i></button>
             </div>
         </div>
     </header>
 
-    <!-- Menu cho di động -->
+    <!-- Mobile Navigation Overlay -->
     <div class="mobile-nav-overlay" id="mobile-nav-overlay">
         <div class="mobile-nav-content">
             <button class="close-mobile-menu" id="close-mobile-menu"><i class="ph-bold ph-x"></i></button>
-            <div class="new-nav-container flex flex-col gap-2">
-                 <a href="https://sites.google.com/view/thiensutinhquang" class="new-nav-btn" target="_blank"><i class="ph-bold ph-house"></i><span>Trang Chủ</span></a>
-                 <a href="https://thiensutinhquang.github.io/playtholientuc/" class="new-nav-btn" target="_blank"><i class="ph-bold ph-book-open"></i><span>Kho Thơ</span></a>
-                <div class="platforms-dropdown">
-                     <button id="platforms-toggle-mobile" class="new-nav-btn w-full justify-start"><i class="ph-bold ph-share-network"></i><span>Nền Tảng</span><i class="ph-bold ph-caret-down ml-auto"></i></button>
-                    <div id="platforms-menu-mobile" class="platforms-menu"></div>
+            <div class="flex flex-col gap-2 mt-8">
+                 <a href="https://sites.google.com/view/thiensutinhquang" class="nav-item group active" target="_blank">
+                    <i class="ph-bold ph-house text-2xl"></i>
+                    <span class="ml-2">Trang Chủ</span>
+                 </a>
+                 <a href="https://thiensutinhquang.github.io/Playlist-YouTube/" class="nav-item group" target="_blank">
+                    <i class="ph-bold ph-video text-2xl"></i>
+                    <span class="ml-2">Xem video</span>
+                 </a>
+                 <a href="https://thiensutinhquang.github.io/playtholientuc/" class="nav-item group" target="_blank">
+                    <i class="ph-bold ph-book-open text-2xl"></i>
+                    <span class="ml-2">Kho Thơ</span>
+                 </a>
+
+                <!-- Mobile Platforms Dropdown -->
+                <div class="dropdown-container">
+                     <button class="dropdown-toggle group" id="platforms-toggle-mobile">
+                        <i class="ph-bold ph-globe text-2xl"></i>
+                        <span class="ml-2">Các Nền Tảng</span>
+                        <i class="ph-bold ph-caret-down ml-auto transition-transform duration-200"></i>
+                     </button>
+                    <div class="dropdown-menu" id="platforms-menu-mobile"></div>
                 </div>
-                 <div class="theme-dropdown">
-                    <button id="mobile-theme-menu" class="new-nav-btn w-full justify-start"><i class="ph-bold ph-palette"></i><span>Giao diện</span></button>
-                    <div id="mobile-theme-options" class="hidden pl-8 pt-2 space-y-4">
-                         <div class="theme-switch flex items-center gap-2">
+
+                 <!-- Mobile Theme Dropdown -->
+                <div class="dropdown-container">
+                    <button class="dropdown-toggle group" id="theme-toggle-mobile">
+                        <i class="ph-bold ph-palette text-2xl"></i>
+                        <span class="ml-2">Giao diện</span>
+                        <i class="ph-bold ph-caret-down ml-auto transition-transform duration-200"></i>
+                    </button>
+                    <div class="dropdown-menu" id="theme-menu-mobile">
+                        <div id="preset-themes-mobile" class="grid grid-cols-4 gap-2 mb-4"></div>
+                         <div class="flex items-center gap-2 justify-center">
                              <i class="ph-bold ph-sun text-yellow-500"></i>
                             <label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" id="darkModeToggleMobile" class="sr-only peer"><div class="w-11 h-6 bg-slate-200 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-color"></div></label>
                             <i class="ph-bold ph-moon text-slate-400"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mobile Timer Dropdown -->
+                <div class="dropdown-container">
+                    <button class="dropdown-toggle group" id="timer-toggle-mobile">
+                        <i class="ph-bold ph-hourglass text-2xl"></i>
+                        <span class="ml-2">Hẹn giờ</span>
+                        <i class="ph-bold ph-caret-down ml-auto transition-transform duration-200"></i>
+                    </button>
+                    <div class="dropdown-menu" id="timer-menu-mobile">
+                        <div class="p-4">
+                            <label for="timer-minutes-mobile" class="block text-sm font-medium mb-2 text-current">Số phút:</label>
+                            <input type="number" id="timer-minutes-mobile" min="1" value="30" class="w-full p-2 rounded-md bg-bg-current border border-border-current mb-2 text-current">
+                            <button id="start-timer-btn-mobile" class="timer-action-btn bg-primary-color text-white py-2 rounded-md hover:bg-primary-hover transition-colors mb-2">Bắt đầu</button>
+                            <button id="cancel-timer-btn-mobile" class="timer-action-btn bg-danger-color text-white py-2 rounded-md hover:opacity-80 transition-opacity hidden">Hủy hẹn giờ</button>
+                            <p id="timer-display-mobile" class="text-center text-lg font-bold mt-2 text-current">00:00</p>
                         </div>
                     </div>
                 </div>
@@ -703,7 +965,6 @@
     
     <script>
     document.addEventListener('DOMContentLoaded', () => {
-        // ... (Toàn bộ mã JavaScript không thay đổi)
         // ==============================================
         // QUẢN LÝ TRẠNG THÁI & BIẾN TOÀN CỤC
         // ==============================================
@@ -711,15 +972,20 @@
             USER_HANDLE: "minhsutinhquang",
             genreMap: {'new':"Pop",'hot':"Country",'dieu-thu':"Classical",'others':"Reggae",'phap':"Podcasts"},
             platformLinks: [
-                { name: 'YouTube', url: 'https://www.youtube.com/channel/UCLdLj1-g4TI5lSmWeD60mnA', icon: 'ph-youtube-logo', color: '#FF0000' },
-                { name: 'TikTok', url: 'https://www.tiktok.com/@minhsutinhquang', icon: 'ph-tiktok-logo', color: '#000000' },
-                { name: 'Facebook', url: 'https://www.facebook.com/phatphapnhiemmauTinhQuang', icon: 'ph-facebook-logo', color: '#1877F2' },
-                { name: 'Telegram', url: 'https://t.me/Giaoly_phap_don_ngo', icon: 'ph-telegram-logo', color: '#24A1DE' },
+                { name: 'YouTube', url: 'https://www.youtube.com/@ThiensuTinhQuang', icon: 'ph-youtube-logo', color: '#FF0000' },
+                { name: 'TikTok', url: 'https://www.tiktok.com/@thiensutinhquang', icon: 'ph-tiktok-logo', color: '#000000' },
+                { name: 'Facebook', url: 'https://www.facebook.com/groups/minhsutinhquang', icon: 'ph-facebook-logo', color: '#1877F2' },
+                { name: 'Telegram', url: 'https://t.me/thiensutinhquang', icon: 'ph-telegram-logo', color: '#24A1DE' },
+                { name: 'Zalo', url: 'https://zalo.me/g/vjkhzt168', icon: 'zalo-svg', color: '#0068FF' } // Custom icon type for Zalo
             ],
             presetThemes: [
-                { id: 'default', title: 'Mặc định', style: 'background: linear-gradient(135deg, #f1f5f9, #e2e8f0);' },
-                { id: 'tinhquang', title: 'Tinh Quang', bg: '#1a0b2a', cardBg: '#2a1b4a', text: '#FFD700', textMuted: '#e0e0e0', border: '#4a2a6a', style: 'background-color: #1a0b2a;' },
-                { id: 'forest', title: 'Rừng Xanh', bg: '#e8f5e9', cardBg: '#ffffff', text: '#1b5e20', textMuted: '#4caf50', border: '#c8e6c9', style: 'background-color: #e8f5e9;' },
+                { id: 'strong', title: 'Mạnh mẽ', bg: '#003366', cardBg: '#004488', text: '#FFD700', textMuted: '#AAAAAA', border: '#0055AA', style: 'background:linear-gradient(45deg,#003366 50%,#FFD700 50%);' },
+                { id: 'gentle', title: 'Dịu nhẹ', bg: '#6A057F', cardBg: '#7B1A8F', text: '#FFB6C1', textMuted: '#E0E0E0', border: '#8C2B9F', style: 'background:linear-gradient(45deg,#6A057F 50%,#FFB6C1 50%);' },
+                { id: 'fresh', title: 'Tươi mát', bg: '#228B22', cardBg: '#339B33', text: '#00CED1', textMuted: '#BBEEFF', border: '#44AA44', style: 'background:linear-gradient(45deg,#228B22 50%,#00CED1 50%);' },
+                { id: 'modern', title: 'Hiện đại', bg: '#228B22', cardBg: '#339B33', text: '#FFD700', textMuted: '#FFDD77', border: '#44AA44', style: 'background:linear-gradient(45deg,#228B22 50%,#FFD700 50%);' },
+                { id: 'warm', title: 'Ấm áp', bg: '#6A057F', cardBg: '#7B1A8F', text: '#FFD700', textMuted: '#FFDD77', border: '#8C2B9F', style: 'background:linear-gradient(45deg,#6A057F 50%,#FFD700 50%);' },
+                { id: 'elegant', title: 'Trang nhã', bg: '#003366', cardBg: '#004488', text: '#00CED1', textMuted: '#BBEEFF', border: '#0055AA', style: 'background:linear-gradient(45deg,#003366 50%,#00CED1 50%);' },
+                { id: 'tinhquang', title: 'Tinh Quang', bg: '#1a0b2a', cardBg: '#2a1b4a', text: '#FFD700', textMuted: '#e0e0e0', border: '#4a2a6a', style: 'background:radial-gradient(circle at center, #3a1a5a 0%, #1a0b2a 100%); border: 2px solid #FFD700;' },
             ]
         };
 
@@ -733,7 +999,9 @@
             favoriteSongIds: JSON.parse(localStorage.getItem('favoriteSongIds')) || [],
             audiusDiscoveryHost: null,
             fuse: null,
-            sleepTimer: null,
+            sleepTimerEndTime: null, // Stores the timestamp when the timer should end
+            sleepTimerInterval: null, // Stores the interval ID for the countdown
+            activeThemeTimeout: null, // For theme dropdown auto-hide
         };
 
         let dom = {};
@@ -763,6 +1031,9 @@
             setupFuse();
             loadCategory('all');
 
+            // Initialize sleep timer display
+            cancelSleepTimer(); // Ensure initial state is reset
+
             dom.splashScreen.classList.add('visible');
 
             setTimeout(() => {
@@ -776,8 +1047,9 @@
         function cacheDOMElements() {
             dom = {
                 body: document.body,
+                html: document.documentElement, // Added for theme management
                 splashScreen: document.getElementById('splash-screen'),
-                songsContainer: document.getElementById('song-list-body'), // Sửa lại
+                songsContainer: document.getElementById('song-list-body'),
                 categoryMenu: document.getElementById('category-menu'),
                 audioPlayer: document.getElementById('audio-player'),
                 playerBar: document.getElementById('player-bar'),
@@ -803,7 +1075,16 @@
                 lyricsContentMain: document.getElementById('lyrics-content-main'),
                 searchInput: document.getElementById('search-input'),
                 searchClearBtn: document.getElementById('search-clear-btn'),
-                currentSleepTimerDisplay: document.getElementById('current-sleep-timer'),
+                
+                // Timer elements
+                timerMinutesDesktop: document.getElementById('timer-minutes-desktop'),
+                startTimerBtnDesktop: document.getElementById('start-timer-btn-desktop'),
+                cancelTimerBtnDesktop: document.getElementById('cancel-timer-btn-desktop'),
+                timerDisplayDesktop: document.getElementById('timer-display-desktop'),
+                timerMinutesMobile: document.getElementById('timer-minutes-mobile'),
+                startTimerBtnMobile: document.getElementById('start-timer-btn-mobile'),
+                cancelTimerBtnMobile: document.getElementById('cancel-timer-btn-mobile'),
+                timerDisplayMobile: document.getElementById('timer-display-mobile'),
             };
         }
 
@@ -845,7 +1126,7 @@
         }
 
         function applyInitialSettings() {
-            const savedTheme = JSON.parse(localStorage.getItem('themeState')) || { mode: 'light' };
+            const savedTheme = JSON.parse(localStorage.getItem('themeState')) || { mode: 'light', id: 'default' };
             updateTheme(savedTheme);
             dom.shuffleBtn.classList.toggle('active-control', state.isShuffling);
             updateRepeatButtonUI();
@@ -939,7 +1220,7 @@
             dom.categoryMenu.innerHTML = '';
             categories.forEach(cat => {
                 const btn = document.createElement('button');
-                btn.className = 'new-nav-btn text-xs';
+                btn.className = 'nav-item text-xs'; /* Changed from new-nav-btn to nav-item */
                 btn.innerHTML = cat.name;
                 btn.dataset.category = cat.id;
                 btn.onclick = () => loadCategory(cat.id);
@@ -948,8 +1229,8 @@
         }
 
         window.loadCategory = (category) => {
-            document.querySelectorAll('#category-menu .new-nav-btn').forEach(btn => btn.classList.remove('active'));
-            const activeBtn = document.querySelector(`#category-menu .new-nav-btn[data-category="${category}"]`);
+            document.querySelectorAll('#category-menu .nav-item').forEach(btn => btn.classList.remove('active'));
+            const activeBtn = document.querySelector(`#category-menu .nav-item[data-category="${category}"]`);
             if (activeBtn) activeBtn.classList.add('active');
             
             dom.searchInput.value = ''; // Clear search when changing category
@@ -1096,15 +1377,26 @@
 
         function updateTheme(theme) {
             localStorage.setItem('themeState', JSON.stringify(theme));
-            dom.body.classList.remove('dark-mode', 'preset-theme');
-            document.querySelectorAll('.preset-theme-btn').forEach(b => b.classList.remove('active'));
             
-            const isDark = theme.mode === 'dark';
-            document.getElementById('darkModeToggle').checked = isDark;
-            document.getElementById('darkModeToggleMobile').checked = isDark;
+            // Remove all preset theme classes and dark mode class first
+            dom.html.removeAttribute('data-theme');
+            dom.body.classList.remove('dark-mode');
+            document.querySelectorAll('.preset-theme-btn').forEach(b => b.classList.remove('active'));
 
-            if (isDark) {
+            if (theme.mode === 'dark') {
                 dom.body.classList.add('dark-mode');
+                document.getElementById('darkModeToggle').checked = true;
+                document.getElementById('darkModeToggleMobile').checked = true;
+            } else if (theme.mode === 'light') {
+                document.getElementById('darkModeToggle').checked = false;
+                document.getElementById('darkModeToggleMobile').checked = false;
+            } else if (theme.mode === 'preset' && theme.id) {
+                dom.html.setAttribute('data-theme', theme.id);
+                // Find and activate the corresponding preset button
+                document.querySelectorAll(`.preset-theme-btn[data-theme="${theme.id}"]`).forEach(btn => btn.classList.add('active'));
+                // Ensure dark mode toggle is off for preset themes
+                document.getElementById('darkModeToggle').checked = false;
+                document.getElementById('darkModeToggleMobile').checked = false;
             }
         }
 
@@ -1189,33 +1481,25 @@
                 loadCategory(activeCategory);
             });
 
-            // Hẹn giờ
-            document.querySelectorAll('.sleep-timer-btn').forEach(button => {
-                button.addEventListener('click', (e) => {
-                    const minutes = parseInt(e.target.dataset.minutes);
-                    startSleepTimer(minutes);
-                });
-            });
-
             // Queue
             dom.queueToggleBtn.addEventListener('click', () => dom.body.classList.toggle('queue-open'));
             dom.queueOverlay.addEventListener('click', () => dom.body.classList.remove('queue-open'));
 
+            // Timer controls
+            dom.startTimerBtnDesktop.addEventListener('click', () => startSleepTimer(parseInt(dom.timerMinutesDesktop.value)));
+            dom.cancelTimerBtnDesktop.addEventListener('click', cancelSleepTimer);
+            dom.timerMinutesDesktop.addEventListener('input', () => { // Clear timer if input changes
+                if (state.sleepTimerInterval) cancelSleepTimer();
+            });
+
+            dom.startTimerBtnMobile.addEventListener('click', () => startSleepTimer(parseInt(dom.timerMinutesMobile.value)));
+            dom.cancelTimerBtnMobile.addEventListener('click', cancelSleepTimer);
+            dom.timerMinutesMobile.addEventListener('input', () => { // Clear timer if input changes
+                if (state.sleepTimerInterval) cancelSleepTimer();
+            });
+
             // Navigation and Theme
             setupNavEvents();
-        }
-
-        function startSleepTimer(minutes) {
-            clearTimeout(state.sleepTimer);
-            if (minutes === 0) {
-                dom.currentSleepTimerDisplay.textContent = 'Không hẹn giờ';
-                return;
-            }
-            dom.currentSleepTimerDisplay.textContent = `Sẽ tắt sau ${minutes} phút`;
-            state.sleepTimer = setTimeout(() => {
-                dom.audioPlayer.pause();
-                dom.currentSleepTimerDisplay.textContent = 'Đã tắt nhạc';
-            }, minutes * 60 * 1000);
         }
 
         function addSongEventListeners() {
@@ -1231,40 +1515,76 @@
         function setupNavEvents() {
             const hamburgerMenu = document.getElementById('hamburger-menu');
             const mobileNavOverlay = document.getElementById('mobile-nav-overlay');
-            const closeMobileMenu = document.querySelector('.close-mobile-menu');
-            const platformsToggleDesktop = document.getElementById('platforms-toggle-desktop');
-            const platformsMenuDesktop = document.getElementById('platforms-menu-desktop');
-            const platformsToggleMobile = document.getElementById('platforms-toggle-mobile');
-            const platformsMenuMobile = document.getElementById('platforms-menu-mobile');
-            const themeToggleDesktop = document.getElementById('theme-toggle-desktop');
-            const themeMenuDesktop = document.getElementById('theme-menu-desktop');
-            const mobileThemeMenu = document.getElementById('mobile-theme-menu');
-            const mobileThemeOptions = document.getElementById('mobile-theme-options');
+            const closeMobileMenu = document.getElementById('close-mobile-menu');
 
+            // Hamburger menu toggle
             hamburgerMenu.addEventListener('click', () => mobileNavOverlay.classList.add('active'));
             closeMobileMenu.addEventListener('click', () => mobileNavOverlay.classList.remove('active'));
-            mobileNavOverlay.addEventListener('click', (e) => { if (e.target === mobileNavOverlay) mobileNavOverlay.classList.remove('active'); });
+            mobileNavOverlay.addEventListener('click', (e) => { 
+                if (e.target === mobileNavOverlay) mobileNavOverlay.classList.remove('active'); 
+            });
             
-            const toggleDropdown = (toggle, menu) => {
-                toggle.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    menu.classList.toggle('show');
+            // Function to toggle dropdowns
+            const toggleDropdown = (toggleId, menuId) => {
+                const toggleBtn = document.getElementById(toggleId);
+                const menu = document.getElementById(menuId);
+                let timeoutId;
+
+                const hideMenu = () => {
+                    menu.classList.remove('show');
+                    toggleBtn.classList.remove('open'); // Remove 'open' class for caret rotation
+                };
+
+                const showMenu = () => {
+                    // Close all other dropdowns first
+                    document.querySelectorAll('.dropdown-menu.show').forEach(openMenu => {
+                        if (openMenu !== menu) openMenu.classList.remove('show');
+                    });
+                    document.querySelectorAll('.dropdown-toggle.open').forEach(openToggle => {
+                        if (openToggle !== toggleBtn) openToggle.classList.remove('open');
+                    });
+
+                    menu.classList.add('show');
+                    toggleBtn.classList.add('open'); // Add 'open' class for caret rotation
+                    
+                    // Clear any existing timeout and set a new one for auto-hide (for theme and timer dropdown)
+                    if (toggleId.includes('theme-toggle') || toggleId.includes('timer-toggle')) {
+                        clearTimeout(state.activeThemeTimeout);
+                        state.activeThemeTimeout = setTimeout(hideMenu, 7000); // Auto-hide after 7 seconds
+                    }
+                };
+
+                toggleBtn.addEventListener('click', (e) => {
+                    e.stopPropagation(); // Prevent click from bubbling to window and closing
+                    if (menu.classList.contains('show')) {
+                        hideMenu();
+                    } else {
+                        showMenu();
+                    }
+                });
+
+                // Prevent clicks inside the menu from closing it immediately
+                menu.addEventListener('click', (e) => e.stopPropagation());
+
+                // Close dropdowns when clicking outside
+                window.addEventListener('click', (e) => {
+                    if (menu.classList.contains('show') && !menu.contains(e.target) && !toggleBtn.contains(e.target)) {
+                        hideMenu();
+                    }
                 });
             };
-            toggleDropdown(platformsToggleDesktop, platformsMenuDesktop);
-            toggleDropdown(platformsToggleMobile, platformsMenuMobile);
-            toggleDropdown(themeToggleDesktop, themeMenuDesktop);
+
+            // Setup dropdowns for desktop
+            toggleDropdown('platforms-toggle-desktop', 'platforms-menu-desktop');
+            toggleDropdown('theme-toggle-desktop', 'theme-menu-desktop');
+            toggleDropdown('timer-toggle-desktop', 'timer-menu-desktop');
             
-            mobileThemeMenu.addEventListener('click', (e) => {
-                e.stopPropagation();
-                mobileThemeOptions.classList.toggle('hidden');
-            });
+            // Setup dropdowns for mobile
+            toggleDropdown('platforms-toggle-mobile', 'platforms-menu-mobile');
+            toggleDropdown('theme-toggle-mobile', 'theme-menu-mobile');
+            toggleDropdown('timer-toggle-mobile', 'timer-menu-mobile');
 
-            window.addEventListener('click', () => {
-                platformsMenuDesktop.classList.remove('show');
-                themeMenuDesktop.classList.remove('show');
-            });
-
+            // Dark Mode Toggles
             [document.getElementById('darkModeToggle'), document.getElementById('darkModeToggleMobile')].forEach(toggle => {
                 toggle.addEventListener('change', (e) => updateTheme({ mode: e.target.checked ? 'dark' : 'light' }));
             });
@@ -1272,16 +1592,26 @@
 
         function renderPlatformLinks() {
             const containers = [document.getElementById('platforms-menu-desktop'), document.getElementById('platforms-menu-mobile')];
+            const zaloSvg = `<svg viewBox="0 0 512 512" fill="currentColor" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5">
+                <path d="M256 8C119 8 8 119 8 256s111 248 248 248 248-111 248-248S393 8 256 8zm0 456c-114.9 0-208-93.1-208-208S141.1 48 256 48s208 93.1 208 208-93.1 208-208 208zm-22.6-261.2c-1.5-1.5-3.5-2.2-5.7-2.2H168.4c-4.4 0-8 3.6-8 8v123.6c0 4.4 3.6 8 8 8h59.3c4.4 0 8-3.6 8-8v-60.6l28.7 28.7c1.5 1.5 3.5 2.2 5.7 2.2h15.2c4.4 0 8-3.6 8-8V194.8c0-4.4-3.6-8-8-8h-15.2c-2.2 0-4.2-.7-5.7-2.2L233.4 162.6zM343.6 288.4c-1.5-1.5-3.5-2.2-5.7-2.2h-59.3c-4.4 0-8 3.6-8 8v60.6l-28.7-28.7c-1.5-1.5-3.5-2.2-5.7-2.2h-15.2c-4.4 0-8 3.6-8 8v59.3c0 4.4 3.6 8 8 8h59.3c4.4 0 8-3.6 8-8v-60.6l28.7 28.7c1.5 1.5 3.5 2.2 5.7 2.2h15.2c4.4 0 8-3.6 8-8v-59.3c0-4.4-3.6-8-8-8z"/>
+            </svg>`;
+
             containers.forEach(container => {
                 container.innerHTML = '';
                 config.platformLinks.forEach(link => {
-                    container.innerHTML += `<a href="${link.url}" target="_blank"><i class="ph-bold ${link.icon}" style="color: ${link.color};"></i> ${link.name}</a>`;
+                    const iconHtml = link.icon === 'zalo-svg' ? zaloSvg : `<i class="ph-bold ${link.icon}"></i>`;
+                    const linkElement = document.createElement('a');
+                    linkElement.href = link.url;
+                    linkElement.target = "_blank";
+                    linkElement.innerHTML = `${iconHtml} ${link.name}`;
+                    linkElement.querySelector('svg, i').style.color = link.color; // Apply color to icon
+                    container.appendChild(linkElement);
                 });
             });
         }
 
         function renderThemeButtons() {
-            const containers = [document.getElementById('preset-themes-desktop'), document.getElementById('mobile-preset-themes')];
+            const containers = [document.getElementById('preset-themes-desktop'), document.getElementById('preset-themes-mobile')];
             containers.forEach(container => {
                 if(container) {
                     container.innerHTML = '';
@@ -1289,12 +1619,80 @@
                         const btn = document.createElement('button');
                         btn.className = 'preset-theme-btn';
                         btn.title = theme.title;
+                        btn.dataset.theme = theme.id;
                         btn.style.cssText = theme.style;
-                        btn.onclick = () => updateTheme({ mode: 'preset', bg: theme.bg, text: theme.text, cardBg: theme.cardBg, border: theme.border });
+                        btn.onclick = () => updateTheme({ mode: 'preset', id: theme.id, bg: theme.bg, text: theme.text, cardBg: theme.cardBg, border: theme.border, textMuted: theme.textMuted });
                         container.appendChild(btn);
                     });
                 }
             });
+        }
+
+        // ==============================================
+        // HẸN GIỜ TẮT NHẠC
+        // ==============================================
+        function startSleepTimer(minutes) {
+            if (minutes <= 0 || isNaN(minutes)) {
+                // Using a simple alert for now. For a production app, this should be a custom modal.
+                alert("Vui lòng nhập số phút hợp lệ (lớn hơn 0).");
+                return;
+            }
+
+            cancelSleepTimer(); // Clear any existing timer first
+
+            const endTime = Date.now() + minutes * 60 * 1000;
+            state.sleepTimerEndTime = endTime;
+
+            // Show cancel button, hide start button for both desktop and mobile
+            dom.startTimerBtnDesktop.classList.add('hidden');
+            dom.cancelTimerBtnDesktop.classList.remove('hidden');
+            dom.startTimerBtnMobile.classList.add('hidden');
+            dom.cancelTimerBtnMobile.classList.remove('hidden');
+
+            // Initial update of display
+            updateSleepTimerDisplay();
+
+            state.sleepTimerInterval = setInterval(() => {
+                updateSleepTimerDisplay();
+                if (Date.now() >= state.sleepTimerEndTime) {
+                    console.log("Hẹn giờ tắt nhạc đã hết.");
+                    dom.audioPlayer.pause(); // Pause the music
+                    cancelSleepTimer(); // Clear timer and reset UI
+                }
+            }, 1000); // Update every second
+        }
+
+        function updateSleepTimerDisplay() {
+            const remainingTimeMs = state.sleepTimerEndTime - Date.now();
+            if (remainingTimeMs <= 0) {
+                dom.timerDisplayDesktop.textContent = '00:00';
+                dom.timerDisplayMobile.textContent = '00:00';
+                return;
+            }
+
+            const totalSeconds = Math.floor(remainingTimeMs / 1000);
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = totalSeconds % 60;
+
+            const formattedTime = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            dom.timerDisplayDesktop.textContent = formattedTime;
+            dom.timerDisplayMobile.textContent = formattedTime;
+        }
+
+        function cancelSleepTimer() {
+            if (state.sleepTimerInterval) {
+                clearInterval(state.sleepTimerInterval);
+                state.sleepTimerInterval = null;
+            }
+            state.sleepTimerEndTime = null; // Clear end time
+            dom.timerDisplayDesktop.textContent = '00:00';
+            dom.timerDisplayMobile.textContent = '00:00';
+            
+            // Hide cancel button, show start button for both desktop and mobile
+            dom.startTimerBtnDesktop.classList.remove('hidden');
+            dom.cancelTimerBtnDesktop.classList.add('hidden');
+            dom.startTimerBtnMobile.classList.remove('hidden');
+            dom.cancelTimerBtnMobile.classList.add('hidden');
         }
 
         // ==============================================
