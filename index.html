@@ -1090,14 +1090,25 @@
                 max-width: 80px;
                 min-width: 60px;
             }
+            /* Show main title on mobile */
             .header-main-content {
-                display: none;
+                display: flex; /* Changed from none to flex */
+                flex-grow: 1; /* Allow it to take space */
+                flex-direction: row; /* Keep title and hamburger in a row */
+                justify-content: center; /* Center title */
+                align-items: center;
+                text-align: center;
+            }
+            .header .main-title { 
+                display: block; /* Ensure main title is visible */
+                font-size: 1.8rem; /* Adjust size for mobile */
+                margin: 0; /* Remove vertical margin */
+                flex-grow: 1; /* Allow title to take available space */
             }
             .hamburger-menu-wrapper {
                 display: block;
-            }
-            .header .main-title { 
-                display: none;
+                flex-shrink: 0; /* Prevent shrinking */
+                margin-left: auto; /* Push to the right */
             }
             .header .desktop-nav {
                 display: none;
@@ -1111,7 +1122,7 @@
                 padding-bottom: 0.5rem;
             }
             .header-logo-container { width: 60px !important; max-width: 60px !important; } 
-            .main-title { font-size: 1.8rem; }
+            .main-title { font-size: 1.5rem; } /* Further adjust title size for smaller mobile */
             
             #player-bar {
                 grid-template-columns: auto 1fr;
@@ -2669,7 +2680,7 @@
             const categoryMenu = document.getElementById('category-menu');
             const categories = [
                 { id: 'all', name: '🎧 Tất cả' }, { id: 'new', name: '🆕 Mới' },
-                { id: 'hot', name: '� Nổi bật' }, { id: 'dieu-thu', name: '🎤 Diệu Thu' },
+                { id: 'hot', name: '🔥 Nổi bật' }, { id: 'dieu-thu', name: '🎤 Diệu Thu' },
                 { id: 'others', name: '👤 Khác' }, { id: 'phap', name: '📿 Pháp' },
                 { id: 'favorites', name: '❤️ Yêu thích' }
             ];
@@ -2722,4 +2733,3 @@
     </script>
 </body>
 </html>
-�
