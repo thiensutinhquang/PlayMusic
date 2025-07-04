@@ -215,11 +215,12 @@
             justify-content: center;
             position: relative; 
             overflow: hidden; 
+            border-radius: 8px; /* FIX: Bo tròn góc cho nội dung bên trong */
         }
         #header-logo-placeholder svg {
             width: 100%;
             height: 100%;
-            object-fit: contain;
+            object-fit: cover; /* Changed to cover to fill the rounded container */
             position: relative; 
             z-index: 1; 
         }
@@ -1050,8 +1051,8 @@
             transition: all 0.3s ease-out;
         }
         #lyrics-radial-menu-container.active {
-            width: 200px;
-            height: 200px;
+            width: 250px; /* Increased size for better spacing */
+            height: 250px;
         }
         #radial-menu-toggle-btn {
             width: 50px;
@@ -1074,16 +1075,17 @@
             transform: scale(1.05);
         }
         #lyrics-radial-menu-container.active #radial-menu-toggle-btn {
-            transform: rotate(45deg); /* Rotate X icon */
+            transform: rotate(135deg); /* Rotate to an X */
         }
         .radial-item {
             position: absolute;
-            width: 40px;
-            height: 40px;
+            width: 60px; /* Increased size */
+            height: 60px; /* Increased size */
             border-radius: 50%;
             background-color: var(--card-bg-current);
             color: var(--text-current);
             display: flex;
+            flex-direction: column; /* Stack icon and label */
             justify-content: center;
             align-items: center;
             box-shadow: var(--shadow-sm);
@@ -1091,9 +1093,20 @@
             transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55); /* Springy effect */
             opacity: 0;
             pointer-events: none;
-            font-size: 1.2rem;
             transform: translate(0, 0); /* Initial position */
+            padding: 4px;
         }
+        .radial-item i {
+            font-size: 1.75rem; /* Larger icons */
+            margin-bottom: 2px;
+        }
+        .radial-label {
+            font-size: 0.6rem;
+            font-weight: 500;
+            color: inherit;
+            white-space: nowrap;
+        }
+
         #lyrics-radial-menu-container.active .radial-item {
             opacity: 1;
             pointer-events: all;
@@ -1570,12 +1583,31 @@
         <!-- Radial Menu for Lyrics Controls -->
         <div id="lyrics-radial-menu-container">
             <button id="radial-menu-toggle-btn" aria-label="Mở menu tùy chỉnh lời bài hát"><i class="ph-bold ph-plus"></i></button>
-            <div class="radial-item" id="radial-font-size-increase" style="--x: 0px; --y: 0px;" aria-label="Tăng cỡ chữ"><i class="ph-bold ph-text-aa"></i></div>
-            <div class="radial-item" id="radial-font-size-decrease" style="--x: 0px; --y: 0px;" aria-label="Giảm cỡ chữ"><i class="ph-bold ph-text-a"></i></div>
-            <div class="radial-item" id="radial-lines-increase" style="--x: 0px; --y: 0px;" aria-label="Tăng số dòng mỗi trang"><i class="ph-bold ph-rows"></i></div>
-            <div class="radial-item" id="radial-lines-decrease" style="--x: 0px; --y: 0px;" aria-label="Giảm số dòng mỗi trang"><i class="ph-bold ph-columns"></i></div>
-            <div class="radial-item" id="radial-font-btn" style="--x: 0px; --y: 0px;" aria-label="Thay đổi phông chữ"><i class="ph-bold ph-font"></i></div>
-            <div class="radial-item" id="radial-theme-btn" style="--x: 0px; --y: 0px;" aria-label="Thay đổi chủ đề lời bài hát"><i class="ph-bold ph-palette"></i></div>
+            <!-- IMPROVED ICONS -->
+            <div class="radial-item" id="radial-font-size-increase" style="--x: 0px; --y: 0px;" aria-label="Tăng cỡ chữ">
+                <i class="ph-fill ph-text-aa"></i>
+                <span class="radial-label">Cỡ chữ+</span>
+            </div>
+            <div class="radial-item" id="radial-font-size-decrease" style="--x: 0px; --y: 0px;" aria-label="Giảm cỡ chữ">
+                <i class="ph-fill ph-text-a"></i>
+                <span class="radial-label">Cỡ chữ-</span>
+            </div>
+            <div class="radial-item" id="radial-lines-increase" style="--x: 0px; --y: 0px;" aria-label="Tăng số dòng mỗi trang">
+                <i class="ph-fill ph-text-align-justify"></i>
+                <span class="radial-label">Dòng+</span>
+            </div>
+            <div class="radial-item" id="radial-lines-decrease" style="--x: 0px; --y: 0px;" aria-label="Giảm số dòng mỗi trang">
+                 <i class="ph-fill ph-list-dashes"></i>
+                 <span class="radial-label">Dòng-</span>
+            </div>
+            <div class="radial-item" id="radial-font-btn" style="--x: 0px; --y: 0px;" aria-label="Thay đổi phông chữ">
+                <i class="ph-fill ph-font"></i>
+                <span class="radial-label">Phông</span>
+            </div>
+            <div class="radial-item" id="radial-theme-btn" style="--x: 0px; --y: 0px;" aria-label="Thay đổi chủ đề lời bài hát">
+                <i class="ph-fill ph-palette"></i>
+                <span class="radial-label">Màu</span>
+            </div>
         </div>
     </div>
     
@@ -2747,14 +2779,15 @@
          * Định vị các item trong menu radial.
          */
         function positionRadialItems() {
-            // Adjust angle step for 6 items in a semi-circle (180 degrees)
-            const angleStep = 180 / (radialItems.length - 1); // For 6 items, 180 / 5 = 36 degrees
-            const radius = 90; // Distance from center
+            // Use a wider 270-degree arc to prevent overlap and ensure visibility
+            const totalAngle = 270; 
+            const startAngle = -180; // Start from the left
+            const radius = 95; // Radius for positioning
+
+            const angleStep = totalAngle / (radialItems.length - 1);
 
             radialItems.forEach((item, index) => {
-                // Start from -90 degrees (vertical up) to +90 degrees (vertical down)
-                // This creates a fan-like spread from the toggle button
-                const angle = (index * angleStep) - 90; 
+                const angle = startAngle + (index * angleStep);
                 const radians = angle * (Math.PI / 180);
                 item.style.setProperty('--x', `${radius * Math.cos(radians)}px`);
                 item.style.setProperty('--y', `${radius * Math.sin(radians)}px`);
