@@ -1517,6 +1517,16 @@
                     </div>
                 </div>
                 <audio id="audio-player" style="display: none;"></audio>
+                
+                <!-- Scroll Navigation Buttons -->
+                <div id="scroll-nav-container">
+                    <button id="scroll-to-top-btn" aria-label="Cuộn lên đầu">
+                        <i class="ph-bold ph-caret-up"></i>
+                    </button>
+                    <button id="scroll-to-bottom-btn" aria-label="Cuộn xuống cuối">
+                        <i class="ph-bold ph-caret-down"></i>
+                    </button>
+                </div>
             </div>
         </div>
     </main>
@@ -1818,6 +1828,13 @@
         // Logo elements (will be cached after SVG injection)
         let logoElements = {};
         const headerLogoContainer = document.querySelector('.header-logo-container'); // Changed from headerLogoPlaceholder to container
+        
+        // Scroll Nav elements
+        const musicSection = document.getElementById('music-section');
+        const scrollNavContainer = document.getElementById('scroll-nav-container');
+        const scrollToTopBtn = document.getElementById('scroll-to-top-btn');
+        const scrollToBottomBtn = document.getElementById('scroll-to-bottom-btn');
+
 
         // ==============================================
         // Global State & Settings
@@ -2464,6 +2481,7 @@
             renderPopupSongList(tracks); // Re-render popup playlist
             updateUI(); 
             setupMarquees();
+            updateScrollButtonsVisibility(); // NEW: Check visibility after rendering
         }
         
         /**
@@ -3139,6 +3157,13 @@
             });
         }
 
+        function updateScrollButtonsVisibility() {
+            if (!musicSection || !scrollNavContainer) return;
+
+            const isOverflowing = musicSection.scrollHeight > window.innerHeight;
+            
+            scrollNavContainer.classList.toggle('visible', isOverflowing);
+        }
 
         // ==============================================
         // INITIALIZATION
@@ -3206,6 +3231,18 @@
 
             updateUI(); // Update UI to reflect initial state
             positionRadialItems(); // Position radial menu items
+            
+            // Scroll Nav Listeners
+            scrollToTopBtn.addEventListener('click', () => {
+                musicSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+
+            scrollToBottomBtn.addEventListener('click', () => {
+                musicSection.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            });
+            
+            window.addEventListener('resize', updateScrollButtonsVisibility);
+            updateScrollButtonsVisibility(); // Initial check
 
             // Hide splash screen after delay
             const splashScreen = document.getElementById('splash-screen');
