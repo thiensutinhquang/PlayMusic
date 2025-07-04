@@ -1121,6 +1121,23 @@
                 flex-shrink: 0; /* Prevent shrinking */
                 margin-left: auto; /* Push to the right */
             }
+            /* Make hamburger button larger and more distinct */
+            .hamburger-menu {
+                display: block;
+                font-size: 2.5rem; /* Make it significantly larger */
+                padding: 0.5rem; /* Add some padding */
+                border-radius: 8px; /* Rounded corners */
+                background-color: transparent; /* Default */
+                color: var(--text-current); /* Inherit text color */
+                transition: var(--transition-fast);
+                cursor: pointer;
+                border: 2px solid transparent; /* Add a subtle border */
+            }
+            .hamburger-menu:hover {
+                background-color: var(--bg-current);
+                border-color: var(--primary-color);
+            }
+
             .header .desktop-nav {
                 display: none;
             }
@@ -1175,7 +1192,7 @@
         }
     </style>
 </head>
-<body class="theme-default">
+<body>
     <!-- Màn hình chờ -->
     <div id="splash-screen">
         <div class="stars"></div>
