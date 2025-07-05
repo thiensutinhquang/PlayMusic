@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Play Nhạc MSTQ</title>
+    <title>Play Nhạc MSTQ - Nâng cấp</title>
 
     <!-- PWA Manifest & Theme -->
     <link rel="manifest" href="https://thiensutinhquang.github.io/PlayMusic/manifest.json">
@@ -20,44 +20,44 @@
     
     <style>
         /* ==============================================
-        HỆ THỐNG THIẾT KẾ & BIẾN CSS
+        HỆ THỐNG THIẾT KẾ & BIẾN TOÀN CỤC (CSS VARIABLES)
         ============================================== */
         :root {
             /* Bảng màu chính */
-            --primary-color: #f59e0b; /* Amber 500 */
-            --primary-hover: #d97706; /* Amber 600 */
-            --secondary-color: #3b82f6; /* Blue 500 */
-            --danger-color: #ef4444; /* Red 500 */
+            --primary-color: #f59e0b; /* Màu chủ đạo (Hổ phách 500) */
+            --primary-hover: #d97706; /* Màu chủ đạo khi di chuột (Hổ phách 600) */
+            --secondary-color: #3b82f6; /* Màu phụ (Xanh dương 500) */
+            --da--danger-color: #ef4444; /* Màu cảnh báo nguy hiểm (Đỏ 500) */
             
-            /* Màu cho chế độ Sáng */
-            --bg-light: #f1f5f9; /* Slate 100 */
-            --card-bg-light: #ffffff;
-            --text-light: #1e293b; /* Slate 800 */
-            --text-muted-light: #475569; /* Slate 600 - Đã điều chỉnh để tăng độ tương phản */
-            --border-light: #e2e8f0; /* Slate 200 */
-            --logo-bg-light: #f8fafc; /* Slightly off-white for logo background */
+            /* Màu sắc cho Giao diện Sáng (Light Mode) */
+            --bg-light: #f1f5f9; /* Màu nền (Xám 100) */
+            --card-bg-light: #ffffff; /* Màu nền thẻ */
+            --text-light: #1e293b; /* Màu chữ (Xám 800) */
+            --text-muted-light: #475569; /* Màu chữ phụ, mờ hơn (Xám 600) */
+            --border-light: #e2e8f0; /* Màu viền (Xám 200) */
+            --logo-bg-light: #f8fafc; /* Màu nền logo hơi trắng ngà */
 
-            /* Màu cho chế độ Tối */
-            --bg-dark: #0f172a; /* Slate 900 */
-            --card-bg-dark: #1e293b; /* Slate 800 */
-            --text-dark: #e2e8f0; /* Slate 200 */
-            --text-muted-dark: #94a3b8; /* Slate 400 */
-            --border-dark: #334155; /* Slate 700 */
-            --logo-bg-dark: #111827; /* Darker shade for logo background */
+            /* Màu sắc cho Giao diện Tối (Dark Mode) */
+            --bg-dark: #0f172a; /* Màu nền (Xám 900) */
+            --card-bg-dark: #1e293b; /* Màu nền thẻ (Xám 800) */
+            --text-dark: #e2e8f0; /* Màu chữ (Xám 200) */
+            --text-muted-dark: #94a3b8; /* Màu chữ phụ, mờ hơn (Xám 400) */
+            --border-dark: #334155; /* Màu viền (Xám 700) */
+            --logo-bg-dark: #111827; /* Màu nền logo tối hơn */
 
-            /* Đổ bóng */
+            /* Các kiểu đổ bóng (Box Shadow) */
             --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
             --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
             --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
             
-            /* Hiệu ứng chuyển động */
+            /* Các hiệu ứng chuyển động (Transitions) */
             --transition-fast: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             --transition-slow: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 
-            /* Font chữ */
+            /* Phông chữ chính */
             --font-sans: 'Be Vietnam Pro', sans-serif;
 
-            /* Mặc định là giao diện Sáng */
+            /* Các biến màu động (sẽ thay đổi theo giao diện Sáng/Tối/Preset) */
             --bg-current: var(--bg-light);
             --card-bg-current: var(--card-bg-light);
             --text-current: var(--text-light);
@@ -142,10 +142,26 @@
             font-family: var(--font-sans);
             background-color: var(--bg-current);
             color: var(--text-current);
-            transition: background-color var(--transition-fast), color var(--transition-fast);
+            transition: background-color var(--transition-slow), color var(--transition-fast);
             line-height: 1.6;
             padding-bottom: 90px; /* Tạo không gian cho thanh điều khiển */
             overflow-x: hidden; /* Prevent horizontal scroll on mobile nav */
+        }
+        
+        /* NEW: Dynamic Background Container */
+        #dynamic-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            filter: blur(20px) brightness(0.7);
+            transform: scale(1.1); /* Prevent blurred edges */
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
         }
         
         .container { max-width: 1280px; margin: 0 auto; padding: 1rem 1.5rem; }
@@ -225,7 +241,6 @@
             z-index: 1; 
         }
 
-        /* NEW: Higgs Field Canvas Style */
         #higgs-field-canvas {
             position: absolute;
             top: 0;
@@ -562,20 +577,22 @@
 
         /* Hiệu ứng Chakra Glow MẠNH cho ảnh bìa album */
         #player-bar .now-playing-info img.chakra-glow-album {
-            box-shadow: 0 0 5px var(--primary-color), 
-                        0 0 10px var(--primary-color), 
-                        0 0 15px var(--primary-color);
-            animation: album-glow 1.5s infinite alternate;
+            box-shadow: 0 0 8px var(--primary-color), 
+                        0 0 16px var(--primary-color), 
+                        0 0 24px var(--primary-color),
+                        0 0 32px var(--primary-color); /* Added one more layer for intensity */
+            animation: album-glow 1.2s infinite alternate ease-in-out; /* Faster and smoother animation */
         }
 
         @keyframes album-glow {
             from {
-                box-shadow: 0 0 5px var(--primary-color);
+                box-shadow: 0 0 5px var(--primary-color), 0 0 10px var(--primary-color);
             }
             to {
-                box-shadow: 0 0 8px var(--primary-color), 
-                            0 0 16px var(--primary-color), 
-                            0 0 24px var(--primary-color);
+                box-shadow: 0 0 10px var(--primary-color), 
+                            0 0 20px var(--primary-color), 
+                            0 0 30px var(--primary-color),
+                            0 0 40px var(--primary-color);
             }
         }
 
@@ -620,6 +637,14 @@
             gap: 0.75rem;
             width: 100%;
         }
+        
+        /* NEW: Audio Visualizer Canvas */
+        #audio-visualizer {
+            width: 80px; /* Fixed width for the visualizer */
+            height: 30px; /* Height of the visualizer */
+            margin-right: 0.75rem; /* Space between visualizer and progress bar */
+        }
+        
         #player-bar .progress-container { 
             flex-grow: 1; 
             height: 8px; /* Height for the progress bar track */
@@ -749,7 +774,7 @@
             padding: 0.75rem 1rem;
             border-radius: 8px;
             cursor: pointer;
-            transition: background-color var(--transition-fast);
+            transition: background-color var(--transition-fast), opacity 0.2s;
             display: flex;
             align-items: center;
             gap: 0.75rem;
@@ -765,13 +790,18 @@
         #popup-song-list li.active-song-in-list .artist-text {
             color: rgba(255,255,255,0.8); /* Lighter text for artist in active state */
         }
-        #popup-song-list li .artist-text {
-            font-size: 0.85rem;
-            color: var(--text-muted-current);
-        }
         #popup-song-list li .song-info-text {
             flex-grow: 1;
             min-width: 0;
+        }
+        
+        /* NEW: Drag and Drop Styles */
+        #popup-song-list li.dragging {
+            opacity: 0.5;
+            background: var(--primary-hover);
+        }
+        #popup-song-list li.drag-over {
+            border-top: 2px solid var(--primary-color);
         }
 
 
@@ -902,7 +932,7 @@
         }
         .song-list-item:hover .is-scrolling > .marquee-text,
         .song-list-item.active-song .is-scrolling > .marquee-text,
-        .now-playing-info .is-scrolling > .marquee-text {
+        #player-bar.playing-music .now-playing-info .is-scrolling > .marquee-text { /* Updated rule for player bar */
             animation-play-state: running;
         }
         .is-scrolling > .marquee-text {
@@ -918,16 +948,24 @@
             }
         }
         
-        /* Scroll Navigation Buttons */
+        /* === NÂNG CẤP: Nút Cuộn Cố Định === */
         #scroll-nav-container {
-            position: absolute;
-            top: 50%;
-            right: 10px; /* Position inside the card */
+            position: fixed; /* Cố định vị trí so với khung nhìn */
+            top: 50%; /* Canh giữa theo chiều dọc */
+            right: 20px; /* Cách cạnh phải màn hình 20px */
             transform: translateY(-50%);
-            z-index: 10;
+            z-index: 999; /* Đảm bảo nổi trên hầu hết nội dung */
             display: flex;
             flex-direction: column;
             gap: 0.75rem;
+            opacity: 0; /* Mặc định ẩn đi */
+            visibility: hidden;
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+        }
+
+        #scroll-nav-container.show {
+            opacity: 1; /* Hiện ra khi cần */
+            visibility: visible;
         }
 
         #scroll-nav-container button {
@@ -958,7 +996,7 @@
 
         @media (max-width: 768px) {
              #scroll-nav-container {
-                right: 5px; /* Adjust for smaller screens */
+               right: 10px; /* Điều chỉnh lại cho màn hình nhỏ hơn */
              }
         }
 
@@ -1357,6 +1395,16 @@
             #player-bar .player-actions-right { 
                 display: none; 
             }
+            /* On mobile, move visualizer to be next to progress time */
+            #player-bar .progress-section {
+                order: -1; /* Move it before the time displays */
+            }
+            #audio-visualizer {
+                width: 60px; /* Make it smaller on mobile */
+                height: 24px;
+                margin-right: 0.5rem;
+            }
+
 
             #queue-sidebar {
                 width: 100%; /* Full width on tiny screens */
@@ -1386,6 +1434,9 @@
     </style>
 </head>
 <body>
+    <!-- NEW: Dynamic Background -->
+    <div id="dynamic-bg"></div>
+    
     <!-- Màn hình chờ -->
     <div id="splash-screen">
         <div class="stars"></div>
@@ -1570,20 +1621,20 @@
                             <p class="text-center text-muted-current col-span-full p-4" id="loading-message">Đang tải thư viện nhạc...</p>
                     </div>
                 </div>
-                <audio id="audio-player" style="display: none;"></audio>
-                
-                <!-- Scroll Navigation Buttons -->
-                <div id="scroll-nav-container">
-                    <button id="scroll-to-top-btn" aria-label="Cuộn lên đầu">
-                        <i class="ph-bold ph-caret-up"></i>
-                    </button>
-                    <button id="scroll-to-bottom-btn" aria-label="Cuộn xuống cuối">
-                        <i class="ph-bold ph-caret-down"></i>
-                    </button>
-                </div>
+                <audio id="audio-player" style="display: none;" crossOrigin="anonymous"></audio> <!-- Added crossOrigin for visualizer -->
             </div>
         </div>
     </main>
+    
+    <!-- NÂNG CẤP: Các nút cuộn cố định -->
+    <div id="scroll-nav-container">
+        <button id="scroll-to-top-btn" aria-label="Cuộn lên đầu">
+            <i class="ph-bold ph-caret-up"></i>
+        </button>
+        <button id="scroll-to-bottom-btn" aria-label="Cuộn xuống cuối">
+            <i class="ph-bold ph-caret-down"></i>
+        </button>
+    </div>
     
     <!-- Thanh điều khiển nhạc cố định -->
     <div id="player-bar">
@@ -1602,7 +1653,7 @@
                     <h4 id="popup-song-title" class="font-bold marquee-text">Chọn một bài hát</h4>
                 </div>
                 <div class="title-artist-wrapper">
-                     <p id="popup-song-artist" class="text-sm text-muted-current marquee-text">Để bắt đầu nghe nhạc</p>
+                    <p id="popup-song-artist" class="text-sm text-muted-current marquee-text">Để bắt đầu nghe nhạc</p>
                 </div>
             </div>
             <button id="toggle-playlist-btn" title="Danh sách phát" aria-label="Hiển thị hoặc ẩn danh sách phát" class="ml-4 text-xl text-muted-current hover:text-current">
@@ -1624,6 +1675,8 @@
             </div>
             <div class="progress-section" id="popup-progress-section">
                 <span id="popup-current-time" class="text-xs">0:00</span>
+                <!-- NEW: Audio Visualizer Canvas -->
+                <canvas id="audio-visualizer"></canvas>
                 <div class="progress-container" id="popup-progress-container">
                     <div class="progress-bar" id="popup-progress-bar" style="width: 0%"></div>
                     <div id="progress-tooltip" class="hidden">0:00</div>
@@ -1690,8 +1743,8 @@
                 <span class="radial-label">Dòng+</span>
             </div>
             <div class="radial-item" id="radial-lines-decrease" style="--x: 0px; --y: 0px;" aria-label="Giảm số dòng mỗi trang">
-                 <i class="ph-fill ph-list-dashes"></i>
-                 <span class="radial-label">Dòng-</span>
+                <i class="ph-fill ph-list-dashes"></i>
+                <span class="radial-label">Dòng-</span>
             </div>
             <div class="radial-item" id="radial-font-btn" style="--x: 0px; --y: 0px;" aria-label="Thay đổi phông chữ">
                 <i class="ph-fill ph-font"></i>
@@ -1709,7 +1762,7 @@
     // Normally this would be in a separate sw.js file, but for a self-contained
     // single-file app, we define it as a string and register it via a Blob.
     const swCode = `
-        const CACHE_NAME = 'mstq-music-cache-v2';
+        const CACHE_NAME = 'mstq-music-cache-v3'; // Incremented cache version
         // Add the base URL of your GitHub Pages site to the URLs to cache.
         const BASE_URL = 'https://thiensutinhquang.github.io/PlayMusic/';
         const urlsToCache = [
@@ -1820,6 +1873,7 @@
         // ==============================================
         const body = document.body;
         const html = document.documentElement; // Added for theme management
+        const dynamicBg = document.getElementById('dynamic-bg'); // NEW: Dynamic background element
         const darkModeToggle = document.getElementById('darkModeToggle');
         const darkModeToggleMobile = document.getElementById('darkModeToggleMobile'); // Mobile dark mode toggle
         const songsContainer = document.getElementById('song-list-body'); // Changed from songs-container to song-list-body
@@ -1884,10 +1938,18 @@
         const headerLogoContainer = document.querySelector('.header-logo-container'); // Changed from headerLogoPlaceholder to container
         
         // Scroll Nav elements
-        const musicSection = document.getElementById('music-section');
         const scrollNavContainer = document.getElementById('scroll-nav-container');
         const scrollToTopBtn = document.getElementById('scroll-to-top-btn');
         const scrollToBottomBtn = document.getElementById('scroll-to-bottom-btn');
+        
+        // NEW: Audio Visualizer elements
+        const visualizerCanvas = document.getElementById('audio-visualizer');
+        const visualizerCtx = visualizerCanvas.getContext('2d');
+        let audioContext;
+        let analyser;
+        let source;
+        let dataArray;
+        let isAudioContextInitialized = false;
 
 
         // ==============================================
@@ -2402,7 +2464,7 @@
                 if (mobileThemeOptions && mobileThemeOptions.classList.contains('show') && !mobileThemeOptions.contains(e.target) && e.target !== document.getElementById('theme-toggle-mobile')) {
                     closeMobileThemeOptions();
                 }
-                  // Hide mobile timer menu
+                    // Hide mobile timer menu
                 const timerMenuMobile = document.getElementById('timer-menu-mobile');
                 const timerToggleMobile = document.getElementById('timer-toggle-mobile');
                 if (timerMenuMobile && timerMenuMobile.classList.contains('show') && !timerMenuMobile.contains(e.target) && e.target !== timerToggleMobile) {
@@ -2434,6 +2496,68 @@
                 });
             });
         }
+        
+        // ==============================================
+        // NEW: AUDIO VISUALIZER FUNCTIONS
+        // ==============================================
+
+        /**
+         * Initializes the Web Audio API context and analyser node.
+         * This must be called after a user interaction (e.g., the first play click).
+         */
+        function initAudioContext() {
+            if (isAudioContextInitialized) return;
+            
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            analyser = audioContext.createAnalyser();
+            source = audioContext.createMediaElementSource(audioPlayer);
+
+            source.connect(analyser);
+            analyser.connect(audioContext.destination);
+
+            analyser.fftSize = 64; // Determines the number of data points
+            const bufferLength = analyser.frequencyBinCount;
+            dataArray = new Uint8Array(bufferLength);
+            
+            isAudioContextInitialized = true;
+            console.log("AudioContext Initialized.");
+            
+            drawVisualizer(); // Start the drawing loop
+        }
+
+        /**
+         * The main animation loop for the visualizer.
+         */
+        function drawVisualizer() {
+            requestAnimationFrame(drawVisualizer);
+
+            if (!isPlaying || !isAudioContextInitialized) {
+                // Clear canvas if not playing
+                visualizerCtx.clearRect(0, 0, visualizerCanvas.width, visualizerCanvas.height);
+                return;
+            }
+
+            analyser.getByteFrequencyData(dataArray);
+
+            visualizerCtx.clearRect(0, 0, visualizerCanvas.width, visualizerCanvas.height);
+
+            const barWidth = (visualizerCanvas.width / dataArray.length) * 1.5;
+            let barHeight;
+            let x = 0;
+
+            // Use the primary color from CSS variables for the bars
+            const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary-color');
+
+            for (let i = 0; i < dataArray.length; i++) {
+                barHeight = dataArray[i] / 2.5; // Scale the height
+
+                visualizerCtx.fillStyle = primaryColor;
+                visualizerCtx.fillRect(x, visualizerCanvas.height - barHeight, barWidth, barHeight);
+
+                x += barWidth + 2; // Add spacing between bars
+            }
+        }
+
 
         // ==============================================
         // MUSIC PLAYER CORE FUNCTIONS
@@ -2546,24 +2670,28 @@
                 popupSongList.innerHTML = '<li class="p-4 text-center text-muted-current">Danh sách phát trống.</li>';
                 return;
             }
-            songs.forEach((song) => {
+            songs.forEach((song, index) => {
                 const globalIndex = songData.findIndex(s => s.id === song.id);
                 const li = document.createElement('li');
                 li.className = 'p-2 rounded-md cursor-pointer hover:bg-bg-current text-sm';
+                li.draggable = true; // NEW: Make item draggable
+                li.dataset.index = globalIndex;
+                li.dataset.displayIndex = index; // Store the display index for reordering
                 li.innerHTML = `
                     <div class="song-info-text">
                         <div class="title-artist-wrapper">
-                           <p class="font-semibold marquee-text">${song.title}</p>
+                            <p class="font-semibold marquee-text">${song.title}</p>
                         </div>
                         <div class="title-artist-wrapper">
-                           <p class="artist-text marquee-text">${song.artist}</p>
+                            <p class="artist-text marquee-text">${song.artist}</p>
                         </div>
                     </div>
                 `;
-                li.dataset.index = globalIndex;
                 li.addEventListener('click', () => playSong(globalIndex));
                 popupSongList.appendChild(li);
             });
+            // Add drag-and-drop event listeners after rendering
+            addDragAndDropListeners();
         }
 
         /**
@@ -2633,41 +2761,64 @@
          */
         function playSong(index) {
             if (index < 0 || index >= songData.length) return;
-
-            // Add fade-out effect to current song info
-            const previousSongInfo = document.getElementById('popup-now-playing-info-wrapper');
-            if (previousSongInfo) { // Check if the element exists
-                previousSongInfo.classList.add('fade-out');
-            }
             
-            // FIX: Pause before changing src to avoid interruption error
-            audioPlayer.pause();
+            // NEW: Initialize AudioContext on the first user interaction (play)
+            if (!isAudioContextInitialized) {
+                initAudioContext();
+            }
 
-            setTimeout(() => {
-                currentSongIndex = index;
-                const song = songData[index];
-                
-                audioPlayer.src = `${audiusDiscoveryHost}/v1/tracks/${song.id}/stream?app_name=MSTQPlayer`;
-                
-                const playPromise = audioPlayer.play();
-                if (playPromise !== undefined) {
-                    playPromise.catch(error => {
-                        console.error("Playback error:", error, "Could not play song.");
-                        // The 'pause' event listener will handle the UI update to show the play icon.
-                    });
-                }
+            const song = songData[index];
 
-                // Update UI elements
-                popupAlbumArt.src = song.artwork;
-                popupAlbumArt.classList.remove('animate-pulse');
+            // Update player bar info immediately with the correct title and artist
+            popupSongTitle.textContent = song.title;
+            popupSongArtist.textContent = song.artist;
+            popupAlbumArt.src = song.artwork;
+            popupAlbumArt.classList.remove('animate-pulse');
+            
+            // NEW: Update dynamic background
+            dynamicBg.style.backgroundImage = `url(${song.artwork})`;
+            dynamicBg.style.opacity = 1;
 
-                if (previousSongInfo) {
-                    previousSongInfo.classList.remove('fade-out');
+            // Set fade-out effect for a smooth transition of the album art/info
+            const nowPlayingInfoWrapper = document.getElementById('popup-now-playing-info-wrapper');
+            if (nowPlayingInfoWrapper) {
+                nowPlayingInfoWrapper.classList.add('fade-out');
+            }
+
+            currentSongIndex = index;
+
+            // Set the new source, load it, then play.
+            audioPlayer.src = `${audiusDiscoveryHost}/v1/tracks/${song.id}/stream?app_name=MSTQPlayer`;
+            audioPlayer.load(); // Load the new media
+
+            const playPromise = audioPlayer.play();
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    // Playback started successfully, remove fade-out
+                    if (nowPlayingInfoWrapper) {
+                        nowPlayingInfoWrapper.classList.remove('fade-out');
+                    }
+                    updateMediaSession();
+                    updateUI(); // Call updateUI after successful play
+                }).catch(error => {
+                    console.error("Playback error:", error, "Could not play song.");
+                    // Handle error, e.g., show a message to the user
+                    showMessage("Không thể phát bài hát này. Vui lòng thử bài khác.", "Lỗi phát nhạc");
+                    // Ensure UI is updated to reflect paused state
+                    isPlaying = false;
+                    updateUI();
+                    if (nowPlayingInfoWrapper) {
+                        nowPlayingInfoWrapper.classList.remove('fade-out');
+                    }
+                });
+            } else {
+                // For browsers that don't return a promise (older implementations)
+                if (nowPlayingInfoWrapper) {
+                    nowPlayingInfoWrapper.classList.remove('fade-out');
                 }
                 updateMediaSession();
                 updateUI();
-                setupMarquees();
-            }, 300);
+            }
         }
         
         /**
@@ -2679,18 +2830,9 @@
 
             // Update player bar info
             if (song) {
-                const displayIndex = currentDisplayData.findIndex(s => s.id === song.id);
-                
-                // CORRECTED LOGIC:
-                // Top line: "Đang nghe bài [number]"
-                if (displayIndex !== -1) {
-                    popupSongTitle.textContent = `Đang nghe bài ${displayIndex + 1}`;
-                } else {
-                    popupSongTitle.textContent = "Đang phát"; // Fallback
-                }
-                
-                // Bottom line: Song Title
-                popupSongArtist.textContent = song.title;
+                // Display the actual song title and artist name
+                popupSongTitle.textContent = song.title;
+                popupSongArtist.textContent = song.artist;
                 
                 popupAlbumArt.src = song.artwork;
                 popupAlbumArt.classList.remove('animate-pulse');
@@ -2702,6 +2844,8 @@
                 popupAlbumArt.classList.add('animate-pulse');
                 favoriteBtn.classList.remove('liked');
                 favoriteBtn.innerHTML = '<i class="ph-bold ph-heart"></i>';
+                // Fade out dynamic background when no song is playing
+                dynamicBg.style.opacity = 0;
             }
 
             // Update play/pause icons
@@ -2711,6 +2855,12 @@
             
             // Toggle chakra glow for album art
             popupAlbumArt.classList.toggle('chakra-glow-album', isPlaying);
+
+            // Toggle 'playing-music' class on player-bar
+            const playerBar = document.getElementById('player-bar');
+            if (playerBar) {
+                playerBar.classList.toggle('playing-music', isPlaying);
+            }
 
             // Update main song list items (play indicator)
             document.querySelectorAll('.song-list-item').forEach(item => {
@@ -2741,6 +2891,7 @@
             } else {
                 deactivateLogoAnimations(); 
             }
+            // Setup marquee effect after UI text has been updated
             setupMarquees();
         }
         
@@ -3029,6 +3180,10 @@
         customAlertOkBtn.addEventListener('click', hideMessage);
         
         playPauseBtn.addEventListener('click', () => {
+            // NEW: Initialize audio context on first click if not already done
+            if (!isAudioContextInitialized) {
+                initAudioContext();
+            }
             if (currentSongIndex === -1 && songData.length > 0) playSong(0);
             else if (audioPlayer.paused) audioPlayer.play();
             else audioPlayer.pause();
@@ -3099,8 +3254,10 @@
         });
         
         volumeSlider.addEventListener('input', (e) => {
-            audioPlayer.volume = e.target.value;
-            volumePercentage.textContent = Math.round(e.target.value * 100);
+            const newVolume = e.target.value;
+            audioPlayer.volume = newVolume;
+            volumePercentage.textContent = Math.round(newVolume * 100);
+            localStorage.setItem('playerVolume', newVolume); // NEW: Save volume
         });
         
         favoriteBtn.addEventListener('click', () => {
@@ -3197,37 +3354,107 @@
             loadCustomCategory(currentCategory);
         });
 
+        // ==============================================
+        // [FIXED] MARQUEE EFFECT LOGIC
+        // ==============================================
         function setupMarquees() {
             document.querySelectorAll('.title-artist-wrapper').forEach(wrapper => {
                 const textEl = wrapper.querySelector('.marquee-text');
                 if (!textEl) return;
 
-                // Reset any previous marquee setup
-                if (wrapper.dataset.originalHtml) {
-                    textEl.innerHTML = wrapper.dataset.originalHtml;
-                } else {
-                    wrapper.dataset.originalHtml = textEl.innerHTML;
-                }
+                // 1. Lấy nội dung văn bản hiện tại. Đây là nguồn dữ liệu chính xác.
+                const currentText = textEl.textContent; 
+                
+                // 2. Đặt lại phần tử về trạng thái cơ bản trước khi đo đạc.
+                // Điều này sẽ loại bỏ bất kỳ hiệu ứng marquee nào đã được áp dụng trước đó.
+                textEl.innerHTML = currentText; 
                 wrapper.classList.remove('is-scrolling');
                 wrapper.style.removeProperty('--marquee-duration');
-
-                // Check for overflow after a short delay to allow rendering
+                
+                // Kiểm tra xem văn bản có bị tràn hay không sau một khoảng trễ nhỏ để trình duyệt render.
                 setTimeout(() => {
                     const isOverflowing = textEl.scrollWidth > wrapper.clientWidth;
 
                     if (isOverflowing) {
                         wrapper.classList.add('is-scrolling');
                         const scrollWidth = textEl.scrollWidth;
-                        const duration = scrollWidth / 50; // Speed: 50px per second
+                        const duration = scrollWidth / 50; // Tốc độ: 50px mỗi giây
                         
-                        // Duplicate the content for a seamless loop
-                        textEl.innerHTML += `<span style="display: inline-block; width: 2rem;"></span>` + wrapper.dataset.originalHtml;
+                        // Nhân đôi nội dung để tạo hiệu ứng lặp lại liền mạch.
+                        // Sử dụng `currentText` đã lưu để tránh nhân đôi văn bản đã được nhân đôi.
+                        textEl.innerHTML = currentText + `<span style="display: inline-block; width: 2rem;"></span>` + currentText;
                         
                         wrapper.style.setProperty('--marquee-duration', `${duration * 2}s`);
                     }
                 }, 100); 
             });
         }
+        
+        // ==============================================
+        // NEW: DRAG AND DROP FOR PLAYLIST
+        // ==============================================
+        let draggedItem = null;
+
+        function addDragAndDropListeners() {
+            const items = popupSongList.querySelectorAll('li[draggable="true"]');
+            items.forEach(item => {
+                item.addEventListener('dragstart', handleDragStart);
+                item.addEventListener('dragover', handleDragOver);
+                item.addEventListener('dragleave', handleDragLeave);
+                item.addEventListener('drop', handleDrop);
+                item.addEventListener('dragend', handleDragEnd);
+            });
+        }
+
+        function handleDragStart(e) {
+            draggedItem = this;
+            // Use a timeout to avoid the item disappearing immediately
+            setTimeout(() => {
+                this.classList.add('dragging');
+            }, 0);
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            this.classList.add('drag-over');
+        }
+        
+        function handleDragLeave() {
+            this.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            this.classList.remove('drag-over');
+            
+            if (draggedItem !== this) {
+                const fromIndex = parseInt(draggedItem.dataset.displayIndex);
+                const toIndex = parseInt(this.dataset.displayIndex);
+                
+                // Reorder the `currentDisplayData` array
+                const [reorderedItem] = currentDisplayData.splice(fromIndex, 1);
+                currentDisplayData.splice(toIndex, 0, reorderedItem);
+                
+                // Re-render the popup list to reflect the new order
+                renderPopupSongList(currentDisplayData);
+                
+                // Update the currentSongIndex if the currently playing song was moved
+                const currentlyPlayingSongId = songData[currentSongIndex]?.id;
+                if (currentlyPlayingSongId) {
+                    const newGlobalIndex = songData.findIndex(s => s.id === currentlyPlayingSongId);
+                    currentSongIndex = newGlobalIndex;
+                }
+                updateUI();
+            }
+        }
+
+        function handleDragEnd() {
+            this.classList.remove('dragging');
+            draggedItem = null;
+            // Clean up any remaining drag-over classes
+            popupSongList.querySelectorAll('.drag-over').forEach(item => item.classList.remove('drag-over'));
+        }
+
 
         // ==============================================
         // INITIALIZATION
@@ -3250,8 +3477,18 @@
             shuffleBtn.classList.toggle('active-control', isShuffling);
             repeatBtn.classList.toggle('active-control', repeatMode !== 'none');
             repeatBtn.innerHTML = repeatMode === 'one' ? '<i class="ph-bold ph-repeat-once"></i>' : '<i class="ph-bold ph-repeat"></i>';
-            volumeSlider.value = audioPlayer.volume; // Set slider to current volume
-            volumePercentage.textContent = Math.round(audioPlayer.volume * 100); // Set initial volume percentage
+            
+            // NEW: Load saved volume
+            const savedVolume = localStorage.getItem('playerVolume');
+            if (savedVolume !== null) {
+                audioPlayer.volume = savedVolume;
+                volumeSlider.value = savedVolume;
+                volumePercentage.textContent = Math.round(savedVolume * 100);
+            } else {
+                volumeSlider.value = audioPlayer.volume; // Set slider to default volume
+                volumePercentage.textContent = Math.round(audioPlayer.volume * 100);
+            }
+
 
             // Render category buttons
             const categoryMenu = document.getElementById('category-menu');
@@ -3296,13 +3533,21 @@
             updateUI(); // Update UI to reflect initial state
             positionRadialItems(); // Position radial menu items
             
-            // Scroll Nav Listeners
+            // === NÂNG CẤP: Sự kiện cho các nút cuộn cố định ===
             scrollToTopBtn.addEventListener('click', () => {
-                musicSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             });
 
             scrollToBottomBtn.addEventListener('click', () => {
-                musicSection.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+            });
+            
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 200) { // Hiện nút sau khi cuộn 200px
+                    scrollNavContainer.classList.add('show');
+                } else {
+                    scrollNavContainer.classList.remove('show');
+                }
             });
 
             // Hide splash screen after delay
