@@ -558,34 +558,7 @@
             transition: transform 0.3s ease-out, box-shadow 0.3s ease-out; 
             flex-shrink: 0;
         }
-        #player-bar .now-playing-info img.spinning {
-            animation: spin 8s linear infinite;
-        }
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-
-        /* Hiệu ứng Chakra Glow MẠNH cho ảnh bìa album */
-        #player-bar .now-playing-info img.chakra-glow-album {
-            box-shadow: 0 0 8px var(--primary-color), 
-                        0 0 16px var(--primary-color), 
-                        0 0 24px var(--primary-color),
-                        0 0 32px var(--primary-color); /* Added one more layer for intensity */
-            animation: album-glow 1.2s infinite alternate ease-in-out; /* Faster and smoother animation */
-        }
-
-        @keyframes album-glow {
-            from {
-                box-shadow: 0 0 5px var(--primary-color), 0 0 10px var(--primary-color);
-            }
-            to {
-                box-shadow: 0 0 10px var(--primary-color), 
-                            0 0 20px var(--primary-color), 
-                            0 0 30px var(--primary-color),
-                            0 0 40px var(--primary-color);
-            }
-        }
+        /* Removed spinning and chakra-glow-album CSS */
 
         #player-bar .now-playing-info .text-info {
             min-width: 0;
@@ -629,12 +602,7 @@
             width: 100%;
         }
         
-        /* NEW: Audio Visualizer Canvas */
-        #audio-visualizer {
-            width: 80px; /* Fixed width for the visualizer */
-            height: 30px; /* Height of the visualizer */
-            margin-right: 0.75rem; /* Space between visualizer and progress bar */
-        }
+        /* Removed Audio Visualizer Canvas CSS */
         
         #player-bar .progress-container { 
             flex-grow: 1; 
@@ -917,27 +885,11 @@
         .marquee-text {
             white-space: nowrap;
             display: inline-block;
+            /* Ensure text does not wrap */
+            overflow: hidden; /* Hide overflowing text by default */
+            text-overflow: ellipsis; /* Add ellipsis for overflowing text */
         }
-        .is-scrolling > .marquee-text {
-            animation: marquee-animation var(--marquee-duration) linear infinite;
-        }
-        .song-list-item:hover .is-scrolling > .marquee-text,
-        .song-list-item.active-song .is-scrolling > .marquee-text,
-        #player-bar.playing-music .now-playing-info .is-scrolling > .marquee-text { /* Updated rule for player bar */
-            animation-play-state: running;
-        }
-        .is-scrolling > .marquee-text {
-            animation-play-state: paused;
-        }
-
-        @keyframes marquee-animation {
-            from {
-                transform: translateX(0);
-            }
-            to {
-                transform: translateX(-50%);
-            }
-        }
+        /* Removed is-scrolling and marquee-animation as marquee is now static by default */
         
         /* === NÂNG CẤP: Nút Cuộn Cố Định === */
         #scroll-nav-container {
@@ -1421,8 +1373,7 @@
             .song-list-item .song-info {
                 gap: 0.75rem; /* Giảm khoảng cách giữa ảnh và chữ */
             }
-        }
-    </style>
+        </style>
 </head>
 <body>
     <!-- Removed dynamic-bg and particle-bg-canvas elements -->
@@ -1636,11 +1587,8 @@
 
         <!-- Thông tin bài hát đang phát -->
         <div class="now-playing-info" id="popup-now-playing-info-wrapper">
-            <!-- Removed bg-effect-toggle-btn -->
-            <!-- Nút bật/tắt hiệu ứng âm thanh -->
-            <button id="visualizer-toggle-btn" title="Bật/Tắt hiệu ứng âm thanh">
-                <i class="ph-bold ph-waveform"></i>
-            </button>
+            <!-- NEW: Số thứ tự bài hát -->
+            <span id="popup-track-number" class="text-lg font-bold text-red-700 flex items-center justify-center w-8 h-8 flex-shrink-0"></span>
             <img id="popup-album-art" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" alt="Album Art" class="animate-pulse">
             <div class="text-info">
                 <div class="title-artist-wrapper">
@@ -1669,8 +1617,7 @@
             </div>
             <div class="progress-section" id="popup-progress-section">
                 <span id="popup-current-time" class="text-xs">0:00</span>
-                <!-- NEW: Audio Visualizer Canvas -->
-                <canvas id="audio-visualizer"></canvas>
+                <!-- Removed Audio Visualizer Canvas -->
                 <div class="progress-container" id="popup-progress-container">
                     <div class="progress-bar" id="popup-progress-bar" style="width: 0%"></div>
                     <div id="progress-tooltip" class="hidden">0:00</div>
@@ -1897,6 +1844,7 @@
         const popupPlaylistContainer = document.getElementById('popup-playlist-container');
         const popupSongList = document.getElementById('popup-song-list');
         const progressTooltip = document.getElementById('progress-tooltip');
+        const popupTrackNumber = document.getElementById('popup-track-number'); // Get the new element
 
         // Lyrics Fullscreen Popup elements
         const lyricsFullscreenPopup = document.getElementById('lyrics-fullscreen-popup');
@@ -1939,15 +1887,7 @@
         const scrollToBottomBtn = document.getElementById('scroll-to-bottom-btn');
         
         // Audio Visualizer elements
-        const visualizerCanvas = document.getElementById('audio-visualizer');
-        const visualizerCtx = visualizerCanvas.getContext('2d');
-        let audioContext;
-        let analyser;
-        let source;
-        let dataArray;
-        let isAudioContextInitialized = false;
-        let isVisualizerActive = JSON.parse(localStorage.getItem('isVisualizerActive')) || false; // Default to off
-        const visualizerToggleBtn = document.getElementById('visualizer-toggle-btn');
+        // Removed visualizerCanvas, visualizerCtx, audioContext, analyser, source, dataArray, isAudioContextInitialized, isVisualizerActive, visualizerToggleBtn
         // Removed isHiggsFieldActive
 
 
@@ -2385,59 +2325,8 @@
         // ==============================================
         // AUDIO VISUALIZER FUNCTIONS - CHỨC NĂNG HIỂN THỊ ÂM THANH
         // ==============================================
-        /**
-         * Khởi tạo AudioContext và AnalyserNode để xử lý âm thanh và hiển thị visualizer.
-         */
-        function initAudioContext() {
-            if (isAudioContextInitialized) return; // Chỉ khởi tạo một lần
-            
-            audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            analyser = audioContext.createAnalyser();
-            source = audioContext.createMediaElementSource(audioPlayer);
-
-            source.connect(analyser);
-            analyser.connect(audioContext.destination);
-
-            analyser.fftSize = 64; // Kích thước FFT, càng nhỏ càng ít tốn CPU
-            const bufferLength = analyser.frequencyBinCount;
-            dataArray = new Uint8Array(bufferLength);
-            
-            isAudioContextInitialized = true;
-            console.log("AudioContext Initialized.");
-            
-            // Chỉ gọi drawVisualizer nếu visualizer đang hoạt động
-            if (isVisualizerActive) {
-                drawVisualizer();
-            }
-        }
-
-        /**
-         * Vẽ visualizer âm thanh trên canvas.
-         */
-        function drawVisualizer() {
-            requestAnimationFrame(drawVisualizer);
-
-            // Chỉ vẽ khi nhạc đang phát và visualizer đang hoạt động và AudioContext đã được khởi tạo
-            if (!isPlaying || !isVisualizerActive || !isAudioContextInitialized) {
-                visualizerCtx.clearRect(0, 0, visualizerCanvas.width, visualizerCanvas.height);
-                return;
-            }
-
-            analyser.getByteFrequencyData(dataArray);
-            visualizerCtx.clearRect(0, 0, visualizerCanvas.width, visualizerCanvas.height);
-            const barWidth = (visualizerCanvas.width / dataArray.length) * 1.5;
-            let barHeight;
-            let x = 0;
-            const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary-color');
-
-            for (let i = 0; i < dataArray.length; i++) {
-                barHeight = dataArray[i] / 2.5;
-                visualizerCtx.fillStyle = primaryColor;
-                visualizerCtx.fillRect(x, visualizerCanvas.height - barHeight, barWidth, barHeight);
-                x += barWidth + 2;
-            }
-        }
-
+        // Removed all visualizer related functions and variables
+        // initAudioContext, drawVisualizer, visualizerCanvas, visualizerCtx, audioContext, analyser, source, dataArray, isAudioContextInitialized, isVisualizerActive
 
         // ==============================================
         // MUSIC PLAYER CORE FUNCTIONS - CHỨC NĂNG CHÍNH CỦA TRÌNH PHÁT NHẠC
@@ -2636,9 +2525,6 @@
         function playSong(index) {
             if (index < 0 || index >= songData.length) return;
             
-            // Luôn khởi tạo AudioContext khi một bài hát được phát
-            // initAudioContext(); // This line was moved to visualizerToggleBtn click handler
-
             const song = songData[index];
 
             popupSongTitle.textContent = song.title;
@@ -2646,8 +2532,6 @@
             popupAlbumArt.src = song.artwork;
             popupAlbumArt.classList.remove('animate-pulse');
             
-            // Removed dynamicBg updates as background effects are removed.
-
             const nowPlayingInfoWrapper = document.getElementById('popup-now-playing-info-wrapper');
             if (nowPlayingInfoWrapper) {
                 nowPlayingInfoWrapper.classList.add('fade-out');
@@ -2697,6 +2581,7 @@
                 popupAlbumArt.src = song.artwork;
                 popupAlbumArt.classList.remove('animate-pulse');
                 updateFavoriteButtonsUI(song.id, favoriteSongIds.includes(song.id));
+                popupTrackNumber.textContent = currentSongIndex + 1; // Update track number
             } else {
                 popupSongTitle.textContent = "Chọn một bài hát";
                 popupSongArtist.textContent = "Để bắt đầu nghe nhạc";
@@ -2704,13 +2589,16 @@
                 popupAlbumArt.classList.add('animate-pulse');
                 favoriteBtn.classList.remove('liked');
                 favoriteBtn.innerHTML = '<i class="ph-bold ph-heart"></i>';
-                // Removed dynamicBg opacity update as background effects are removed.
+                popupTrackNumber.textContent = ''; // Clear track number
             }
 
             playIcon.classList.toggle('hidden', isPlaying);
             pauseIcon.classList.toggle('hidden', !isPlaying);
-            popupAlbumArt.classList.toggle('spinning', isPlaying);
-            popupAlbumArt.classList.toggle('chakra-glow-album', isPlaying);
+
+            // Removed spinning and chakra-glow-album classes as they are no longer needed
+            popupAlbumArt.classList.remove('spinning');
+            popupAlbumArt.classList.remove('chakra-glow-album');
+
 
             const playerBar = document.getElementById('player-bar');
             if (playerBar) {
@@ -2737,21 +2625,16 @@
                 }
             });
 
+            // Control logo animations based on isPlaying 
             if (isPlaying) {
                 activateLogoAnimations(); 
-                // Removed Higgs Field start logic
             } else {
                 deactivateLogoAnimations(); 
-                // Removed Higgs Field stop logic
             }
-            setupMarquees();
+            setupMarquees(); 
 
-            // Update visualizer button state
-            if (visualizerToggleBtn) {
-                visualizerToggleBtn.classList.toggle('active-control', isVisualizerActive);
-                visualizerToggleBtn.querySelector('i').className = isVisualizerActive ? 'ph-fill ph-waveform' : 'ph-bold ph-waveform';
-            }
-            // Removed Higgs field button state update
+            // Removed visualizer button state update
+            // Removed Low Power Mode button state update
         }
         
         /**
@@ -3028,7 +2911,6 @@
         customAlertOkBtn.addEventListener('click', hideMessage);
         
         playPauseBtn.addEventListener('click', () => {
-            // initAudioContext(); // Moved this call to visualizerToggleBtn click handler
             if (currentSongIndex === -1 && songData.length > 0) playSong(0);
             else if (audioPlayer.paused) audioPlayer.play();
             else audioPlayer.pause();
@@ -3197,25 +3079,8 @@
             loadCustomCategory(currentCategory);
         });
 
-        // Removed bgEffectToggleBtn event listener as background effects are removed.
-
-        // Nâng cấp: Sự kiện cho nút bật/tắt visualizer
-        visualizerToggleBtn.addEventListener('click', () => {
-            isVisualizerActive = !isVisualizerActive;
-            localStorage.setItem('isVisualizerActive', isVisualizerActive);
-            updateUI(); // Cập nhật trạng thái nút và giao diện
-
-            if (isVisualizerActive) {
-                // Nếu visualizer được bật, luôn cố gắng khởi tạo AudioContext
-                // Nó sẽ chỉ khởi tạo một lần nhờ kiểm tra bên trong initAudioContext()
-                initAudioContext();
-            } else {
-                // Nếu visualizer bị tắt, xóa canvas
-                visualizerCtx.clearRect(0, 0, visualizerCanvas.width, visualizerCanvas.height);
-            }
-        });
-
-        // Removed Higgs Field toggle button creation and event listener.
+        // Removed visualizerToggleBtn event listener
+        // Removed Low Power Mode button and its logic
 
 
         // ==============================================
@@ -3238,12 +3103,16 @@
                 setTimeout(() => {
                     const isOverflowing = textEl.scrollWidth > wrapper.clientWidth;
 
+                    // Marquee effect is now always off for performance
                     if (isOverflowing) {
-                        wrapper.classList.add('is-scrolling');
-                        const scrollWidth = textEl.scrollWidth;
-                        const duration = scrollWidth / 50; // Điều chỉnh tốc độ cuộn
-                        textEl.innerHTML = currentText + `<span style="display: inline-block; width: 2rem;"></span>` + currentText; // Lặp lại nội dung
-                        wrapper.style.setProperty('--marquee-duration', `${duration * 2}s`);
+                        // Optionally, you could still add a static ellipsis if text overflows
+                        textEl.style.whiteSpace = 'nowrap';
+                        textEl.style.overflow = 'hidden';
+                        textEl.style.textOverflow = 'ellipsis';
+                    } else {
+                        textEl.style.whiteSpace = 'normal'; // Reset if not overflowing
+                        textEl.style.overflow = 'visible';
+                        textEl.style.textOverflow = 'clip';
                     }
                 }, 100); 
             });
@@ -3314,8 +3183,8 @@
                 
                 // Cập nhật chỉ mục bài hát đang phát nếu cần
                 const currentlyPlayingSongId = songData[currentSongIndex]?.id;
-                if (currentlyPlayingSongId) {
-                    const newGlobalIndex = songData.findIndex(s => s.id === currentlyPlayingSongId);
+                if (currentlyPlayingId) { // Fixed: used currentlyPlayingId instead of currentlyPlayingSongId
+                    const newGlobalIndex = songData.findIndex(s => s.id === currentlyPlayingId);
                     currentSongIndex = newGlobalIndex;
                 }
                 updateUI();
@@ -3324,6 +3193,7 @@
 
         /**
          * Xử lý sự kiện kết thúc kéo.
+         * @param {DragEvent} e - Đối tượng sự kiện kéo.
          */
         function handleDragEnd() {
             this.classList.remove('dragging');
