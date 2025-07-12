@@ -595,6 +595,26 @@
         }
         #player-bar .player-buttons #play-pause-btn:hover { background-color: var(--primary-hover); }
 
+        /* NEW: Loading spinner for play-pause button */
+        .play-pause-loading .ph-play, .play-pause-loading .ph-pause {
+            display: none;
+        }
+
+        .play-pause-loading::after {
+            content: '';
+            display: block;
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+
         #player-bar .progress-section {
             display: flex;
             align-items: center;
@@ -1715,7 +1735,12 @@
             'https://cdn.jsdelivr.net/npm/fuse.js@6.6.2',
             'https://raw.githubusercontent.com/thiensutinhquang/PlayMusic/main/LOGOvectorFULL.svg',
             BASE_URL + 'images/icons/icon-192x192.png',
-            BASE_URL + 'images/icons/icon-512x512.png'
+            BASE_URL + 'images/icons/icon-512x512.png',
+            // Icons for notifications
+            'https://thiensutinhquang.github.io/PlayMusic/images/icons/play.png',
+            'https://thiensutinhquang.github.io/PlayMusic/images/icons/pause.png',
+            'https://thiensutinhquang.github.io/PlayMusic/images/icons/next.png',
+            'https://thiensutinhquang.github.io/PlayMusic/images/icons/prev.png'
         ];
 
         self.addEventListener('install', event => {
@@ -1788,6 +1813,39 @@
               );
             })
           );
+        });
+
+        // Service Worker: Handle notification clicks to send messages to main app
+        self.addEventListener('notificationclick', event => {
+            event.notification.close(); // Close the notification
+
+            const action = event.action; // 'play-pause', 'prev', 'next'
+
+            event.waitUntil(
+                clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {
+                    // Find an open window client to send the message to
+                    let clientToFocus = null;
+                    for (let i = 0; i < windowClients.length; i++) {
+                        const client = windowClients[i];
+                        if (client.url.startsWith(BASE_URL) && 'focus' in client) {
+                            clientToFocus = client;
+                            break;
+                        }
+                    }
+
+                    if (clientToFocus) {
+                        clientToFocus.focus(); // Bring the app to foreground
+                        clientToFocus.postMessage({ action: action }); // Send action to main app
+                    } else if (clients.openWindow) {
+                        // If no window is open, open a new one and send the action
+                        clients.openWindow(BASE_URL).then(newClient => {
+                            if (newClient) {
+                                newClient.postMessage({ action: action });
+                            }
+                        });
+                    }
+                })
+            );
         });
     `;
 
@@ -2323,10 +2381,8 @@
         }
         
         // ==============================================
-        // AUDIO VISUALIZER FUNCTIONS - CHỨC NĂNG HIỂN THỊ ÂM THANH
+        // Removed AUDIO VISUALIZER FUNCTIONS - CHỨC NĂNG HIỂN THỊ ÂM THANH
         // ==============================================
-        // Removed all visualizer related functions and variables
-        // initAudioContext, drawVisualizer, visualizerCanvas, visualizerCtx, audioContext, analyser, source, dataArray, isAudioContextInitialized, isVisualizerActive
 
         // ==============================================
         // MUSIC PLAYER CORE FUNCTIONS - CHỨC NĂNG CHÍNH CỦA TRÌNH PHÁT NHẠC
@@ -2408,12 +2464,8 @@
                     <div class="song-info">
                         <img src="${song.artwork}" alt="${song.title}" class="artwork">
                         <div class="title-artist">
-                            <div class="title-artist-wrapper">
-                                <p class="title marquee-text">${song.title}</p>
-                            </div>
-                            <div class="title-artist-wrapper">
-                                <p class="artist marquee-text">${song.artist}</p>
-                            </div>
+                            <p class="title marquee-text">${song.title}</p>
+                            <p class="artist marquee-text">${song.artist}</p>
                         </div>
                     </div>
                     <button class="lyrics-button" data-song-id="${song.id}" aria-label="Xem lời bài hát">
@@ -2448,12 +2500,8 @@
                 li.dataset.displayIndex = index;
                 li.innerHTML = `
                     <div class="song-info-text">
-                        <div class="title-artist-wrapper">
-                            <p class="font-semibold marquee-text">${song.title}</p>
-                        </div>
-                        <div class="title-artist-wrapper">
-                            <p class="artist-text marquee-text">${song.artist}</p>
-                        </div>
+                        <p class="font-semibold marquee-text">${song.title}</p>
+                        <p class="artist-text marquee-text">${song.artist}</p>
                     </div>
                 `;
                 li.addEventListener('click', () => playSong(globalIndex));
@@ -2542,29 +2590,46 @@
             audioPlayer.src = `${audiusDiscoveryHost}/v1/tracks/${song.id}/stream?app_name=MSTQPlayer`;
             audioPlayer.load();
 
+            // Show loading spinner immediately when trying to play a new song
+            playPauseBtn.classList.add('play-pause-loading');
+
             const playPromise = audioPlayer.play();
             if (playPromise !== undefined) {
                 playPromise.then(() => {
+                    // Hide loading spinner when playback actually starts
+                    playPauseBtn.classList.remove('play-pause-loading');
                     if (nowPlayingInfoWrapper) {
                         nowPlayingInfoWrapper.classList.remove('fade-out');
                     }
                     updateMediaSession();
                     updateUI();
+                    showNowPlayingNotification(song); // Show notification on play
                 }).catch(error => {
-                    console.error("Playback error:", error, "Could not play song.");
+                    console.error("Playback error:", error, "Could not play song:", song.title, error);
                     showMessage("Không thể phát bài hát này. Vui lòng thử bài khác.", "Lỗi phát nhạc");
                     isPlaying = false;
                     updateUI();
+                    playPauseBtn.classList.remove('play-pause-loading'); // Hide spinner on error
                     if (nowPlayingInfoWrapper) {
                         nowPlayingInfoWrapper.classList.remove('fade-out');
                     }
+                    // Attempt to play next song on error for continuous playback
+                    if (repeatMode === 'all' || isShuffling) {
+                        console.log("Attempting to play next song due to error.");
+                        playNext();
+                    } else {
+                        clearNowPlayingNotification(); // Clear notification if unable to continue
+                    }
                 });
             } else {
+                // For browsers that don't return a promise, assume immediate play and update UI
+                playPauseBtn.classList.remove('play-pause-loading');
                 if (nowPlayingInfoWrapper) {
                     nowPlayingInfoWrapper.classList.remove('fade-out');
                 }
                 updateMediaSession();
                 updateUI();
+                showNowPlayingNotification(song); // Show notification on play
             }
         }
         
@@ -2574,6 +2639,13 @@
         function updateUI() {
             const song = songData[currentSongIndex];
             isPlaying = !audioPlayer.paused;
+
+            // Manage loading spinner based on readyState
+            if (isPlaying && audioPlayer.readyState < 3) {
+                playPauseBtn.classList.add('play-pause-loading');
+            } else {
+                playPauseBtn.classList.remove('play-pause-loading');
+            }
 
             if (song) {
                 popupSongTitle.textContent = song.title;
@@ -2633,8 +2705,20 @@
             }
             setupMarquees(); 
 
-            // Removed visualizer button state update
-            // Removed Low Power Mode button state update
+            // Manage notification visibility
+            if (isPlaying) {
+                showNowPlayingNotification(song);
+            } else {
+                clearNowPlayingNotification();
+            }
+
+            // Update repeat button icon and state
+            repeatBtn.classList.toggle('active-control', repeatMode !== 'none');
+            if (repeatMode === 'one') {
+                repeatBtn.innerHTML = '<i class="ph-bold ph-repeat-once"></i>';
+            } else {
+                repeatBtn.innerHTML = '<i class="ph-bold ph-repeat"></i>';
+            }
         }
         
         /**
@@ -2917,7 +3001,7 @@
         });
 
         audioPlayer.addEventListener('play', () => { isPlaying = true; updateUI(); requestWakeLock(); updateMediaSession(); });
-        audioPlayer.addEventListener('pause', () => { isPlaying = false; updateUI(); releaseWakeLock(); updateMediaSession();});
+        audioPlayer.addEventListener('pause', () => { isPlaying = false; updateUI(); releaseWakeLock(); updateMediaSession(); clearNowPlayingNotification(); }); // Clear notification on pause
         
         audioPlayer.addEventListener('ended', () => {
             if (repeatMode === 'one') {
@@ -2930,8 +3014,36 @@
                 audioPlayer.pause();
                 currentSongIndex = -1;
                 updateUI();
+                clearNowPlayingNotification(); // Clear notification when playback truly ends
             }
         });
+
+        // Add event listeners for audio loading states
+        audioPlayer.addEventListener('waiting', () => {
+            playPauseBtn.classList.add('play-pause-loading');
+            console.log("Audio is waiting for data...");
+        });
+        audioPlayer.addEventListener('playing', () => {
+            playPauseBtn.classList.remove('play-pause-loading');
+            console.log("Audio is playing.");
+        });
+        audioPlayer.addEventListener('stalled', () => {
+            console.warn("Audio playback stalled due to network or data issues.");
+            playPauseBtn.classList.add('play-pause-loading'); // Show spinner if stalled
+        });
+        audioPlayer.addEventListener('error', (e) => {
+            console.error("Audio error:", e);
+            showMessage(`Lỗi phát nhạc: ${e.message || 'Không xác định'}. Thử chuyển bài.`, "Lỗi Phát Nhạc");
+            playPauseBtn.classList.remove('play-pause-loading'); // Hide spinner on error
+            // Attempt to play next song on error for continuous playback
+            if (repeatMode === 'all' || isShuffling) {
+                console.log("Attempting to play next song due to error.");
+                playNext();
+            } else {
+                clearNowPlayingNotification(); // Clear notification if unable to continue
+            }
+        });
+
 
         audioPlayer.addEventListener('timeupdate', () => {
             const { currentTime, duration } = audioPlayer;
@@ -3079,8 +3191,94 @@
             loadCustomCategory(currentCategory);
         });
 
-        // Removed visualizerToggleBtn event listener
-        // Removed Low Power Mode button and its logic
+        // ==============================================
+        // NOTIFICATION API FUNCTIONS - CHỨC NĂNG THÔNG BÁO
+        // ==============================================
+        /**
+         * Yêu cầu quyền hiển thị thông báo.
+         */
+        async function requestNotificationPermission() {
+            if (!('Notification' in window)) {
+                console.log('Trình duyệt này không hỗ trợ thông báo.');
+                return;
+            }
+            if (Notification.permission === 'granted') {
+                return;
+            }
+            if (Notification.permission !== 'denied') {
+                const permission = await Notification.requestPermission();
+                if (permission === 'granted') {
+                    console.log('Quyền thông báo đã được cấp.');
+                }
+            }
+        }
+
+        /**
+         * Hiển thị thông báo "Đang phát".
+         * @param {object} song - Đối tượng bài hát đang phát.
+         */
+        function showNowPlayingNotification(song) {
+            if ('Notification' in window && Notification.permission === 'granted') {
+                // Clear any existing notification first
+                clearNowPlayingNotification(); 
+
+                const notificationOptions = {
+                    body: song.artist,
+                    icon: song.artwork, // Use album art as notification icon
+                    silent: true, // Don't make a sound/vibrate for ongoing playback
+                    tag: 'now-playing-music', // A unique tag to identify and replace this notification
+                    renotify: true, // Re-notify if content changes (e.g., new song)
+                    actions: [
+                        { action: 'prev', title: 'Bài trước', icon: 'https://thiensutinhquang.github.io/PlayMusic/images/icons/prev.png' }, // Placeholder icons
+                        { action: 'play-pause', title: isPlaying ? 'Tạm dừng' : 'Phát', icon: isPlaying ? 'https://thiensutinhquang.github.io/PlayMusic/images/icons/pause.png' : 'https://thiensutinhquang.github.io/PlayMusic/images/icons/play.png' },
+                        { action: 'next', title: 'Bài kế tiếp', icon: 'https://thiensutinhquang.github.io/PlayMusic/images/icons/next.png' }
+                    ]
+                };
+                const notification = new Notification(song.title, notificationOptions);
+
+                // Add event listener for notification clicks (for control buttons)
+                notification.onclick = (event) => {
+                    event.preventDefault(); // Prevent browser from focusing the tab
+                    if (event.action === 'play-pause') {
+                        if (audioPlayer.paused) audioPlayer.play(); else audioPlayer.pause();
+                    } else if (event.action === 'prev') {
+                        playPrev();
+                    } else if (event.action === 'next') {
+                        playNext();
+                    }
+                    // Bring the app to foreground when notification is clicked
+                    window.focus(); 
+                };
+
+                // Store the notification instance to close it later
+                window.currentNotification = notification;
+            }
+        }
+
+        /**
+         * Xóa thông báo "Đang phát".
+         */
+        function clearNowPlayingNotification() {
+            if (window.currentNotification) {
+                window.currentNotification.close();
+                window.currentNotification = null;
+            }
+        }
+
+        // Add event listener for Service Worker messages (for notification actions)
+        if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+            navigator.serviceWorker.addEventListener('message', (event) => {
+                if (event.data && event.data.action) {
+                    if (event.data.action === 'play-pause') {
+                        if (audioPlayer.paused) audioPlayer.play(); else audioPlayer.pause();
+                    } else if (event.data.action === 'prev') {
+                        playPrev();
+                    } else if (event.data.action === 'next') {
+                        playNext();
+                    }
+                }
+            });
+        }
 
 
         // ==============================================
@@ -3183,8 +3381,8 @@
                 
                 // Cập nhật chỉ mục bài hát đang phát nếu cần
                 const currentlyPlayingSongId = songData[currentSongIndex]?.id;
-                if (currentlyPlayingId) { // Fixed: used currentlyPlayingId instead of currentlyPlayingSongId
-                    const newGlobalIndex = songData.findIndex(s => s.id === currentlyPlayingId);
+                if (currentlyPlayingSongId) { 
+                    const newGlobalIndex = songData.findIndex(s => s.id === currentlyPlayingSongId);
                     currentSongIndex = newGlobalIndex;
                 }
                 updateUI();
@@ -3328,7 +3526,8 @@
                 splashScreen.classList.remove('visible');
             }, 2000);
 
-            // Removed Higgs Field initialization and state updates
+            // Request notification permission on app load
+            requestNotificationPermission();
         }
 
         initializeApp();
