@@ -459,12 +459,21 @@
         HIỆU ỨNG LOGO & VŨ TRỤ
         ============================================== */
         
-        /* Hiệu ứng Logo Header khi nhạc phát */
-        #header-logo-placeholder #human-body.breathing-effect { 
-            animation: breathe 2s infinite alternate ease-in-out; /* Tăng biên độ nhịp thở */
+        /* Hiệu ứng Chakra Glow CỰC MẠNH cho Logo Header (luôn bật) */
+        #header-logo-placeholder::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 400%; 
+            height: 400%; 
+            border-radius: 50%; 
+            background: radial-gradient(circle, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0.9) 20%, rgba(255, 255, 255, 0) 60%);
+            z-index: 0; /* Behind the SVG and canvas */
+            /* Adjusted radiant-glow animation for less intensity */
+            animation: radiant-glow 1.5s infinite alternate ease-in-out; 
         }
-        #header-logo-placeholder #chakra-system.energy-flow-active { stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: flow-animation 3s linear infinite; }
-        #header-logo-placeholder #logo-text-trucchichantam.highlight-text { fill: gold; }
 
         @keyframes radiant-glow {
             0% {
@@ -1945,6 +1954,10 @@
         const progressTooltip = document.getElementById('progress-tooltip');
         const popupTrackNumber = document.getElementById('popup-track-number'); // Get the new element
         const mediaSessionIndicator = document.getElementById('media-session-indicator'); // NEW: Media Session Indicator
+        const retryMessageElement = document.createElement('span'); // NEW: Element for retry messages
+        retryMessageElement.id = 'retry-message';
+        retryMessageElement.className = 'text-sm text-red-500 ml-2';
+        document.getElementById('popup-progress-section').appendChild(retryMessageElement); // Append to progress section
 
         // Lyrics Fullscreen Popup elements
         const lyricsFullscreenPopup = document.getElementById('lyrics-fullscreen-popup');
@@ -1998,6 +2011,7 @@
         const API_KEY = "08c897eb7784e03007e0769d01f2ca1c6a2001b4";
         const USER_HANDLE = "minhsutinhquang";
         let audiusDiscoveryHost = null;
+        let audiusHosts = []; // Ensure audiusHosts is defined
         const genreMap = { 'new': "Pop", 'hot': "Country", 'dieu-thu': "Classical", 'others': "Reggae", 'phap': "Podcasts" };
 
         let songData = [];
@@ -2701,6 +2715,15 @@
                 currentSongItem.classList.add('loading-song-item');
             }
 
+            // Show a less intrusive retry message
+            if (retryCount > 0) {
+                retryMessageElement.textContent = `Đang thử kết nối khác... (Thử lại ${retryCount + 1}/${MAX_AUDIO_RETRIES})`;
+                retryMessageElement.classList.remove('hidden');
+            } else {
+                retryMessageElement.classList.add('hidden');
+            }
+
+
             // Set audio source and load
             audioPlayer.src = `${currentHost}/v1/tracks/${song.id}/stream?app_name=MSTQPlayer`;
             audioPlayer.load();
@@ -2712,6 +2735,7 @@
                 const nowPlayingInfoWrapper = document.getElementById('popup-now-playing-info-wrapper');
                 if (nowPlayingInfoWrapper) nowPlayingInfoWrapper.classList.remove('fade-out');
                 if (currentSongItem) currentSongItem.classList.remove('loading-song-item');
+                retryMessageElement.classList.add('hidden'); // Hide retry message on success
                 updateMediaSession();
                 updateUI();
                 showNowPlayingNotification(song);
@@ -2723,11 +2747,12 @@
                 if (currentSongItem) currentSongItem.classList.remove('loading-song-item');
 
                 if (retryCount < MAX_AUDIO_RETRIES - 1) { // Check if more retries are allowed
-                    showMessage(`Lỗi phát nhạc. Đang thử kết nối khác... (Thử lại ${retryCount + 1}/${MAX_AUDIO_RETRIES})`, "Lỗi phát nhạc");
+                    // Message already updated above for retry attempts
                     await playSongWithRetries(song, retryCount + 1, currentHost); // Retry with a different host
                 } else {
                     // Max retries reached
                     showMessage("Không thể phát bài hát này sau nhiều lần thử. Vui lòng thử bài khác.", "Lỗi phát nhạc");
+                    retryMessageElement.classList.add('hidden'); // Hide retry message on final failure
                     isPlaying = false;
                     updateUI();
                     if (repeatMode === 'all' || isShuffling) {
@@ -3204,20 +3229,14 @@
         });
         audioPlayer.addEventListener('error', (e) => {
             console.error("Audio error:", e);
-            showMessage(`Lỗi phát nhạc: ${e.message || 'Không xác định'}. Thử chuyển bài.`, "Lỗi Phát Nhạc");
+            // showMessage(`Lỗi phát nhạc: ${e.message || 'Không xác định'}. Thử chuyển bài.`, "Lỗi Phát Nhạc"); // Removed this, handled by playSongWithRetries
             playPauseBtn.classList.remove('play-pause-loading'); // Hide spinner on error
             // Clear saved position for the errored song
             if (currentSongIndex !== -1 && songData[currentSongIndex]) {
                 delete savedPlaybackPositions[songData[currentSongIndex].id];
                 localStorage.setItem('savedPlaybackPositions', JSON.stringify(savedPlaybackPositions));
             }
-            // Attempt to play next song on error for continuous playback
-            if (repeatMode === 'all' || isShuffling) {
-                console.log("Attempting to play next song due to error.");
-                playNext();
-            } else {
-                clearNowPlayingNotification(); // Clear notification if unable to continue
-            }
+            // The retry logic in playSongWithRetries will handle displaying messages and next song attempts.
         });
 
 
