@@ -585,7 +585,9 @@
             cursor: pointer;
             transition: var(--transition-fast);
         }
-        #player-bar .player-buttons button:hover { color: var(--text-current); }
+        #player-bar .player-buttons button:hover {
+            color: var(--text-current);
+        }
         #player-bar .player-buttons #play-pause-btn {
             background-color: var(--primary-color);
             color: white;
@@ -2216,7 +2218,7 @@
          * Áp dụng chủ đề (sáng/tối/preset) đã lưu hoặc mặc định.
          */
         const applyTheme = () => {
-            if (navigator.vibrate) { navigator.vibrate(20); }
+            triggerHapticFeedback(20); // Haptic feedback on theme change
             const theme = JSON.parse(localStorage.getItem('themeState')) || { mode: 'light' };
             
             body.classList.remove('dark-mode');
@@ -2288,7 +2290,7 @@
             const theme = { mode: 'preset', id: preset.id };
             localStorage.setItem('themeState', JSON.stringify(theme));
             applyTheme();
-            if (navigator.vibrate) navigator.vibrate(20);
+            triggerHapticFeedback(20); // Haptic feedback on theme change
             closeDesktopThemeOptions();
             closeMobileThemeOptions();
         }
@@ -2326,15 +2328,25 @@
             const platformsToggleMobile = document.getElementById('platforms-toggle-mobile');
             const platformsMenuMobile = document.getElementById('platforms-menu-mobile');
             
-            if(hamburgerMenu) hamburgerMenu.addEventListener('click', () => mobileNavOverlay.classList.add('active'));
-            if(closeMobileMenu) closeMobileMenu.addEventListener('click', () => mobileNavOverlay.classList.remove('active'));
+            if(hamburgerMenu) hamburgerMenu.addEventListener('click', () => {
+                mobileNavOverlay.classList.add('active');
+                triggerHapticFeedback(50); // Haptic feedback on menu open
+            });
+            if(closeMobileMenu) closeMobileMenu.addEventListener('click', () => {
+                mobileNavOverlay.classList.remove('active');
+                triggerHapticFeedback(50); // Haptic feedback on menu close
+            });
             if(mobileNavOverlay) mobileNavOverlay.addEventListener('click', (e) => {
-                if (e.target === mobileNavOverlay) mobileNavOverlay.classList.remove('active');
+                if (e.target === mobileNavOverlay) {
+                    mobileNavOverlay.classList.remove('active');
+                    triggerHapticFeedback(50); // Haptic feedback on overlay click
+                }
             });
 
             const toggleDropdown = (toggleBtn, menu) => { // Removed autoCloseTimer from params
                 const isShown = menu.classList.toggle('show');
                 toggleBtn.classList.toggle('open', isShown);
+                triggerHapticFeedback(30); // Haptic feedback on dropdown toggle
 
                 // Close other open dropdowns
                 document.querySelectorAll('.dropdown-menu.show').forEach(openMenu => {
@@ -3141,12 +3153,13 @@
             const theme = { mode: e.target.checked ? 'dark' : 'light' };
             localStorage.setItem('themeState', JSON.stringify(theme));
             applyTheme();
-            if (navigator.vibrate) navigator.vibrate(20);
+            triggerHapticFeedback(20); // Haptic feedback on dark mode toggle
         });
 
         customAlertOkBtn.addEventListener('click', hideMessage);
         
         playPauseBtn.addEventListener('click', () => {
+            triggerHapticFeedback(50); // Haptic feedback on play/pause
             if (currentSongIndex === -1 && songData.length > 0) playSong(0);
             else if (audioPlayer.paused) audioPlayer.play();
             else audioPlayer.pause();
@@ -3245,16 +3258,24 @@
         });
         
         progressContainer.addEventListener('click', (e) => {
+            triggerHapticFeedback(30); // Haptic feedback on progress bar click
             if(audioPlayer.duration && isFinite(audioPlayer.duration)) audioPlayer.currentTime = (e.offsetX / progressContainer.clientWidth) * audioPlayer.duration;
         });
         
-        nextBtn.addEventListener('click', playNext);
-        prevBtn.addEventListener('click', playPrev);
+        nextBtn.addEventListener('click', () => {
+            playNext();
+            triggerHapticFeedback(50); // Haptic feedback on next track
+        });
+        prevBtn.addEventListener('click', () => {
+            playPrev();
+            triggerHapticFeedback(50); // Haptic feedback on previous track
+        });
 
         shuffleBtn.addEventListener('click', () => {
             isShuffling = !isShuffling;
             localStorage.setItem('isShuffling', isShuffling);
             shuffleBtn.classList.toggle('active-control', isShuffling);
+            triggerHapticFeedback(30); // Haptic feedback on shuffle toggle
         });
         
         repeatBtn.addEventListener('click', () => {
@@ -3263,6 +3284,7 @@
             repeatMode = modes[(currentModeIndex + 1) % modes.length];
             localStorage.setItem('repeatMode', repeatMode);
             updateUI(); // Update UI to reflect new repeat mode icon
+            triggerHapticFeedback(30); // Haptic feedback on repeat toggle
         });
         
         volumeSlider.addEventListener('input', (e) => {
@@ -3270,44 +3292,66 @@
             audioPlayer.volume = newVolume;
             volumePercentage.textContent = Math.round(newVolume * 100);
             localStorage.setItem('playerVolume', newVolume);
+            triggerHapticFeedback(10); // Subtle haptic feedback on volume change
         });
         
         favoriteBtn.addEventListener('click', () => {
             if (currentSongIndex !== -1) {
                 toggleFavorite(songData[currentSongIndex].id);
+                triggerHapticFeedback(70); // Stronger haptic feedback for favorite
             } else {
                 showMessage("Vui lòng chọn một bài hát để thêm vào mục yêu thích.");
+                triggerHapticFeedback(50); // Haptic feedback for alert
             }
         });
         
-        popupOpenLyricsBtn.addEventListener('click', () => showLyricsFullscreenPopup(songData[currentSongIndex]));
-        closeLyricsFullscreenBtn.addEventListener('click', hideLyricsFullscreenPopup);
-        lyricsLeftArrow.addEventListener('click', () => { if(currentLyricsPage > 0) { currentLyricsPage--; displayCurrentLyricsPage(); } });
-        lyricsRightArrow.addEventListener('click', () => { if(currentLyricsPage < lyricsPages.length - 1) { currentLyricsPage++; displayCurrentLyricsPage(); } });
+        popupOpenLyricsBtn.addEventListener('click', () => {
+            showLyricsFullscreenPopup(songData[currentSongIndex]);
+            triggerHapticFeedback(50); // Haptic feedback on open lyrics
+        });
+        closeLyricsFullscreenBtn.addEventListener('click', () => {
+            hideLyricsFullscreenPopup();
+            triggerHapticFeedback(50); // Haptic feedback on close lyrics
+        });
+        lyricsLeftArrow.addEventListener('click', () => { 
+            if(currentLyricsPage > 0) { 
+                currentLyricsPage--; displayCurrentLyricsPage(); 
+                triggerHapticFeedback(30); // Haptic feedback for lyrics pagination
+            }
+        });
+        lyricsRightArrow.addEventListener('click', () => { 
+            if(currentLyricsPage < lyricsPages.length - 1) { 
+                currentLyricsPage++; displayCurrentLyricsPage(); 
+                triggerHapticFeedback(30); // Haptic feedback for lyrics pagination
+            }
+        });
         
-        radialMenuToggleBtn.addEventListener('click', () => radialMenuContainer.classList.toggle('active'));
+        radialMenuToggleBtn.addEventListener('click', () => {
+            radialMenuContainer.classList.toggle('active');
+            triggerHapticFeedback(50); // Haptic feedback on radial menu toggle
+        });
         document.getElementById('radial-font-size-increase').addEventListener('click', () => {
-            if (navigator.vibrate) { navigator.vibrate(20); }
+            triggerHapticFeedback(20); // Haptic feedback for radial item
             lyricsFontSize++; applyLyricsThemeAndFontStyles(); saveLyricsPreferences();
         });
         document.getElementById('radial-font-size-decrease').addEventListener('click', () => {
-            if (navigator.vibrate) { navigator.vibrate(20); }
+            triggerHapticFeedback(20); // Haptic feedback for radial item
             lyricsFontSize = Math.max(12, lyricsFontSize - 1); applyLyricsThemeAndFontStyles(); saveLyricsPreferences();
         });
         document.getElementById('radial-lines-increase').addEventListener('click', () => {
-            if (navigator.vibrate) { navigator.vibrate(20); }
+            triggerHapticFeedback(20); // Haptic feedback for radial item
             linesPerPage++; paginateLyrics(songData[currentSongIndex]?.description || ''); saveLyricsPreferences();
         });
         document.getElementById('radial-lines-decrease').addEventListener('click', () => {
-            if (navigator.vibrate) { navigator.vibrate(20); }
+            triggerHapticFeedback(20); // Haptic feedback for radial item
             linesPerPage = Math.max(1, linesPerPage - 1); paginateLyrics(songData[currentSongIndex]?.description || ''); saveLyricsPreferences();
         });
         document.getElementById('radial-font-btn').addEventListener('click', () => {
-            if (navigator.vibrate) { navigator.vibrate(20); }
+            triggerHapticFeedback(20); // Haptic feedback for radial item
             currentFontIndex = (currentFontIndex + 1) % fontOptions.length; applyLyricsThemeAndFontStyles(); saveLyricsPreferences();
         });
         document.getElementById('radial-theme-btn').addEventListener('click', () => {
-            if (navigator.vibrate) { navigator.vibrate(20); }
+            triggerHapticFeedback(20); // Haptic feedback for radial item
             let currentThemeObjIndex = lyricsThemes.findIndex(t => t.id === currentLyricsThemeId);
             currentLyricsThemeId = lyricsThemes[(currentThemeObjIndex + 1) % lyricsThemes.length].id;
             applyLyricsThemeAndFontStyles(); saveLyricsPreferences();
@@ -3316,6 +3360,7 @@
         togglePlaylistBtn.addEventListener('click', () => {
             const isHidden = popupPlaylistContainer.classList.toggle('hidden');
             popupPlaylistContainer.classList.toggle('show', !isHidden);
+            triggerHapticFeedback(50); // Haptic feedback on playlist toggle
 
             if (!isHidden) {
                 const activeSongInList = popupSongList.querySelector('.active-song-in-list');
@@ -3325,14 +3370,26 @@
             }
         });
 
-        document.getElementById('start-timer-btn-desktop').addEventListener('click', () => startSleepTimer(parseInt(document.getElementById('timer-minutes-desktop').value)));
-        document.getElementById('cancel-timer-btn-desktop').addEventListener('click', cancelSleepTimer);
+        document.getElementById('start-timer-btn-desktop').addEventListener('click', () => {
+            startSleepTimer(parseInt(document.getElementById('timer-minutes-desktop').value));
+            triggerHapticFeedback(70); // Haptic feedback for timer start
+        });
+        document.getElementById('cancel-timer-btn-desktop').addEventListener('click', () => {
+            cancelSleepTimer();
+            triggerHapticFeedback(70); // Haptic feedback for timer cancel
+        });
         document.getElementById('timer-minutes-desktop').addEventListener('input', () => {
             if (sleepTimerInterval) cancelSleepTimer();
         });
 
-        document.getElementById('start-timer-btn-mobile').addEventListener('click', () => startSleepTimer(parseInt(document.getElementById('timer-minutes-mobile').value)));
-        document.getElementById('cancel-timer-btn-mobile').addEventListener('click', cancelSleepTimer);
+        document.getElementById('start-timer-btn-mobile').addEventListener('click', () => {
+            startSleepTimer(parseInt(document.getElementById('timer-minutes-mobile').value));
+            triggerHapticFeedback(70); // Haptic feedback for timer start
+        });
+        document.getElementById('cancel-timer-btn-mobile').addEventListener('click', () => {
+            cancelSleepTimer();
+            triggerHapticFeedback(70); // Haptic feedback for timer cancel
+        });
         document.getElementById('timer-minutes-mobile').addEventListener('input', () => {
             if (sleepTimerInterval) cancelSleepTimer();
         });
@@ -3358,6 +3415,7 @@
             const currentCategoryButton = document.querySelector('#category-menu .nav-item.active');
             const currentCategory = currentCategoryButton ? currentCategoryButton.dataset.category : 'all';
             loadCustomCategory(currentCategory);
+            triggerHapticFeedback(30); // Haptic feedback for search clear
         });
 
         // ==============================================
@@ -3511,6 +3569,7 @@
         function handleDragStart(e) {
             draggedItem = this;
             setTimeout(() => { this.classList.add('dragging'); }, 0);
+            triggerHapticFeedback(30); // Haptic feedback on drag start
         }
 
         /**
@@ -3555,6 +3614,7 @@
                     currentSongIndex = newGlobalIndex;
                 }
                 updateUI();
+                triggerHapticFeedback(70); // Haptic feedback on successful drop
             }
         }
 
@@ -3607,6 +3667,16 @@
                 }
                 return lastResult;
             };
+        }
+
+        /**
+         * Triggers haptic feedback (vibration) if supported by the device.
+         * @param {number} duration - The duration of the vibration in milliseconds.
+         */
+        function triggerHapticFeedback(duration = 50) {
+            if (navigator.vibrate) {
+                navigator.vibrate(duration);
+            }
         }
 
 
@@ -3676,9 +3746,11 @@
             
             scrollToTopBtn.addEventListener('click', () => {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
+                triggerHapticFeedback(50); // Haptic feedback on scroll to top
             });
             scrollToBottomBtn.addEventListener('click', () => {
                 window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+                triggerHapticFeedback(50); // Haptic feedback on scroll to bottom
             });
             
             // Debounce sự kiện cuộn trang để tối ưu hiệu suất
