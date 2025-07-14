@@ -2751,16 +2751,19 @@
                     await playSongWithRetries(song, retryCount + 1, currentHost); // Retry with a different host
                 } else {
                     // Max retries reached
-                    showMessage("Không thể phát bài hát này sau nhiều lần thử. Vui lòng thử bài khác.", "Lỗi phát nhạc");
-                    retryMessageElement.classList.add('hidden'); // Hide retry message on final failure
-                    isPlaying = false;
-                    updateUI();
-                    if (repeatMode === 'all' || isShuffling) {
-                        console.log("Attempting to play next song due to persistent error.");
-                        playNext();
-                    } else {
-                        clearNowPlayingNotification();
+                    // Only show the final alert if the audio is actually paused (i.e., it truly failed to play)
+                    if (audioPlayer.paused) { 
+                        showMessage("Không thể phát bài hát này sau nhiều lần thử. Vui lòng thử bài khác.", "Lỗi phát nhạc");
+                        isPlaying = false;
+                        updateUI(); // Update UI to reflect paused state
+                        if (repeatMode === 'all' || isShuffling) {
+                            console.log("Attempting to play next song due to persistent error.");
+                            playNext();
+                        } else {
+                            clearNowPlayingNotification();
+                        }
                     }
+                    retryMessageElement.classList.add('hidden'); // Hide retry message on final failure
                 }
             }
         }
