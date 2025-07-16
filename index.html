@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Play Nhạc MSTQ - Giao diện Đang phát</title>
+    <title>Play Nhạc MSTQ - Chia sẻ Thông minh & Giao diện Mới</title>
 
     <!-- PWA Manifest & Theme -->
     <link rel="manifest" href="https://thiensutinhquang.github.io/PlayMusic/manifest.json">
@@ -1336,7 +1336,8 @@
                     duration: track.duration,
                     description: track.description || 'Không có lời bài hát cho bài này.',
                     isFavorite: state.favoriteSongIds.includes(track.id),
-                    genre: track.genre || 'Không xác định'
+                    genre: track.genre || 'Không xác định',
+                    permalink: track.permalink
                 }));
 
                 window.fuse = new Fuse(state.songData, { keys: ['title', 'artist', 'genre'], includeScore: true, threshold: 0.4 });
@@ -1705,26 +1706,49 @@
         // NEW FEATURES: SHARE & DOWNLOAD
         // ==============================================
         const shareSong = async () => {
-            const song = state.currentDisplayData[state.currentSongIndex];
-            if (!song) {
-                showMessage("Vui lòng chọn một bài hát để chia sẻ.");
+            const song = state.songData.find(s => s.id === state.currentDisplayData[state.currentSongIndex]?.id);
+            if (!song || !song.permalink) {
+                showMessage("Không thể chia sẻ bài hát này.");
                 return;
             }
+
+            const shareUrl = `https://audius.co${song.permalink}`;
+            
             const shareData = {
                 title: `Nghe "${song.title}" - ${song.artist}`,
                 text: `Nghe bài hát "${song.title}" của ${song.artist} trên Play Nhạc MSTQ.`,
-                url: window.location.href
+                url: shareUrl
             };
+
+            const copyToClipboard = () => {
+                const textArea = document.createElement("textarea");
+                textArea.value = shareUrl;
+                textArea.style.position = "fixed";
+                textArea.style.top = "-9999px";
+                textArea.style.left = "-9999px";
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    showMessage("Chia sẻ thất bại. Đã sao chép link vào bộ nhớ tạm!", "Thông báo", true);
+                } catch (err) {
+                    showMessage("Không thể sao chép link.", "Lỗi");
+                }
+                document.body.removeChild(textArea);
+            };
+
             if (navigator.share) {
                 try {
                     await navigator.share(shareData);
                 } catch (err) {
                     console.error('Lỗi khi chia sẻ:', err);
+                    // If sharing is denied or fails, fall back to copying the link.
+                    copyToClipboard();
                 }
             } else {
-                navigator.clipboard.writeText(shareData.url).then(() => {
-                    showMessage("Đã sao chép liên kết vào bộ nhớ tạm.", "Chia sẻ", true);
-                }).catch(() => showMessage("Không thể sao chép liên kết.", "Lỗi"));
+                // If navigator.share is not supported at all.
+                copyToClipboard();
             }
         };
 
