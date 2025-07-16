@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Play Nhạc MSTQ - Tối ưu Hiển thị Tên bài hát</title>
+    <title>Play Nhạc MSTQ - Giao diện Đang phát</title>
 
     <!-- PWA Manifest & Theme -->
     <link rel="manifest" href="https://thiensutinhquang.github.io/PlayMusic/manifest.json">
@@ -284,12 +284,17 @@
             border-top: 1px solid var(--border-current); z-index: 1001;
             padding: 0 1.5rem; display: grid; 
             grid-template-columns: 3.5fr 2fr 1.2fr; align-items: center; gap: 1rem;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        body.fullscreen-player-active #player-bar {
+            transform: translateY(100%);
         }
         body.dark-mode #player-bar { background-color: rgba(15, 23, 42, 0.7); }
 
         #player-bar .now-playing-info {
             display: flex; align-items: center; gap: 0.75rem;
             min-width: 0; opacity: 1; transition: opacity 0.3s ease-out;
+            cursor: pointer;
         }
         #player-bar .now-playing-info.fade-out { opacity: 0; }
         #player-bar .now-playing-info img {
@@ -332,18 +337,18 @@
 
         #player-bar .progress-section { display: flex; align-items: center; gap: 0.75rem; width: 100%; }
         
-        #player-bar .progress-container { 
+        .progress-container { 
             flex-grow: 1; height: 8px; background-color: var(--border-current);
             border-radius: 4px; overflow: hidden; cursor: pointer; position: relative;
         }
-        #player-bar .progress-bar { height: 100%; background-color: var(--primary-color); border-radius: 4px; transition: width 0.1s linear; }
+        .progress-bar { height: 100%; background-color: var(--primary-color); border-radius: 4px; transition: width 0.1s linear; }
         #progress-tooltip {
             position: absolute; bottom: 100%; transform: translateX(-50%);
             background-color: rgba(0, 0, 0, 0.7); color: white; padding: 0.25rem 0.5rem;
             border-radius: 4px; font-size: 0.75rem; white-space: nowrap;
             pointer-events: none; opacity: 0; transition: opacity 0.2s ease; margin-bottom: 5px;
         }
-        #player-bar .progress-container:hover #progress-tooltip { opacity: 1; }
+        .progress-container:hover #progress-tooltip { opacity: 1; }
 
         #player-bar .player-actions-right { display: flex; align-items: center; justify-content: flex-end; gap: 1rem; }
         #player-bar .player-actions-right button {
@@ -351,22 +356,22 @@
             cursor: pointer; transition: color var(--transition-fast);
         }
         #player-bar .player-actions-right button:hover { color: var(--text-current); }
-        #player-bar .volume-container { display: flex; align-items: center; gap: 0.5rem; width: 120px; }
-        #player-bar .volume-container .volume-icon { cursor: pointer; transition: color var(--transition-fast); }
-        #player-bar .volume-container .volume-icon:hover { color: var(--text-current); }
-        #player-bar .volume-container input[type="range"] { -webkit-appearance: none; appearance: none; background: transparent; }
-        #player-bar .volume-container input[type="range"]::-webkit-slider-runnable-track { background: var(--border-current); border-radius: 4px; height: 6px; }
-        #player-bar .volume-container input[type="range"]::-moz-range-track { background: var(--border-current); border-radius: 4px; height: 6px; }
-        #player-bar .volume-container input[type="range"]::-webkit-slider-thumb {
+        .volume-container { display: flex; align-items: center; gap: 0.5rem; width: 120px; }
+        .volume-container .volume-icon { cursor: pointer; transition: color var(--transition-fast); }
+        .volume-container .volume-icon:hover { color: var(--text-current); }
+        .volume-container input[type="range"] { -webkit-appearance: none; appearance: none; background: transparent; }
+        .volume-container input[type="range"]::-webkit-slider-runnable-track { background: var(--border-current); border-radius: 4px; height: 6px; }
+        .volume-container input[type="range"]::-moz-range-track { background: var(--border-current); border-radius: 4px; height: 6px; }
+        .volume-container input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none; appearance: none; width: 16px; height: 16px;
             background: var(--primary-color); border-radius: 50%; cursor: grab;
             margin-top: -5px; box-shadow: 0 0 0 2px var(--card-bg-current);
         }
-        #player-bar .volume-container input[type="range"]::-moz-range-thumb {
+        .volume-container input[type="range"]::-moz-range-thumb {
             width: 16px; height: 16px; background: var(--primary-color);
             border-radius: 50%; cursor: grab; box-shadow: 0 0 0 2px var(--card-bg-current);
         }
-        #player-bar .volume-percentage { font-size: 0.75rem; width: 25px; text-align: right; }
+        .volume-percentage { font-size: 0.75rem; width: 25px; text-align: right; }
 
         .media-session-indicator { font-size: 1.25rem; color: var(--text-muted-current); transition: color 0.2s ease-in-out; }
         .media-session-indicator.active { color: var(--primary-color); }
@@ -1032,6 +1037,7 @@
             },
             playerBar: {
                 container: document.getElementById('player-bar'),
+                nowPlayingWrapper: document.getElementById('popup-now-playing-info-wrapper'),
                 songTitle: document.getElementById('popup-song-title'),
                 songArtist: document.getElementById('popup-song-artist'),
                 albumArt: document.getElementById('popup-album-art'),
