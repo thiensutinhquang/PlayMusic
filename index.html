@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Play Nhạc MSTQ - Nâng cấp Tìm kiếm & Hiệu ứng</title>
+    <title>Play Nhạc MSTQ - Tối ưu Hiển thị Tên bài hát</title>
 
     <!-- PWA Manifest & Theme -->
     <link rel="manifest" href="https://thiensutinhquang.github.io/PlayMusic/manifest.json">
@@ -296,7 +296,14 @@
             width: 56px; height: 56px; border-radius: 8px; object-fit: cover;
             transition: transform 0.3s ease-out, box-shadow 0.3s ease-out; flex-shrink: 0;
         }
-        #player-bar .now-playing-info .text-info { min-width: 0; flex-grow: 1; }
+        #player-bar .now-playing-info .text-info { 
+            min-width: 0; 
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 56px; /* Đảm bảo chiều cao cho 2 dòng tiêu đề */
+        }
 
         #player-bar .player-controls-main {
             display: flex; flex-direction: column; align-items: center;
@@ -452,7 +459,19 @@
         .empty-state i { font-size: 3rem; margin-bottom: 1rem; color: var(--border-current); }
 
         .title-artist-wrapper { overflow: hidden; width: 100%; display: block; }
-        .marquee-text { white-space: nowrap; display: inline-block; overflow: hidden; text-overflow: ellipsis; }
+        
+        /* NÂNG CẤP: Tự động xuống dòng cho tên bài hát */
+        .marquee-text {
+            display: -webkit-box;
+            -webkit-line-clamp: 2; /* Giới hạn 2 dòng */
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: normal; /* Cho phép xuống dòng */
+            word-break: break-word; /* Ngắt từ nếu cần */
+            line-height: 1.3;
+        }
+
         mark {
             background-color: var(--primary-color);
             color: white;
