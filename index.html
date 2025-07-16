@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Play Nhạc MSTQ - Nâng cấp Phím tắt & Giao diện</title>
+    <title>Play Nhạc MSTQ - Nâng cấp Tìm kiếm & Hiệu ứng</title>
 
     <!-- PWA Manifest & Theme -->
     <link rel="manifest" href="https://thiensutinhquang.github.io/PlayMusic/manifest.json">
@@ -307,7 +307,8 @@
             background: none; border: none; color: var(--text-muted-current);
             font-size: 1.5rem; cursor: pointer; transition: var(--transition-fast);
         }
-        #player-bar .player-buttons button:hover { color: var(--text-current); }
+        #player-bar .player-buttons button:hover { color: var(--text-current); transform: scale(1.1); }
+        #player-bar .player-buttons button:active { transform: scale(0.9); }
         #player-bar .player-buttons #play-pause-btn {
             background-color: var(--primary-color); color: white;
             width: 44px; height: 44px; border-radius: 50%; font-size: 1.5rem;
@@ -344,6 +345,8 @@
         }
         #player-bar .player-actions-right button:hover { color: var(--text-current); }
         #player-bar .volume-container { display: flex; align-items: center; gap: 0.5rem; width: 120px; }
+        #player-bar .volume-container .volume-icon { cursor: pointer; transition: color var(--transition-fast); }
+        #player-bar .volume-container .volume-icon:hover { color: var(--text-current); }
         #player-bar .volume-container input[type="range"] { -webkit-appearance: none; appearance: none; background: transparent; }
         #player-bar .volume-container input[type="range"]::-webkit-slider-runnable-track { background: var(--border-current); border-radius: 4px; height: 6px; }
         #player-bar .volume-container input[type="range"]::-moz-range-track { background: var(--border-current); border-radius: 4px; height: 6px; }
@@ -403,6 +406,13 @@
             display: grid; grid-template-columns: 40px 1fr auto auto;
             gap: 1rem; align-items: center; padding: 0.75rem 1rem;
             border-radius: 8px; cursor: pointer; transition: background-color var(--transition-fast);
+            animation: slide-in-up 0.4s ease-out forwards;
+            animation-delay: calc(var(--i, 0) * 30ms);
+            opacity: 0;
+        }
+        @keyframes slide-in-up {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         .song-list-item:hover { background-color: var(--bg-current); }
         .song-list-item .song-index-play { position: relative; display: flex; align-items: center; justify-content: center; }
@@ -443,6 +453,12 @@
 
         .title-artist-wrapper { overflow: hidden; width: 100%; display: block; }
         .marquee-text { white-space: nowrap; display: inline-block; overflow: hidden; text-overflow: ellipsis; }
+        mark {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 0 2px;
+            border-radius: 3px;
+        }
         
         #scroll-nav-container {
             position: fixed; top: 50%; right: 20px; transform: translateY(-50%);
@@ -788,7 +804,7 @@
              <button type="button" id="popup-open-lyrics-btn" title="Mở lời bài hát" aria-label="Mở lời bài hát toàn màn hình" class="text-muted-current hover:text-current"><i class="ph-bold ph-file-text text-xl"></i></button>
              <span id="media-session-indicator" class="media-session-indicator" title="Media Session Active"><i class="ph-bold ph-broadcast"></i></span>
              <div class="volume-container">
-                 <i class="ph-bold ph-speaker-high"></i>
+                 <i id="volume-icon" class="ph-bold ph-speaker-high volume-icon"></i>
                  <input type="range" id="popup-volume-slider" min="0" max="1" step="0.01" value="1" class="w-full h-1 bg-border-current rounded-lg appearance-none cursor-pointer" aria-label="Điều chỉnh âm lượng">
                  <span id="volume-percentage" class="text-xs text-muted-current w-6 text-right">100</span>
              </div>
@@ -827,7 +843,7 @@
     <script>
     // --- PWA Service Worker Logic ---
     const swCode = `
-        const CACHE_NAME = 'mstq-music-cache-v8'; // Nâng cấp phiên bản cache
+        const CACHE_NAME = 'mstq-music-cache-v9'; // Nâng cấp phiên bản cache
         const BASE_URL = 'https://thiensutinhquang.github.io/PlayMusic/';
         const urlsToCache = [
             BASE_URL, BASE_URL + 'index.html',
@@ -1013,6 +1029,7 @@
                 repeatBtn: document.getElementById('popup-repeat-btn'),
                 volumeSlider: document.getElementById('popup-volume-slider'),
                 volumePercentage: document.getElementById('volume-percentage'),
+                volumeIcon: document.getElementById('volume-icon'),
                 favoriteBtn: document.getElementById('popup-favorite-btn'),
                 shareBtn: document.getElementById('popup-share-btn'),
                 trackNumber: document.getElementById('popup-track-number'),
@@ -1073,6 +1090,7 @@
             repeatMode: 'all',
             favoriteSongIds: [],
             wakeLock: null,
+            lastVolume: 1,
             lyrics: {
                 pages: [],
                 currentPage: 0,
@@ -1445,6 +1463,7 @@
         const renderSongs = (tracks) => {
             state.currentDisplayData = tracks; 
             const container = dom.mainContent.songsContainer;
+            const searchQuery = dom.mainContent.searchInput.value.trim();
             
             if (!tracks || tracks.length === 0) {
                 const currentCategory = document.querySelector('#category-menu .nav-item.active')?.dataset.category;
@@ -1459,9 +1478,20 @@
                     const songItem = document.createElement('div');
                     songItem.className = 'song-list-item';
                     songItem.dataset.displayIndex = displayIndex; 
+                    songItem.style.setProperty('--i', displayIndex);
+
+                    let titleHTML = song.title;
+                    let artistHTML = song.artist;
+
+                    if (searchQuery) {
+                        const regex = new RegExp(searchQuery.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'ig');
+                        titleHTML = song.title.replace(regex, `<mark>$&</mark>`);
+                        artistHTML = song.artist.replace(regex, `<mark>$&</mark>`);
+                    }
+
                     songItem.innerHTML = `
                         <div class="song-index-play"><span class="index-number">${displayIndex + 1}</span><div class="play-button"><i class="ph-bold ph-play"></i></div></div>
-                        <div class="song-info"><img src="${song.artwork}" alt="${song.title}" class="artwork"><div class="title-artist"><p class="title marquee-text">${song.title}</p><p class="artist marquee-text">${song.artist}</p></div></div>
+                        <div class="song-info"><img src="${song.artwork}" alt="${song.title}" class="artwork"><div class="title-artist"><p class="title marquee-text">${titleHTML}</p><p class="artist marquee-text">${artistHTML}</p></div></div>
                         <button type="button" class="lyrics-button" data-song-id="${song.id}" aria-label="Xem lời bài hát"><i class="ph-bold ph-book-open"></i></button>
                         <div class="duration">${new Date(song.duration * 1000).toISOString().substr(14, 5)}</div>
                     `;
@@ -1898,12 +1928,14 @@
 
             // Volume
             dom.playerBar.volumeSlider.addEventListener('input', (e) => {
+                dom.audioPlayer.muted = false; // Unmute when user adjusts volume
                 dom.audioPlayer.volume = e.target.value;
-                dom.playerBar.volumePercentage.textContent = Math.round(e.target.value * 100);
+                updateVolumeUI();
             });
              dom.playerBar.volumeSlider.addEventListener('change', (e) => {
                 saveStateToLocalStorage(CONFIG.STORAGE_KEYS.VOLUME, e.target.value);
             });
+            dom.playerBar.volumeIcon.addEventListener('click', toggleMute);
             
             // Search
             dom.mainContent.searchInput.addEventListener('input', debounce(() => {
@@ -1993,8 +2025,7 @@
                         dom.playerBar.prevBtn.click();
                         break;
                     case 'KeyM':
-                        dom.audioPlayer.muted = !dom.audioPlayer.muted;
-                        showMessage(dom.audioPlayer.muted ? "Đã tắt tiếng" : "Đã bật tiếng", "Âm thanh", true);
+                        toggleMute();
                         break;
                 }
             });
@@ -2067,6 +2098,44 @@
         };
         
         // ==============================================
+        // NÂNG CẤP: ĐỒNG BỘ TAB & ÂM LƯỢNG
+        // ==============================================
+        const broadcastChannel = new BroadcastChannel('mstq_music_player');
+
+        const setupBroadcastChannel = () => {
+            broadcastChannel.onmessage = (event) => {
+                const { type, payload } = event.data;
+                if (type === 'PLAY_ACTION' && payload.isPlaying) {
+                    dom.audioPlayer.pause();
+                }
+            };
+        };
+        
+        const updateVolumeUI = () => {
+            const volume = dom.audioPlayer.volume;
+            const isMuted = dom.audioPlayer.muted;
+            dom.playerBar.volumePercentage.textContent = isMuted ? 0 : Math.round(volume * 100);
+
+            if (isMuted || volume === 0) {
+                dom.playerBar.volumeIcon.className = 'ph-bold ph-speaker-slash volume-icon';
+            } else if (volume < 0.5) {
+                dom.playerBar.volumeIcon.className = 'ph-bold ph-speaker-low volume-icon';
+            } else {
+                dom.playerBar.volumeIcon.className = 'ph-bold ph-speaker-high volume-icon';
+            }
+        };
+
+        const toggleMute = () => {
+            dom.audioPlayer.muted = !dom.audioPlayer.muted;
+            if (!dom.audioPlayer.muted && dom.audioPlayer.volume === 0) {
+                dom.audioPlayer.volume = state.lastVolume > 0 ? state.lastVolume : 0.5;
+                dom.playerBar.volumeSlider.value = dom.audioPlayer.volume;
+            }
+            updateVolumeUI();
+            showMessage(dom.audioPlayer.muted ? "Đã tắt tiếng" : "Đã bật tiếng", "Âm thanh", true);
+        };
+
+        // ==============================================
         // INITIALIZATION
         // ==============================================
         const initializeApp = async () => {
@@ -2083,8 +2152,9 @@
             state.favoriteSongIds = loadStateFromLocalStorage(CONFIG.STORAGE_KEYS.FAVORITES, []);
             const savedVolume = loadStateFromLocalStorage(CONFIG.STORAGE_KEYS.VOLUME, '1');
             dom.audioPlayer.volume = savedVolume;
+            state.lastVolume = savedVolume;
             dom.playerBar.volumeSlider.value = savedVolume;
-            dom.playerBar.volumePercentage.textContent = Math.round(savedVolume * 100);
+            updateVolumeUI();
             applyTheme();
 
             // 3. Render static components
@@ -2103,6 +2173,7 @@
             
             // 4. Setup all event listeners
             setupEventListeners();
+            setupBroadcastChannel();
             
             // 5. Fetch data and render song list
             renderSkeletonLoader();
