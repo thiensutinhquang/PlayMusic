@@ -2228,22 +2228,32 @@
             renderSkeletonLoader();
             await fetchAudiusData();
             
-            // 6. Restore previous playback state
-            const savedPlaybackState = loadStateFromLocalStorage(CONFIG.STORAGE_KEYS.PLAYBACK_STATE, null);
-            if (savedPlaybackState) {
-                dom.mainContent.searchInput.value = savedPlaybackState.currentSearchQuery || '';
-                loadCustomCategory(savedPlaybackState.currentCategory || 'all');
-                const songIndex = state.currentDisplayData.findIndex(s => s.id === savedPlaybackState.songId);
+            // 6. Restore previous playback state or handle shared link
+            const urlParams = new URLSearchParams(window.location.search);
+            const songToPlayId = urlParams.get('play');
+
+            if (songToPlayId) {
+                const songIndex = state.songData.findIndex(s => s.id === songToPlayId);
                 if (songIndex !== -1) {
-                    state.currentSongIndex = songIndex;
-                    updateUI(); 
-                    dom.audioPlayer.currentTime = savedPlaybackState.currentTime || 0;
-                    showMessage("Đã khôi phục phiên nghe nhạc trước đó. Nhấn nút Play để tiếp tục.", "Chào mừng trở lại!");
-                } else {
-                    loadCustomCategory('all'); // Fallback
+                    playSong(songIndex);
                 }
             } else {
-                loadCustomCategory('all');
+                const savedPlaybackState = loadStateFromLocalStorage(CONFIG.STORAGE_KEYS.PLAYBACK_STATE, null);
+                if (savedPlaybackState) {
+                    dom.mainContent.searchInput.value = savedPlaybackState.currentSearchQuery || '';
+                    loadCustomCategory(savedPlaybackState.currentCategory || 'all');
+                    const songIndex = state.currentDisplayData.findIndex(s => s.id === savedPlaybackState.songId);
+                    if (songIndex !== -1) {
+                        state.currentSongIndex = songIndex;
+                        updateUI(); 
+                        dom.audioPlayer.currentTime = savedPlaybackState.currentTime || 0;
+                        showMessage("Đã khôi phục phiên nghe nhạc trước đó. Nhấn nút Play để tiếp tục.", "Chào mừng trở lại!");
+                    } else {
+                        loadCustomCategory('all'); // Fallback
+                    }
+                } else {
+                    loadCustomCategory('all');
+                }
             }
 
             // 7. Final UI updates and splash screen
