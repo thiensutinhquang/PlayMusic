@@ -96,6 +96,7 @@
             line-height: 1.6;
             padding-bottom: 90px;
             overflow-x: hidden;
+            touch-action: manipulation; /* Ngăn chặn các cử chỉ chạm mặc định của trình duyệt */
         }
         
         .container { max-width: 1280px; margin: 0 auto; padding: 1rem 1.5rem; }
@@ -318,12 +319,19 @@
         #player-bar .player-buttons button {
             background: none; border: none; color: var(--text-muted-current);
             font-size: 1.5rem; cursor: pointer; transition: var(--transition-fast);
+            min-width: 48px; /* Đảm bảo kích thước chạm tối thiểu */
+            min-height: 48px; /* Đảm bảo kích thước chạm tối thiểu */
+            display: flex; /* Để căn giữa icon nếu cần */
+            align-items: center;
+            justify-content: center;
         }
         #player-bar .player-buttons button:hover { color: var(--text-current); transform: scale(1.1); }
         #player-bar .player-buttons button:active { transform: scale(0.9); }
         #player-bar .player-buttons #play-pause-btn {
             background-color: var(--primary-color); color: white;
             width: 44px; height: 44px; border-radius: 50%; font-size: 1.5rem;
+            min-width: 44px; /* Giữ nguyên kích thước đặc biệt */
+            min-height: 44px;
         }
         #player-bar .player-buttons #play-pause-btn:hover { background-color: var(--primary-hover); }
 
@@ -354,6 +362,11 @@
         #player-bar .player-actions-right button {
             background: none; border: none; color: var(--text-muted-current); font-size: 1.25rem;
             cursor: pointer; transition: color var(--transition-fast);
+            min-width: 48px; /* Đảm bảo kích thước chạm tối thiểu */
+            min-height: 48px; /* Đảm bảo kích thước chạm tối thiểu */
+            display: flex; /* Để căn giữa icon nếu cần */
+            align-items: center;
+            justify-content: center;
         }
         #player-bar .player-actions-right button:hover { color: var(--text-current); }
         .volume-container { display: flex; align-items: center; gap: 0.5rem; width: 120px; }
@@ -445,6 +458,11 @@
             background: none; border: none; color: var(--text-muted-current);
             font-size: 1.25rem; cursor: pointer; transition: color var(--transition-fast);
             padding: 0.5rem; border-radius: 6px;
+            min-width: 48px; /* Đảm bảo kích thước chạm tối thiểu */
+            min-height: 48px; /* Đảm bảo kích thước chạm tối thiểu */
+            display: flex; /* Để căn giữa icon nếu cần */
+            align-items: center;
+            justify-content: center;
         }
         .song-list-item .lyrics-button:hover { color: var(--primary-color); background-color: var(--bg-current); }
         .song-list-item .duration { text-align: right; font-size: 0.875rem; color: var(--text-muted-current); }
@@ -491,7 +509,9 @@
         }
         #scroll-nav-container.show { opacity: 1; visibility: visible; }
         #scroll-nav-container button {
-            width: 36px; height: 36px; background-color: rgba(0, 0, 0, 0.3); color: white;
+            width: 48px; /* Tăng kích thước nút cuộn */
+            height: 48px; /* Tăng kích thước nút cuộn */
+            background-color: rgba(0, 0, 0, 0.3); color: white;
             border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
             cursor: pointer; box-shadow: var(--shadow-md); transition: all 0.2s; backdrop-filter: blur(4px);
@@ -618,9 +638,15 @@
             cursor: pointer; align-self: flex-end; margin-bottom: 1rem;
         }
         .mobile-nav-content .close-mobile-menu:hover { color: var(--text-current); }
-        .mobile-nav-content .nav-item { width: 100%; justify-content: flex-start; margin-bottom: 0.75rem; font-size: 1.1rem; padding: 0.8rem 1.2rem; }
+        .mobile-nav-content .nav-item { 
+            width: 100%; justify-content: flex-start; margin-bottom: 0.75rem; font-size: 1.1rem; padding: 0.8rem 1.2rem; 
+            min-height: 48px; /* Đảm bảo kích thước chạm tối thiểu */
+        }
         .mobile-nav-content .dropdown-container { width: 100%; }
-        .mobile-nav-content .dropdown-toggle { width: 100%; justify-content: flex-start; font-size: 1.1rem; padding: 0.8rem 1.2rem; }
+        .mobile-nav-content .dropdown-toggle { 
+            width: 100%; justify-content: flex-start; font-size: 1.1rem; padding: 0.8rem 1.2rem; 
+            min-height: 48px; /* Đảm bảo kích thước chạm tối thiểu */
+        }
         .mobile-nav-content .dropdown-menu {
             position: static; width: 100%; box-shadow: none; border: none; padding: 0;
             margin-top: 0.5rem; background-color: transparent; opacity: 1; transform: translateY(0);
@@ -630,7 +656,7 @@
         @media (max-width: 1024px) {
             .desktop-nav { display: none; }
             .header-layout-wrapper { flex-direction: row; justify-content: space-between; align-items: center; padding: 0 1rem; }
-            .header-logo-container { width: 80px; max-width: 80px; min-width: 60px; }
+            .header-logo-container { width: 80px !important; max-width: 80px !important; min-width: 60px !important; } /* Tăng độ ưu tiên */
             .header-main-content {
                 display: flex; flex-grow: 1; flex-direction: row;
                 justify-content: center; align-items: center; text-align: center;
@@ -641,6 +667,8 @@
                 display: block; font-size: 2.5rem; padding: 0.5rem; border-radius: 8px;
                 background-color: transparent; color: var(--text-current);
                 transition: var(--transition-fast); cursor: pointer; border: 2px solid transparent;
+                min-width: 48px; /* Đảm bảo kích thước chạm tối thiểu */
+                min-height: 48px; /* Đảm bảo kích thước chạm tối thiểu */
             }
             .hamburger-menu:hover { background-color: var(--bg-current); border-color: var(--primary-color); }
             .header .desktop-nav { display: none; }
@@ -981,7 +1009,7 @@
         // CẤU HÌNH & BIẾN TOÀN CỤC
         // ==============================================
         const CONFIG = {
-            API_KEY: "08c897eb7784e03007e0769d01f2ca1c6a2001b4",
+            API_KEY: "08c897eb7784e0769d01f2ca1c6a2001b4",
             USER_HANDLE: "minhsutinhquang",
             MAX_AUDIO_RETRIES: 3,
             STORAGE_KEYS: {
