@@ -1432,8 +1432,8 @@
             if (state.repeatMode === 'one' && state.currentSongIndex !== -1) {
                 prevIndex = state.currentSongIndex;
             } else if (state.isShuffling) {
-                 do { prevIndex = Math.floor(Math.random() * state.currentDisplayData.length); } 
-                 while (state.currentDisplayData.length > 1 && prevIndex === state.currentSongIndex);
+                    do { prevIndex = Math.floor(Math.random() * state.currentDisplayData.length); } 
+                    while (state.currentDisplayData.length > 1 && prevIndex === state.currentSongIndex);
             } else {
                 prevIndex = (state.currentSongIndex - 1 + state.currentDisplayData.length) % state.currentDisplayData.length;
             }
@@ -1706,13 +1706,13 @@
         // NEW FEATURES: SHARE & DOWNLOAD
         // ==============================================
         const shareSong = async () => {
-            const song = state.songData.find(s => s.id === state.currentDisplayData[state.currentSongIndex]?.id);
+            const song = state.currentDisplayData[state.currentSongIndex];
             if (!song || !song.permalink) {
                 showMessage("Không thể chia sẻ bài hát này.");
                 return;
             }
 
-            const shareUrl = `https://audius.co${song.permalink}`;
+            const shareUrl = `${window.location.origin}${window.location.pathname}?play=${song.id}`; // Tạo liên kết thông minh
             
             const shareData = {
                 title: `Nghe "${song.title}" - ${song.artist}`,
@@ -1731,20 +1731,23 @@
                 textArea.select();
                 try {
                     document.execCommand('copy');
-                    showMessage("Chia sẻ thất bại. Đã sao chép link vào bộ nhớ tạm!", "Thông báo", true);
+                    showMessage("Đã sao chép liên kết vào bộ nhớ tạm!", "Thông báo", true); // Cập nhật thông báo
                 } catch (err) {
-                    showMessage("Không thể sao chép link.", "Lỗi");
+                    showMessage("Không thể sao chép liên kết.", "Lỗi");
                 }
                 document.body.removeChild(textArea);
             };
 
-            if (navigator.share && window.top === window.self) {
+            if (navigator.share && window.top === window.self) { // Kiểm tra navigator.share và nếu không phải trong iframe
                 try {
                     await navigator.share(shareData);
                 } catch (err) {
                     console.error('Lỗi khi chia sẻ:', err);
+                    // Nếu lỗi không phải do người dùng hủy bỏ, thì fallback sang copy
                     if (err.name !== 'AbortError') {
-                         copyToClipboard();
+                            copyToClipboard();
+                    } else {
+                        showMessage("Đã hủy chia sẻ.", "Thông báo", true); // Thông báo nếu người dùng hủy
                     }
                 }
             } else {
@@ -1800,8 +1803,8 @@
             const displayDesktop = document.getElementById('timer-display-desktop');
             const displayMobile = document.getElementById('timer-display-mobile');
             if (!state.sleepTimer.endTime) {
-                 if(displayDesktop) displayDesktop.textContent = '00:00';
-                 if(displayMobile) displayMobile.textContent = '00:00';
+                    if(displayDesktop) displayDesktop.textContent = '00:00';
+                    if(displayMobile) displayMobile.textContent = '00:00';
                 return;
             }
             const remainingTimeMs = state.sleepTimer.endTime - Date.now();
@@ -2233,11 +2236,17 @@
             const songToPlayId = urlParams.get('play');
 
             if (songToPlayId) {
+                // Nếu có ID bài hát trong URL, ưu tiên phát bài hát đó
                 const songIndex = state.songData.findIndex(s => s.id === songToPlayId);
                 if (songIndex !== -1) {
                     playSong(songIndex);
+                } else {
+                    // Nếu không tìm thấy bài hát, tải danh mục mặc định
+                    loadCustomCategory('all');
+                    showMessage("Không tìm thấy bài hát được chia sẻ. Vui lòng chọn bài khác.", "Lỗi");
                 }
             } else {
+                // Nếu không có ID bài hát trong URL, khôi phục trạng thái phát lại trước đó
                 const savedPlaybackState = loadStateFromLocalStorage(CONFIG.STORAGE_KEYS.PLAYBACK_STATE, null);
                 if (savedPlaybackState) {
                     dom.mainContent.searchInput.value = savedPlaybackState.currentSearchQuery || '';
@@ -2249,10 +2258,10 @@
                         dom.audioPlayer.currentTime = savedPlaybackState.currentTime || 0;
                         showMessage("Đã khôi phục phiên nghe nhạc trước đó. Nhấn nút Play để tiếp tục.", "Chào mừng trở lại!");
                     } else {
-                        loadCustomCategory('all'); // Fallback
+                        loadCustomCategory('all'); // Fallback nếu bài hát đã lưu không còn tồn tại
                     }
                 } else {
-                    loadCustomCategory('all');
+                    loadCustomCategory('all'); // Tải danh mục tất cả nếu không có trạng thái lưu
                 }
             }
 
