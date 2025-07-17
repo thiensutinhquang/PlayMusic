@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Play Nhạc MSTQ - Chia sẻ Thông minh & Giao diện Mới</title>
+    <title>Play Nhạc MSTQ - Bản Nâng Cấp Toàn Diện</title>
 
     <!-- PWA Manifest & Theme -->
     <link rel="manifest" href="https://thiensutinhquang.github.io/PlayMusic/manifest.json">
@@ -1738,16 +1738,16 @@
                 document.body.removeChild(textArea);
             };
 
-            if (navigator.share) {
+            if (navigator.share && window.top === window.self) {
                 try {
                     await navigator.share(shareData);
                 } catch (err) {
                     console.error('Lỗi khi chia sẻ:', err);
-                    // If sharing is denied or fails, fall back to copying the link.
-                    copyToClipboard();
+                    if (err.name !== 'AbortError') {
+                         copyToClipboard();
+                    }
                 }
             } else {
-                // If navigator.share is not supported at all.
                 copyToClipboard();
             }
         };
