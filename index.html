@@ -22,41 +22,21 @@
         HỆ THỐNG THIẾT KẾ & BIẾN TOÀN CỤC (CSS VARIABLES)
         ============================================== */
         :root {
-            /* Bảng màu chính */
-            --primary-color: #f59e0b; /* Màu chủ đạo (Hổ phách 500) */
-            --primary-hover: #d97706; /* Màu chủ đạo khi di chuột (Hổ phách 600) */
-            --secondary-color: #3b82f6; /* Màu phụ (Xanh dương 500) */
-            --danger-color: #ef4444; /* Màu cảnh báo nguy hiểm (Đỏ 500) */
-            
-            /* Màu sắc cho Giao diện Sáng (Light Mode) */
-            --bg-light: #f1f5f9; /* Màu nền (Xám 100) */
-            --card-bg-light: #ffffff; /* Màu nền thẻ */
-            --text-light: #1e293b; /* Màu chữ (Xám 800) */
-            --text-muted-light: #475569; /* Màu chữ phụ, mờ hơn (Xám 600) */
-            --border-light: #e2e8f0; /* Màu viền (Xám 200) */
-            --logo-bg-light: #f8fafc; /* Màu nền logo hơi trắng ngà */
+            /* Màu chủ đạo */
+            --primary-color: #f59e0b;       /* Cam hổ phách */
+            --primary-hover: #d97706;       /* Cam đậm hơn */
+            --secondary-color: #3b82f6;     /* Xanh dương trung tính */
+            --danger-color: #ef4444;        /* Đỏ cảnh báo */
 
-            /* Màu sắc cho Giao diện Tối (Dark Mode) */
-            --bg-dark: #0f172a; /* Màu nền (Xám 900) */
-            --card-bg-dark: #1e293b; /* Màu nền thẻ (Xám 800) */
-            --text-dark: #e2e8f0; /* Màu chữ (Xám 200) */
-            --text-muted-dark: #94a3b8; /* Màu chữ phụ, mờ hơn (Xám 400) */
-            --border-dark: #334155; /* Màu viền (Xám 700) */
-            --logo-bg-dark: #111827; /* Màu nền logo tối hơn */
+            /* Giao diện Sáng (Tone Trắng Kem + Cam Hổ Phách Ấm) */
+            --bg-light: #fdfcfb;            /* Trắng kem dịu */
+            --card-bg-light: #ffffff;       /* Nền thẻ trắng */
+            --text-light: #1f2937;          /* Xám đậm dễ đọc */
+            --text-muted-light: #64748b;    /* Xám mờ vừa đủ */
+            --border-light: #dbeafe;        /* Xanh xám nhẹ */
+            --logo-bg-light: #fef9ef;       /* Nền logo hơi vàng nhạt */
 
-            /* Các kiểu đổ bóng (Box Shadow) */
-            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-            
-            /* Các hiệu ứng chuyển động (Transitions) */
-            --transition-fast: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            --transition-slow: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-
-            /* Phông chữ chính */
-            --font-sans: 'Be Vietnam Pro', sans-serif;
-
-            /* Các biến màu động (sẽ thay đổi theo giao diện Sáng/Tối/Preset) */
+            /* Giá trị mặc định áp dụng */
             --bg-current: var(--bg-light);
             --card-bg-current: var(--card-bg-light);
             --text-current: var(--text-light);
@@ -65,23 +45,15 @@
             --logo-bg-current: var(--logo-bg-light);
         }
 
+        /* Giao diện Tối (Tone Than Xám + Cam Vàng Nổi Bật) */
         body.dark-mode {
-            --bg-current: var(--bg-dark);
-            --card-bg-current: var(--card-bg-dark);
-            --text-current: var(--text-dark);
-            --text-muted-current: var(--text-muted-dark);
-            --border-current: var(--border-dark);
-            --logo-bg-current: var(--logo-bg-dark);
+            --bg-current: #1a1c23;          /* Than đậm dịu mắt */
+            --card-bg-current: #232732;     /* Xám xanh lạnh */
+            --text-current: #f1f5f9;        /* Trắng hơi xám dễ nhìn */
+            --text-muted-current: #cbd5e1;  /* Xám trắng rõ ràng hơn */
+            --border-current: #3b4252;      /* Viền rõ trên nền tối */
+            --logo-bg-current: #1f2530;     /* Logo nền than xanh */
         }
-
-        /* Preset themes */
-        html[data-theme="strong"] { --bg-current: #003366; --card-bg-current: #004488; --text-current: #FFD700; --text-muted-current: #AAAAAA; --border-current: #0055AA; --logo-bg-current: #002244; }
-        html[data-theme="gentle"] { --bg-current: #6A057F; --card-bg-current: #7B1A8F; --text-current: #FFB6C1; --text-muted-current: #E0E0E0; --border-current: #8C2B9F; --logo-bg-current: #5A046F; }
-        html[data-theme="fresh"] { --bg-current: #228B22; --card-bg-current: #339B33; --text-current: #00CED1; --text-muted-current: #BBEEFF; --border-current: #44AA44; --logo-bg-current: #1A7A1A; }
-        html[data-theme="modern"] { --bg-current: #228B22; --card-bg-current: #339B33; --text-current: #FFD700; --text-muted-current: #FFDD77; --border-current: #44AA44; --logo-bg-current: #1A7A1A; }
-        html[data-theme="warm"] { --bg-current: #6A057F; --card-bg-current: #7B1A8F; --text-current: #FFD700; --text-muted-current: #FFDD77; --border-current: #8C2B9F; --logo-bg-current: #5A046F; }
-        html[data-theme="elegant"] { --bg-current: #003366; --card-bg-current: #004488; --text-current: #00CED1; --text-muted-current: #BBEEFF; --border-current: #0055AA; --logo-bg-current: #002244; }
-        html[data-theme="tinhquang"] { --bg-current: #1a0b2a; --card-bg-current: #2a1b4a; --text-current: #FFD700; --text-muted-current: #e0e0e0; --border-current: #4a2a6a; --logo-bg-current: #100818; }
         
         /* ==============================================
         PHONG CÁCH CƠ BẢN & TOÀN CỤC
@@ -446,7 +418,7 @@
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             opacity: 0; transition: opacity var(--transition-fast); font-size: 1.5rem;
         }
-        .song-list-item:hover .index-number, .song-list-item.active-song .index-number { opacity: 0; }
+        .song-list-item:hover .index-number, .song-list-item.active-song .index-number { opacity: 1; } /* Changed to 1 to make it visible on hover */
         .song-list-item.active-song .play-button { opacity: 1; }
         .song-list-item .song-info { display: flex; align-items: center; gap: 1rem; min-width: 0; }
         .song-list-item .artwork { width: 40px; height: 40px; border-radius: 4px; object-fit: cover; }
@@ -622,8 +594,7 @@
         ============================================== */
         .hamburger-menu { display: none; }
         .mobile-nav-overlay {
-            position: fixed; top: 0; right: 0; bottom: 0; width: 100%;
-            background-color: rgba(0, 0, 0, 0.5); z-index: 1005;
+            position: fixed; inset: 0; background-color: rgba(0, 0, 0, 0.5); z-index: 1005;
             opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease;
         }
         .mobile-nav-overlay.active { opacity: 1; visibility: visible; }
@@ -724,11 +695,25 @@
             .header-logo-container { width: 60px !important; max-width: 60px !important; } 
             .main-title { font-size: 1.5rem; }
             #player-bar {
-                grid-template-columns: 1fr; grid-template-rows: auto auto auto; /* Thêm một hàng cho các nút hành động */
-                height: auto; gap: 0.5rem; padding: 0.75rem 1rem;
+                grid-template-columns: 1fr; /* Chỉ 1 cột */
+                grid-template-rows: auto auto auto; /* 3 hàng: info, controls, actions */
+                height: auto; 
+                gap: 0.5rem; 
+                padding: 0.75rem 1rem;
             }
-            #player-bar .now-playing-info { grid-column: 1 / -1; order: 1; }
-            #player-bar .player-controls-main { grid-column: 1 / -1; order: 2; }
+            #player-bar .now-playing-info { 
+                grid-column: 1 / -1; 
+                order: 1; 
+                justify-content: space-between; /* Căn đều các phần tử */
+                align-items: center;
+            }
+            #player-bar .player-controls-main { 
+                grid-column: 1 / -1; 
+                order: 2; 
+                flex-direction: row; /* Nút điều khiển ngang hàng */
+                justify-content: center;
+                gap: 1rem; /* Khoảng cách giữa các nút */
+            }
             #player-bar .player-actions-right { 
                 display: flex; /* Hiển thị lại */
                 justify-content: center; 
@@ -738,7 +723,10 @@
                 padding-top: 0.5rem; /* Khoảng cách với hàng trên */
                 gap: 1rem; /* Khoảng cách giữa các nút */
             }
-            #player-bar .progress-section { order: -1; } /* Vẫn ở trên cùng */
+            #player-bar .progress-section { 
+                order: -1; /* Vẫn ở trên cùng */
+                grid-column: 1 / -1; /* Mở rộng toàn bộ chiều rộng */
+            } 
 
             /* Ẩn các nút khác trong player-actions-right trên mobile, chỉ giữ lại nút chia sẻ */
             #player-bar .player-actions-right #popup-favorite-btn,
@@ -912,8 +900,23 @@
                         <span>#</span> <span>Bài hát</span> <span>Lời bài hát</span> <span>Thời lượng</span>
                     </div>
                     <div id="song-list-body"></div>
+                    <!-- Initial Loading Overlay -->
+                    <div id="initial-loading-overlay" class="absolute inset-0 bg-bg-current flex items-center justify-center flex-col text-muted-current z-10 transition-opacity duration-500">
+                        <i class="ph-bold ph-spinner-gap animate-spin text-4xl text-primary-color mb-4"></i>
+                        <p>Đang tải thư viện nhạc...</p>
+                    </div>
                 </div>
                 <audio id="audio-player" style="display: none;" crossOrigin="anonymous"></audio>
+                <!-- Pagination / Load More -->
+                <div id="pagination-controls" class="mt-6 text-center">
+                    <button id="load-more-btn" class="bg-primary-color text-white px-8 py-4 rounded-lg font-semibold hover:bg-primary-hover transition-colors duration-200 shadow-lg text-lg w-full max-w-xs hidden">
+                        Tải thêm nhạc
+                    </button>
+                    <p id="all-songs-loaded-msg" class="text-muted-current mt-2 hidden">Đã tải hết tất cả nhạc.</p>
+                    <p id="loading-more-spinner" class="text-muted-current mt-2 hidden">
+                        <i class="ph-bold ph-spinner-gap animate-spin mr-2"></i>Đang tải thêm...
+                    </p>
+                </div>
             </div>
         </div>
     </main>
@@ -928,7 +931,7 @@
     <div id="player-bar">
         <div id="popup-playlist-container" class="hidden"><ul id="popup-song-list"></ul></div>
         <div class="now-playing-info" id="popup-now-playing-info-wrapper">
-            <span id="popup-track-number" class="text-lg font-bold text-red-700 flex items-center justify-content-center w-8 h-8 flex-shrink-0"></span>
+            <span id="popup-track-number" class="text-lg font-bold text-red-700 flex items-center justify-center w-8 h-8 flex-shrink-0"></span>
             <img id="popup-album-art" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" alt="Album Art" class="animate-pulse">
             <div class="text-info">
                 <div class="title-artist-wrapper"><h4 id="popup-song-title" class="font-bold marquee-text">Chọn một bài hát</h4></div>
@@ -1096,6 +1099,8 @@
                 .then(reg => console.log('ServiceWorker đã đăng ký thành công:', reg.scope))
                 .catch(err => console.log('ServiceWorker đăng ký thất bại:', err));
         });
+    } else {
+        console.warn("Service Workers không được hỗ trợ trong môi trường này. Các tính năng PWA có thể bị hạn chế.");
     }
 
     // --- Dynamic Styles ---
@@ -1112,7 +1117,7 @@
         // CẤU HÌNH & BIẾN TOÀN CỤC
         // ==============================================
         const CONFIG = {
-            API_KEY: "08c897eb7784e0769d01f2ca1c6a2001b4",
+            API_KEY: "08c897eb7784e03007e0769d01f2ca1c6a2001b4",
             USER_HANDLE: "minhsutinhquang",
             MAX_AUDIO_RETRIES: 3,
             STORAGE_KEYS: {
@@ -1152,7 +1157,9 @@
                 { name: 'Facebook', url: 'https://www.facebook.com/groups/minhsutinhquang', icon: 'ph-facebook-logo', color: '#1877F2' },
                 { name: 'Telegram', url: 'https://t.me/thiensutinhquang', icon: 'ph-telegram-logo', color: '#24A1DE' },
                 { name: 'Zalo', url: 'https://zalo.me/g/vjkhzt168', icon: 'zalo-svg', color: '#0068FF' }
-            ]
+            ],
+            PAGE_SIZE: 20, // Số lượng bài hát tải mỗi lần phân trang
+            INITIAL_LOAD_SIZE: 20, // Số lượng bài hát tải ban đầu
         };
 
         // DOM Elements
@@ -1218,6 +1225,10 @@
                 categoryMenu: document.getElementById('category-menu'),
                 searchInput: document.getElementById('search-input'),
                 searchClearBtn: document.getElementById('search-clear-btn'),
+                initialLoadingOverlay: document.getElementById('initial-loading-overlay'),
+                loadMoreBtn: document.getElementById('load-more-btn'),
+                allSongsLoadedMsg: document.getElementById('all-songs-loaded-msg'),
+                loadingMoreSpinner: document.getElementById('loading-more-spinner'),
             },
             modals: {
                 alert: document.getElementById('custom-alert-modal'),
@@ -1236,8 +1247,9 @@
         
         // Global State
         let state = {
-            songData: [],
-            currentDisplayData: [],
+            originalSongData: [], // To store all songs for search
+            currentDisplayData: [], // Songs currently displayed (paginated or search results)
+            currentFilteredSongs: [], // Stores the currently filtered list of songs (before pagination)
             audiusHosts: [],
             currentAudiusHost: null,
             currentSongIndex: -1,
@@ -1260,7 +1272,10 @@
                 interval: null
             },
             logoElements: {},
-            lastScrollY: 0, // Thêm biến theo dõi vị trí cuộn
+            lastScrollY: 0, // Track scroll position for player bar minimization
+            songsLoadedCount: 0, // Track how many songs are loaded for pagination
+            isFetchingAllData: false, // Flag to prevent multiple full data fetches
+            isSearching: false, // Flag to indicate if search is active
         };
 
         // ==============================================
@@ -1309,7 +1324,7 @@
                 dom.header.logoPlaceholder.innerHTML = svgText;
             } catch (error) {
                 console.error("Lỗi tải SVG:", error);
-                dom.header.logoPlaceholder.innerHTML = `<div class="w-16 h-16 bg-primary-color rounded-full flex items-center justify-content-center text-white font-bold text-2xl">M</div>`;
+                dom.header.logoPlaceholder.innerHTML = `<div class="w-16 h-16 bg-primary-color rounded-full flex items-center justify-center text-white font-bold text-2xl">M</div>`;
             }
         };
 
@@ -1443,41 +1458,83 @@
                 let hosts;
                 try {
                     const response = await fetch('https://api.audius.co');
-                    if (!response.ok) throw new Error('Không thể lấy danh sách host');
-                    hosts = (await response.json()).data;
+                    if (!response.ok) {
+                        // Fallback to hardcoded hosts if initial host list fetch fails
+                        console.warn('Không thể lấy danh sách host từ Audius API, sử dụng danh sách dự phòng.');
+                        hosts = ['https://discoveryprovider.audius.co', 'https://discoveryprovider2.audius.co', 'https://discoveryprovider3.audius.co', 'https://dn-dn.audius.co', 'https://discoveryprovider.audius.prod-us-west-2.staked.cloud'];
+                    } else {
+                        const hostsData = await response.json();
+                        if (hostsData && Array.isArray(hostsData.data)) {
+                            hosts = hostsData.data;
+                        } else {
+                            console.warn('Cấu trúc dữ liệu host từ Audius API không hợp lệ, sử dụng danh sách dự phòng.');
+                            hosts = ['https://discoveryprovider.audius.co', 'https://discoveryprovider2.audius.co', 'https://discoveryprovider3.audius.co', 'https://dn-dn.audius.co', 'https://discoveryprovider.audius.prod-us-west-2.staked.cloud'];
+                        }
+                    }
                 } catch (e) {
-                    console.warn("Không thể lấy danh sách host từ Audius, sử dụng danh sách dự phòng.", e.message);
+                    console.warn("Lỗi khi lấy danh sách host từ Audius, sử dụng danh sách dự phòng.", e.message);
                     hosts = ['https://discoveryprovider.audius.co', 'https://discoveryprovider2.audius.co', 'https://discoveryprovider3.audius.co', 'https://dn-dn.audius.co', 'https://discoveryprovider.audius.prod-us-west-2.staked.cloud'];
                 }
                 
+                if (!hosts || hosts.length === 0) {
+                    throw new Error('Không có host Audius nào khả dụng.');
+                }
                 state.audiusHosts = hosts;
                 state.currentAudiusHost = state.audiusHosts[Math.floor(Math.random() * state.audiusHosts.length)];
 
+                // Show initial loading overlay
+                dom.mainContent.initialLoadingOverlay.classList.remove('hidden');
+                dom.mainContent.initialLoadingOverlay.classList.add('opacity-100');
+
+                // Fetch user ID
                 const userResponse = await fetch(`${state.currentAudiusHost}/v1/users/search?query=${CONFIG.USER_HANDLE}&app_name=MSTQPlayer`);
+                if (!userResponse.ok) {
+                    throw new Error(`Không thể tìm thấy người dùng "${CONFIG.USER_HANDLE}" trên Audius. Mã lỗi: ${userResponse.status}`);
+                }
                 const userData = await userResponse.json();
-                if (!userData.data || userData.data.length === 0) throw new Error("Không tìm thấy người dùng trên Audius.");
+                if (!userData || !Array.isArray(userData.data) || userData.data.length === 0) {
+                    throw new Error("Dữ liệu người dùng từ Audius không hợp lệ hoặc không tìm thấy.");
+                }
                 const userId = userData.data[0].id;
                 
-                const tracksResponse = await fetch(`${state.currentAudiusHost}/v1/users/${userId}/tracks?limit=1000&app_name=MSTQPlayer`);
-                const tracksData = await tracksResponse.json();
-                state.songData = tracksData.data.map(track => ({
-                    id: track.id,
-                    title: track.title,
-                    artist: track.user ? track.user.name : 'Nghệ sĩ không xác định',
-                    artwork: track.artwork ? (track.artwork['480x480'] || track.artwork.url) : `https://placehold.co/150x150/1e293b/f1f5f9?text=${track.title.charAt(0)}`,
-                    duration: track.duration,
-                    description: track.description || 'Không có lời bài hát cho bài này.',
-                    isFavorite: state.favoriteSongIds.includes(track.id),
-                    genre: track.genre || 'Không xác định',
-                    permalink: track.permalink
-                }));
+                // Fetch all tracks for search functionality
+                state.isFetchingAllData = true;
+                const allTracksResponse = await fetch(`${state.currentAudiusHost}/v1/users/${userId}/tracks?limit=10000&app_name=MSTQPlayer`); // Increased limit for full fetch
+                if (!allTracksResponse.ok) {
+                    throw new Error(`Không thể tải danh sách bài hát từ Audius. Mã lỗi: ${allTracksResponse.status}`);
+                }
+                const allTracksData = await allTracksResponse.json();
+                
+                if (allTracksData && Array.isArray(allTracksData.data)) {
+                    state.originalSongData = allTracksData.data.map(track => ({
+                        id: track.id,
+                        title: track.title,
+                        artist: track.user ? track.user.name : 'Nghệ sĩ không xác định',
+                        artwork: track.artwork ? (track.artwork['480x480'] || track.artwork.url) : `https://placehold.co/150x150/1e293b/f1f5f9?text=${track.title.charAt(0)}`,
+                        duration: track.duration,
+                        description: track.description || 'Không có lời bài hát cho bài này.',
+                        isFavorite: state.favoriteSongIds.includes(track.id),
+                        genre: track.genre || 'Không xác định',
+                        permalink: track.permalink
+                    }));
+                } else {
+                    console.warn("Audius API did not return expected data structure for tracks. Setting originalSongData to empty array.");
+                    state.originalSongData = [];
+                }
 
-                window.fuse = new Fuse(state.songData, { keys: ['title', 'artist', 'genre'], includeScore: true, threshold: 0.4 });
+                state.isFetchingAllData = false;
+                dom.mainContent.initialLoadingOverlay.classList.remove('opacity-100');
+                dom.mainContent.initialLoadingOverlay.classList.add('opacity-0');
+                setTimeout(() => dom.mainContent.initialLoadingOverlay.classList.add('hidden'), 500); // Hide after transition
+
+                window.fuse = new Fuse(state.originalSongData, { keys: ['title', 'artist', 'genre'], includeScore: true, threshold: 0.4 });
                 
             } catch (error) {
                 console.error("Lỗi khi lấy dữ liệu từ Audius:", error);
                 dom.mainContent.songsContainer.innerHTML = '<p class="text-center text-red-500 col-span-full">Lỗi khi tải danh sách nhạc. Vui lòng thử lại sau.</p>';
-                showMessage("Không thể tải danh sách nhạc từ Audius. Vui lòng kiểm tra kết nối internet hoặc thử lại sau.", "Lỗi tải dữ liệu");
+                showMessage(`Không thể tải danh sách nhạc từ Audius: ${error.message}. Vui lòng kiểm tra kết nối internet hoặc thử lại sau.`, "Lỗi tải dữ liệu");
+                dom.mainContent.initialLoadingOverlay.classList.add('hidden'); // Hide overlay on error
+                state.originalSongData = []; // Ensure it's empty on error
             }
         };
 
@@ -1583,7 +1640,7 @@
             }
             saveStateToLocalStorage(CONFIG.STORAGE_KEYS.FAVORITES, state.favoriteSongIds);
             
-            const song = state.songData.find(s => s.id === songId);
+            const song = state.originalSongData.find(s => s.id === songId); // Use originalSongData
             if(song) song.isFavorite = state.favoriteSongIds.includes(songId);
 
             const currentCategory = document.querySelector('#category-menu .nav-item.active')?.dataset.category;
@@ -1627,9 +1684,14 @@
                 const currentCategory = document.querySelector('#category-menu .nav-item.active')?.dataset.category;
                 if (currentCategory === 'favorites') {
                     container.innerHTML = `<div class="empty-state col-span-full"><i class="ph-bold ph-heart-break"></i><p>Bạn chưa có bài hát yêu thích nào.</p><p class="text-sm">Nhấn vào hình trái tim ❤️ ở một bài hát để thêm vào đây.</p></div>`;
-                } else {
+                } else if (state.isSearching && searchQuery.length > 0) {
+                    container.innerHTML = `<div class="empty-state col-span-full"><i class="ph-bold ph-magnifying-glass-slash"></i><p>Không tìm thấy kết quả cho "${searchQuery}".</p></div>`;
+                }
+                else {
                     container.innerHTML = '<p class="text-center text-muted-current col-span-full p-4">Không tìm thấy bài hát nào.</p>';
                 }
+                dom.mainContent.loadMoreBtn.classList.add('hidden');
+                dom.mainContent.allSongsLoadedMsg.classList.add('hidden');
             } else {
                 container.innerHTML = '';
                 tracks.forEach((song, displayIndex) => {
@@ -1655,6 +1717,7 @@
                     `;
                     container.appendChild(songItem);
                 });
+                updatePaginationControls();
             }
             addSongEventListeners();
             renderPopupSongList(tracks);
@@ -1950,6 +2013,7 @@
             const seconds = totalSeconds % 60;
             const formattedTime = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
             if(displayDesktop) displayDesktop.textContent = formattedTime;
+            if(displayMobile) dom.playerBar.songArtist.classList.add('hidden'); // Hide on mobile when timer is active
             if(displayMobile) displayMobile.textContent = formattedTime;
         };
 
@@ -1972,7 +2036,7 @@
         const setupNavEvents = () => {
             const hamburgerMenu = document.getElementById('hamburger-menu');
             const mobileNavOverlay = document.getElementById('mobile-nav-overlay');
-            const closeMobileMenu = document.getElementById('close-mobile-menu'); // Corrected ID
+            const closeMobileMenu = document.getElementById('close-mobile-menu'); 
             
             hamburgerMenu?.addEventListener('click', () => mobileNavOverlay.classList.add('active'));
             closeMobileMenu?.addEventListener('click', () => mobileNavOverlay.classList.remove('active'));
@@ -2047,7 +2111,7 @@
                 item.querySelector('.lyrics-button')?.addEventListener('click', (e) => {
                     e.stopPropagation();
                     const songId = e.currentTarget.dataset.songId;
-                    const song = state.songData.find(s => s.id === songId);
+                    const song = state.originalSongData.find(s => s.id === songId); // Use originalSongData for lyrics lookup
                     if (song) showLyricsFullscreenPopup(song);
                 });
             });
@@ -2066,6 +2130,9 @@
             dom.playerBar.shuffleBtn.addEventListener('click', () => {
                 state.isShuffling = !state.isShuffling;
                 saveStateToLocalStorage(CONFIG.STORAGE_KEYS.SHUFFLE, state.isShuffling);
+                // When shuffling, re-render the current category's songs (which will apply pagination)
+                const currentCategory = document.querySelector('#category-menu .nav-item.active')?.dataset.category || 'all';
+                loadCustomCategory(currentCategory);
                 updateUI(); triggerHapticFeedback(30);
             });
             dom.playerBar.repeatBtn.addEventListener('click', () => {
@@ -2082,8 +2149,18 @@
             dom.playerBar.shareBtn.addEventListener('click', shareSong);
             
             // Audio events
-            dom.audioPlayer.addEventListener('play', () => { state.isPlaying = true; updateUI(); requestWakeLock(); });
-            dom.audioPlayer.addEventListener('pause', () => { state.isPlaying = false; updateUI(); releaseWakeLock(); });
+            dom.audioPlayer.addEventListener('play', () => { 
+                state.isPlaying = true; 
+                updateUI(); 
+                requestWakeLock(); 
+                broadcastChannel.postMessage({ type: 'PLAY_ACTION', payload: { isPlaying: true } });
+            });
+            dom.audioPlayer.addEventListener('pause', () => { 
+                state.isPlaying = false; 
+                updateUI(); 
+                releaseWakeLock(); 
+                broadcastChannel.postMessage({ type: 'PLAY_ACTION', payload: { isPlaying: false } });
+            });
             dom.audioPlayer.addEventListener('ended', () => { if (state.repeatMode !== 'none') playNext(); else { state.isPlaying = false; updateUI(); } });
             dom.audioPlayer.addEventListener('timeupdate', throttle(() => {
                 const { currentTime, duration } = dom.audioPlayer;
@@ -2124,16 +2201,25 @@
             // Search
             dom.mainContent.searchInput.addEventListener('input', debounce(() => {
                 const query = dom.mainContent.searchInput.value.trim();
-                dom.mainContent.searchClearBtn.classList.toggle('hidden', query.length === 0);
-                if (query.length > 0) {
+                state.isSearching = query.length > 0; // Update search flag
+                dom.mainContent.searchClearBtn.classList.toggle('hidden', !state.isSearching);
+                
+                if (state.isSearching) {
+                    dom.mainContent.loadingMoreSpinner.classList.remove('hidden'); // Show searching spinner
+                    dom.mainContent.loadMoreBtn.classList.add('hidden'); // Hide load more button
+                    dom.mainContent.allSongsLoadedMsg.classList.add('hidden'); // Hide all loaded message
+
                     const result = window.fuse.search(query);
                     renderSongs(result.map(item => item.item));
+                    dom.mainContent.loadingMoreSpinner.classList.add('hidden'); // Hide searching spinner
                 } else {
+                    // If search is cleared, reload the current category with pagination
                     loadCustomCategory(document.querySelector('#category-menu .nav-item.active')?.dataset.category || 'all');
                 }
             }, 300));
             dom.mainContent.searchClearBtn.addEventListener('click', () => {
                 dom.mainContent.searchInput.value = '';
+                state.isSearching = false;
                 dom.mainContent.searchClearBtn.classList.add('hidden');
                 loadCustomCategory(document.querySelector('#category-menu .nav-item.active')?.dataset.category || 'all');
             });
@@ -2250,6 +2336,9 @@
                 triggerHapticFeedback(30);
             });
 
+            // Load more button event listener
+            dom.mainContent.loadMoreBtn.addEventListener('click', loadMoreSongs);
+
 
             // NÂNG CẤP: Keyboard Shortcuts
             document.addEventListener('keydown', (e) => {
@@ -2312,7 +2401,7 @@
         };
 
         // ==============================================
-        // CATEGORY & NAVIGATION
+        // PAGINATION & CATEGORY LOGIC
         // ==============================================
         const loadCustomCategory = (category) => {
             document.querySelectorAll('#category-menu .nav-item').forEach(btn => btn.classList.remove('active'));
@@ -2323,18 +2412,78 @@
             }
             
             dom.mainContent.searchInput.value = '';
+            state.isSearching = false; // Reset search state when changing category
             dom.mainContent.searchClearBtn.classList.add('hidden');
 
             let filteredSongs;
             if (category === 'favorites') {
-                filteredSongs = state.songData.filter(s => state.favoriteSongIds.includes(s.id));
+                filteredSongs = state.originalSongData.filter(s => state.favoriteSongIds.includes(s.id));
             } else if (CONFIG.GENRE_MAP[category]) {
-                filteredSongs = state.songData.filter(s => s.genre && s.genre.toLowerCase() === CONFIG.GENRE_MAP[category].toLowerCase());
-            } else { // 'all'
-                filteredSongs = [...state.songData];
+                filteredSongs = state.originalSongData.filter(s => s.genre && s.genre.toLowerCase() === CONFIG.GENRE_MAP[category].toLowerCase());
+            } else { // 'all' or other categories
+                filteredSongs = [...state.originalSongData];
             }
 
-            renderSongs(filteredSongs);
+            // Apply shuffle if active for the current category (excluding favorites)
+            if (state.isShuffling && category !== 'favorites') {
+                // Simple shuffle logic
+                for (let i = filteredSongs.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [filteredSongs[i], filteredSongs[j]] = [filteredSongs[j], filteredSongs[i]]; // Corrected swap
+                }
+            }
+
+            // Reset songsLoadedCount for new category/filter
+            state.songsLoadedCount = 0;
+            // Load initial page of songs
+            const initialSongs = filteredSongs.slice(0, CONFIG.INITIAL_LOAD_SIZE);
+            renderSongs(initialSongs); // This will update currentDisplayData
+            state.songsLoadedCount = initialSongs.length;
+
+            // Store the full filtered list for subsequent "Load More" actions
+            state.currentFilteredSongs = filteredSongs; 
+            updatePaginationControls();
+        };
+
+        const loadMoreSongs = () => {
+            dom.mainContent.loadMoreBtn.classList.add('hidden');
+            dom.mainContent.loadingMoreSpinner.classList.remove('hidden');
+            
+            setTimeout(() => { // Simulate loading delay
+                const startIndex = state.songsLoadedCount;
+                const endIndex = startIndex + CONFIG.PAGE_SIZE;
+                const newSongs = state.currentFilteredSongs.slice(startIndex, endIndex);
+
+                state.currentDisplayData = [...state.currentDisplayData, ...newSongs];
+                state.songsLoadedCount += newSongs.length;
+                
+                // Re-render the entire list to apply animations and correct indices
+                renderSongs(state.currentDisplayData); 
+                updateUI(); // Update player bar and active song state
+
+                dom.mainContent.loadingMoreSpinner.classList.add('hidden');
+                updatePaginationControls();
+            }, 500);
+        };
+
+        const updatePaginationControls = () => {
+            // Hide all by default
+            dom.mainContent.loadMoreBtn.classList.add('hidden');
+            dom.mainContent.allSongsLoadedMsg.classList.add('hidden');
+            dom.mainContent.loadingMoreSpinner.classList.add('hidden');
+
+            if (state.isSearching) {
+                // No load more button during search, as search operates on all data
+                return;
+            }
+
+            if (state.songsLoadedCount < state.currentFilteredSongs.length) {
+                dom.mainContent.loadMoreBtn.classList.remove('hidden');
+            } else {
+                if (state.currentFilteredSongs.length > 0) { // Only show "all loaded" if there are songs
+                    dom.mainContent.allSongsLoadedMsg.classList.remove('hidden');
+                }
+            }
         };
         
         // ==============================================
@@ -2427,18 +2576,40 @@
             setupBroadcastChannel();
             
             // 5. Fetch data and render song list
-            renderSkeletonLoader();
-            await fetchAudiusData();
-            
+            renderSkeletonLoader(CONFIG.INITIAL_LOAD_SIZE); // Show skeleton for initial load size
+            dom.mainContent.initialLoadingOverlay.classList.remove('hidden'); // Show initial loading overlay
+            dom.mainContent.initialLoadingOverlay.classList.add('opacity-100');
+
+            await fetchAudiusData(); // This now fetches all data into originalSongData
+
             // 6. Restore previous playback state or handle shared link
             const urlParams = new URLSearchParams(window.location.search);
             const songToPlayId = urlParams.get('play');
 
             if (songToPlayId) {
                 // Nếu có ID bài hát trong URL, ưu tiên phát bài hát đó
-                const songIndex = state.songData.findIndex(s => s.id === songToPlayId);
+                const songIndex = state.originalSongData.findIndex(s => s.id === songToPlayId);
                 if (songIndex !== -1) {
-                    playSong(songIndex);
+                    // Load the category of the shared song, then play it
+                    const sharedSongCategory = state.originalSongData[songIndex].genre ? 
+                                                Object.keys(CONFIG.GENRE_MAP).find(key => CONFIG.GENRE_MAP[key].toLowerCase() === state.originalSongData[songIndex].genre.toLowerCase()) || 'all'
+                                                : 'all';
+                    loadCustomCategory(sharedSongCategory);
+                    // Ensure the song is in currentDisplayData before playing
+                    const displayIndex = state.currentFilteredSongs.findIndex(s => s.id === songToPlayId);
+                    if (displayIndex !== -1) {
+                         // Ensure the song is within the initially loaded set or load it
+                        if (displayIndex >= state.songsLoadedCount) {
+                            state.currentDisplayData = state.currentFilteredSongs.slice(0, displayIndex + 1);
+                            state.songsLoadedCount = displayIndex + 1;
+                            renderSongs(state.currentDisplayData);
+                        }
+                        playSong(displayIndex);
+                    } else {
+                        // Fallback if song is not found in filtered list
+                        loadCustomCategory('all');
+                        showMessage("Không tìm thấy bài hát được chia sẻ. Vui lòng chọn bài khác.", "Lỗi");
+                    }
                 } else {
                     // Nếu không tìm thấy bài hát, tải danh mục mặc định
                     loadCustomCategory('all');
@@ -2450,7 +2621,7 @@
                 if (savedPlaybackState) {
                     dom.mainContent.searchInput.value = savedPlaybackState.currentSearchQuery || '';
                     loadCustomCategory(savedPlaybackState.currentCategory || 'all');
-                    const songIndex = state.currentDisplayData.findIndex(s => s.id === savedPlaybackState.songId);
+                    const songIndex = state.currentFilteredSongs.findIndex(s => s.id === savedPlaybackState.songId); // Check in filtered songs
                     if (songIndex !== -1) {
                         state.currentSongIndex = songIndex;
                         updateUI(); 
