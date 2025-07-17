@@ -615,7 +615,7 @@
             transform: translateX(100%); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             padding: 1.5rem; display: flex; flex-direction: column;
         }
-        .mobile-nav-overlay.active .mobile-nav-content { transform: translateX(0); }
+        .mobile-nav-content.active .mobile-nav-content { transform: translateX(0); }
         .mobile-nav-content .close-mobile-menu {
             background: none; border: none; font-size: 2rem; color: var(--text-muted-current);
             cursor: pointer; align-self: flex-end; margin-bottom: 1rem;
@@ -727,32 +727,42 @@
             }
             #player-bar .player-actions-right { 
                 display: flex; /* Hiển thị lại */
-                justify-content: center; 
+                justify-content: space-around; /* Phân phối đều các nút */
                 align-items: center;
                 grid-column: 1 / -1; /* Đặt nó ở hàng riêng */
                 order: 3; /* Đặt sau các điều khiển chính */
                 padding-top: 0.5rem; /* Khoảng cách với hàng trên */
-                gap: 1rem; /* Khoảng cách giữa các nút */
+                gap: 0.5rem; /* Khoảng cách giữa các nút */
+                flex-wrap: wrap; /* Cho phép xuống dòng nếu không đủ chỗ */
             }
             #player-bar .progress-section { 
                 order: -1; /* Vẫn ở trên cùng */
                 grid-column: 1 / -1; /* Mở rộng toàn bộ chiều rộng */
             } 
 
-            /* Ẩn các nút khác trong player-actions-right trên mobile, chỉ giữ lại nút chia sẻ */
-            #player-bar .player-actions-right #popup-favorite-btn,
-            #player-bar .player-actions-right #popup-open-lyrics-btn,
-            #player-bar .player-actions-right #media-session-indicator,
+            /* Đảm bảo tất cả các nút trong player-actions-right hiển thị và có kích thước chạm phù hợp */
+            #player-bar .player-actions-right button,
             #player-bar .player-actions-right .volume-container {
-                display: none;
+                display: flex; /* Đảm bảo hiển thị */
+                min-width: 48px; /* Kích thước chạm tối thiểu */
+                min-height: 48px; /* Kích thước chạm tối thiểu */
+                font-size: 1.5rem; /* Kích thước icon lớn hơn */
+                align-items: center;
+                justify-content: center;
             }
-            /* Đảm bảo nút chia sẻ hiển thị */
-            #player-bar .player-actions-right #popup-share-btn {
-                display: flex; /* Đảm bảo hiển thị nếu có quy tắc ẩn khác */
-                min-width: 48px; /* Đảm bảo kích thước chạm */
-                min-height: 48px;
-                font-size: 1.5rem;
+            #player-bar .player-actions-right .volume-container {
+                width: 100%; /* Cho phép chiếm toàn bộ chiều rộng nếu cần */
+                max-width: 250px; /* Giới hạn chiều rộng tối đa */
+                margin: 0 auto; /* Căn giữa */
             }
+            #player-bar .player-actions-right .volume-container input[type="range"] {
+                flex-grow: 1; /* Thanh trượt sẽ co giãn */
+            }
+            #player-bar .player-actions-right .volume-percentage {
+                flex-shrink: 0; /* Phần trăm không co lại */
+                min-width: 30px; /* Đảm bảo đủ chỗ cho chữ */
+            }
+
 
             @media (max-width: 768px) { #scroll-nav-container { right: 10px; } }
 
@@ -819,7 +829,7 @@
                     </div>
                     <div class="flex items-center justify-center gap-2">
                         <div class="dropdown-container" id="platforms-dropdown-desktop">
-                            <button type="button" class="dropdown-toggle group" id="platforms-toggle-desktop" aria-label="Các nền tảng"><i class="ph-bold ph-globe text-2xl"></i><span class="ml-2">Các Nền Tảng</span><i class="ph-bold ph-caret-down ml-2"></i></button>
+                            <button type="button" class="dropdown-toggle group" id="platforms-toggle-desktop" aria-label="Các nền tảng"><i class="ph-bold ph-globe text-2xl"></i><span class="ml-2">Các Nền tảng</span><i class="ph-bold ph-caret-down ml-2"></i></button>
                             <div class="dropdown-menu" id="platforms-menu-desktop"></div>
                         </div>
                         <div class="dropdown-container" id="theme-dropdown-desktop">
@@ -1173,15 +1183,15 @@
             PAGE_SIZE: 20, // Số lượng bài hát tải mỗi lần phân trang
             INITIAL_LOAD_SIZE: 20, // Số lượng bài hát tải ban đầu
             APP_THEMES: [ // Defined app themes
-                { id: 'light', name: 'Sáng', bgColor: '#fdfcfb', textColor: '#1f2937', borderColor: '#dbeafe' },
-                { id: 'dark', name: 'Tối', bgColor: '#1a1c23', textColor: '#f1f5f9', borderColor: '#3b4252' },
-                { id: 'strong', name: 'Mạnh mẽ', bgColor: '#003366', textColor: '#FFD700', borderColor: '#0055AA' },
-                { id: 'gentle', name: 'Dịu dàng', bgColor: '#6A057F', textColor: '#FFB6C1', borderColor: '#8C2B9F' },
-                { id: 'fresh', name: 'Tươi mới', bgColor: '#228B22', textColor: '#00CED1', borderColor: '#44AA44' },
-                { id: 'modern', name: 'Hiện đại', bgColor: '#228B22', textColor: '#FFD700', borderColor: '#44AA44' },
-                { id: 'warm', name: 'Ấm áp', bgColor: '#6A057F', textColor: '#FFD700', borderColor: '#8C2B9F' },
-                { id: 'elegant', name: 'Thanh lịch', bgColor: '#003366', textColor: '#00CED1', borderColor: '#0055AA' },
-                { id: 'tinhquang', name: 'Tinh Quang', bgColor: '#1a0b2a', textColor: '#FFD700', borderColor: '#4a2a6a' }
+                { id: 'light', name: 'Sáng', bgColor: '#fdfcfb', cardBgColor: '#ffffff', textColor: '#1f2937', textMutedColor: '#64748b', borderColor: '#dbeafe', logoBgColor: '#fef9ef' },
+                { id: 'dark', name: 'Tối', bgColor: '#1a1c23', cardBgColor: '#232732', textColor: '#f1f5f9', textMutedColor: '#cbd5e1', borderColor: '#3b4252', logoBgColor: '#1f2530' },
+                { id: 'modern', name: 'Hiện đại', bgColor: '#228B22', cardBgColor: '#339B33', textColor: '#FFD700', textMutedColor: '#FFDD77', borderColor: '#44AA44', logoBgColor: '#1A7A1A' }, // Kept from original
+                { id: 'tinhquang', name: 'MSTQ độc quyền', bgColor: '#1a0b2a', cardBgColor: '#2a1b4a', textColor: '#FFD700', textMutedColor: '#e0e0e0', borderColor: '#4a2a6a', logoBgColor: '#100818' }, // Kept from original
+                { id: 'zen', name: 'Zen', bgColor: '#e6f0ec', cardBgColor: '#ffffff', textColor: '#1f2937', textMutedColor: '#4b5563', borderColor: '#cbd5e1', logoBgColor: '#f5fdfb' },
+                { id: 'midnight', name: 'Midnight', bgColor: '#1a1c23', cardBgColor: '#232732', textColor: '#f1f5f9', textMutedColor: '#cbd5e1', borderColor: '#3b4252', logoBgColor: '#1f2530' },
+                { id: 'sunset', name: 'Sunset', bgColor: '#ffedd5', cardBgColor: '#fff7ed', textColor: '#1f2937', textMutedColor: '#4b5563', borderColor: '#fcd34d', logoBgColor: '#fef3c7' },
+                { id: 'ocean', name: 'Ocean', bgColor: '#e0f2fe', cardBgColor: '#f0f9ff', textColor: '#0f172a', textMutedColor: '#334155', borderColor: '#bae6fd', logoBgColor: '#e0f7fa' },
+                { id: 'classic', name: 'Classic', bgColor: '#fef9ef', cardBgColor: '#ffffff', textColor: '#1e293b', textMutedColor: '#475569', borderColor: '#e2e8f0', logoBgColor: '#f8fafc' },
             ],
         };
 
@@ -1444,7 +1454,7 @@
         const applyTheme = () => {
             const theme = loadStateFromLocalStorage(CONFIG.STORAGE_KEYS.THEME, { mode: 'light' });
             dom.body.classList.remove('dark-mode');
-            dom.html.removeAttribute('data-theme');
+            dom.html.removeAttribute('data-theme'); // Remove data-theme to ensure dynamic CSS variables take precedence
             document.querySelectorAll('.preset-theme-btn').forEach(b => b.classList.remove('active'));
             
             const darkModeToggle = document.getElementById('darkModeToggle');
@@ -1457,7 +1467,7 @@
                 if(darkModeToggle) darkModeToggle.checked = true;
                 if(darkModeToggleMobile) darkModeToggleMobile.checked = true;
             } else if (theme.mode === 'preset' && theme.id) {
-                dom.html.setAttribute('data-theme', theme.id);
+                // No need to set data-theme attribute if using dynamic CSS variables
                 currentThemeObj = CONFIG.APP_THEMES.find(t => t.id === theme.id);
                 document.querySelectorAll(`.preset-theme-btn[data-theme="${theme.id}"]`).forEach(btn => btn.classList.add('active'));
                 if(darkModeToggle) darkModeToggle.checked = false;
@@ -2122,7 +2132,7 @@
             setupDropdown('theme-toggle-desktop', 'theme-menu-desktop');
             setupDropdown('timer-toggle-desktop', 'timer-menu-desktop');
             setupDropdown('platforms-toggle-mobile', 'platforms-menu-mobile');
-            setupDropdown('theme-toggle-mobile', 'mobile-theme-options');
+            setupDropdown('theme-toggle-mobile', 'mobile-theme-options'); // Corrected ID for mobile theme dropdown
             setupDropdown('timer-toggle-mobile', 'timer-menu-mobile');
 
             document.addEventListener('click', () => {
