@@ -1172,6 +1172,17 @@
             ],
             PAGE_SIZE: 20, // Số lượng bài hát tải mỗi lần phân trang
             INITIAL_LOAD_SIZE: 20, // Số lượng bài hát tải ban đầu
+            APP_THEMES: [ // Defined app themes
+                { id: 'light', name: 'Sáng', bgColor: '#fdfcfb', textColor: '#1f2937', borderColor: '#dbeafe' },
+                { id: 'dark', name: 'Tối', bgColor: '#1a1c23', textColor: '#f1f5f9', borderColor: '#3b4252' },
+                { id: 'strong', name: 'Mạnh mẽ', bgColor: '#003366', textColor: '#FFD700', borderColor: '#0055AA' },
+                { id: 'gentle', name: 'Dịu dàng', bgColor: '#6A057F', textColor: '#FFB6C1', borderColor: '#8C2B9F' },
+                { id: 'fresh', name: 'Tươi mới', bgColor: '#228B22', textColor: '#00CED1', borderColor: '#44AA44' },
+                { id: 'modern', name: 'Hiện đại', bgColor: '#228B22', textColor: '#FFD700', borderColor: '#44AA44' },
+                { id: 'warm', name: 'Ấm áp', bgColor: '#6A057F', textColor: '#FFD700', borderColor: '#8C2B9F' },
+                { id: 'elegant', name: 'Thanh lịch', bgColor: '#003366', textColor: '#00CED1', borderColor: '#0055AA' },
+                { id: 'tinhquang', name: 'Tinh Quang', bgColor: '#1a0b2a', textColor: '#FFD700', borderColor: '#4a2a6a' }
+            ],
         };
 
         // DOM Elements
@@ -1439,27 +1450,62 @@
             const darkModeToggle = document.getElementById('darkModeToggle');
             const darkModeToggleMobile = document.getElementById('darkModeToggleMobile');
 
+            let currentThemeObj;
             if (theme.mode === 'dark') {
                 dom.body.classList.add('dark-mode');
+                currentThemeObj = CONFIG.APP_THEMES.find(t => t.id === 'dark');
                 if(darkModeToggle) darkModeToggle.checked = true;
                 if(darkModeToggleMobile) darkModeToggleMobile.checked = true;
             } else if (theme.mode === 'preset' && theme.id) {
                 dom.html.setAttribute('data-theme', theme.id);
+                currentThemeObj = CONFIG.APP_THEMES.find(t => t.id === theme.id);
                 document.querySelectorAll(`.preset-theme-btn[data-theme="${theme.id}"]`).forEach(btn => btn.classList.add('active'));
                 if(darkModeToggle) darkModeToggle.checked = false;
                 if(darkModeToggleMobile) darkModeToggleMobile.checked = false;
-            } else { 
+            } else { // Default to light mode
+                currentThemeObj = CONFIG.APP_THEMES.find(t => t.id === 'light');
                 if(darkModeToggle) darkModeToggle.checked = false;
                 if(darkModeToggleMobile) darkModeToggleMobile.checked = false;
             }
+
+            // Apply dynamic CSS variables from the selected theme object
+            if (currentThemeObj) {
+                document.documentElement.style.setProperty('--bg-current', currentThemeObj.bgColor);
+                document.documentElement.style.setProperty('--card-bg-current', currentThemeObj.cardBgColor);
+                document.documentElement.style.setProperty('--text-current', currentThemeObj.textColor);
+                document.documentElement.style.setProperty('--text-muted-current', currentThemeObj.textMutedColor);
+                document.documentElement.style.setProperty('--border-current', currentThemeObj.borderColor);
+                document.documentElement.style.setProperty('--logo-bg-current', currentThemeObj.logoBgColor);
+            }
         };
 
-        const changeTheme = (preset) => {
-            saveStateToLocalStorage(CONFIG.STORAGE_KEYS.THEME, { mode: 'preset', id: preset.id });
+        const changeTheme = (themeId) => {
+            if (themeId === 'light' || themeId === 'dark') {
+                saveStateToLocalStorage(CONFIG.STORAGE_KEYS.THEME, { mode: themeId });
+            } else {
+                saveStateToLocalStorage(CONFIG.STORAGE_KEYS.THEME, { mode: 'preset', id: themeId });
+            }
             applyTheme();
             triggerHapticFeedback(20);
             document.querySelectorAll('.dropdown-menu.show').forEach(menu => menu.classList.remove('show'));
             document.querySelectorAll('.dropdown-toggle.open').forEach(toggle => toggle.classList.remove('open'));
+        };
+
+        const renderPresetThemes = (containerId) => {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            container.innerHTML = ''; // Clear existing buttons
+            CONFIG.APP_THEMES.filter(theme => theme.id !== 'light' && theme.id !== 'dark').forEach(theme => { // Exclude light/dark as they have separate toggles
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'preset-theme-btn';
+                btn.dataset.theme = theme.id;
+                btn.style.backgroundColor = theme.bgColor;
+                btn.style.borderColor = theme.borderColor;
+                btn.title = theme.name;
+                btn.addEventListener('click', () => changeTheme(theme.id));
+                container.appendChild(btn);
+            });
         };
 
         // ==============================================
@@ -2083,6 +2129,14 @@
                 document.querySelectorAll('.dropdown-menu.show').forEach(menu => menu.classList.remove('show'));
                 document.querySelectorAll('.dropdown-toggle.open').forEach(toggle => toggle.classList.remove('open'));
             });
+
+            // Dark Mode toggles
+            document.getElementById('darkModeToggle')?.addEventListener('change', (e) => {
+                changeTheme(e.target.checked ? 'dark' : 'light');
+            });
+            document.getElementById('darkModeToggleMobile')?.addEventListener('change', (e) => {
+                changeTheme(e.target.checked ? 'dark' : 'light');
+            });
         };
         
         const renderPlatformLinks = () => {
@@ -2569,7 +2623,11 @@
             updateVolumeUI();
             applyTheme();
 
-            // 3. Render static components
+            // Render preset theme buttons
+            renderPresetThemes('preset-themes-desktop');
+            renderPresetThemes('preset-themes-mobile');
+
+            // 3. Render static components (already done above for categories)
             CONFIG.CATEGORIES.forEach(cat => {
                 const btn = document.createElement('button');
                 btn.type = 'button';
