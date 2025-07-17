@@ -285,7 +285,7 @@
             border-top: 1px solid var(--border-current); z-index: 1001;
             padding: 0 1.5rem; display: grid; 
             grid-template-columns: 3.5fr 2fr 1.2fr; align-items: center; gap: 1rem;
-            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); /* Transition cho tất cả thuộc tính */
         }
         body.fullscreen-player-active #player-bar {
             transform: translateY(100%);
@@ -568,6 +568,7 @@
             flex-grow: 1; padding: 2rem; overflow-y: auto; text-align: center;
             line-height: 1.8; transition: background-color 0.3s, color 0.3s;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
+            overscroll-behavior: contain; /* Ngăn cuộn nền khi cuộn lời bài hát */
         }
         /* NÂNG CẤP: Hiệu ứng chuyển trang lời bài hát */
         .lyrics-fade-in { animation: fadeIn 0.5s ease-in-out; }
@@ -653,6 +654,50 @@
         }
         .mobile-nav-content .dropdown-menu a { padding-left: 3rem; font-size: 1rem; padding-top: 0.6rem; padding-bottom: 0.6rem; }
         
+        /* Cải tiến cho thanh player khi cuộn */
+        body.player-bar-minimized #player-bar {
+            height: 60px; /* Chiều cao ngắn hơn */
+            grid-template-columns: auto 1fr auto; /* Điều chỉnh grid cho nội dung thu nhỏ */
+            padding: 0 1rem; /* Giảm padding */
+        }
+
+        body.player-bar-minimized #player-bar .now-playing-info .text-info {
+            display: none; /* Ẩn thông tin văn bản */
+        }
+
+        body.player-bar-minimized #player-bar .now-playing-info img {
+            width: 48px; /* Thu nhỏ ảnh bìa */
+            height: 48px;
+        }
+
+        body.player-bar-minimized #player-bar .player-controls-main {
+            flex-direction: row; /* Đặt các nút ngang hàng */
+            justify-content: center;
+            gap: 0.5rem; /* Giảm khoảng cách */
+        }
+
+        body.player-bar-minimized #player-bar .player-buttons {
+            gap: 0.5rem; /* Giảm khoảng cách */
+        }
+
+        body.player-bar-minimized #player-bar .player-buttons #play-pause-btn {
+            width: 36px; /* Thu nhỏ nút play/pause */
+            height: 36px;
+            font-size: 1.2rem;
+        }
+
+        body.player-bar-minimized #player-bar .player-buttons button {
+            font-size: 1.2rem; /* Thu nhỏ icon nút */
+            min-width: 36px;
+            min-height: 36px;
+        }
+
+        body.player-bar-minimized #player-bar .progress-section,
+        body.player-bar-minimized #player-bar .player-actions-right {
+            display: none; /* Ẩn thanh tiến trình và các hành động bên phải */
+        }
+
+
         @media (max-width: 1024px) {
             .desktop-nav { display: none; }
             .header-layout-wrapper { flex-direction: row; justify-content: space-between; align-items: center; padding: 0 1rem; }
@@ -679,18 +724,76 @@
             .header-logo-container { width: 60px !important; max-width: 60px !important; } 
             .main-title { font-size: 1.5rem; }
             #player-bar {
-                grid-template-columns: 1fr; grid-template-rows: auto auto;
+                grid-template-columns: 1fr; grid-template-rows: auto auto auto; /* Thêm một hàng cho các nút hành động */
                 height: auto; gap: 0.5rem; padding: 0.75rem 1rem;
             }
             #player-bar .now-playing-info { grid-column: 1 / -1; order: 1; }
             #player-bar .player-controls-main { grid-column: 1 / -1; order: 2; }
-            #player-bar .player-actions-right { display: none; }
-            #player-bar .progress-section { order: -1; }
-            #lyrics-radial-menu-container { bottom: 110px; right: 10px; }
-            .song-list-header, .song-list-item { grid-template-columns: 24px 1fr auto; gap: 0.75rem; }
-            .song-list-header span:nth-child(4), .song-list-item .duration { display: none; }
-            .song-list-item .song-info { gap: 0.75rem; }
+            #player-bar .player-actions-right { 
+                display: flex; /* Hiển thị lại */
+                justify-content: center; 
+                align-items: center;
+                grid-column: 1 / -1; /* Đặt nó ở hàng riêng */
+                order: 3; /* Đặt sau các điều khiển chính */
+                padding-top: 0.5rem; /* Khoảng cách với hàng trên */
+                gap: 1rem; /* Khoảng cách giữa các nút */
+            }
+            #player-bar .progress-section { order: -1; } /* Vẫn ở trên cùng */
+
+            /* Ẩn các nút khác trong player-actions-right trên mobile, chỉ giữ lại nút chia sẻ */
+            #player-bar .player-actions-right #popup-favorite-btn,
+            #player-bar .player-actions-right #popup-open-lyrics-btn,
+            #player-bar .player-actions-right #media-session-indicator,
+            #player-bar .player-actions-right .volume-container {
+                display: none;
+            }
+            /* Đảm bảo nút chia sẻ hiển thị */
+            #player-bar .player-actions-right #popup-share-btn {
+                display: flex; /* Đảm bảo hiển thị nếu có quy tắc ẩn khác */
+                min-width: 48px; /* Đảm bảo kích thước chạm */
+                min-height: 48px;
+                font-size: 1.5rem;
+            }
+
             @media (max-width: 768px) { #scroll-nav-container { right: 10px; } }
+
+            /* Cải tiến cho thanh player khi cuộn trên di động */
+            body.player-bar-minimized #player-bar {
+                height: 60px; /* Giữ chiều cao nhất quán */
+                grid-template-columns: auto 1fr; /* Chỉ hiển thị thông tin và điều khiển */
+                padding: 0 0.75rem;
+            }
+            body.player-bar-minimized #player-bar .now-playing-info {
+                gap: 0.5rem;
+            }
+            body.player-bar-minimized #player-bar .now-playing-info img {
+                width: 48px;
+                height: 48px;
+            }
+            body.player-bar-minimized #player-bar .player-controls-main {
+                flex-direction: row;
+                justify-content: flex-end; /* Căn điều khiển sang phải trên di động */
+            }
+            body.player-bar-minimized #player-bar .player-buttons {
+                gap: 0.5rem;
+            }
+            body.player-bar-minimized #player-bar .player-buttons #play-pause-btn {
+                width: 36px;
+                height: 36px;
+                font-size: 1.2rem;
+            }
+            body.player-bar-minimized #player-bar .player-buttons button {
+                font-size: 1.2rem;
+                min-width: 36px;
+                min-height: 36px;
+            }
+            body.player-bar-minimized #player-bar .now-playing-info .text-info {
+                display: none; /* Vẫn ẩn thông tin văn bản */
+            }
+            /* Đảm bảo ẩn player-actions-right khi thu nhỏ */
+            body.player-bar-minimized #player-bar .player-actions-right {
+                display: none;
+            }
         }
     </style>
 </head>
@@ -825,7 +928,7 @@
     <div id="player-bar">
         <div id="popup-playlist-container" class="hidden"><ul id="popup-song-list"></ul></div>
         <div class="now-playing-info" id="popup-now-playing-info-wrapper">
-            <span id="popup-track-number" class="text-lg font-bold text-red-700 flex items-center justify-center w-8 h-8 flex-shrink-0"></span>
+            <span id="popup-track-number" class="text-lg font-bold text-red-700 flex items-center justify-content-center w-8 h-8 flex-shrink-0"></span>
             <img id="popup-album-art" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" alt="Album Art" class="animate-pulse">
             <div class="text-info">
                 <div class="title-artist-wrapper"><h4 id="popup-song-title" class="font-bold marquee-text">Chọn một bài hát</h4></div>
@@ -1157,6 +1260,7 @@
                 interval: null
             },
             logoElements: {},
+            lastScrollY: 0, // Thêm biến theo dõi vị trí cuộn
         };
 
         // ==============================================
@@ -1205,7 +1309,7 @@
                 dom.header.logoPlaceholder.innerHTML = svgText;
             } catch (error) {
                 console.error("Lỗi tải SVG:", error);
-                dom.header.logoPlaceholder.innerHTML = `<div class="w-16 h-16 bg-primary-color rounded-full flex items-center justify-center text-white font-bold text-2xl">M</div>`;
+                dom.header.logoPlaceholder.innerHTML = `<div class="w-16 h-16 bg-primary-color rounded-full flex items-center justify-content-center text-white font-bold text-2xl">M</div>`;
             }
         };
 
@@ -1868,7 +1972,7 @@
         const setupNavEvents = () => {
             const hamburgerMenu = document.getElementById('hamburger-menu');
             const mobileNavOverlay = document.getElementById('mobile-nav-overlay');
-            const closeMobileMenu = document.querySelector('.mobile-nav-content .close-mobile-menu');
+            const closeMobileMenu = document.getElementById('close-mobile-menu'); // Corrected ID
             
             hamburgerMenu?.addEventListener('click', () => mobileNavOverlay.classList.add('active'));
             closeMobileMenu?.addEventListener('click', () => mobileNavOverlay.classList.remove('active'));
@@ -2088,6 +2192,65 @@
             // Window events
             window.addEventListener('beforeunload', saveCurrentPlaybackState);
 
+            // Nâng cấp: Cuộn ẩn/hiện thanh player
+            window.addEventListener('scroll', throttle(() => {
+                const currentScrollY = window.scrollY;
+                if (currentScrollY > state.lastScrollY && currentScrollY > 100) { // Cuộn xuống
+                    dom.body.classList.add('player-bar-minimized');
+                } else if (currentScrollY < state.lastScrollY || currentScrollY <= 100) { // Cuộn lên hoặc ở đầu trang
+                    dom.body.classList.remove('player-bar-minimized');
+                }
+                state.lastScrollY = currentScrollY;
+                toggleScrollNavVisibility(); // Cập nhật hiển thị nút cuộn khi cuộn
+            }, 200)); // Hạn chế tần suất xử lý sự kiện cuộn
+
+            // Nâng cấp: Swipe gestures trên album art
+            let touchStartX = 0;
+            let touchStartY = 0;
+            const albumArtElement = dom.playerBar.nowPlayingWrapper;
+
+            albumArtElement.addEventListener('touchstart', (e) => {
+                touchStartX = e.touches[0].clientX;
+                touchStartY = e.touches[0].clientY;
+            });
+
+            albumArtElement.addEventListener('touchmove', (e) => {
+                // Chỉ ngăn chặn cuộn dọc nếu đang vuốt ngang đáng kể
+                const touchMoveX = e.touches[0].clientX;
+                const touchMoveY = e.touches[0].clientY;
+                const diffX = touchMoveX - touchStartX;
+                const diffY = touchMoveY - touchStartY;
+
+                if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 10) { // Nếu di chuyển ngang nhiều hơn dọc
+                    e.preventDefault(); // Ngăn cuộn trang
+                }
+            }, { passive: false }); // `passive: false` để `preventDefault` hoạt động
+
+            albumArtElement.addEventListener('touchend', (e) => {
+                const touchEndX = e.changedTouches[0].clientX;
+                const diffX = touchEndX - touchStartX;
+
+                if (Math.abs(diffX) > 50) { // Ngưỡng vuốt
+                    if (diffX > 0) { // Vuốt sang phải
+                        playPrev();
+                    } else { // Vuốt sang trái
+                        playNext();
+                    }
+                    triggerHapticFeedback(50);
+                }
+            });
+
+            // Scroll navigation buttons
+            dom.scrollNav.toTopBtn.addEventListener('click', () => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                triggerHapticFeedback(30);
+            });
+            dom.scrollNav.toBottomBtn.addEventListener('click', () => {
+                window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' });
+                triggerHapticFeedback(30);
+            });
+
+
             // NÂNG CẤP: Keyboard Shortcuts
             document.addEventListener('keydown', (e) => {
                 // Bỏ qua nếu đang gõ trong ô input
@@ -2103,9 +2266,6 @@
                         break;
                     case 'ArrowLeft':
                         dom.playerBar.prevBtn.click();
-                        break;
-                    case 'KeyM':
-                        toggleMute();
                         break;
                 }
             });
@@ -2218,6 +2378,17 @@
         // ==============================================
         // INITIALIZATION
         // ==============================================
+        // Add a function to toggle scroll nav visibility
+        const toggleScrollNavVisibility = () => {
+            // Check if content height is greater than viewport height
+            const isScrollable = document.documentElement.scrollHeight > window.innerHeight;
+            // Check if scroll position is not at the very top or bottom
+            const isNotAtExtremes = window.scrollY > 0 && (window.scrollY + window.innerHeight) < document.documentElement.scrollHeight;
+
+            // Only show if scrollable AND not at the very top/bottom
+            dom.scrollNav.container.classList.toggle('show', isScrollable && isNotAtExtremes);
+        };
+
         const initializeApp = async () => {
             // 1. Setup initial UI
             createStars(100, dom.splashScreen.querySelector('.stars'));
@@ -2299,6 +2470,10 @@
             setTimeout(() => dom.splashScreen.classList.remove('visible'), 2000);
             
             requestNotificationPermission();
+
+            // Cập nhật hiển thị nút cuộn sau khi tải trang và khi thay đổi kích thước cửa sổ
+            toggleScrollNavVisibility();
+            window.addEventListener('resize', throttle(toggleScrollNavVisibility, 200));
         };
 
         initializeApp();
