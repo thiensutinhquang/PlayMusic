@@ -36,6 +36,12 @@
             --border-light: #dbeafe;        /* Xanh xám nhẹ */
             --logo-bg-light: #fef9ef;       /* Nền logo hơi vàng nhạt */
 
+            /* Màu cho nút "Tải thêm nhạc" */
+            --load-more-bg: #FFD700;        /* Vàng kim */
+            --load-more-text: #8B4513;      /* Nâu đỏ */
+            --load-more-hover-bg: #DAA520;  /* Vàng kim đậm hơn khi hover */
+
+
             /* Giá trị mặc định áp dụng */
             --bg-current: var(--bg-light);
             --card-bg-current: var(--card-bg-light);
@@ -53,6 +59,11 @@
             --text-muted-current: #cbd5e1;  /* Xám trắng rõ ràng hơn */
             --border-current: #3b4252;      /* Viền rõ trên nền tối */
             --logo-bg-current: #1f2530;     /* Logo nền than xanh */
+
+            /* Màu cho nút "Tải thêm nhạc" trong Dark Mode */
+            --load-more-bg: #FFD700;        /* Vàng kim */
+            --load-more-text: #8B4513;      /* Nâu đỏ */
+            --load-more-hover-bg: #DAA520;  /* Vàng kim đậm hơn khi hover */
         }
         
         /* ==============================================
@@ -909,7 +920,8 @@
                 <audio id="audio-player" style="display: none;" crossOrigin="anonymous"></audio>
                 <!-- Pagination / Load More -->
                 <div id="pagination-controls" class="mt-6 text-center">
-                    <button id="load-more-btn" class="bg-primary-color text-white px-8 py-4 rounded-lg font-semibold hover:bg-primary-hover transition-colors duration-200 shadow-lg text-lg w-full max-w-xs hidden">
+                    <button id="load-more-btn" class="px-8 py-4 rounded-lg font-semibold transition-colors duration-200 shadow-lg text-lg w-full max-w-xs hidden"
+                        style="background-color: var(--load-more-bg); color: var(--load-more-text);">
                         Tải thêm nhạc
                     </button>
                     <p id="all-songs-loaded-msg" class="text-muted-current mt-2 hidden">Đã tải hết tất cả nhạc.</p>
