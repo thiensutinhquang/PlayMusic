@@ -1281,11 +1281,12 @@
         // Global State
         let state = {
             originalSongData: [], // To store all songs for search
-            currentDisplayData: [], // Songs currently displayed (paginated or search results)
-            currentFilteredSongs: [], // Stores the currently filtered list of songs (before pagination)
+            currentFilteredSongs: [], // All songs filtered by category/search, potentially shuffled
+            currentDisplayData: [], // The actual subset of songs currently rendered in the UI
+            currentDisplayStartIndex: 0, // The index in currentFilteredSongs where currentDisplayData starts
             audiusHosts: [],
             currentAudiusHost: null,
-            currentSongIndex: -1,
+            currentSongIndex: -1, // Index of the currently playing song within currentFilteredSongs
             isPlaying: false,
             isShuffling: false,
             repeatMode: 'all',
@@ -1306,7 +1307,7 @@
             },
             logoElements: {},
             lastScrollY: 0, // Track scroll position for player bar minimization
-            songsLoadedCount: 0, // Track how many songs are loaded for pagination
+            songsLoadedCount: 0, // This will now represent the end index of currentDisplayData within currentFilteredSongs
             isFetchingAllData: false, // Flag to prevent multiple full data fetches
             isSearching: false, // Flag to indicate if search is active
         };
@@ -1436,7 +1437,7 @@
         
         const saveCurrentPlaybackState = () => {
             if (state.currentSongIndex === -1) return;
-            const song = state.currentDisplayData[state.currentSongIndex];
+            const song = state.currentFilteredSongs[state.currentSongIndex]; // Use currentFilteredSongs for persistence
             if (!song) return;
 
             const playbackState = {
@@ -1529,19 +1530,19 @@
                     if (!response.ok) {
                         // Fallback to hardcoded hosts if initial host list fetch fails
                         console.warn('Không thể lấy danh sách host từ Audius API, sử dụng danh sách dự phòng.');
-                        hosts = ['https://discoveryprovider.audius.co', 'https://discoveryprovider2.audius.co', 'https://discoveryprovider3.audius.co', 'https://dn-dn.audius.co', 'https://discoveryprovider.audius.prod-us-west-2.staked.cloud'];
+                        hosts = ['https://discoveryprovider.audius.co', 'https://discoveryprovider2.audius.co', 'https://discoveryprovider3.audius.co', 'https://dn-dn.audius.co', 'https://discoveryprovider.audius.prod-us-2.staked.cloud'];
                     } else {
                         const hostsData = await response.json();
                         if (hostsData && Array.isArray(hostsData.data)) {
                             hosts = hostsData.data;
                         } else {
                             console.warn('Cấu trúc dữ liệu host từ Audius API không hợp lệ, sử dụng danh sách dự phòng.');
-                            hosts = ['https://discoveryprovider.audius.co', 'https://discoveryprovider2.audius.co', 'https://discoveryprovider3.audius.co', 'https://dn-dn.audius.co', 'https://discoveryprovider.audius.prod-us-west-2.staked.cloud'];
+                            hosts = ['https://discoveryprovider.audius.co', 'https://discoveryprovider2.audius.co', 'https://discoveryprovider3.audius.co', 'https://dn-dn.audius.co', 'https://discoveryprovider.audius.prod-us-2.staked.cloud'];
                         }
                     }
                 } catch (e) {
                     console.warn("Lỗi khi lấy danh sách host từ Audius, sử dụng danh sách dự phòng.", e.message);
-                    hosts = ['https://discoveryprovider.audius.co', 'https://discoveryprovider2.audius.co', 'https://discoveryprovider3.audius.co', 'https://dn-dn.audius.co', 'https://discoveryprovider.audius.prod-us-west-2.staked.cloud'];
+                    hosts = ['https://discoveryprovider.audius.co', 'https://discoveryprovider2.audius.co', 'https://discoveryprovider3.audius.co', 'https://dn-dn.audius.co', 'https://discoveryprovider.audius.prod-us-2.staked.cloud'];
                 }
                 
                 if (!hosts || hosts.length === 0) {
@@ -1609,20 +1610,6 @@
         // ==============================================
         // MUSIC PLAYER CORE
         // ==============================================
-        const playSong = (displayIndex) => {
-            if (displayIndex < 0 || displayIndex >= state.currentDisplayData.length) return;
-            
-            state.currentSongIndex = displayIndex;
-            const song = state.currentDisplayData[displayIndex];
-
-            dom.playerBar.songTitle.textContent = song.title;
-            dom.playerBar.songArtist.textContent = song.artist;
-            dom.playerBar.albumArt.src = song.artwork;
-            dom.playerBar.albumArt.classList.remove('animate-pulse');
-            
-            playSongWithRetries(song);
-        };
-        
         const playSongWithRetries = async (song, retryCount = 0, lastFailedHost = null) => {
             if (!song) return;
 
@@ -1669,32 +1656,61 @@
             }
         };
 
-        const playNext = () => {
-            if (state.currentDisplayData.length === 0) return;
-            let nextIndex;
-            if (state.repeatMode === 'one' && state.currentSongIndex !== -1) {
-                nextIndex = state.currentSongIndex;
-            } else if (state.isShuffling) {
-                do { nextIndex = Math.floor(Math.random() * state.currentDisplayData.length); } 
-                while (state.currentDisplayData.length > 1 && nextIndex === state.currentSongIndex);
-            } else {
-                nextIndex = (state.currentSongIndex + 1) % state.currentDisplayData.length;
+        const playSong = (filteredIndex) => {
+            if (filteredIndex < 0 || filteredIndex >= state.currentFilteredSongs.length) return;
+            
+            state.currentSongIndex = filteredIndex; // This is the index in the full filtered list
+            const song = state.currentFilteredSongs[filteredIndex];
+
+            // Determine if the song is outside the current displayed window
+            const currentDisplayEndIndex = state.currentDisplayStartIndex + state.currentDisplayData.length;
+            let needsRerender = false;
+
+            if (filteredIndex < state.currentDisplayStartIndex || filteredIndex >= currentDisplayEndIndex) {
+                // Calculate new window start index, trying to center the playing song
+                let newDisplayStartIndex = Math.max(0, filteredIndex - Math.floor(CONFIG.PAGE_SIZE / 2));
+                // Ensure the window doesn't go beyond the end of currentFilteredSongs
+                newDisplayStartIndex = Math.min(newDisplayStartIndex, state.currentFilteredSongs.length - CONFIG.PAGE_SIZE);
+                if (newDisplayStartIndex < 0) newDisplayStartIndex = 0; // Handle cases where total songs < PAGE_SIZE
+
+                state.currentDisplayData = state.currentFilteredSongs.slice(newDisplayStartIndex, newDisplayStartIndex + CONFIG.PAGE_SIZE);
+                state.currentDisplayStartIndex = newDisplayStartIndex;
+                needsRerender = true;
             }
-            playSong(nextIndex);
+
+            if (needsRerender) {
+                renderSongs(state.currentDisplayData); // Re-render the new window of songs
+            }
+
+            dom.playerBar.songTitle.textContent = song.title;
+            dom.playerBar.songArtist.textContent = song.artist;
+            dom.playerBar.albumArt.src = song.artwork;
+            dom.playerBar.albumArt.classList.remove('animate-pulse');
+            
+            playSongWithRetries(song);
+
+            // Scroll the active song into view within the *currently rendered* list
+            const displayIndexInCurrentData = state.currentDisplayData.findIndex(s => s.id === song.id);
+            const activeSongElement = document.querySelector(`.song-list-item[data-display-index="${displayIndexInCurrentData}"]`);
+            if (activeSongElement) {
+                activeSongElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        };
+
+        const playNext = () => {
+            if (state.currentFilteredSongs.length === 0) return;
+
+            let newIndex = (state.currentSongIndex + 1) % state.currentFilteredSongs.length;
+            playSong(newIndex); // Call playSong with the index in the full filtered list
+            triggerHapticFeedback(50);
         };
 
         const playPrev = () => {
-            if (state.currentDisplayData.length === 0) return;
-            let prevIndex;
-            if (state.repeatMode === 'one' && state.currentSongIndex !== -1) {
-                prevIndex = state.currentSongIndex;
-            } else if (state.isShuffling) {
-                    do { prevIndex = Math.floor(Math.random() * state.currentDisplayData.length); } 
-                    while (state.currentDisplayData.length > 1 && prevIndex === state.currentSongIndex);
-            } else {
-                prevIndex = (state.currentSongIndex - 1 + state.currentDisplayData.length) % state.currentDisplayData.length;
-            }
-            playSong(prevIndex);
+            if (state.currentFilteredSongs.length === 0) return;
+
+            let newIndex = (state.currentSongIndex - 1 + state.currentFilteredSongs.length) % state.currentFilteredSongs.length;
+            playSong(newIndex); // Call playSong with the index in the full filtered list
+            triggerHapticFeedback(50);
         };
         
         const toggleFavorite = (songId) => {
@@ -1743,30 +1759,29 @@
             dom.mainContent.songsContainer.innerHTML = skeletonHTML;
         };
 
-        const renderSongs = (tracks) => {
-            state.currentDisplayData = tracks; 
+        const renderSongs = (tracksToRender) => { // No longer needs 'append'
             const container = dom.mainContent.songsContainer;
             const searchQuery = dom.mainContent.searchInput.value.trim();
             
-            if (!tracks || tracks.length === 0) {
+            container.innerHTML = ''; // Always clear and re-render the current window of songs
+
+            if (!tracksToRender || tracksToRender.length === 0) {
                 const currentCategory = document.querySelector('#category-menu .nav-item.active')?.dataset.category;
                 if (currentCategory === 'favorites') {
                     container.innerHTML = `<div class="empty-state col-span-full"><i class="ph-bold ph-heart-break"></i><p>Bạn chưa có bài hát yêu thích nào.</p><p class="text-sm">Nhấn vào hình trái tim ❤️ ở một bài hát để thêm vào đây.</p></div>`;
                 } else if (state.isSearching && searchQuery.length > 0) {
                     container.innerHTML = `<div class="empty-state col-span-full"><i class="ph-bold ph-magnifying-glass-slash"></i><p>Không tìm thấy kết quả cho "${searchQuery}".</p></div>`;
-                }
-                else {
+                } else {
                     container.innerHTML = '<p class="text-center text-muted-current col-span-full p-4">Không tìm thấy bài hát nào.</p>';
                 }
                 dom.mainContent.loadMoreBtn.classList.add('hidden');
                 dom.mainContent.allSongsLoadedMsg.classList.add('hidden');
             } else {
-                container.innerHTML = '';
-                tracks.forEach((song, displayIndex) => {
+                tracksToRender.forEach((song, indexInDisplayedList) => { // indexInDisplayedList is the index within currentDisplayData
                     const songItem = document.createElement('div');
                     songItem.className = 'song-list-item';
-                    songItem.dataset.displayIndex = displayIndex; 
-                    songItem.style.setProperty('--i', displayIndex);
+                    songItem.dataset.displayIndex = indexInDisplayedList; // This is now index within the *displayed* list
+                    songItem.style.setProperty('--i', indexInDisplayedList); // For animation delay
 
                     let titleHTML = song.title;
                     let artistHTML = song.artist;
@@ -1778,7 +1793,7 @@
                     }
 
                     songItem.innerHTML = `
-                        <div class="song-index-play"><span class="index-number">${displayIndex + 1}</span><div class="play-button"><i class="ph-bold ph-play"></i></div></div>
+                        <div class="song-index-play"><span class="index-number">${state.currentFilteredSongs.indexOf(song) + 1}</span><div class="play-button"><i class="ph-bold ph-play"></i></div></div>
                         <div class="song-info"><img src="${song.artwork}" alt="${song.title}" class="artwork"><div class="title-artist"><p class="title marquee-text">${titleHTML}</p><p class="artist marquee-text">${artistHTML}</p></div></div>
                         <button type="button" class="lyrics-button" data-song-id="${song.id}" aria-label="Xem lời bài hát"><i class="ph-bold ph-book-open"></i></button>
                         <div class="duration">${new Date(song.duration * 1000).toISOString().substr(14, 5)}</div>
@@ -1787,9 +1802,9 @@
                 });
                 updatePaginationControls();
             }
-            addSongEventListeners();
-            renderPopupSongList(tracks);
-            updateUI(); 
+            addSongEventListeners(); // Re-add listeners to new elements
+            renderPopupSongList(state.currentDisplayData); // Popup list always reflects currentDisplayData
+            updateUI(); // Update player bar and active song state
         };
         
         const renderPopupSongList = (songs) => {
@@ -1804,7 +1819,7 @@
                 li.draggable = true;
                 li.dataset.displayIndex = index;
                 li.innerHTML = `<div class="song-info-text"><p class="font-semibold marquee-text">${song.title}</p><p class="artist-text marquee-text">${song.artist}</p></div>`;
-                li.addEventListener('click', () => playSong(index));
+                li.addEventListener('click', () => playSong(state.currentFilteredSongs.indexOf(song))); // Play song from its index in the full filtered list
                 dom.playlist.list.appendChild(li);
             });
             addDragAndDropListeners();
@@ -1812,7 +1827,7 @@
         
         const updateUI = () => {
             state.isPlaying = !dom.audioPlayer.paused;
-            const song = state.currentDisplayData[state.currentSongIndex];
+            const song = state.currentFilteredSongs[state.currentSongIndex]; // Always reference from currentFilteredSongs
             
             // Player bar
             if (song) {
@@ -1822,7 +1837,7 @@
                 dom.playerBar.albumArt.classList.remove('animate-pulse');
                 dom.playerBar.favoriteBtn.classList.toggle('liked', state.favoriteSongIds.includes(song.id));
                 dom.playerBar.favoriteBtn.innerHTML = state.favoriteSongIds.includes(song.id) ? '<i class="ph-fill ph-heart"></i>' : '<i class="ph-bold ph-heart"></i>';
-                dom.playerBar.trackNumber.textContent = state.currentDisplayData.findIndex(s => s.id === song.id) + 1;
+                dom.playerBar.trackNumber.textContent = state.currentSongIndex + 1; // Display actual track number
             } else {
                 dom.playerBar.songTitle.textContent = "Chọn một bài hát";
                 dom.playerBar.songArtist.textContent = "Để bắt đầu nghe nhạc";
@@ -1839,8 +1854,8 @@
 
             // Song list items
             document.querySelectorAll('.song-list-item').forEach(item => {
-                const displayIndex = parseInt(item.dataset.displayIndex);
-                const isActive = displayIndex === state.currentSongIndex;
+                const songInDisplayedList = state.currentDisplayData[parseInt(item.dataset.displayIndex)];
+                const isActive = songInDisplayedList && songInDisplayedList.id === song?.id;
                 item.classList.toggle('active-song', isActive);
                 const indicatorIcon = item.querySelector('.play-button i');
                 if (isActive && isLoading) {
@@ -1852,7 +1867,8 @@
 
             // Popup playlist items
             document.querySelectorAll('#popup-song-list li').forEach(item => {
-                const isActive = parseInt(item.dataset.displayIndex) === state.currentSongIndex;
+                const songInPopupList = state.currentDisplayData[parseInt(item.dataset.displayIndex)];
+                const isActive = songInPopupList && songInPopupList.id === song?.id;
                 item.classList.toggle('active-song-in-list', isActive);
                 if (isActive && dom.playlist.container.classList.contains('show')) {
                     item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -1877,7 +1893,7 @@
         const updateMediaSession = () => {
             if ('mediaSession' in navigator) {
                 try {
-                    const song = state.currentDisplayData[state.currentSongIndex];
+                    const song = state.currentFilteredSongs[state.currentSongIndex]; // Always reference from currentFilteredSongs
                     if (!song) {
                         navigator.mediaSession.metadata = null;
                         navigator.mediaSession.playbackState = "none";
@@ -1969,7 +1985,7 @@
         // NEW FEATURES: SHARE & DOWNLOAD
         // ==============================================
         const shareSong = async () => {
-            const song = state.currentDisplayData[state.currentSongIndex];
+            const song = state.currentFilteredSongs[state.currentSongIndex]; // Use currentFilteredSongs
             if (!song || !song.permalink) {
                 showMessage("Không thể chia sẻ bài hát này.");
                 return;
@@ -2019,7 +2035,7 @@
         };
 
         const downloadLyrics = () => {
-            const song = state.currentDisplayData[state.currentSongIndex];
+            const song = state.currentFilteredSongs[state.currentSongIndex]; // Use currentFilteredSongs
             if (!song || !song.description || song.description.trim() === 'Không có lời bài hát cho bài này.') {
                 showMessage("Không có lời bài hát để tải về.", "Thông báo");
                 return;
@@ -2135,9 +2151,12 @@
             setupDropdown('theme-toggle-mobile', 'mobile-theme-options'); // Corrected ID for mobile theme dropdown
             setupDropdown('timer-toggle-mobile', 'timer-menu-mobile');
 
-            document.addEventListener('click', () => {
-                document.querySelectorAll('.dropdown-menu.show').forEach(menu => menu.classList.remove('show'));
-                document.querySelectorAll('.dropdown-toggle.open').forEach(toggle => toggle.classList.remove('open'));
+            document.addEventListener('click', (e) => {
+                // Close all dropdowns if click is outside
+                if (!e.target.closest('.dropdown-container')) {
+                    document.querySelectorAll('.dropdown-menu.show').forEach(menu => menu.classList.remove('show'));
+                    document.querySelectorAll('.dropdown-toggle.open').forEach(toggle => toggle.classList.remove('open'));
+                }
             });
 
             // Dark Mode toggles
@@ -2177,16 +2196,20 @@
             document.querySelectorAll('.song-list-item').forEach(item => {
                 item.addEventListener('click', (e) => {
                     if (e.target.closest('.lyrics-button')) return;
-                    const displayIndex = parseInt(item.dataset.displayIndex);
-                    if (displayIndex === state.currentSongIndex) {
-                        if (dom.audioPlayer.paused) dom.audioPlayer.play(); else dom.audioPlayer.pause();
-                    } else {
-                        playSong(displayIndex);
+                    // Get the song from the full filtered list based on its ID
+                    const songId = state.currentDisplayData[parseInt(item.dataset.displayIndex)].id;
+                    const filteredIndex = state.currentFilteredSongs.findIndex(s => s.id === songId);
+                    if (filteredIndex !== -1) {
+                        if (filteredIndex === state.currentSongIndex) {
+                            if (dom.audioPlayer.paused) dom.audioPlayer.play(); else dom.audioPlayer.pause();
+                        } else {
+                            playSong(filteredIndex);
+                        }
                     }
                 });
                 item.querySelector('.lyrics-button')?.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    const songId = e.currentTarget.dataset.songId;
+                    const songId = state.currentDisplayData[parseInt(item.dataset.displayIndex)].id; // Get ID from displayed song
                     const song = state.originalSongData.find(s => s.id === songId); // Use originalSongData for lyrics lookup
                     if (song) showLyricsFullscreenPopup(song);
                 });
@@ -2197,7 +2220,7 @@
             // Player controls
             dom.playerBar.playPauseBtn.addEventListener('click', () => {
                 triggerHapticFeedback(50);
-                if (state.currentSongIndex === -1 && state.currentDisplayData.length > 0) playSong(0);
+                if (state.currentSongIndex === -1 && state.currentFilteredSongs.length > 0) playSong(0); // Play first song from filtered list
                 else if (dom.audioPlayer.paused) dom.audioPlayer.play();
                 else dom.audioPlayer.pause();
             });
@@ -2208,7 +2231,7 @@
                 saveStateToLocalStorage(CONFIG.STORAGE_KEYS.SHUFFLE, state.isShuffling);
                 // When shuffling, re-render the current category's songs (which will apply pagination)
                 const currentCategory = document.querySelector('#category-menu .nav-item.active')?.dataset.category || 'all';
-                loadCustomCategory(currentCategory);
+                loadCustomCategory(currentCategory); // This will re-filter and re-shuffle if needed
                 updateUI(); triggerHapticFeedback(30);
             });
             dom.playerBar.repeatBtn.addEventListener('click', () => {
@@ -2218,7 +2241,7 @@
                 updateUI(); triggerHapticFeedback(30);
             });
             dom.playerBar.favoriteBtn.addEventListener('click', () => {
-                if (state.currentSongIndex !== -1) toggleFavorite(state.currentDisplayData[state.currentSongIndex].id);
+                if (state.currentSongIndex !== -1) toggleFavorite(state.currentFilteredSongs[state.currentSongIndex].id); // Use currentFilteredSongs
                 else showMessage("Vui lòng chọn một bài hát để yêu thích.");
                 triggerHapticFeedback(70);
             });
@@ -2286,7 +2309,10 @@
                     dom.mainContent.allSongsLoadedMsg.classList.add('hidden'); // Hide all loaded message
 
                     const result = window.fuse.search(query);
-                    renderSongs(result.map(item => item.item));
+                    state.currentFilteredSongs = result.map(item => item.item); // Update filtered songs with search results
+                    state.currentDisplayStartIndex = 0; // Reset display start for search results
+                    state.currentDisplayData = state.currentFilteredSongs; // Display all search results
+                    renderSongs(state.currentDisplayData); // Render search results
                     dom.mainContent.loadingMoreSpinner.classList.add('hidden'); // Hide searching spinner
                 } else {
                     // If search is cleared, reload the current category with pagination
@@ -2307,7 +2333,7 @@
                 dom.playlist.container.classList.toggle('show', !isHidden);
                 if (!isHidden) updateUI();
             });
-            dom.lyrics.openBtn.addEventListener('click', () => showLyricsFullscreenPopup(state.currentDisplayData[state.currentSongIndex]));
+            dom.lyrics.openBtn.addEventListener('click', () => showLyricsFullscreenPopup(state.currentFilteredSongs[state.currentSongIndex])); // Use currentFilteredSongs
             dom.lyrics.closeBtn.addEventListener('click', () => dom.lyrics.popup.classList.remove('show'));
             
             // Timer
@@ -2330,12 +2356,12 @@
             });
             document.getElementById('radial-lines-increase').addEventListener('click', () => {
                 state.lyrics.linesPerPage++;
-                paginateLyrics(state.currentDisplayData[state.currentSongIndex]?.description || '');
+                paginateLyrics(state.currentFilteredSongs[state.currentSongIndex]?.description || ''); // Use currentFilteredSongs
                 saveStateToLocalStorage(CONFIG.LYRICS.STORAGE_KEYS.LINES_PER_PAGE, state.lyrics.linesPerPage);
             });
              document.getElementById('radial-lines-decrease').addEventListener('click', () => {
                 state.lyrics.linesPerPage = Math.max(1, state.lyrics.linesPerPage - 1);
-                paginateLyrics(state.currentDisplayData[state.currentSongIndex]?.description || '');
+                paginateLyrics(state.currentFilteredSongs[state.currentSongIndex]?.description || ''); // Use currentFilteredSongs
                 saveStateToLocalStorage(CONFIG.LYRICS.STORAGE_KEYS.LINES_PER_PAGE, state.lyrics.linesPerPage);
             });
             document.getElementById('radial-font-btn').addEventListener('click', () => {
@@ -2462,12 +2488,20 @@
                         const [reorderedItem] = state.currentDisplayData.splice(fromIndex, 1);
                         state.currentDisplayData.splice(toIndex, 0, reorderedItem);
                         
-                        const currentlyPlayingSongId = state.currentDisplayData[state.currentSongIndex]?.id;
+                        // After reordering currentDisplayData, find the new index of the currently playing song in the full filtered list
+                        const currentlyPlayingSongId = state.currentFilteredSongs[state.currentSongIndex]?.id;
                         if(currentlyPlayingSongId) {
-                           state.currentSongIndex = state.currentDisplayData.findIndex(s => s.id === currentlyPlayingSongId);
+                            // Update currentFilteredSongs to reflect the reorder
+                            const reorderedSongInFiltered = state.currentFilteredSongs.find(s => s.id === reorderedItem.id);
+                            const originalIndexInFiltered = state.currentFilteredSongs.indexOf(reorderedSongInFiltered);
+                            state.currentFilteredSongs.splice(originalIndexInFiltered, 1);
+                            state.currentFilteredSongs.splice(toIndex + state.currentDisplayStartIndex, 0, reorderedSongInFiltered); // Insert at the correct position in the full list
+
+                            state.currentSongIndex = state.currentFilteredSongs.findIndex(s => s.id === currentlyPlayingSongId);
                         }
                         
-                        renderPopupSongList(state.currentDisplayData);
+                        renderPopupSongList(state.currentDisplayData); // Re-render popup list
+                        renderSongs(state.currentDisplayData); // Re-render main list
                         updateUI();
                         triggerHapticFeedback(70);
                     }
@@ -2509,16 +2543,12 @@
                 }
             }
 
-            // Reset songsLoadedCount for new category/filter
-            state.songsLoadedCount = 0;
-            // Load initial page of songs
-            const initialSongs = filteredSongs.slice(0, CONFIG.INITIAL_LOAD_SIZE);
-            renderSongs(initialSongs); // This will update currentDisplayData
-            state.songsLoadedCount = initialSongs.length;
-
-            // Store the full filtered list for subsequent "Load More" actions
             state.currentFilteredSongs = filteredSongs; 
-            updatePaginationControls();
+            state.currentDisplayStartIndex = 0; // Always start from the beginning for a new category
+            state.currentDisplayData = state.currentFilteredSongs.slice(0, CONFIG.INITIAL_LOAD_SIZE);
+            
+            renderSongs(state.currentDisplayData); // Render initial songs
+            updatePaginationControls(); // Update pagination controls based on the full filtered list
         };
 
         const loadMoreSongs = () => {
@@ -2526,15 +2556,14 @@
             dom.mainContent.loadingMoreSpinner.classList.remove('hidden');
             
             setTimeout(() => { // Simulate loading delay
-                const startIndex = state.songsLoadedCount;
-                const endIndex = startIndex + CONFIG.PAGE_SIZE;
+                // Calculate the next chunk to load from currentFilteredSongs
+                const startIndex = state.currentDisplayStartIndex + state.currentDisplayData.length;
+                const endIndex = Math.min(startIndex + CONFIG.PAGE_SIZE, state.currentFilteredSongs.length);
                 const newSongs = state.currentFilteredSongs.slice(startIndex, endIndex);
 
-                state.currentDisplayData = [...state.currentDisplayData, ...newSongs];
-                state.songsLoadedCount += newSongs.length;
+                state.currentDisplayData = [...state.currentDisplayData, ...newSongs]; // Append to current displayed songs
                 
-                // Re-render the entire list to apply animations and correct indices
-                renderSongs(state.currentDisplayData); 
+                renderSongs(state.currentDisplayData); // Re-render the expanded list
                 updateUI(); // Update player bar and active song state
 
                 dom.mainContent.loadingMoreSpinner.classList.add('hidden');
@@ -2553,7 +2582,8 @@
                 return;
             }
 
-            if (state.songsLoadedCount < state.currentFilteredSongs.length) {
+            // Show load more if there are more songs in currentFilteredSongs than currently displayed
+            if (state.currentDisplayData.length < state.currentFilteredSongs.length) {
                 dom.mainContent.loadMoreBtn.classList.remove('hidden');
             } else {
                 if (state.currentFilteredSongs.length > 0) { // Only show "all loaded" if there are songs
@@ -2679,12 +2709,17 @@
                     const displayIndex = state.currentFilteredSongs.findIndex(s => s.id === songToPlayId);
                     if (displayIndex !== -1) {
                          // Ensure the song is within the initially loaded set or load it
-                        if (displayIndex >= state.songsLoadedCount) {
-                            state.currentDisplayData = state.currentFilteredSongs.slice(0, displayIndex + 1);
-                            state.songsLoadedCount = displayIndex + 1;
+                        if (displayIndex >= state.currentDisplayStartIndex + state.currentDisplayData.length || displayIndex < state.currentDisplayStartIndex) {
+                            // If the song is not in the current window, adjust the window
+                            let newDisplayStartIndex = Math.max(0, displayIndex - Math.floor(CONFIG.PAGE_SIZE / 2));
+                            newDisplayStartIndex = Math.min(newDisplayStartIndex, state.currentFilteredSongs.length - CONFIG.PAGE_SIZE);
+                            if (newDisplayStartIndex < 0) newDisplayStartIndex = 0;
+
+                            state.currentDisplayData = state.currentFilteredSongs.slice(newDisplayStartIndex, newDisplayStartIndex + CONFIG.PAGE_SIZE);
+                            state.currentDisplayStartIndex = newDisplayStartIndex;
                             renderSongs(state.currentDisplayData);
                         }
-                        playSong(displayIndex);
+                        playSong(displayIndex); // Play the song using its index in the filtered list
                     } else {
                         // Fallback if song is not found in filtered list
                         loadCustomCategory('all');
