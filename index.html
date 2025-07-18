@@ -927,7 +927,7 @@
                         <p>Đang tải thư viện nhạc...</p>
                     </div>
                 </div>
-                <audio id="audio-player" style="display: none;" crossOrigin="anonymous"></audio>
+                <audio id="audio-player" style="display: none;" crossOrigin="anonymous" preload="auto"></audio>
                 <!-- Pagination / Load More -->
                 <div id="pagination-controls" class="mt-6 text-center">
                     <button id="load-more-btn" class="px-8 py-4 rounded-lg font-semibold transition-colors duration-200 shadow-lg text-lg w-full max-w-xs hidden"
@@ -1630,6 +1630,7 @@
             
             console.log(`Đang thử phát ${song.title} từ ${host} (Lần thử ${retryCount + 1})`);
             dom.playerBar.playPauseBtn.classList.add('play-pause-loading');
+            dom.playerBar.albumArt.classList.add('animate-pulse'); // Show pulse on album art during loading
             updateUI();
             
             dom.audioPlayer.src = `${host}/v1/tracks/${song.id}/stream?app_name=MSTQPlayer`;
@@ -1649,7 +1650,7 @@
                     showMessage(`Lỗi phát nhạc. Đang thử kết nối khác...`, "Lỗi kết nối");
                     await playSongWithRetries(song, retryCount + 1, host);
                 } else {
-                    showMessage("Không thể phát bài hát này. Tự động chuyển bài tiếp theo.", "Lỗi phát nhạc");
+                    showMessage("Không thể phát bài hát này. Vui lòng kiểm tra kết nối Internet hoặc thử lại sau.", "Lỗi phát nhạc");
                     if (state.repeatMode === 'all' || state.isShuffling) playNext();
                     else { state.isPlaying = false; updateUI(); }
                 }
@@ -1847,7 +1848,7 @@
             }
 
             // Play/Pause button
-            const isLoading = state.isPlaying && dom.audioPlayer.readyState < 3;
+            const isLoading = state.isPlaying && (dom.audioPlayer.readyState < 3 || dom.audioPlayer.seeking); // Also consider seeking as loading
             dom.playerBar.playPauseBtn.classList.toggle('play-pause-loading', isLoading);
             dom.playerBar.playIcon.classList.toggle('hidden', state.isPlaying || isLoading);
             dom.playerBar.pauseIcon.classList.toggle('hidden', !state.isPlaying || isLoading);
@@ -2269,8 +2270,49 @@
                     dom.playerBar.duration.textContent = new Date(duration * 1000).toISOString().substr(14, 5);
                 }
             }, 500));
-            dom.audioPlayer.addEventListener('waiting', () => updateUI());
-            dom.audioPlayer.addEventListener('playing', () => updateUI());
+            dom.audioPlayer.addEventListener('waiting', () => {
+                console.log('Audio is waiting for more data...');
+                if (state.isPlaying) { // Only show loading if it was supposed to be playing
+                    dom.playerBar.playPauseBtn.classList.add('play-pause-loading');
+                    dom.playerBar.albumArt.classList.add('animate-pulse'); // Show pulse on album art during buffering
+                    updateUI(); // Update UI to show spinner on active song too
+                }
+            });
+            dom.audioPlayer.addEventListener('playing', () => {
+                console.log('Audio is playing again.');
+                dom.playerBar.playPauseBtn.classList.remove('play-pause-loading');
+                dom.playerBar.albumArt.classList.remove('animate-pulse'); // Remove pulse when playing resumes
+                updateUI(); // Ensure spinner is removed
+            });
+            dom.audioPlayer.addEventListener('stalled', () => {
+                console.warn('Audio playback stalled. Network or buffering issue.');
+                // For now, let the browser try to recover.
+                // If persistent, user might need to check network or we might need more aggressive host switching.
+                showMessage("Kết nối mạng không ổn định, đang tải lại...", "Lỗi mạng", true, 3000);
+            });
+            dom.audioPlayer.addEventListener('error', (e) => {
+                console.error('Audio error:', e);
+                let errorMessage = "Đã xảy ra lỗi khi phát bài hát.";
+                switch (e.target.error.code) {
+                    case e.target.error.MEDIA_ERR_ABORTED:
+                        errorMessage = "Quá trình tải bài hát đã bị hủy bỏ.";
+                        break;
+                    case e.target.error.MEDIA_ERR_NETWORK:
+                        errorMessage = "Lỗi mạng: Không thể tải bài hát.";
+                        break;
+                    case e.target.error.MEDIA_ERR_DECODE:
+                        errorMessage = "Lỗi giải mã: Bài hát không thể phát.";
+                        break;
+                    case e.target.error.MEDIA_ERR_SRC_NOT_SUPPORTED:
+                        errorMessage = "Định dạng bài hát không được hỗ trợ.";
+                        break;
+                    default:
+                        errorMessage = "Lỗi không xác định khi phát bài hát.";
+                        break;
+                }
+                showMessage(errorMessage + " Tự động chuyển bài tiếp theo.", "Lỗi Phát Nhạc");
+                playNext(); // Automatically try next song on error
+            });
             
             // Progress bar
             dom.playerBar.progressContainer.addEventListener('click', (e) => {
