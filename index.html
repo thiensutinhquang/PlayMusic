@@ -308,7 +308,7 @@
             align-items: center;
             justify-content: center;
         }
-        #player-bar .player-buttons button:hover { color: var(--text-current); transform: scale(1.1); }
+        #player-bar .player-buttons button:hover { color: var(--text-current); }
         #player-bar .player-buttons button:active { transform: scale(0.9); }
         #player-bar .player-buttons #play-pause-btn {
             background-color: var(--primary-color); color: white;
@@ -1719,10 +1719,10 @@
             const songIndexInFavorites = state.favoriteSongIds.indexOf(songId);
             if (songIndexInFavorites > -1) {
                 state.favoriteSongIds.splice(songIndexInFavorites, 1);
-                showMessage("Đã xóa khỏi danh sách yêu thích.", "Thông báo", true);
+                showMessage("Đã xóa khỏi danh sách yêu thích.", "Thông báo", true, 2500); // Changed duration to 2.5 seconds
             } else {
                 state.favoriteSongIds.push(songId);
-                showMessage("Đã thêm vào danh sách yêu thích!", "Thông báo", true);
+                showMessage("Đã thêm vào danh sách yêu thích!", "Thông báo", true, 2500); // Changed duration to 2.5 seconds
             }
             saveStateToLocalStorage(CONFIG.STORAGE_KEYS.FAVORITES, state.favoriteSongIds);
             
@@ -2012,7 +2012,7 @@
                 textArea.select();
                 try {
                     document.execCommand('copy');
-                    showMessage("Đã sao chép liên kết vào bộ nhớ tạm!", "Thông báo", true); // Cập nhật thông báo
+                    showMessage("Đã sao chép liên kết vào bộ nhớ tạm!", "Thông báo", true, 2500); // Changed duration to 2.5 seconds
                 } catch (err) {
                     showMessage("Không thể sao chép liên kết.", "Lỗi");
                 }
@@ -2028,7 +2028,7 @@
                     if (err.name !== 'AbortError') {
                             copyToClipboard();
                     } else {
-                        showMessage("Đã hủy chia sẻ.", "Thông báo", true); // Thông báo nếu người dùng hủy
+                        showMessage("Đã hủy chia sẻ.", "Thông báo", true, 2500); // Changed duration to 2.5 seconds
                     }
                 }
             } else {
@@ -2073,7 +2073,7 @@
                 if (Date.now() >= state.sleepTimer.endTime) {
                     dom.audioPlayer.pause();
                     cancelSleepTimer();
-                    showMessage("Hẹn giờ tắt nhạc đã kết thúc.", "Hẹn giờ");
+                    showMessage("Hẹn giờ tắt nhạc đã kết thúc.", "Hẹn giờ", true, 2500); // Changed duration to 2.5 seconds
                 } else {
                     updateSleepTimerDisplay();
                 }
@@ -2289,7 +2289,7 @@
                 console.warn('Audio playback stalled. Network or buffering issue.');
                 // For now, let the browser try to recover.
                 // If persistent, user might need to check network or we might need more aggressive host switching.
-                showMessage("Kết nối mạng không ổn định, đang tải lại...", "Lỗi mạng", true, 3000);
+                showMessage("Kết nối mạng không ổn định, đang tải lại...", "Lỗi mạng", true, 2500); // Changed duration to 2.5 seconds
             });
             dom.audioPlayer.addEventListener('error', (e) => {
                 console.error('Audio error:', e);
@@ -2670,7 +2670,7 @@
                 dom.playerBar.volumeSlider.value = dom.audioPlayer.volume;
             }
             updateVolumeUI();
-            showMessage(dom.audioPlayer.muted ? "Đã tắt tiếng" : "Đã bật tiếng", "Âm thanh", true);
+            showMessage(dom.audioPlayer.muted ? "Đã tắt tiếng" : "Đã bật tiếng", "Âm thanh", true, 2500); // Changed duration to 2.5 seconds
         };
 
         // ==============================================
@@ -2784,7 +2784,7 @@
                         state.currentSongIndex = songIndex;
                         updateUI(); 
                         dom.audioPlayer.currentTime = savedPlaybackState.currentTime || 0;
-                        showMessage("Đã khôi phục phiên nghe nhạc trước đó. Nhấn nút Play để tiếp tục.", "Chào mừng trở lại!");
+                        showMessage("Đã khôi phục phiên nghe nhạc trước đó. Nhấn nút Play để tiếp tục.", "Chào mừng trở lại!", true, 2500); // Changed duration to 2.5 seconds
                     } else {
                         loadCustomCategory('all'); // Fallback nếu bài hát đã lưu không còn tồn tại
                     }
