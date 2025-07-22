@@ -615,7 +615,8 @@
             transform: translateX(100%); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             padding: 1.5rem; display: flex; flex-direction: column;
         }
-        .mobile-nav-content.active .mobile-nav-content { transform: translateX(0); }
+        /* FIX: Corrected selector for mobile menu to slide in */
+        .mobile-nav-overlay.active .mobile-nav-content { transform: translateX(0); }
         .mobile-nav-content .close-mobile-menu {
             background: none; border: none; font-size: 2rem; color: var(--text-muted-current);
             cursor: pointer; align-self: flex-end; margin-bottom: 1rem;
@@ -2750,17 +2751,17 @@
                     // Ensure the song is in currentDisplayData before playing
                     const displayIndex = state.currentFilteredSongs.findIndex(s => s.id === songToPlayId);
                     if (displayIndex !== -1) {
-                         // Ensure the song is within the initially loaded set or load it
-                        if (displayIndex >= state.currentDisplayStartIndex + state.currentDisplayData.length || displayIndex < state.currentDisplayStartIndex) {
-                            // If the song is not in the current window, adjust the window
-                            let newDisplayStartIndex = Math.max(0, displayIndex - Math.floor(CONFIG.PAGE_SIZE / 2));
-                            newDisplayStartIndex = Math.min(newDisplayStartIndex, state.currentFilteredSongs.length - CONFIG.PAGE_SIZE);
-                            if (newDisplayStartIndex < 0) newDisplayStartIndex = 0;
+                             // Ensure the song is within the initially loaded set or load it
+                            if (displayIndex >= state.currentDisplayStartIndex + state.currentDisplayData.length || displayIndex < state.currentDisplayStartIndex) {
+                                // If the song is not in the current window, adjust the window
+                                let newDisplayStartIndex = Math.max(0, displayIndex - Math.floor(CONFIG.PAGE_SIZE / 2));
+                                newDisplayStartIndex = Math.min(newDisplayStartIndex, state.currentFilteredSongs.length - CONFIG.PAGE_SIZE);
+                                if (newDisplayStartIndex < 0) newDisplayStartIndex = 0;
 
-                            state.currentDisplayData = state.currentFilteredSongs.slice(newDisplayStartIndex, newDisplayStartIndex + CONFIG.PAGE_SIZE);
-                            state.currentDisplayStartIndex = newDisplayStartIndex;
-                            renderSongs(state.currentDisplayData);
-                        }
+                                state.currentDisplayData = state.currentFilteredSongs.slice(newDisplayStartIndex, newDisplayStartIndex + CONFIG.PAGE_SIZE);
+                                state.currentDisplayStartIndex = newDisplayStartIndex;
+                                renderSongs(state.currentDisplayData);
+                            }
                         playSong(displayIndex); // Play the song using its index in the filtered list
                     } else {
                         // Fallback if song is not found in filtered list
