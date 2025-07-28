@@ -978,7 +978,7 @@
                         <p>Đang tải thư viện nhạc...</p>
                     </div>
                 </div>
-                <audio id="audio-player" style="display: none;" crossOrigin="anonymous" preload="auto"></audio>
+                <audio id="audio-player" style="display: none;" crossOrigin="anonymous" preload="auto" playsinline webkit-playsinline></audio>
                 <!-- Pagination / Load More -->
                 <div id="pagination-controls" class="mt-6 text-center">
                     <button id="load-more-btn" class="px-8 py-4 rounded-lg font-semibold transition-colors duration-200 shadow-lg text-lg w-full max-w-xs hidden"
@@ -1991,6 +1991,17 @@
                     });
                     navigator.mediaSession.playbackState = state.isPlaying ? "playing" : "paused";
                     dom.playerBar.mediaSessionIndicator.classList.add('active');
+
+                    // Set Media Session action handlers
+                    navigator.mediaSession.setActionHandler('play', () => {
+                        dom.audioPlayer.play();
+                        dom.playerBar.playPauseBtn.classList.remove('attention-bounce'); // Remove animation on manual play
+                    });
+                    navigator.mediaSession.setActionHandler('pause', () => dom.audioPlayer.pause());
+                    navigator.mediaSession.setActionHandler('stop', () => dom.audioPlayer.pause());
+                    navigator.mediaSession.setActionHandler('nexttrack', playNext);
+                    navigator.mediaSession.setActionHandler('previoustrack', playPrev);
+
                 } catch (error) {
                     console.error("Lỗi khi cập nhật Media Session:", error);
                     dom.playerBar.mediaSessionIndicator.classList.remove('active');
