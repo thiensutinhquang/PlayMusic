@@ -986,6 +986,9 @@
                     <p id="loading-more-spinner" class="text-muted-current mt-2 hidden">
                         <i class="ph-bold ph-spinner-gap animate-spin mr-2"></i>Đang tải thêm...
                     </p>
+                    <button id="reload-library-btn" class="mt-4 px-8 py-3 rounded-lg font-semibold transition-colors duration-200 shadow-lg text-lg w-full max-w-xs bg-blue-600 text-white hover:bg-blue-700 hidden">
+                        Tải lại thư viện
+                    </button>
                 </div>
             </div>
         </div>
@@ -2483,16 +2486,16 @@
         
         function setupEventListeners() {
             // Player controls
-            dom.playerBar.playPauseBtn.addEventListener('click', () => {
+            dom.playerBar.playPauseBtn?.addEventListener('click', () => { // Added null check
                 triggerHapticFeedback(50);
                 dom.playerBar.playPauseBtn.classList.remove('attention-bounce'); // Remove animation on click
                 if (state.currentSongIndex === -1 && state.currentFilteredSongs.length > 0) playSong(0); // Play first song from filtered list
                 else if (dom.audioPlayer.paused) dom.audioPlayer.play();
                 else dom.audioPlayer.pause();
             });
-            dom.playerBar.nextBtn.addEventListener('click', () => { playNext(); triggerHapticFeedback(50); });
-            dom.playerBar.prevBtn.addEventListener('click', () => { playPrev(); triggerHapticFeedback(50); });
-            dom.playerBar.shuffleBtn.addEventListener('click', () => {
+            dom.playerBar.nextBtn?.addEventListener('click', () => { playNext(); triggerHapticFeedback(50); }); // Added null check
+            dom.playerBar.prevBtn?.addEventListener('click', () => { playPrev(); triggerHapticFeedback(50); }); // Added null check
+            dom.playerBar.shuffleBtn?.addEventListener('click', () => { // Added null check
                 state.isShuffling = !state.isShuffling;
                 saveStateToLocalStorage(CONFIG.STORAGE_KEYS.SHUFFLE, state.isShuffling);
                 // When shuffling, re-render the current category's songs (which will apply pagination)
@@ -2500,18 +2503,18 @@
                 loadCustomCategory(currentCategory); // This will re-filter and re-shuffle if needed
                 updateUI(); triggerHapticFeedback(30);
             });
-            dom.playerBar.repeatBtn.addEventListener('click', () => {
+            dom.playerBar.repeatBtn?.addEventListener('click', () => { // Added null check
                 const modes = ['none', 'all', 'one'];
                 state.repeatMode = modes[(modes.indexOf(state.repeatMode) + 1) % modes.length];
                 saveStateToLocalStorage(CONFIG.STORAGE_KEYS.REPEAT, state.repeatMode);
                 updateUI(); triggerHapticFeedback(30);
             });
-            dom.playerBar.favoriteBtn.addEventListener('click', () => {
+            dom.playerBar.favoriteBtn?.addEventListener('click', () => { // Added null check
                 if (state.currentSongIndex !== -1) toggleFavorite(state.currentFilteredSongs[state.currentSongIndex].id); // Use currentFilteredSongs
                 else showMessage("Vui lòng chọn một bài hát để yêu thích.");
                 triggerHapticFeedback(70);
             });
-            dom.playerBar.shareBtn.addEventListener('click', shareSong);
+            dom.playerBar.shareBtn?.addEventListener('click', shareSong); // Added null check
             
             // Audio events
             dom.audioPlayer.addEventListener('play', () => { 
@@ -2581,10 +2584,10 @@
             });
             
             // Progress bar
-            dom.playerBar.progressContainer.addEventListener('click', (e) => {
-                if(dom.audioPlayer.duration) dom.audioBar.currentTime = (e.offsetX / dom.playerBar.progressContainer.clientWidth) * dom.audioPlayer.duration; // Corrected ID
+            dom.playerBar.progressContainer?.addEventListener('click', (e) => { // Added null check
+                if(dom.audioPlayer.duration) dom.audioPlayer.currentTime = (e.offsetX / dom.playerBar.progressContainer.clientWidth) * dom.audioPlayer.duration; // Corrected ID
             });
-            dom.playerBar.progressContainer.addEventListener('mousemove', throttle((e) => {
+            dom.playerBar.progressContainer?.addEventListener('mousemove', throttle((e) => { // Added null check
                 if (dom.audioPlayer.duration) {
                     const hoverTime = (e.offsetX / dom.playerBar.progressContainer.clientWidth) * dom.audioPlayer.duration;
                     dom.playerBar.progressTooltip.textContent = new Date(hoverTime * 1000).toISOString().substr(14, 5);
@@ -2592,21 +2595,21 @@
                     dom.playerBar.progressTooltip.classList.remove('hidden');
                 }
             }, 50));
-            dom.playerBar.progressContainer.addEventListener('mouseleave', () => dom.playerBar.progressTooltip.classList.add('hidden'));
+            dom.playerBar.progressContainer?.addEventListener('mouseleave', () => dom.playerBar.progressTooltip.classList.add('hidden')); // Added null check
 
             // Volume
-            dom.playerBar.volumeSlider.addEventListener('input', (e) => {
+            dom.playerBar.volumeSlider?.addEventListener('input', (e) => { // Added null check
                 dom.audioPlayer.muted = false; // Unmute when user adjusts volume
                 dom.audioPlayer.volume = e.target.value;
                 updateVolumeUI();
             });
-             dom.playerBar.volumeSlider.addEventListener('change', (e) => {
+             dom.playerBar.volumeSlider?.addEventListener('change', (e) => { // Added null check
                 saveStateToLocalStorage(CONFIG.STORAGE_KEYS.VOLUME, e.target.value);
             });
-            dom.playerBar.volumeIcon.addEventListener('click', toggleMute); 
+            dom.playerBar.volumeIcon?.addEventListener('click', toggleMute); // Added null check
             
             // Search
-            dom.mainContent.searchInput.addEventListener('input', debounce(() => {
+            dom.mainContent.searchInput?.addEventListener('input', debounce(() => { // Added null check
                 const query = dom.mainContent.searchInput.value.trim();
                 state.isSearching = query.length > 0; // Update search flag
                 dom.mainContent.searchClearBtn.classList.toggle('hidden', !state.isSearching);
@@ -2631,7 +2634,7 @@
                     loadCustomCategory(document.querySelector('#category-menu .nav-item.active')?.dataset.category || 'all');
                 }
             }, 300));
-            dom.mainContent.searchClearBtn.addEventListener('click', () => {
+            dom.mainContent.searchClearBtn?.addEventListener('click', () => { // Added null check
                 dom.mainContent.searchInput.value = '';
                 state.isSearching = false;
                 dom.mainContent.searchClearBtn.classList.add('hidden');
@@ -2639,14 +2642,14 @@
             });
 
             // Modals and Popups
-            dom.modals.alertOkBtn.addEventListener('click', hideMessage);
-            dom.playlist.toggleBtn.addEventListener('click', () => {
+            dom.modals.alertOkBtn?.addEventListener('click', hideMessage); // Added null check
+            dom.playlist.toggleBtn?.addEventListener('click', () => { // Added null check
                 const isHidden = dom.playlist.container.classList.toggle('hidden');
                 dom.playlist.container.classList.toggle('show', !isHidden);
                 if (!isHidden) updateUI();
             });
-            dom.lyrics.openBtn.addEventListener('click', () => showLyricsFullscreenPopup(state.currentFilteredSongs[state.currentSongIndex])); // Use currentFilteredSongs
-            dom.lyrics.closeBtn.addEventListener('click', () => dom.lyrics.popup.classList.remove('show'));
+            dom.lyrics.openBtn?.addEventListener('click', () => showLyricsFullscreenPopup(state.currentFilteredSongs[state.currentSongIndex])); // Added null check // Use currentFilteredSongs
+            dom.lyrics.closeBtn?.addEventListener('click', () => dom.lyrics.popup.classList.remove('show')); // Added null check
             
             // Timer
             document.getElementById('start-timer-btn-desktop')?.addEventListener('click', () => startSleepTimer(parseInt(document.getElementById('timer-minutes-desktop').value)));
@@ -2655,39 +2658,39 @@
             document.getElementById('cancel-timer-btn-mobile')?.addEventListener('click', cancelSleepTimer);
 
             // Lyrics Radial Menu
-            dom.lyrics.radialMenu.toggleBtn.addEventListener('click', () => dom.lyrics.radialMenu.container.classList.toggle('active'));
-            document.getElementById('radial-font-size-increase').addEventListener('click', () => {
+            dom.lyrics.radialMenu.toggleBtn?.addEventListener('click', () => dom.lyrics.radialMenu.container.classList.toggle('active')); // Added null check
+            document.getElementById('radial-font-size-increase')?.addEventListener('click', () => { // Added null check
                 state.lyrics.fontSize++;
                 applyLyricsThemeAndFontStyles();
                 saveStateToLocalStorage(CONFIG.LYRICS.STORAGE_KEYS.FONT_SIZE, state.lyrics.fontSize);
             });
-            document.getElementById('radial-font-size-decrease').addEventListener('click', () => {
+            document.getElementById('radial-font-size-decrease')?.addEventListener('click', () => { // Added null check
                 state.lyrics.fontSize = Math.max(12, state.lyrics.fontSize - 1);
                 applyLyricsThemeAndFontStyles();
                 saveStateToLocalStorage(CONFIG.LYRICS.STORAGE_KEYS.FONT_SIZE, state.lyrics.fontSize);
             });
-            document.getElementById('radial-lines-increase').addEventListener('click', () => {
+            document.getElementById('radial-lines-increase')?.addEventListener('click', () => { // Added null check
                 state.lyrics.linesPerPage++;
                 paginateLyrics(state.currentFilteredSongs[state.currentSongIndex]?.description || ''); // Use currentFilteredSongs
                 saveStateToLocalStorage(CONFIG.LYRICS.STORAGE_KEYS.LINES_PER_PAGE, state.lyrics.linesPerPage);
             });
-             document.getElementById('radial-lines-decrease').addEventListener('click', () => {
+             document.getElementById('radial-lines-decrease')?.addEventListener('click', () => { // Added null check
                 state.lyrics.linesPerPage = Math.max(1, state.lyrics.linesPerPage - 1);
                 paginateLyrics(state.currentFilteredSongs[state.currentSongIndex]?.description || ''); // Use currentFilteredSongs
                 saveStateToLocalStorage(CONFIG.LYRICS.STORAGE_KEYS.LINES_PER_PAGE, state.lyrics.linesPerPage);
             });
-            document.getElementById('radial-font-btn').addEventListener('click', () => {
+            document.getElementById('radial-font-btn')?.addEventListener('click', () => { // Added null check
                 state.lyrics.fontIndex = (state.lyrics.fontIndex + 1) % CONFIG.LYRICS.FONTS.length;
                 applyLyricsThemeAndFontStyles();
                 saveStateToLocalStorage(CONFIG.LYRICS.STORAGE_KEYS.FONT_INDEX, state.lyrics.fontIndex);
             });
-            document.getElementById('radial-theme-btn').addEventListener('click', () => {
+            document.getElementById('radial-theme-btn')?.addEventListener('click', () => { // Added null check
                 let currentThemeObjIndex = CONFIG.LYRICS.THEMES.findIndex(t => t.id === state.lyrics.themeId);
                 state.lyrics.themeId = CONFIG.LYRICS.THEMES[(currentThemeObjIndex + 1) % CONFIG.LYRICS.THEMES.length].id;
                 applyLyricsThemeAndFontStyles();
                 saveStateToLocalStorage(CONFIG.LYRICS.STORAGE_KEYS.THEME_ID, state.lyrics.themeId);
             });
-            dom.lyrics.radialMenu.downloadBtn.addEventListener('click', downloadLyrics);
+            dom.lyrics.radialMenu.downloadBtn?.addEventListener('click', downloadLyrics); // Added null check
 
             // Window events
             window.addEventListener('beforeunload', saveCurrentPlaybackState);
@@ -2714,12 +2717,12 @@
             let touchStartY = 0;
             const albumArtElement = dom.playerBar.nowPlayingWrapper;
 
-            albumArtElement.addEventListener('touchstart', (e) => {
+            albumArtElement?.addEventListener('touchstart', (e) => { // Added null check
                 touchStartX = e.touches[0].clientX;
                 touchStartY = e.touches[0].clientY;
             });
 
-            albumArtElement.addEventListener('touchmove', (e) => {
+            albumArtElement?.addEventListener('touchmove', (e) => { // Added null check
                 // Only prevent vertical scrolling if horizontal swipe is significant
                 const touchMoveX = e.touches[0].clientX;
                 const touchMoveY = e.touches[0].clientY;
@@ -2731,7 +2734,7 @@
                 }
             }, { passive: false }); // `passive: false` to allow `preventDefault`
 
-            albumArtElement.addEventListener('touchend', (e) => {
+            albumArtElement?.addEventListener('touchend', (e) => { // Added null check
                 const touchEndX = e.changedTouches[0].clientX;
                 const diffX = touchEndX - touchStartX;
 
@@ -2746,17 +2749,26 @@
             });
 
             // Scroll navigation buttons
-            dom.scrollNav.toTopBtn.addEventListener('click', () => {
+            dom.scrollNav.toTopBtn?.addEventListener('click', () => { // Added null check
                 window.scrollTo({ top: 0, behavior: 'smooth' });
                 triggerHapticFeedback(30);
             });
-            dom.scrollNav.toBottomBtn.addEventListener('click', () => {
+            dom.scrollNav.toBottomBtn?.addEventListener('click', () => { // Added null check
                 window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' });
                 triggerHapticFeedback(30);
             });
 
             // Load more button event listener
-            dom.mainContent.loadMoreBtn.addEventListener('click', loadMoreSongs);
+            dom.mainContent.loadMoreBtn?.addEventListener('click', loadMoreSongs); // Added null check
+
+            // Reload Library button listener
+            dom.mainContent.reloadLibraryBtn?.addEventListener('click', async () => { // Added null check
+                dom.mainContent.reloadLibraryBtn.classList.add('hidden'); // Hide button while reloading
+                dom.mainContent.initialLoadingOverlay.classList.remove('hidden');
+                dom.mainContent.initialLoadingOverlay.classList.add('opacity-100');
+                await fetchAudiusData(); // Re-fetch all data
+                loadCustomCategory(document.querySelector('#category-menu .nav-item.active')?.dataset.category || 'all'); // Re-render current category
+            });
 
 
             // NÂNG CẤP: Keyboard Shortcuts
@@ -2767,13 +2779,13 @@
                 switch (e.code) {
                     case 'Space':
                         e.preventDefault(); // Ngăn cuộn trang
-                        dom.playerBar.playPauseBtn.click();
+                        dom.playerBar.playPauseBtn?.click(); // Added null check
                         break;
                     case 'ArrowRight':
-                        dom.playerBar.nextBtn.click();
+                        dom.playerBar.nextBtn?.click(); // Added null check
                         break;
                     case 'ArrowLeft':
-                        dom.playerBar.prevBtn.click();
+                        dom.playerBar.prevBtn?.click(); // Added null check
                         break;
                 }
             });
@@ -2826,6 +2838,11 @@
             dom.mainContent.initialLoadingOverlay.classList.add('opacity-100');
 
             await fetchAudiusData(); // This now fetches all data into originalSongData
+
+            // If fetchAudiusData failed, show the reload button
+            if (state.originalSongData.length === 0) {
+                dom.mainContent.reloadLibraryBtn.classList.remove('hidden');
+            }
 
             // 6. Restore previous playback state or handle shared link
             const urlParams = new URLSearchParams(window.location.search);
