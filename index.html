@@ -101,7 +101,7 @@
             color: var(--text-current);
             transition: background-color var(--transition-slow), color var(--transition-fast);
             line-height: 1.6;
-            padding-bottom: 90px;
+            padding-bottom: 180px; /* Increased padding-bottom for more space */
             overflow-x: hidden;
             touch-action: manipulation; /* Ngăn chặn các cử chỉ chạm mặc định của trình duyệt */
         }
@@ -763,20 +763,20 @@
             /* Reverted to original mobile player bar styles */
             #player-bar {
                 grid-template-columns: 1fr; /* Chỉ 1 cột */
-                grid-template-rows: auto auto auto; /* 3 hàng: info, controls, actions */
+                grid-template-rows: auto auto auto auto; /* 4 hàng: player-actions-right, progress, info, controls */
                 height: auto; 
                 gap: 0.5rem; 
                 padding: 0.75rem 1rem;
             }
             #player-bar .now-playing-info { 
                 grid-column: 1 / -1; 
-                order: 1; 
+                order: 3; /* Changed order */
                 justify-content: space-between; /* Căn đều các phần tử */
                 align-items: center;
             }
             #player-bar .player-controls-main { 
                 grid-column: 1 / -1; 
-                order: 2; 
+                order: 4; /* Changed order */
                 flex-direction: row; /* Nút điều khiển ngang hàng */
                 justify-content: center;
                 gap: 1rem; /* Khoảng cách giữa các nút */
@@ -786,13 +786,13 @@
                 justify-content: space-around; /* Phân phối đều các nút */
                 align-items: center;
                 grid-column: 1 / -1; /* Đặt nó ở hàng riêng */
-                order: 3; /* Đặt sau các điều khiển chính */
+                order: 1; /* Changed order to be first */
                 padding-top: 0.5rem; /* Khoảng cách với hàng trên */
                 gap: 0.5rem; /* Khoảng cách giữa các nút */
                 flex-wrap: wrap; /* Cho phép xuống dòng nếu không đủ chỗ */
             }
             #player-bar .progress-section { 
-                order: -1; /* Vẫn ở trên cùng */
+                order: 2; /* Changed order */
                 grid-column: 1 / -1; /* Mở rộng toàn bộ chiều rộng */
             } 
 
@@ -1080,7 +1080,6 @@
             BASE_URL, BASE_URL + 'index.html',
             'https://cdn.tailwindcss.com', 'https://unpkg.com/@phosphor-icons/web',
             'https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap',
-            'https://cdn.jsdelivr.net/npm/fuse.js@6.6.2',
             'https://raw.githubusercontent.com/thiensutinhquang/PlayMusic/main/LOGOvectorFULL.svg',
             BASE_URL + 'images/icons/icon-192x192.png', BASE_URL + 'images/icons/icon-512x512.png',
             BASE_URL + 'images/icons/play.png', BASE_URL + 'images/icons/pause.png',
@@ -1379,7 +1378,9 @@
             }
             dom.modals.alertTitle.textContent = title;
             dom.modals.alertMessage.textContent = message;
-            dom.modals.alertOkBtn.style.display = autoDismiss ? 'none' : 'inline-block';
+            if (dom.modals.alertOkBtn) { // Added null check
+                dom.modals.alertOkBtn.style.display = autoDismiss ? 'none' : 'inline-block';
+            }
             dom.modals.alert.classList.add('show');
             if (autoDismiss) {
                 messageTimer = setTimeout(hideMessage, duration);
@@ -1725,7 +1726,7 @@
             }
         }
 
-        function playSong(filteredIndex) {
+        async function playSong(filteredIndex) { // Made async
             if (filteredIndex < 0 || filteredIndex >= state.currentFilteredSongs.length) return;
             
             state.currentSongIndex = filteredIndex; // This is the index in the full filtered list
@@ -1756,7 +1757,7 @@
             dom.playerBar.albumArt.src = song.artwork; /* Reverted to .src for img tag */
             dom.playerBar.albumArt.classList.remove('animate-pulse');
             
-            playSongWithRetries(song);
+            await playSongWithRetries(song); // Await the retry mechanism
 
             // Scroll the active song into view within the *currently rendered* list
             const displayIndexInCurrentData = state.currentDisplayData.findIndex(s => s.id === song.id);
@@ -2220,7 +2221,6 @@
                 clearInterval(state.sleepTimer.interval);
                 state.sleepTimer.interval = null;
             }
-            state.sleepTimer.endTime = null;
             document.getElementById('start-timer-btn-desktop').classList.remove('hidden');
             document.getElementById('cancel-timer-btn-desktop').classList.add('hidden');
             document.getElementById('start-timer-btn-mobile').classList.remove('hidden');
@@ -2736,7 +2736,7 @@
 
             albumArtElement?.addEventListener('touchend', (e) => { // Added null check
                 const touchEndX = e.changedTouches[0].clientX;
-                const diffX = touchEndX - touchStartX;
+                const diffX = touchEndX - touchStartX; // This should be diffX, not diffY
 
                 if (Math.abs(diffX) > 50) { // Swipe threshold
                     if (diffX > 0) { // Swiped right
