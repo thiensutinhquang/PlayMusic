@@ -811,9 +811,6 @@
                 max-width: 250px; /* Giới hạn chiều rộng tối đa */
                 margin: 0 auto; /* Căn giữa */
             }
-            #player-bar .player-actions-right .volume-container input[type="range"] {
-                flex-grow: 1; /* Thanh trượt sẽ co giãn */
-            }
             #player-bar .player-actions-right .volume-percentage {
                 flex-shrink: 0; /* Phần trăm không co lại */
                 min-width: 30px; /* Đảm bảo đủ chỗ cho chữ */
@@ -2585,7 +2582,7 @@
             
             // Progress bar
             dom.playerBar.progressContainer.addEventListener('click', (e) => {
-                if(dom.audioPlayer.duration) dom.audioPlayer.currentTime = (e.offsetX / dom.playerBar.progressContainer.clientWidth) * dom.audioPlayer.duration;
+                if(dom.audioPlayer.duration) dom.audioBar.currentTime = (e.offsetX / dom.playerBar.progressContainer.clientWidth) * dom.audioPlayer.duration; // Corrected ID
             });
             dom.playerBar.progressContainer.addEventListener('mousemove', throttle((e) => {
                 if (dom.audioPlayer.duration) {
