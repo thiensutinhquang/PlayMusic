@@ -101,7 +101,7 @@
             color: var(--text-current);
             transition: background-color var(--transition-slow), color var(--transition-fast);
             line-height: 1.6;
-            padding-bottom: 180px; /* Increased padding-bottom for more space */
+            padding-bottom: 250px; /* Increased padding-bottom for more space */
             overflow-x: hidden;
             touch-action: manipulation; /* Ngăn chặn các cử chỉ chạm mặc định của trình duyệt */
         }
@@ -786,13 +786,13 @@
                 justify-content: space-around; /* Phân phối đều các nút */
                 align-items: center;
                 grid-column: 1 / -1; /* Đặt nó ở hàng riêng */
-                order: 1; /* Changed order to be first */
+                order: 2; /* Changed order to be second */
                 padding-top: 0.5rem; /* Khoảng cách với hàng trên */
                 gap: 0.5rem; /* Khoảng cách giữa các nút */
                 flex-wrap: wrap; /* Cho phép xuống dòng nếu không đủ chỗ */
             }
             #player-bar .progress-section { 
-                order: 2; /* Changed order */
+                order: 1; /* Changed order to be first */
                 grid-column: 1 / -1; /* Mở rộng toàn bộ chiều rộng */
             } 
 
@@ -1680,49 +1680,68 @@
         // ==============================================
         // MUSIC PLAYER CORE
         // ==============================================
-        async function playSongWithRetries(song, retryCount = 0, lastFailedHost = null) {
+        async function playSongWithRetries(song, retryCount = 0, hostRetryAttempt = 0) {
             if (!song) return;
 
-            let host = state.currentAudiusHost;
-            if (lastFailedHost && state.audiusHosts.length > 1) {
-                const availableHosts = state.audiusHosts.filter(h => h !== lastFailedHost);
-                if (availableHosts.length > 0) {
-                    host = availableHosts[Math.floor(Math.random() * availableHosts.length)];
-                    state.currentAudiusHost = host;
-                } else {
-                    console.error("Không còn host nào để thử.");
-                    showMessage("Không thể phát bài hát này. Vui lòng thử bài khác.", "Lỗi phát nhạc");
-                    state.isPlaying = false; updateUI();
-                    if (state.repeatMode === 'all' || state.isShuffling) playNext();
-                    return;
-                }
+            // If all hosts have been tried for this song, move to the next song
+            if (hostRetryAttempt >= state.audiusHosts.length) {
+                console.warn(`Tất cả hosts đã được thử cho bài hát ${song.title}. Chuyển sang bài tiếp theo.`);
+                showMessage("Không thể phát bài hát này sau nhiều lần thử. Chuyển sang bài tiếp theo.", "Lỗi Phát Nhạc");
+                playNext();
+                return;
+            }
+
+            // Determine the current host to try
+            let hostToTry = state.currentAudiusHost;
+            if (retryCount > 0) { // If this is a retry, cycle through hosts
+                const currentHostIndex = state.audiusHosts.indexOf(state.currentAudiusHost);
+                const nextHostIndex = (currentHostIndex + 1) % state.audiusHosts.length;
+                hostToTry = state.audiusHosts[nextHostIndex];
+                state.currentAudiusHost = hostToTry; // Update the global current host
             }
             
-            console.log(`Đang thử phát ${song.title} từ ${host} (Lần thử ${retryCount + 1})`);
+            console.log(`Đang thử phát ${song.title} từ ${hostToTry} (Lần thử ${retryCount + 1})`);
             dom.playerBar.playPauseBtn.classList.add('play-pause-loading');
-            dom.playerBar.albumArt.classList.add('animate-pulse'); // Show pulse on album art during loading
-            updateUI();
-            
-            dom.audioPlayer.src = `${host}/v1/tracks/${song.id}/stream?app_name=MSTQPlayer`;
+            dom.playerBar.albumArt.classList.add('animate-pulse');
+            // updateUI(); // Removed to prevent race condition
+
+            dom.audioPlayer.src = `${hostToTry}/v1/tracks/${song.id}/stream?app_name=MSTQPlayer`;
             dom.audioPlayer.load();
 
+            const playPromise = dom.audioPlayer.play();
+
             try {
-                // Khôi phục vị trí phát nếu có
-                const savedState = loadStateFromLocalStorage(CONFIG.STORAGE_KEYS.PLAYBACK_STATE, {});
-                if (savedState.songId === song.id && savedState.currentTime) {
-                    dom.audioPlayer.currentTime = savedState.currentTime;
-                    saveStateToLocalStorage(CONFIG.STORAGE_KEYS.PLAYBACK_STATE, {});
-                }
-                await dom.audioPlayer.play();
+                // Add a timeout for the play promise itself
+                const playTimeoutPromise = new Promise((resolve, reject) => {
+                    const id = setTimeout(() => reject(new Error('Play timeout')), 10000); // 10 seconds for play()
+                    playPromise.then(resolve, reject).finally(() => clearTimeout(id));
+                });
+                
+                await playTimeoutPromise; // Wait for play to resolve or timeout
+                
+                // If play was successful, clear any previous retry state
+                state.lastPlayAttemptFailed = false;
+
             } catch (error) {
-                console.error(`Lỗi phát nhạc từ ${host}:`, error);
+                console.error(`Lỗi phát nhạc từ ${hostToTry}:`, error);
+                // Check if the error is due to interruption by pause (common browser policy)
+                if (error.name === 'AbortError' && error.message.includes('interrupted by a call to pause')) {
+                    console.log("Play request interrupted by pause. This is often benign due to browser autoplay policies.");
+                    // In this specific case, we don't necessarily want to retry or skip.
+                    // The user might have manually paused, or the browser might be preventing autoplay.
+                    // We'll let the play/pause event listeners handle the UI state.
+                    return; // Exit without further retries or skipping
+                }
+
+                // If it's a real playback error, try again with exponential backoff and potentially a new host
                 if (retryCount < CONFIG.MAX_AUDIO_RETRIES - 1) {
-                    showMessage(`Lỗi phát nhạc. Đang thử kết nối khác...`, "Lỗi kết nối");
-                    await playSongWithRetries(song, retryCount + 1, host);
+                    showMessage(`Lỗi phát nhạc. Đang thử kết nối khác... (Thử lại ${retryCount + 1})`, "Lỗi kết nối", true, 2500);
+                    // Exponential backoff before retrying
+                    await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
+                    await playSongWithRetries(song, retryCount + 1, hostRetryAttempt + 1); // Increment host retry attempt
                 } else {
-                    showMessage("Không thể phát bài hát này. Vui lòng kiểm tra kết nối Internet hoặc thử lại sau.", "Lỗi phát nhạc");
-                    if (state.repeatMode === 'all' || state.isShuffling) playNext();
-                    else { state.isPlaying = false; updateUI(); }
+                    showMessage("Không thể phát bài hát này sau nhiều lần thử. Chuyển sang bài tiếp theo.", "Lỗi Phát Nhạc");
+                    playNext(); // Move to next song if all retries fail
                 }
             }
         }
@@ -2015,6 +2034,15 @@
                     navigator.mediaSession.setActionHandler('stop', () => dom.audioPlayer.pause());
                     navigator.mediaSession.setActionHandler('nexttrack', playNext);
                     navigator.mediaSession.setActionHandler('previoustrack', playPrev);
+
+                    // Update position state for progress bar
+                    if ('setPositionState' in navigator.mediaSession) {
+                        navigator.mediaSession.setPositionState({
+                            duration: dom.audioPlayer.duration || 0,
+                            playbackRate: dom.audioPlayer.playbackRate,
+                            position: dom.audioPlayer.currentTime
+                        });
+                    }
 
                 } catch (error) {
                     console.error("Lỗi khi cập nhật Media Session:", error);
@@ -2539,6 +2567,14 @@
                     dom.playerBar.currentTime.textContent = new Date(currentTime * 1000).toISOString().substr(14, 5);
                     dom.playerBar.duration.textContent = new Date(duration * 1000).toISOString().substr(14, 5);
                 }
+                // Update Media Session position state for native player progress bar
+                if ('mediaSession' in navigator && navigator.mediaSession.setPositionState) {
+                    navigator.mediaSession.setPositionState({
+                        duration: duration || 0,
+                        playbackRate: dom.audioPlayer.playbackRate,
+                        position: currentTime
+                    });
+                }
             }, 500));
             dom.audioPlayer.addEventListener('waiting', () => {
                 console.log('Audio is waiting for more data...');
@@ -2790,6 +2826,30 @@
                         break;
                 }
             });
+
+            // Add visibility change listener for wake lock management
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) {
+                    // App is going to background
+                    releaseWakeLock();
+                } else {
+                    // App is coming to foreground
+                    if (state.isPlaying && dom.audioPlayer.paused && dom.audioPlayer.currentTime > 0) {
+                        // If it was playing and now paused (likely by OS), try to resume
+                        requestWakeLock(); // Re-acquire wake lock
+                        dom.audioPlayer.play().catch(e => {
+                            console.warn("Could not resume playback on foreground:", e);
+                            // Inform user if play fails due to policy (e.g., no user gesture)
+                            if (e.name === 'NotAllowedError') {
+                                showMessage("Vui lòng nhấn nút Play để tiếp tục nghe nhạc.", "Tiếp tục phát nhạc", true, 3000);
+                            }
+                        });
+                    } else if (state.isPlaying) {
+                        // If it was playing and still playing, just re-acquire wake lock
+                        requestWakeLock();
+                    }
+                }
+            });
         }
 
         async function initializeApp() {
@@ -2807,7 +2867,6 @@
             const savedVolume = loadStateFromLocalStorage(CONFIG.STORAGE_KEYS.VOLUME, '1');
             dom.audioPlayer.volume = savedVolume;
             state.lastVolume = savedVolume;
-            dom.playerBar.volumeSlider.value = savedVolume;
             updateVolumeUI();
             applyTheme();
 
