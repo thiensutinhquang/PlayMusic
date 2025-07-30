@@ -763,7 +763,7 @@
             /* Reverted to original mobile player bar styles */
             #player-bar {
                 grid-template-columns: 1fr; /* Chỉ 1 cột */
-                grid-template-rows: auto auto auto auto; /* 4 hàng: player-actions-right, progress, info, controls */
+                grid-template-rows: auto auto auto auto; /* 4 hàng: progress, volume, info, controls */
                 height: auto; 
                 gap: 0.5rem; 
                 padding: 0.75rem 1rem;
@@ -781,18 +781,18 @@
                 justify-content: center;
                 gap: 1rem; /* Khoảng cách giữa các nút */
             }
-            #player-bar .player-actions-right { 
+            #player-bar .player-actions-right { /* This contains the volume slider and other actions */
                 display: flex; /* Hiển thị lại */
                 justify-content: space-around; /* Phân phối đều các nút */
                 align-items: center;
                 grid-column: 1 / -1; /* Đặt nó ở hàng riêng */
-                order: 1; /* Changed order to be first */
+                order: 2; /* Changed order to be second */
                 padding-top: 0.5rem; /* Khoảng cách với hàng trên */
                 gap: 0.5rem; /* Khoảng cách giữa các nút */
                 flex-wrap: wrap; /* Cho phép xuống dòng nếu không đủ chỗ */
             }
             #player-bar .progress-section { 
-                order: 2; /* Changed order to be second */
+                order: 1; /* Changed order to be first */
                 grid-column: 1 / -1; /* Mở rộng toàn bộ chiều rộng */
             } 
 
