@@ -786,13 +786,13 @@
                 justify-content: space-around; /* Phân phối đều các nút */
                 align-items: center;
                 grid-column: 1 / -1; /* Đặt nó ở hàng riêng */
-                order: 2; /* Changed order to be second */
+                order: 1; /* Changed order to be first */
                 padding-top: 0.5rem; /* Khoảng cách với hàng trên */
                 gap: 0.5rem; /* Khoảng cách giữa các nút */
                 flex-wrap: wrap; /* Cho phép xuống dòng nếu không đủ chỗ */
             }
             #player-bar .progress-section { 
-                order: 1; /* Changed order to be first */
+                order: 2; /* Changed order to be second */
                 grid-column: 1 / -1; /* Mở rộng toàn bộ chiều rộng */
             } 
 
@@ -1530,7 +1530,7 @@
                 currentThemeObj = CONFIG.APP_THEMES.find(t => t.id === theme.id);
                 document.querySelectorAll(`.preset-theme-btn[data-theme="${theme.id}"]`).forEach(btn => btn.classList.add('active'));
                 if(darkModeToggle) darkModeToggle.checked = false;
-                if(darkModeToggleMobile) darkModeToggleMobile.checked = false;
+                if(darkModeToggleMobile) darkModeToggleToggleMobile.checked = false; // Corrected ID
             } else { // Default to light mode
                 currentThemeObj = CONFIG.APP_THEMES.find(t => t.id === 'light');
                 if(darkModeToggle) darkModeToggle.checked = false;
