@@ -536,8 +536,8 @@
         
         /* Reverted to original scroll nav styles */
         #scroll-nav-container {
-            position: fixed; top: 50%; right: 20px; transform: translateY(-50%);
-            z-index: 999; display: flex; flex-direction: column; gap: 0.75rem;
+            position: fixed; bottom: 110px; /* Adjusted position to be above the player bar */
+            right: 20px; z-index: 999; display: flex; flex-direction: column; gap: 0.75rem;
             opacity: 0; visibility: hidden; transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
         }
         #scroll-nav-container.show { opacity: 1; visibility: visible; }
@@ -846,7 +846,7 @@
                 min-height: 36px;
             }
             body.player-bar-minimized #player-bar .now-playing-info .text-info {
-                display: none; /* Vẫn ẩn thông tin văn bản */
+                display: none; /* Vẫn ẩn thông báo văn bản */
             }
             body.player-bar-minimized #player-bar .player-actions-right {
                 display: none; /* Vẫn ẩn các hành động bên phải */
