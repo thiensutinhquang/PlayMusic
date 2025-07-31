@@ -34,12 +34,6 @@
     <!-- Fuse.js for fuzzy search -->
     <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2"></script>
     
-    <!-- 
-        GIẢI PHÁP 1: TÁCH CSS RA FILE RIÊNG (main.css)
-        Trong dự án thực tế, bạn sẽ tạo một file main.css và đặt toàn bộ CSS dưới đây vào đó.
-        Sau đó, bạn sẽ liên kết nó như sau: <link rel="stylesheet" href="main.css">
-        Trong môi trường Canvas, chúng ta vẫn phải giữ nó trong thẻ <style>, nhưng đây là cách bạn tổ chức nó.
-    -->
     <style>
         /* ==============================================
         HỆ THỐNG THIẾT KẾ & BIẾN TOÀN CỤC (CSS VARIABLES)
@@ -1530,7 +1524,7 @@
                 currentThemeObj = CONFIG.APP_THEMES.find(t => t.id === theme.id);
                 document.querySelectorAll(`.preset-theme-btn[data-theme="${theme.id}"]`).forEach(btn => btn.classList.add('active'));
                 if(darkModeToggle) darkModeToggle.checked = false;
-                if(darkModeToggleMobile) darkModeToggleToggleMobile.checked = false; // Corrected ID
+                if(darkModeToggleMobile) darkModeToggleMobile.checked = false; // Corrected ID
             } else { // Default to light mode
                 currentThemeObj = CONFIG.APP_THEMES.find(t => t.id === 'light');
                 if(darkModeToggle) darkModeToggle.checked = false;
@@ -2241,8 +2235,8 @@
             const seconds = totalSeconds % 60;
             const formattedTime = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
             if(displayDesktop) displayDesktop.textContent = formattedTime;
-            if(displayMobile) dom.playerBar.songArtist.classList.add('hidden'); // Hide on mobile when timer is active
-            if(displayMobile) mobileDisplay.textContent = formattedTime; // Corrected ID
+            // On mobile, update the timer display in the mobile menu, not the song artist
+            if(displayMobile) displayMobile.textContent = formattedTime;
         }
 
         function cancelSleepTimer() {
@@ -2735,7 +2729,8 @@
             // Nâng cấp: Cuộn ẩn/hiện thanh player
             window.addEventListener('scroll', throttle(() => {
                 const currentScrollY = window.scrollY;
-                if (window.innerWidth > 768) { // Only apply minimization on larger screens
+                // Only apply minimization on larger screens
+                if (window.innerWidth > 768) {
                     if (currentScrollY > state.lastScrollY && currentScrollY > 100) { // Scrolling down
                         dom.body.classList.add('player-bar-minimized');
                     } else if (currentScrollY < state.lastScrollY || currentScrollY <= 100) { // Scrolling up or at the top
