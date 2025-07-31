@@ -1341,6 +1341,7 @@
             repeatMode: 'all',
             favoriteSongIds: [],
             wakeLock: null,
+            wakeLockInterval: null, // Thêm biến để lưu trữ interval của Wake Lock
             lastVolume: 1,
             lyrics: {
                 pages: [],
@@ -2026,8 +2027,14 @@
                     });
                     navigator.mediaSession.setActionHandler('pause', () => dom.audioPlayer.pause());
                     navigator.mediaSession.setActionHandler('stop', () => dom.audioPlayer.pause());
-                    navigator.mediaSession.setActionHandler('nexttrack', playNext);
-                    navigator.mediaSession.setActionHandler('previoustrack', playPrev);
+                    navigator.mediaSession.setActionHandler('nexttrack', () => { // Thêm phản hồi rung cho native controls
+                        playNext();
+                        triggerHapticFeedback(50);
+                    });
+                    navigator.mediaSession.setActionHandler('previoustrack', () => { // Thêm phản hồi rung cho native controls
+                        playPrev();
+                        triggerHapticFeedback(50);
+                    });
 
                     // Update position state for progress bar
                     if ('setPositionState' in navigator.mediaSession) {
@@ -2544,6 +2551,10 @@
                 state.isPlaying = true; 
                 updateUI(); 
                 requestWakeLock(); 
+                // Bắt đầu kiểm tra Wake Lock định kỳ khi phát nhạc
+                if (!state.wakeLockInterval) {
+                    state.wakeLockInterval = setInterval(requestWakeLock, 60000); // Mỗi 60 giây
+                }
                 broadcastChannel.postMessage({ type: 'PLAY_ACTION', payload: { isPlaying: true } });
             });
             dom.audioPlayer.addEventListener('pause', () => { 
@@ -2551,6 +2562,11 @@
                 updateUI(); 
                 dom.playerBar.albumArt.classList.remove('animate-pulse'); // Ensure pulse is removed on pause
                 releaseWakeLock(); 
+                // Dừng kiểm tra Wake Lock định kỳ khi tạm dừng
+                if (state.wakeLockInterval) {
+                    clearInterval(state.wakeLockInterval);
+                    state.wakeLockInterval = null;
+                }
                 broadcastChannel.postMessage({ type: 'PLAY_ACTION', payload: { isPlaying: false } });
             });
             dom.audioPlayer.addEventListener('ended', () => { if (state.repeatMode !== 'none') playNext(); else { state.isPlaying = false; updateUI(); } });
@@ -2560,6 +2576,14 @@
                     dom.playerBar.progressBar.style.width = `${(currentTime / duration) * 100}%`;
                     dom.playerBar.currentTime.textContent = new Date(currentTime * 1000).toISOString().substr(14, 5);
                     dom.playerBar.duration.textContent = new Date(duration * 1000).toISOString().substr(14, 5);
+
+                    // Nâng cấp: Kiểm tra nếu bài hát gần hết (90%) và đang ở trạng thái tạm dừng không mong muốn
+                    // Thử phát lại để duy trì kết nối
+                    const progress = currentTime / duration;
+                    if (progress > 0.9 && dom.audioPlayer.paused && state.isPlaying) {
+                        console.log('Bài hát gần hết, bị tạm dừng bất ngờ. Đang thử phát lại.');
+                        dom.audioPlayer.play().catch(e => console.warn('Không thể tự động tiếp tục phát khi gần hết bài:', e));
+                    }
                 }
                 // Update Media Session position state for native player progress bar
                 if ('mediaSession' in navigator && navigator.mediaSession.setPositionState) {
@@ -2589,6 +2613,13 @@
                 // For now, let the browser try to recover.
                 // If persistent, user might need to check network or we might need more aggressive host switching.
                 showMessage("Kết nối mạng không ổn định, đang tải lại...", "Lỗi mạng", true, 2500); // Changed duration to 2.5 seconds
+                // Gửi thông báo nếu có quyền
+                if (Notification.permission === 'granted' && state.isPlaying) {
+                    new Notification('Kết nối không ổn định', {
+                        body: 'Đang tải lại nhạc. Vui lòng kiểm tra kết nối mạng.',
+                        icon: 'https://thiensutinhquang.github.io/PlayMusic/images/icons/icon-192x192.png'
+                    });
+                }
             });
             dom.audioPlayer.addEventListener('error', (e) => {
                 console.error('Audio error:', e);
@@ -2611,6 +2642,13 @@
                         break;
                 }
                 showMessage(errorMessage + " Tự động chuyển bài tiếp theo.", "Lỗi Phát Nhạc");
+                // Gửi thông báo nếu có quyền
+                if (Notification.permission === 'granted' && state.isPlaying) {
+                    new Notification('Lỗi Phát Nhạc', {
+                        body: `Bài hát dừng đột ngột: ${errorMessage}. Vui lòng quay lại ứng dụng.`,
+                        icon: 'https://thiensutinhquang.github.io/PlayMusic/images/icons/icon-192x192.png'
+                    });
+                }
                 playNext(); // Automatically try next song on error
             });
             
@@ -2827,11 +2865,20 @@
                 if (document.hidden) {
                     // App is going to background
                     releaseWakeLock();
+                    // Dừng kiểm tra Wake Lock định kỳ khi ứng dụng ẩn
+                    if (state.wakeLockInterval) {
+                        clearInterval(state.wakeLockInterval);
+                        state.wakeLockInterval = null;
+                    }
                 } else {
                     // App is coming to foreground
                     if (state.isPlaying && dom.audioPlayer.paused && dom.audioPlayer.currentTime > 0) {
                         // If it was playing and now paused (likely by OS), try to resume
                         requestWakeLock(); // Re-acquire wake lock
+                        // Bắt đầu kiểm tra Wake Lock định kỳ khi ứng dụng hiện lại và đang phát
+                        if (!state.wakeLockInterval) {
+                            state.wakeLockInterval = setInterval(requestWakeLock, 60000);
+                        }
                         dom.audioPlayer.play().catch(e => {
                             console.warn("Could not resume playback on foreground:", e);
                             // Inform user if play fails due to policy (e.g., no user gesture)
@@ -2842,6 +2889,10 @@
                     } else if (state.isPlaying) {
                         // If it was playing and still playing, just re-acquire wake lock
                         requestWakeLock();
+                        // Bắt đầu kiểm tra Wake Lock định kỳ nếu ứng dụng hiện lại và đang phát
+                        if (!state.wakeLockInterval) {
+                            state.wakeLockInterval = setInterval(requestWakeLock, 60000);
+                        }
                     }
                 }
             });
