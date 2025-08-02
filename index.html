@@ -15,7 +15,6 @@
     <link rel="preconnect" href="https://unpkg.com">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <link rel="preconnect" href="https://api.audius.co">
     <!-- Assuming common discovery hosts, add more if known -->
     <link rel="preconnect" href="https://discoveryprovider.audius.co"> 
@@ -1223,7 +1222,7 @@
             },
             CATEGORIES: [
                 { id: 'all', name: '🎧 Tất cả' }, { id: 'new', name: '🆕 Mới' },
-                { id: 'hot', name: '� Nổi bật' }, { id: 'dieu-thu', name: '🎤 Diệu Thu' },
+                { id: 'hot', name: '🔥 Nổi bật' }, { id: 'dieu-thu', name: '🎤 Diệu Thu' },
                 { id: 'others', name: '👤 Khác' }, { id: 'phap', name: '📿 Pháp' },
                 { id: 'favorites', name: '❤️ Yêu thích' }
             ],
@@ -1395,19 +1394,19 @@
             if (messageTimer) {
                 clearTimeout(messageTimer);
             }
-            dom.modals.alertTitle.textContent = title;
-            dom.modals.alertMessage.textContent = message;
+            if (dom.modals.alertTitle) dom.modals.alertTitle.textContent = title;
+            if (dom.modals.alertMessage) dom.modals.alertMessage.textContent = message;
             if (dom.modals.alertOkBtn) { // Added null check
                 dom.modals.alertOkBtn.style.display = autoDismiss ? 'none' : 'inline-block';
             }
-            dom.modals.alert.classList.add('show');
+            if (dom.modals.alert) dom.modals.alert.classList.add('show');
             if (autoDismiss) {
                 messageTimer = setTimeout(hideMessage, duration);
             }
         }
 
         function hideMessage() {
-            dom.modals.alert.classList.remove('show');
+            if (dom.modals.alert) dom.modals.alert.classList.remove('show');
             if (messageTimer) {
                 clearTimeout(messageTimer);
                 messageTimer = null;
@@ -1700,7 +1699,14 @@
                 if (dom.mainContent.songsContainer) { // Add null check
                     dom.mainContent.songsContainer.innerHTML = '<p class="text-center text-red-500 col-span-full">Lỗi khi tải danh sách nhạc. Vui lòng thử lại sau.</p>';
                 }
-                showMessage(`Không thể tải danh sách nhạc từ Audius: ${error.message}. Vui lòng kiểm tra kết nối internet hoặc thử lại sau.`, "Lỗi tải dữ liệu");
+                // Cập nhật thông báo cho người dùng
+                showMessage(
+                    `Không thể tải danh sách nhạc từ Audius: ${error.message}. ` +
+                    `Vui lòng kiểm tra kết nối internet. Nếu lỗi vẫn tiếp diễn, ` +
+                    `hãy vào **Menu Giao diện** (biểu tượng bảng màu) và chọn **"Xóa Cache & Tải lại"** để khắc phục.`,
+                    "Lỗi tải dữ liệu",
+                    false // Không tự động đóng, để người dùng đọc kỹ
+                );
                 
                 // Ensure loading overlay is hidden even on error
                 if (dom.mainContent.initialLoadingOverlay) { // Add null check
@@ -1807,10 +1813,12 @@
                 renderSongs(state.currentDisplayData); // Re-render the new window of songs
             }
 
-            dom.playerBar.songTitle.textContent = song.title;
-            dom.playerBar.songArtist.textContent = song.artist;
-            dom.playerBar.albumArt.src = song.artwork_full; // Use full artwork for player bar
-            dom.playerBar.albumArt.classList.remove('animate-pulse');
+            if (dom.playerBar.songTitle) dom.playerBar.songTitle.textContent = song.title;
+            if (dom.playerBar.songArtist) dom.playerBar.songArtist.textContent = song.artist;
+            if (dom.playerBar.albumArt) {
+                dom.playerBar.albumArt.src = song.artwork_full; // Use full artwork for player bar
+                dom.playerBar.albumArt.classList.remove('animate-pulse');
+            }
             
             await playSongWithRetries(song); // Await the retry mechanism
 
@@ -3175,4 +3183,3 @@
     </script>
 </body>
 </html>
-�
