@@ -883,6 +883,7 @@
                                     <label class="relative inline-flex items-center cursor-pointer" aria-label="Chế độ tối"><input type="checkbox" id="darkModeToggle" class="sr-only peer"><div class="w-11 h-6 bg-slate-200 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-color"></div></label>
                                     <i class="ph-bold ph-moon text-slate-400"></i>
                                 </div>
+                                <a href="#" id="clear-cache-btn-desktop" class="flex items-center gap-1 p-2 rounded-md text-red-500 hover:bg-red-100 mt-2"><i class="ph-bold ph-trash"></i>Xóa Cache & Tải lại</a>
                             </div>
                         </div>
                         <div class="dropdown-container" id="timer-dropdown-desktop">
@@ -927,6 +928,7 @@
                             <label class="relative inline-flex items-center cursor-pointer" aria-label="Chế độ tối"><input type="checkbox" id="darkModeToggleMobile" class="sr-only peer"><div class="w-11 h-6 bg-slate-200 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-color"></div></label>
                             <i class="ph-bold ph-moon text-slate-400"></i>
                         </div>
+                        <a href="#" id="clear-cache-btn-mobile" class="flex items-center gap-1 p-2 rounded-md text-red-500 hover:bg-red-100 mt-2"><i class="ph-bold ph-trash"></i>Xóa Cache & Tải lại</a>
                     </div>
                 </div>
                 <div class="dropdown-container">
@@ -970,6 +972,7 @@
                     </div>
                 </div>
                 <audio id="audio-player" style="display: none;" crossOrigin="anonymous" preload="auto" playsinline webkit-playsinline></audio>
+                <audio id="audio-preloader" style="display: none;" crossOrigin="anonymous" preload="auto"></audio> <!-- Thêm audio preloader -->
                 <!-- Pagination / Load More -->
                 <div id="pagination-controls" class="mt-6 text-center">
                     <button id="load-more-btn" class="px-8 py-4 rounded-lg font-semibold transition-colors duration-200 shadow-lg text-lg w-full max-w-xs hidden"
@@ -1068,7 +1071,7 @@
     <script>
     // --- PWA Service Worker Logic ---
     const swCode = `
-        const CACHE_NAME = 'mstq-music-cache-v9'; // Nâng cấp phiên bản cache
+        const CACHE_NAME = 'mstq-music-cache-v10'; // Nâng cấp phiên bản cache để kích hoạt cập nhật
         const BASE_URL = 'https://thiensutinhquang.github.io/PlayMusic/';
         const urlsToCache = [
             BASE_URL, BASE_URL + 'index.html',
@@ -1082,11 +1085,30 @@
         ];
 
         self.addEventListener('install', event => {
+            console.log('ServiceWorker: Đang cài đặt, cache tài nguyên...');
+            self.skipWaiting(); // Kích hoạt Service Worker mới ngay lập tức
             event.waitUntil(
                 caches.open(CACHE_NAME).then(cache => {
-                    console.log('Cache đã được mở');
                     return cache.addAll(urlsToCache);
-                }).catch(error => console.error('Lỗi cache tài nguyên khi cài đặt:', error))
+                }).catch(error => console.error('ServiceWorker: Lỗi cache tài nguyên khi cài đặt:', error))
+            );
+        });
+
+        self.addEventListener('activate', event => {
+            console.log('ServiceWorker: Đã kích hoạt.');
+            event.waitUntil(
+                caches.keys().then(cacheNames => {
+                    return Promise.all(
+                        cacheNames.map(cacheName => {
+                            if (cacheName !== CACHE_NAME) {
+                                console.log('ServiceWorker: Xóa cache cũ:', cacheName);
+                                return caches.delete(cacheName);
+                            }
+                        })
+                    );
+                }).then(() => {
+                    return clients.claim(); // Cho phép Service Worker mới kiểm soát các trang đã mở
+                })
             );
         });
 
@@ -1098,7 +1120,7 @@
             if (url.hostname.includes('audius.co') || url.hostname.includes('staked.cloud')) {
                 event.respondWith(
                     fetch(request).catch(err => {
-                        console.error("Lỗi fetch API Audius:", err);
+                        console.error("ServiceWorker: Lỗi fetch API Audius:", err);
                     })
                 );
                 return;
@@ -1119,26 +1141,10 @@
                         }
                         return networkResponse;
                     }).catch(error => {
-                        console.log('Fetch thất bại, không có trong cache:', error);
+                        console.log('ServiceWorker: Fetch thất bại, không có trong cache:', error);
                     });
                 })
             );
-        });
-
-        self.addEventListener('activate', event => {
-          const cacheWhitelist = [CACHE_NAME];
-          event.waitUntil(
-            caches.keys().then(cacheNames => {
-              return Promise.all(
-                cacheNames.map(cacheName => {
-                  if (cacheWhitelist.indexOf(cacheName) === -1) {
-                    console.log('Xóa cache cũ:', cacheName);
-                    return caches.delete(cacheName);
-                  }
-                })
-              );
-            })
-          );
         });
 
         self.addEventListener('notificationclick', event => {
@@ -1163,7 +1169,21 @@
             const blob = new Blob([swCode], { type: 'application/javascript' });
             const swUrl = URL.createObjectURL(blob);
             navigator.serviceWorker.register(swUrl)
-                .then(reg => console.log('ServiceWorker đã đăng ký thành công:', reg.scope))
+                .then(reg => {
+                    console.log('ServiceWorker đã đăng ký thành công:', reg.scope);
+                    reg.addEventListener('updatefound', () => {
+                        const newWorker = reg.installing || reg.waiting;
+                        if (newWorker) {
+                            newWorker.addEventListener('statechange', () => {
+                                if (newWorker.state === 'activated') {
+                                    console.log('ServiceWorker mới đã được kích hoạt. Đang tải lại trang...');
+                                    // Tải lại trang để áp dụng Service Worker mới
+                                    window.location.reload(true); 
+                                }
+                            });
+                        }
+                    });
+                })
                 .catch(err => console.log('ServiceWorker đăng ký thất bại:', err));
         });
     } else {
@@ -1188,10 +1208,12 @@
         // CẤU HÌNH & BIẾN TOÀN CỤC
         // ==============================================
         const CONFIG = {
+            APP_VERSION: '1.0.1', // Thêm số phiên bản ứng dụng
             API_KEY: "08c897eb7784e03007e0769d01f2ca1c6a2001b4",
             USER_HANDLE: "minhsutinhquang",
             MAX_AUDIO_RETRIES: 3,
             STORAGE_KEYS: {
+                APP_VERSION: 'appVersion', // Key lưu phiên bản ứng dụng
                 THEME: 'themeState',
                 SHUFFLE: 'isShuffling',
                 REPEAT: 'repeatMode',
@@ -1201,7 +1223,7 @@
             },
             CATEGORIES: [
                 { id: 'all', name: '🎧 Tất cả' }, { id: 'new', name: '🆕 Mới' },
-                { id: 'hot', name: '🔥 Nổi bật' }, { id: 'dieu-thu', name: '🎤 Diệu Thu' },
+                { id: 'hot', name: '� Nổi bật' }, { id: 'dieu-thu', name: '🎤 Diệu Thu' },
                 { id: 'others', name: '👤 Khác' }, { id: 'phap', name: '📿 Pháp' },
                 { id: 'favorites', name: '❤️ Yêu thích' }
             ],
@@ -1324,7 +1346,8 @@
                 toTopBtn: document.getElementById('scroll-to-top-btn'),
                 toBottomBtn: document.getElementById('scroll-to-bottom-btn'),
             },
-            audioPlayer: document.getElementById('audio-player')
+            audioPlayer: document.getElementById('audio-player'),
+            audioPreloader: document.getElementById('audio-preloader') // Thêm audio preloader
         };
         
         // Global State
@@ -1407,20 +1430,28 @@
                 const response = await fetch('https://raw.githubusercontent.com/thiensutinhquang/PlayMusic/main/LOGOvectorFULL.svg');
                 if (!response.ok) throw new Error('Không tải được SVG');
                 const svgText = await response.text();
-                document.getElementById('splash-logo-placeholder').innerHTML = svgText;
-                dom.header.logoPlaceholder.innerHTML = svgText;
+                if (document.getElementById('splash-logo-placeholder')) {
+                    document.getElementById('splash-logo-placeholder').innerHTML = svgText;
+                }
+                if (dom.header.logoPlaceholder) {
+                    dom.header.logoPlaceholder.innerHTML = svgText;
+                }
             } catch (error) {
                 console.error("Lỗi tải SVG:", error);
-                dom.header.logoPlaceholder.innerHTML = `<div class="w-16 h-16 bg-primary-color rounded-full flex items-center justify-center text-white font-bold text-2xl">M</div>`;
+                if (dom.header.logoPlaceholder) {
+                    dom.header.logoPlaceholder.innerHTML = `<div class="w-16 h-16 bg-primary-color rounded-full flex items-center justify-center text-white font-bold text-2xl">M</div>`;
+                }
             }
         }
 
         function cacheLogoElements() {
-            state.logoElements = {
-                chakraSystem: dom.header.logoPlaceholder.querySelector('#chakra-system'),
-                humanBody: dom.header.logoPlaceholder.querySelector('#human-body'),
-                trucChiChanTamText: dom.header.logoPlaceholder.querySelector('#logo-text-trucchichantam'),
-            };
+            if (dom.header.logoPlaceholder) { // Kiểm tra null trước khi truy cập
+                state.logoElements = {
+                    chakraSystem: dom.header.logoPlaceholder.querySelector('#chakra-system'),
+                    humanBody: dom.header.logoPlaceholder.querySelector('#human-body'),
+                    trucChiChanTamText: dom.header.logoPlaceholder.querySelector('#logo-text-trucchichantam'),
+                };
+            }
         }
 
         function toggleLogoAnimations(isActive) {
@@ -1497,7 +1528,7 @@
                 songId: song.id,
                 currentTime: dom.audioPlayer.currentTime,
                 currentCategory: document.querySelector('#category-menu .nav-item.active')?.dataset.category || 'all',
-                currentSearchQuery: dom.mainContent.searchInput.value
+                currentSearchQuery: dom.mainContent.searchInput?.value || ''
             };
             saveStateToLocalStorage(CONFIG.STORAGE_KEYS.PLAYBACK_STATE, playbackState);
         }
@@ -1578,7 +1609,7 @@
         async function fetchAudiusData() {
             // Add a timeout for the fetch request
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 seconds timeout
+            const timeoutId = setTimeout(() => controller.abort(), 30000); // Increased to 30 seconds for more robustness
 
             try {
                 let hosts;
@@ -1612,8 +1643,10 @@
                 state.currentAudiusHost = state.audiusHosts[Math.floor(Math.random() * state.audiusHosts.length)];
 
                 // Show initial loading overlay
-                dom.mainContent.initialLoadingOverlay.classList.remove('hidden');
-                dom.mainContent.initialLoadingOverlay.classList.add('opacity-100');
+                if (dom.mainContent.initialLoadingOverlay) { // Add null check
+                    dom.mainContent.initialLoadingOverlay.classList.remove('hidden');
+                    dom.mainContent.initialLoadingOverlay.classList.add('opacity-100');
+                }
 
                 // Fetch user ID
                 const userResponse = await fetch(`${state.currentAudiusHost}/v1/users/search?query=${CONFIG.USER_HANDLE}&app_name=MSTQPlayer`, { signal: controller.signal });
@@ -1639,7 +1672,9 @@
                         id: track.id,
                         title: track.title,
                         artist: track.user ? track.user.name : 'Nghệ sĩ không xác định',
-                        artwork: track.artwork ? (track.artwork['480x480'] || track.artwork.url) : `data:image/svg+xml;base64,` + btoa(`<svg xmlns="http://www.w3.org/2000/svg" width="150" height="150" viewBox="0 0 150 150"><rect width="150" height="150" fill="#1e293b"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="60" fill="#f1f5f9">${track.title.charAt(0) || '?'}</text></svg>`), /* Reverted to original image source, but provided SVG fallback */
+                        // Ưu tiên ảnh 150x150 cho danh sách, 480x480 cho player bar
+                        artwork: track.artwork ? (track.artwork['150x150'] || track.artwork.url) : `data:image/svg+xml;base64,` + btoa(`<svg xmlns="http://www.w3.org/2000/svg" width="150" height="150" viewBox="0 0 150 150"><rect width="150" height="150" fill="#1e293b"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="60" fill="#f1f5f9">${track.title.charAt(0) || '?'}</text></svg>`),
+                        artwork_full: track.artwork ? (track.artwork['480x480'] || track.artwork.url) : `data:image/svg+xml;base64,` + btoa(`<svg xmlns="http://www.w3.org/2000/svg" width="480" height="480" viewBox="0 0 480 480"><rect width="480" height="480" fill="#1e293b"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="180" fill="#f1f5f9">${track.title.charAt(0) || '?'}</text></svg>`),
                         duration: track.duration,
                         description: track.description || 'Không có lời bài hát cho bài này.',
                         isFavorite: state.favoriteSongIds.includes(track.id),
@@ -1652,21 +1687,27 @@
                 }
 
                 state.isFetchingAllData = false;
-                dom.mainContent.initialLoadingOverlay.classList.remove('opacity-100');
-                dom.mainContent.initialLoadingOverlay.classList.add('opacity-0');
-                setTimeout(() => dom.mainContent.initialLoadingOverlay.classList.add('hidden'), 500);
+                if (dom.mainContent.initialLoadingOverlay) { // Add null check
+                    dom.mainContent.initialLoadingOverlay.classList.remove('opacity-100');
+                    dom.mainContent.initialLoadingOverlay.classList.add('opacity-0');
+                    setTimeout(() => dom.mainContent.initialLoadingOverlay.classList.add('hidden'), 500);
+                }
 
                 window.fuse = new Fuse(state.originalSongData, { keys: ['title', 'artist', 'genre'], includeScore: true, threshold: 0.4 }); // Initialize Fuse.js here
                 
             } catch (error) {
                 console.error("Lỗi khi lấy dữ liệu từ Audius:", error);
-                dom.mainContent.songsContainer.innerHTML = '<p class="text-center text-red-500 col-span-full">Lỗi khi tải danh sách nhạc. Vui lòng thử lại sau.</p>';
+                if (dom.mainContent.songsContainer) { // Add null check
+                    dom.mainContent.songsContainer.innerHTML = '<p class="text-center text-red-500 col-span-full">Lỗi khi tải danh sách nhạc. Vui lòng thử lại sau.</p>';
+                }
                 showMessage(`Không thể tải danh sách nhạc từ Audius: ${error.message}. Vui lòng kiểm tra kết nối internet hoặc thử lại sau.`, "Lỗi tải dữ liệu");
                 
                 // Ensure loading overlay is hidden even on error
-                dom.mainContent.initialLoadingOverlay.classList.remove('opacity-100');
-                dom.mainContent.initialLoadingOverlay.classList.add('opacity-0');
-                setTimeout(() => dom.mainContent.initialLoadingOverlay.classList.add('hidden'), 500);
+                if (dom.mainContent.initialLoadingOverlay) { // Add null check
+                    dom.mainContent.initialLoadingOverlay.classList.remove('opacity-100');
+                    dom.mainContent.initialLoadingOverlay.classList.add('opacity-0');
+                    setTimeout(() => dom.mainContent.initialLoadingOverlay.classList.add('hidden'), 500);
+                }
             } finally {
                 clearTimeout(timeoutId); // Clear the timeout regardless of success or failure
             }
@@ -1696,9 +1737,8 @@
             }
             
             console.log(`Đang thử phát ${song.title} từ ${hostToTry} (Lần thử ${retryCount + 1})`);
-            dom.playerBar.playPauseBtn.classList.add('play-pause-loading');
-            dom.playerBar.albumArt.classList.add('animate-pulse');
-            // updateUI(); // Removed to prevent race condition
+            dom.playerBar.playPauseBtn?.classList.add('play-pause-loading'); // Optional chaining
+            dom.playerBar.albumArt?.classList.add('animate-pulse'); // Optional chaining
 
             dom.audioPlayer.src = `${hostToTry}/v1/tracks/${song.id}/stream?app_name=MSTQPlayer`;
             dom.audioPlayer.load();
@@ -1769,7 +1809,7 @@
 
             dom.playerBar.songTitle.textContent = song.title;
             dom.playerBar.songArtist.textContent = song.artist;
-            dom.playerBar.albumArt.src = song.artwork; /* Reverted to .src for img tag */
+            dom.playerBar.albumArt.src = song.artwork_full; // Use full artwork for player bar
             dom.playerBar.albumArt.classList.remove('animate-pulse');
             
             await playSongWithRetries(song); // Await the retry mechanism
@@ -1780,6 +1820,9 @@
             if (activeSongElement) {
                 activeSongElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }
+
+            // Tải trước bài hát tiếp theo
+            preloadNextSong();
         }
 
         function playNext() {
@@ -1816,8 +1859,8 @@
             if (currentCategory === 'favorites') loadCustomCategory('favorites');
             
             updateUI();
-            dom.playerBar.favoriteBtn.classList.add('bounce-animation');
-            setTimeout(() => dom.playerBar.favoriteBtn.classList.remove('bounce-animation'), 300);
+            dom.playerBar.favoriteBtn?.classList.add('bounce-animation'); // Optional chaining
+            setTimeout(() => dom.playerBar.favoriteBtn?.classList.remove('bounce-animation'), 300); // Optional chaining
         }
         
         // ==============================================
@@ -1841,7 +1884,9 @@
                     </div>
                 `;
             }
-            dom.mainContent.songsContainer.innerHTML = skeletonHTML;
+            if (dom.mainContent.songsContainer) { // Add null check
+                dom.mainContent.songsContainer.innerHTML = skeletonHTML;
+            }
         }
 
         // Function to add event listeners to song items
@@ -1871,21 +1916,25 @@
 
         function renderSongs(tracksToRender) { // No longer needs 'append'
             const container = dom.mainContent.songsContainer;
-            const searchQuery = dom.mainContent.searchInput.value.trim();
+            const searchQuery = dom.mainContent.searchInput?.value.trim() || ''; // Optional chaining
             
-            container.innerHTML = ''; // Always clear and re-render the current window of songs
+            if (container) { // Add null check
+                container.innerHTML = ''; // Always clear and re-render the current window of songs
+            }
 
             if (!tracksToRender || tracksToRender.length === 0) {
                 const currentCategory = document.querySelector('#category-menu .nav-item.active')?.dataset.category;
-                if (currentCategory === 'favorites') {
-                    container.innerHTML = `<div class="empty-state col-span-full"><i class="ph-bold ph-heart-break"></i><p>Bạn chưa có bài hát yêu thích nào.</p><p class="text-sm">Nhấn vào hình trái tim ❤️ ở một bài hát để thêm vào đây.</p></div>`;
-                } else if (state.isSearching && searchQuery.length > 0) {
-                    container.innerHTML = `<div class="empty-state col-span-full"><i class="ph-bold ph-magnifying-glass-slash"></i><p>Không tìm thấy kết quả cho "${searchQuery}".</p></div>`;
-                } else {
-                    container.innerHTML = '<p class="text-center text-muted-current col-span-full p-4">Không tìm thấy bài hát nào.</p>';
+                if (container) { // Add null check
+                    if (currentCategory === 'favorites') {
+                        container.innerHTML = `<div class="empty-state col-span-full"><i class="ph-bold ph-heart-break"></i><p>Bạn chưa có bài hát yêu thích nào.</p><p class="text-sm">Nhấn vào hình trái tim ❤️ ở một bài hát để thêm vào đây.</p></div>`;
+                    } else if (state.isSearching && searchQuery.length > 0) {
+                        container.innerHTML = `<div class="empty-state col-span-full"><i class="ph-bold ph-magnifying-glass-slash"></i><p>Không tìm thấy kết quả cho "${searchQuery}".</p></div>`;
+                    } else {
+                        container.innerHTML = '<p class="text-center text-muted-current col-span-full p-4">Không tìm thấy bài hát nào.</p>';
+                    }
                 }
-                dom.mainContent.loadMoreBtn.classList.add('hidden');
-                dom.mainContent.allSongsLoadedMsg.classList.add('hidden');
+                dom.mainContent.loadMoreBtn?.classList.add('hidden'); // Optional chaining
+                dom.mainContent.allSongsLoadedMsg?.classList.add('hidden'); // Optional chaining
             } else {
                 tracksToRender.forEach((song, indexInDisplayedList) => { // indexInDisplayedList is the index within currentDisplayData
                     const songItem = document.createElement('div');
@@ -1905,13 +1954,13 @@
                     songItem.innerHTML = `
                         <div class="song-index-play"><span class="index-number">${state.currentFilteredSongs.indexOf(song) + 1}</span><div class="play-button"><i class="ph-bold ph-play"></i></div></div>
                         <div class="song-info">
-                            <img src="${song.artwork}" alt="${song.title}" class="artwork"> 
+                            <img src="${song.artwork}" alt="${song.title}" class="artwork" loading="lazy"> 
                             <div class="title-artist"><p class="title marquee-text">${titleHTML}</p><p class="artist marquee-text">${artistHTML}</p></div>
                         </div>
                         <button type="button" class="lyrics-button" data-song-id="${song.id}" aria-label="Xem lời bài hát"><i class="ph-bold ph-book-open"></i></button>
                         <div class="duration">${new Date(song.duration * 1000).toISOString().substr(14, 5)}</div>
                     `;
-                    container.appendChild(songItem);
+                    container?.appendChild(songItem); // Optional chaining
                 });
                 updatePaginationControls();
             }
@@ -1921,21 +1970,23 @@
         }
         
         function renderPopupSongList(songs) {
-            dom.playlist.list.innerHTML = '';
-            if (!songs || songs.length === 0) {
-                dom.playlist.list.innerHTML = '<li class="p-4 text-center text-muted-current">Danh sách phát trống.</li>'; /* Reverted padding */
-                return;
+            if (dom.playlist.list) { // Add null check
+                dom.playlist.list.innerHTML = '';
+                if (!songs || songs.length === 0) {
+                    dom.playlist.list.innerHTML = '<li class="p-4 text-center text-muted-current">Danh sách phát trống.</li>'; /* Reverted padding */
+                    return;
+                }
+                songs.forEach((song, index) => {
+                    const li = document.createElement('li');
+                    li.className = 'p-2 rounded-md cursor-pointer hover:bg-bg-current text-sm';
+                    li.draggable = true;
+                    li.dataset.displayIndex = index;
+                    li.innerHTML = `<div class="song-info-text"><p class="font-semibold marquee-text">${song.title}</p><p class="artist-text marquee-text">${song.artist}</p></div>`;
+                    li.addEventListener('click', () => playSong(state.currentFilteredSongs.indexOf(song))); // Play song from its index in the full filtered list
+                    dom.playlist.list.appendChild(li);
+                });
+                addDragAndDropListeners();
             }
-            songs.forEach((song, index) => {
-                const li = document.createElement('li');
-                li.className = 'p-2 rounded-md cursor-pointer hover:bg-bg-current text-sm';
-                li.draggable = true;
-                li.dataset.displayIndex = index;
-                li.innerHTML = `<div class="song-info-text"><p class="font-semibold marquee-text">${song.title}</p><p class="artist-text marquee-text">${song.artist}</p></div>`;
-                li.addEventListener('click', () => playSong(state.currentFilteredSongs.indexOf(song))); // Play song from its index in the full filtered list
-                dom.playlist.list.appendChild(li);
-            });
-            addDragAndDropListeners();
         }
         
         function updateUI() {
@@ -1944,26 +1995,32 @@
             
             // Player bar
             if (song) {
-                dom.playerBar.songTitle.textContent = song.title;
-                dom.playerBar.songArtist.textContent = song.artist;
-                dom.playerBar.albumArt.src = song.artwork; /* Reverted to .src for img tag */
-                dom.playerBar.albumArt.classList.remove('animate-pulse');
-                dom.playerBar.favoriteBtn.classList.toggle('liked', state.favoriteSongIds.includes(song.id));
-                dom.playerBar.favoriteBtn.innerHTML = state.favoriteSongIds.includes(song.id) ? '<i class="ph-fill ph-heart"></i>' : '<i class="ph-bold ph-heart"></i>';
-                dom.playerBar.trackNumber.textContent = state.currentSongIndex + 1; // Display actual track number
+                if (dom.playerBar.songTitle) dom.playerBar.songTitle.textContent = song.title;
+                if (dom.playerBar.songArtist) dom.playerBar.songArtist.textContent = song.artist;
+                if (dom.playerBar.albumArt) {
+                    dom.playerBar.albumArt.src = song.artwork_full; // Use full artwork for player bar
+                    dom.playerBar.albumArt.classList.remove('animate-pulse');
+                }
+                if (dom.playerBar.favoriteBtn) {
+                    dom.playerBar.favoriteBtn.classList.toggle('liked', state.favoriteSongIds.includes(song.id));
+                    dom.playerBar.favoriteBtn.innerHTML = state.favoriteSongIds.includes(song.id) ? '<i class="ph-fill ph-heart"></i>' : '<i class="ph-bold ph-heart"></i>';
+                }
+                if (dom.playerBar.trackNumber) dom.playerBar.trackNumber.textContent = state.currentSongIndex + 1; // Display actual track number
             } else {
-                dom.playerBar.songTitle.textContent = "Chọn một bài hát";
-                dom.playerBar.songArtist.textContent = "Để bắt đầu nghe nhạc";
-                dom.playerBar.albumArt.src = "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs="; /* Reverted to transparent GIF */
-                dom.playerBar.albumArt.classList.add('animate-pulse');
-                dom.playerBar.trackNumber.textContent = '';
+                if (dom.playerBar.songTitle) dom.playerBar.songTitle.textContent = "Chọn một bài hát";
+                if (dom.playerBar.songArtist) dom.playerBar.songArtist.textContent = "Để bắt đầu nghe nhạc";
+                if (dom.playerBar.albumArt) {
+                    dom.playerBar.albumArt.src = "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs="; /* Reverted to transparent GIF */
+                    dom.playerBar.albumArt.classList.add('animate-pulse');
+                }
+                if (dom.playerBar.trackNumber) dom.playerBar.trackNumber.textContent = '';
             }
 
             // Play/Pause button
             const isLoading = state.isPlaying && (dom.audioPlayer.readyState < 3 || dom.audioPlayer.seeking); // Also consider seeking as loading
-            dom.playerBar.playPauseBtn.classList.toggle('play-pause-loading', isLoading);
-            dom.playerBar.playIcon.classList.toggle('hidden', state.isPlaying || isLoading);
-            dom.playerBar.pauseIcon.classList.toggle('hidden', !state.isPlaying || isLoading);
+            if (dom.playerBar.playPauseBtn) dom.playerBar.playPauseBtn.classList.toggle('play-pause-loading', isLoading);
+            if (dom.playerBar.playIcon) dom.playerBar.playIcon.classList.toggle('hidden', state.isPlaying || isLoading);
+            if (dom.playerBar.pauseIcon) dom.playerBar.pauseIcon.classList.toggle('hidden', !state.isPlaying || isLoading);
 
             // Song list items
             document.querySelectorAll('.song-list-item').forEach(item => {
@@ -1971,10 +2028,12 @@
                 const isActive = songInDisplayedList && songInDisplayedList.id === song?.id;
                 item.classList.toggle('active-song', isActive);
                 const indicatorIcon = item.querySelector('.play-button i');
-                if (isActive && isLoading) {
-                    if(indicatorIcon) indicatorIcon.className = 'ph-bold ph-spinner-gap animate-spin text-primary-color';
-                } else {
-                    if(indicatorIcon) indicatorIcon.className = (isActive && state.isPlaying) ? 'ph-bold ph-speaker-high pulsing-icon text-primary-color' : 'ph-bold ph-play';
+                if (indicatorIcon) { // Add null check for indicatorIcon
+                    if (isActive && isLoading) {
+                        indicatorIcon.className = 'ph-bold ph-spinner-gap animate-spin text-primary-color';
+                    } else {
+                        indicatorIcon.className = (isActive && state.isPlaying) ? 'ph-bold ph-speaker-high pulsing-icon text-primary-color' : 'ph-bold ph-play';
+                    }
                 }
             });
 
@@ -1983,18 +2042,20 @@
                 const songInPopupList = state.currentDisplayData[parseInt(item.dataset.displayIndex)];
                 const isActive = songInPopupList && songInPopupList.id === song?.id;
                 item.classList.toggle('active-song-in-list', isActive);
-                if (isActive && dom.playlist.container.classList.contains('show')) {
+                if (isActive && dom.playlist.container?.classList.contains('show')) { // Optional chaining
                     item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                 }
             });
 
             // Repeat button
-            dom.playerBar.repeatBtn.classList.toggle('active-control', state.repeatMode !== 'none');
-            if (state.repeatMode === 'one') dom.playerBar.repeatBtn.innerHTML = '<i class="ph-bold ph-repeat-once"></i>';
-            else dom.playerBar.repeatBtn.innerHTML = '<i class="ph-bold ph-repeat"></i>';
+            dom.playerBar.repeatBtn?.classList.toggle('active-control', state.repeatMode !== 'none'); // Optional chaining
+            if (dom.playerBar.repeatBtn) { // Add null check
+                if (state.repeatMode === 'one') dom.playerBar.repeatBtn.innerHTML = '<i class="ph-bold ph-repeat-once"></i>';
+                else dom.playerBar.repeatBtn.innerHTML = '<i class="ph-bold ph-repeat"></i>';
+            }
 
             // Shuffle button
-            dom.playerBar.shuffleBtn.classList.toggle('active-control', state.isShuffling);
+            dom.playerBar.shuffleBtn?.classList.toggle('active-control', state.isShuffling); // Optional chaining
             
             // Logo animation
             toggleLogoAnimations(state.isPlaying);
@@ -2010,20 +2071,20 @@
                     if (!song) {
                         navigator.mediaSession.metadata = null;
                         navigator.mediaSession.playbackState = "none";
-                        dom.playerBar.mediaSessionIndicator.classList.remove('active');
+                        dom.playerBar.mediaSessionIndicator?.classList.remove('active'); // Optional chaining
                         return;
                     }
                     navigator.mediaSession.metadata = new MediaMetadata({
                         title: song.title, artist: song.artist, album: 'Âm nhạc TSTQ',
-                        artwork: [{ src: song.artwork, sizes: '512x512', type: 'image/jpeg' }] /* Reverted to original artwork source */
+                        artwork: [{ src: song.artwork_full, sizes: '512x512', type: 'image/jpeg' }] // Use full artwork for media session
                     });
                     navigator.mediaSession.playbackState = state.isPlaying ? "playing" : "paused";
-                    dom.playerBar.mediaSessionIndicator.classList.add('active');
+                    dom.playerBar.mediaSessionIndicator?.classList.add('active'); // Optional chaining
 
                     // Set Media Session action handlers
                     navigator.mediaSession.setActionHandler('play', () => {
                         dom.audioPlayer.play();
-                        dom.playerBar.playPauseBtn.classList.remove('attention-bounce'); // Remove animation on manual play
+                        dom.playerBar.playPauseBtn?.classList.remove('attention-bounce'); // Optional chaining
                     });
                     navigator.mediaSession.setActionHandler('pause', () => dom.audioPlayer.pause());
                     navigator.mediaSession.setActionHandler('stop', () => dom.audioPlayer.pause());
@@ -2047,7 +2108,7 @@
 
                 } catch (error) {
                     console.error("Lỗi khi cập nhật Media Session:", error);
-                    dom.playerBar.mediaSessionIndicator.classList.remove('active');
+                    dom.playerBar.mediaSessionIndicator?.classList.remove('active'); // Optional chaining
                 }
             }
         }
@@ -2057,10 +2118,10 @@
         // ==============================================
         function showLyricsFullscreenPopup(song) {
             if (!song) { showMessage("Vui lòng chọn một bài hát để xem lời."); return; }
-            dom.lyrics.title.textContent = song.title;
+            if (dom.lyrics.title) dom.lyrics.title.textContent = song.title;
             paginateLyrics(song.description);
             applyLyricsThemeAndFontStyles();
-            dom.lyrics.popup.classList.add('show');
+            dom.lyrics.popup?.classList.add('show'); // Optional chaining
         }
 
         function paginateLyrics(text) {
@@ -2080,29 +2141,35 @@
             const { pages, currentPage } = state.lyrics;
             const contentEl = dom.lyrics.content;
             if (!pages || pages.length === 0 || !pages[currentPage]) {
-                contentEl.innerHTML = '<p class="text-muted-current">Không có lời bài hát.</p>';
-                dom.lyrics.pageIndicator.textContent = 'Trang 0 / 0';
-                dom.lyrics.leftArrow.classList.add('disabled');
-                dom.lyrics.rightArrow.classList.add('disabled');
+                if (contentEl) contentEl.innerHTML = '<p class="text-muted-current">Không có lời bài hát.</p>';
+                if (dom.lyrics.pageIndicator) dom.lyrics.pageIndicator.textContent = 'Trang 0 / 0';
+                dom.lyrics.leftArrow?.classList.add('disabled'); // Optional chaining
+                dom.lyrics.rightArrow?.classList.add('disabled'); // Optional chaining
                 return;
             }
-            contentEl.innerHTML = pages[currentPage].map(line => `<p>${line}</p>`).join('');
-            contentEl.classList.remove('lyrics-fade-in');
-            void contentEl.offsetWidth; // Trigger reflow
-            contentEl.classList.add('lyrics-fade-in');
+            if (contentEl) { // Add null check
+                contentEl.innerHTML = pages[currentPage].map(line => `<p>${line}</p>`).join('');
+                contentEl.classList.remove('lyrics-fade-in');
+                void contentEl.offsetWidth; // Trigger reflow
+                contentEl.classList.add('lyrics-fade-in');
+            }
 
-            dom.lyrics.pageIndicator.textContent = `Trang ${currentPage + 1} / ${pages.length}`;
-            dom.lyrics.leftArrow.classList.toggle('disabled', currentPage === 0);
-            dom.lyrics.rightArrow.classList.toggle('disabled', currentPage === pages.length - 1);
+            if (dom.lyrics.pageIndicator) dom.lyrics.pageIndicator.textContent = `Trang ${currentPage + 1} / ${pages.length}`;
+            dom.lyrics.leftArrow?.classList.toggle('disabled', currentPage === 0); // Optional chaining
+            dom.lyrics.rightArrow?.classList.toggle('disabled', currentPage === pages.length - 1); // Optional chaining
         }
 
         function applyLyricsThemeAndFontStyles() {
             const theme = CONFIG.LYRICS.THEMES.find(t => t.id === state.lyrics.themeId) || CONFIG.LYRICS.THEMES[0];
-            const popupContent = dom.lyrics.popup.querySelector('.lyrics-popup-content');
-            popupContent.style.backgroundColor = theme.bgColor;
-            popupContent.style.color = theme.textColor;
-            dom.lyrics.content.style.fontSize = `${state.lyrics.fontSize}px`;
-            dom.lyrics.content.style.fontFamily = CONFIG.LYRICS.FONTS[state.lyrics.fontIndex];
+            const popupContent = dom.lyrics.popup?.querySelector('.lyrics-popup-content'); // Optional chaining
+            if (popupContent) { // Add null check
+                popupContent.style.backgroundColor = theme.bgColor;
+                popupContent.style.color = theme.textColor;
+            }
+            if (dom.lyrics.content) { // Add null check
+                dom.lyrics.content.style.fontSize = `${state.lyrics.fontSize}px`;
+                dom.lyrics.content.style.fontFamily = CONFIG.LYRICS.FONTS[state.lyrics.fontIndex];
+            }
         }
         
         function positionRadialItems() {
@@ -2207,10 +2274,10 @@
             }
             cancelSleepTimer();
             state.sleepTimer.endTime = Date.now() + minutes * 60 * 1000;
-            document.getElementById('start-timer-btn-desktop').classList.add('hidden');
-            document.getElementById('cancel-timer-btn-desktop').classList.remove('hidden');
-            document.getElementById('start-timer-btn-mobile').classList.add('hidden');
-            document.getElementById('cancel-timer-btn-mobile').classList.remove('hidden');
+            document.getElementById('start-timer-btn-desktop')?.classList.add('hidden'); // Optional chaining
+            document.getElementById('cancel-timer-btn-desktop')?.classList.remove('hidden'); // Optional chaining
+            document.getElementById('start-timer-btn-mobile')?.classList.add('hidden'); // Optional chaining
+            document.getElementById('cancel-timer-btn-mobile')?.classList.remove('hidden'); // Optional chaining
             updateSleepTimerDisplay();
             state.sleepTimer.interval = setInterval(() => {
                 if (Date.now() >= state.sleepTimer.endTime) {
@@ -2251,10 +2318,10 @@
                 clearInterval(state.sleepTimer.interval);
                 state.sleepTimer.interval = null;
             }
-            document.getElementById('start-timer-btn-desktop').classList.remove('hidden');
-            document.getElementById('cancel-timer-btn-desktop').classList.add('hidden');
-            document.getElementById('start-timer-btn-mobile').classList.remove('hidden');
-            document.getElementById('cancel-timer-btn-mobile').classList.add('hidden');
+            document.getElementById('start-timer-btn-desktop')?.classList.remove('hidden'); // Optional chaining
+            document.getElementById('cancel-timer-btn-desktop')?.classList.add('hidden'); // Optional chaining
+            document.getElementById('start-timer-btn-mobile')?.classList.remove('hidden'); // Optional chaining
+            document.getElementById('cancel-timer-btn-mobile')?.classList.add('hidden'); // Optional chaining
             updateSleepTimerDisplay();
         }
 
@@ -2266,8 +2333,8 @@
             const mobileNavOverlay = document.getElementById('mobile-nav-overlay');
             const closeMobileMenu = document.getElementById('close-mobile-menu'); 
             
-            hamburgerMenu?.addEventListener('click', () => mobileNavOverlay.classList.add('active'));
-            closeMobileMenu?.addEventListener('click', () => mobileNavOverlay.classList.remove('active'));
+            hamburgerMenu?.addEventListener('click', () => mobileNavOverlay?.classList.add('active')); // Optional chaining
+            closeMobileMenu?.addEventListener('click', () => mobileNavOverlay?.classList.remove('active')); // Optional chaining
             mobileNavOverlay?.addEventListener('click', (e) => {
                 if (e.target === mobileNavOverlay) mobileNavOverlay.classList.remove('active');
             });
@@ -2277,8 +2344,8 @@
                 const menu = document.getElementById(menuId);
                 toggle?.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    const isShown = menu.classList.toggle('show');
-                    toggle.classList.toggle('open', isShown);
+                    const isShown = menu?.classList.toggle('show'); // Optional chaining
+                    toggle?.classList.toggle('open', isShown); // Optional chaining
                     document.querySelectorAll('.dropdown-menu.show').forEach(openMenu => {
                         if (openMenu !== menu) openMenu.classList.remove('show');
                     });
@@ -2310,6 +2377,16 @@
             document.getElementById('darkModeToggleMobile')?.addEventListener('change', (e) => {
                 changeTheme(e.target.checked ? 'dark' : 'light');
             });
+
+            // Clear Cache & Reload buttons
+            document.getElementById('clear-cache-btn-desktop')?.addEventListener('click', (e) => {
+                e.preventDefault();
+                clearAppCacheAndReload();
+            });
+            document.getElementById('clear-cache-btn-mobile')?.addEventListener('click', (e) => {
+                e.preventDefault();
+                clearAppCacheAndReload();
+            });
         }
         
         function renderPlatformLinks() {
@@ -2339,19 +2416,19 @@
         let draggedItem = null; /* Reverted to let declaration */
 
         function addDragAndDropListeners() {
-            dom.playlist.list.querySelectorAll('li[draggable="true"]').forEach(item => {
+            dom.playlist.list?.querySelectorAll('li[draggable="true"]').forEach(item => { // Optional chaining
                 item.addEventListener('dragstart', (e) => {
                     draggedItem = e.currentTarget; /* Reverted to direct assignment */
-                    setTimeout(() => e.currentTarget.classList.add('dragging'), 0);
+                    setTimeout(() => e.currentTarget?.classList.add('dragging'), 0); // Optional chaining
                 });
                 item.addEventListener('dragover', (e) => {
                     e.preventDefault();
-                    e.currentTarget.classList.add('drag-over');
+                    e.currentTarget?.classList.add('drag-over'); // Optional chaining
                 });
-                item.addEventListener('dragleave', (e) => e.currentTarget.classList.remove('drag-over'));
+                item.addEventListener('dragleave', (e) => e.currentTarget?.classList.remove('drag-over')); // Optional chaining
                 item.addEventListener('drop', (e) => {
                     e.preventDefault();
-                    e.currentTarget.classList.remove('drag-over');
+                    e.currentTarget?.classList.remove('drag-over'); // Optional chaining
                     if (draggedItem !== e.currentTarget) { /* Reverted to direct comparison */
                         const fromIndex = parseInt(draggedItem.dataset.displayIndex); /* Reverted to direct access */
                         const toIndex = parseInt(e.currentTarget.dataset.displayIndex);
@@ -2377,7 +2454,7 @@
                         triggerHapticFeedback(70);
                     }
                 });
-                item.addEventListener('dragend', (e) => e.currentTarget.classList.remove('dragging')); /* Reverted to direct access */
+                item.addEventListener('dragend', (e) => e.currentTarget?.classList.remove('dragging')); /* Reverted to direct access */ // Optional chaining
             });
         }
 
@@ -2392,9 +2469,9 @@
                 setTimeout(() => activeBtn.classList.remove('bounce-category-btn'), 300);
             }
             
-            dom.mainContent.searchInput.value = '';
+            if (dom.mainContent.searchInput) dom.mainContent.searchInput.value = ''; // Optional chaining
             state.isSearching = false; // Reset search state when changing category
-            dom.mainContent.searchClearBtn.classList.add('hidden');
+            dom.mainContent.searchClearBtn?.classList.add('hidden'); // Optional chaining
 
             let filteredSongs;
             if (category === 'favorites') {
@@ -2423,8 +2500,8 @@
         }
 
         function loadMoreSongs() {
-            dom.mainContent.loadMoreBtn.classList.add('hidden');
-            dom.mainContent.loadingMoreSpinner.classList.remove('hidden');
+            dom.mainContent.loadMoreBtn?.classList.add('hidden'); // Optional chaining
+            dom.mainContent.loadingMoreSpinner?.classList.remove('hidden'); // Optional chaining
             
             setTimeout(() => { // Simulate loading delay
                 // Calculate the next chunk to load from currentFilteredSongs
@@ -2437,16 +2514,16 @@
                 renderSongs(state.currentDisplayData); // Re-render the expanded list
                 updateUI(); // Update player bar and active song state
 
-                dom.mainContent.loadingMoreSpinner.classList.add('hidden');
+                dom.mainContent.loadingMoreSpinner?.classList.add('hidden'); // Optional chaining
                 updatePaginationControls();
             }, 500);
         }
 
         function updatePaginationControls() {
             // Hide all by default
-            dom.mainContent.loadMoreBtn.classList.add('hidden');
-            dom.mainContent.allSongsLoadedMsg.classList.add('hidden');
-            dom.mainContent.loadingMoreSpinner.classList.add('hidden');
+            dom.mainContent.loadMoreBtn?.classList.add('hidden'); // Optional chaining
+            dom.mainContent.allSongsLoadedMsg?.classList.add('hidden'); // Optional chaining
+            dom.mainContent.loadingMoreSpinner?.classList.add('hidden'); // Optional chaining
 
             if (state.isSearching) {
                 // No load more button during search, as search operates on all data
@@ -2455,10 +2532,10 @@
 
             // Show load more if there are more songs in currentFilteredSongs than currently displayed
             if (state.currentDisplayData.length < state.currentFilteredSongs.length) {
-                dom.mainContent.loadMoreBtn.classList.remove('hidden');
+                dom.mainContent.loadMoreBtn?.classList.remove('hidden'); // Optional chaining
             } else {
                 if (state.currentFilteredSongs.length > 0) { // Only show "all loaded" if there are songs
-                    dom.mainContent.allSongsLoadedMsg.classList.add('hidden'); // Ensure hidden if all loaded
+                    dom.mainContent.allSongsLoadedMsg?.classList.add('hidden'); // Optional chaining
                 }
             }
         }
@@ -2487,20 +2564,22 @@
             const isNotAtExtremes = window.scrollY > 0 && (window.scrollY + window.innerHeight) < document.documentElement.scrollHeight;
 
             // Only show if scrollable AND not at the very top/bottom
-            dom.scrollNav.container.classList.toggle('show', isScrollable && isNotAtExtremes);
+            dom.scrollNav.container?.classList.toggle('show', isScrollable && isNotAtExtremes); // Optional chaining
         }
 
         function updateVolumeUI() {
             const volume = dom.audioPlayer.volume;
             const isMuted = dom.audioPlayer.muted;
-            dom.playerBar.volumePercentage.textContent = isMuted ? 0 : Math.round(volume * 100);
+            if (dom.playerBar.volumePercentage) dom.playerBar.volumePercentage.textContent = isMuted ? 0 : Math.round(volume * 100);
 
-            if (isMuted || volume === 0) {
-                dom.playerBar.volumeIcon.className = 'ph-bold ph-speaker-slash volume-icon';
-            } else if (volume < 0.5) {
-                dom.playerBar.volumeIcon.className = 'ph-bold ph-speaker-low volume-icon';
-            } else {
-                dom.playerBar.volumeIcon.className = 'ph-bold ph-speaker-high volume-icon';
+            if (dom.playerBar.volumeIcon) { // Add null check
+                if (isMuted || volume === 0) {
+                    dom.playerBar.volumeIcon.className = 'ph-bold ph-speaker-slash volume-icon';
+                } else if (volume < 0.5) {
+                    dom.playerBar.volumeIcon.className = 'ph-bold ph-speaker-low volume-icon';
+                } else {
+                    dom.playerBar.volumeIcon.className = 'ph-bold ph-speaker-high volume-icon';
+                }
             }
         }
 
@@ -2508,17 +2587,35 @@
             dom.audioPlayer.muted = !dom.audioPlayer.muted;
             if (!dom.audioPlayer.muted && dom.audioPlayer.volume === 0) {
                 dom.audioPlayer.volume = state.lastVolume > 0 ? state.lastVolume : 0.5;
-                dom.playerBar.volumeSlider.value = dom.audioPlayer.volume;
+                if (dom.playerBar.volumeSlider) dom.playerBar.volumeSlider.value = dom.audioPlayer.volume; // Optional chaining
             }
             updateVolumeUI();
             showMessage(dom.audioPlayer.muted ? "Đã tắt tiếng" : "Đã bật tiếng", "Âm thanh", true, 2500); // Changed duration to 2.5 seconds
+        }
+
+        // Preload next song logic
+        function preloadNextSong() {
+            if (!dom.audioPreloader) return; // Ensure preloader element exists
+
+            const nextIndex = (state.currentSongIndex + 1) % state.currentFilteredSongs.length;
+            const nextSong = state.currentFilteredSongs[nextIndex];
+
+            if (nextSong) {
+                const nextSongUrl = `${state.currentAudiusHost}/v1/tracks/${nextSong.id}/stream?app_name=MSTQPlayer`;
+                // Only preload if it's a different song and not already preloading
+                if (dom.audioPreloader.src !== nextSongUrl) {
+                    console.log(`Đang tải trước bài hát: ${nextSong.title}`);
+                    dom.audioPreloader.src = nextSongUrl;
+                    dom.audioPreloader.load();
+                }
+            }
         }
         
         function setupEventListeners() {
             // Player controls
             dom.playerBar.playPauseBtn?.addEventListener('click', () => { // Added null check
                 triggerHapticFeedback(50);
-                dom.playerBar.playPauseBtn.classList.remove('attention-bounce'); // Remove animation on click
+                dom.playerBar.playPauseBtn?.classList.remove('attention-bounce'); // Optional chaining
                 if (state.currentSongIndex === -1 && state.currentFilteredSongs.length > 0) playSong(0); // Play first song from filtered list
                 else if (dom.audioPlayer.paused) dom.audioPlayer.play();
                 else dom.audioPlayer.pause();
@@ -2560,7 +2657,7 @@
             dom.audioPlayer.addEventListener('pause', () => { 
                 state.isPlaying = false; 
                 updateUI(); 
-                dom.playerBar.albumArt.classList.remove('animate-pulse'); // Ensure pulse is removed on pause
+                dom.playerBar.albumArt?.classList.remove('animate-pulse'); // Optional chaining
                 releaseWakeLock(); 
                 // Dừng kiểm tra Wake Lock định kỳ khi tạm dừng
                 if (state.wakeLockInterval) {
@@ -2573,9 +2670,9 @@
             dom.audioPlayer.addEventListener('timeupdate', throttle(() => {
                 const { currentTime, duration } = dom.audioPlayer;
                 if(duration && isFinite(duration)) {
-                    dom.playerBar.progressBar.style.width = `${(currentTime / duration) * 100}%`;
-                    dom.playerBar.currentTime.textContent = new Date(currentTime * 1000).toISOString().substr(14, 5);
-                    dom.playerBar.duration.textContent = new Date(duration * 1000).toISOString().substr(14, 5);
+                    if (dom.playerBar.progressBar) dom.playerBar.progressBar.style.width = `${(currentTime / duration) * 100}%`;
+                    if (dom.playerBar.currentTime) dom.playerBar.currentTime.textContent = new Date(currentTime * 1000).toISOString().substr(14, 5);
+                    if (dom.playerBar.duration) dom.playerBar.duration.textContent = new Date(duration * 1000).toISOString().substr(14, 5);
 
                     // Nâng cấp: Kiểm tra nếu bài hát gần hết (90%) và đang ở trạng thái tạm dừng không mong muốn
                     // Thử phát lại để duy trì kết nối
@@ -2583,6 +2680,10 @@
                     if (progress > 0.9 && dom.audioPlayer.paused && state.isPlaying) {
                         console.log('Bài hát gần hết, bị tạm dừng bất ngờ. Đang thử phát lại.');
                         dom.audioPlayer.play().catch(e => console.warn('Không thể tự động tiếp tục phát khi gần hết bài:', e));
+                    }
+                    // Tải trước bài hát tiếp theo khi đạt 80%
+                    if (progress > 0.8 && progress < 0.9 && dom.audioPreloader) { // Kiểm tra để chỉ tải 1 lần
+                        preloadNextSong();
                     }
                 }
                 // Update Media Session position state for native player progress bar
@@ -2597,15 +2698,15 @@
             dom.audioPlayer.addEventListener('waiting', () => {
                 console.log('Audio is waiting for more data...');
                 if (state.isPlaying) { // Only show loading if it was supposed to be playing
-                    dom.playerBar.playPauseBtn.classList.add('play-pause-loading');
-                    dom.playerBar.albumArt.classList.add('animate-pulse'); // Show pulse on album art during buffering
+                    dom.playerBar.playPauseBtn?.classList.add('play-pause-loading'); // Optional chaining
+                    dom.playerBar.albumArt?.classList.add('animate-pulse'); // Optional chaining
                     updateUI(); // Update UI to show spinner on active song too
                 }
             });
             dom.audioPlayer.addEventListener('playing', () => {
                 console.log('Audio is playing again.');
-                dom.playerBar.playPauseBtn.classList.remove('play-pause-loading');
-                dom.playerBar.albumArt.classList.remove('animate-pulse'); // Remove pulse when playing resumes
+                dom.playerBar.playPauseBtn?.classList.remove('play-pause-loading'); // Optional chaining
+                dom.playerBar.albumArt?.classList.remove('animate-pulse'); // Optional chaining
                 updateUI(); // Ensure spinner is removed
             });
             dom.audioPlayer.addEventListener('stalled', () => {
@@ -2654,17 +2755,17 @@
             
             // Progress bar
             dom.playerBar.progressContainer?.addEventListener('click', (e) => { // Added null check
-                if(dom.audioPlayer.duration) dom.audioPlayer.currentTime = (e.offsetX / dom.playerBar.progressContainer.clientWidth) * dom.audioPlayer.duration; // Corrected ID
+                if(dom.audioPlayer.duration && dom.playerBar.progressContainer) dom.audioPlayer.currentTime = (e.offsetX / dom.playerBar.progressContainer.clientWidth) * dom.audioPlayer.duration; // Corrected ID
             });
             dom.playerBar.progressContainer?.addEventListener('mousemove', throttle((e) => { // Added null check
-                if (dom.audioPlayer.duration) {
+                if (dom.audioPlayer.duration && dom.playerBar.progressContainer && dom.playerBar.progressTooltip) {
                     const hoverTime = (e.offsetX / dom.playerBar.progressContainer.clientWidth) * dom.audioPlayer.duration;
                     dom.playerBar.progressTooltip.textContent = new Date(hoverTime * 1000).toISOString().substr(14, 5);
                     dom.playerBar.progressTooltip.style.left = `${e.offsetX}px`;
                     dom.playerBar.progressTooltip.classList.remove('hidden');
                 }
             }, 50));
-            dom.playerBar.progressContainer?.addEventListener('mouseleave', () => dom.playerBar.progressTooltip.classList.add('hidden')); // Added null check
+            dom.playerBar.progressContainer?.addEventListener('mouseleave', () => dom.playerBar.progressTooltip?.classList.add('hidden')); // Optional chaining
 
             // Volume
             dom.playerBar.volumeSlider?.addEventListener('input', (e) => { // Added null check
@@ -2679,14 +2780,14 @@
             
             // Search
             dom.mainContent.searchInput?.addEventListener('input', debounce(() => { // Added null check
-                const query = dom.mainContent.searchInput.value.trim();
+                const query = dom.mainContent.searchInput?.value.trim() || ''; // Optional chaining
                 state.isSearching = query.length > 0; // Update search flag
-                dom.mainContent.searchClearBtn.classList.toggle('hidden', !state.isSearching);
+                dom.mainContent.searchClearBtn?.classList.toggle('hidden', !state.isSearching); // Optional chaining
                 
                 if (state.isSearching) {
-                    dom.mainContent.loadingMoreSpinner.classList.remove('hidden'); // Show searching spinner
-                    dom.mainContent.loadMoreBtn.classList.add('hidden'); // Hide load more button
-                    dom.mainContent.allSongsLoadedMsg.classList.add('hidden'); // Hide all loaded message
+                    dom.mainContent.loadingMoreSpinner?.classList.remove('hidden'); // Optional chaining
+                    dom.mainContent.loadMoreBtn?.classList.add('hidden'); // Optional chaining
+                    dom.mainContent.allSongsLoadedMsg?.classList.add('hidden'); // Optional chaining
 
                     // Initialize Fuse.js only when search is first used
                     if (!window.fuse) {
@@ -2697,37 +2798,37 @@
                     state.currentDisplayStartIndex = 0; // Reset display start for search results
                     state.currentDisplayData = state.currentFilteredSongs; // Display all search results
                     renderSongs(state.currentDisplayData); // Render search results
-                    dom.mainContent.loadingMoreSpinner.classList.add('hidden'); // Hide searching spinner
+                    dom.mainContent.loadingMoreSpinner?.classList.add('hidden'); // Optional chaining
                 } else {
                     // If search is cleared, reload the current category with pagination
                     loadCustomCategory(document.querySelector('#category-menu .nav-item.active')?.dataset.category || 'all');
                 }
             }, 300));
             dom.mainContent.searchClearBtn?.addEventListener('click', () => { // Added null check
-                dom.mainContent.searchInput.value = '';
+                if (dom.mainContent.searchInput) dom.mainContent.searchInput.value = ''; // Optional chaining
                 state.isSearching = false;
-                dom.mainContent.searchClearBtn.classList.add('hidden');
+                dom.mainContent.searchClearBtn?.classList.add('hidden'); // Optional chaining
                 loadCustomCategory(document.querySelector('#category-menu .nav-item.active')?.dataset.category || 'all');
             });
 
             // Modals and Popups
             dom.modals.alertOkBtn?.addEventListener('click', hideMessage); // Added null check
             dom.playlist.toggleBtn?.addEventListener('click', () => { // Added null check
-                const isHidden = dom.playlist.container.classList.toggle('hidden');
-                dom.playlist.container.classList.toggle('show', !isHidden);
+                const isHidden = dom.playlist.container?.classList.toggle('hidden'); // Optional chaining
+                dom.playlist.container?.classList.toggle('show', !isHidden); // Optional chaining
                 if (!isHidden) updateUI();
             });
             dom.lyrics.openBtn?.addEventListener('click', () => showLyricsFullscreenPopup(state.currentFilteredSongs[state.currentSongIndex])); // Added null check // Use currentFilteredSongs
-            dom.lyrics.closeBtn?.addEventListener('click', () => dom.lyrics.popup.classList.remove('show')); // Added null check
+            dom.lyrics.closeBtn?.addEventListener('click', () => dom.lyrics.popup?.classList.remove('show')); // Optional chaining
             
             // Timer
-            document.getElementById('start-timer-btn-desktop')?.addEventListener('click', () => startSleepTimer(parseInt(document.getElementById('timer-minutes-desktop').value)));
+            document.getElementById('start-timer-btn-desktop')?.addEventListener('click', () => startSleepTimer(parseInt(document.getElementById('timer-minutes-desktop')?.value || '0')));
             document.getElementById('cancel-timer-btn-desktop')?.addEventListener('click', cancelSleepTimer);
-            document.getElementById('start-timer-btn-mobile')?.addEventListener('click', () => startSleepTimer(parseInt(document.getElementById('timer-minutes-mobile').value)));
+            document.getElementById('start-timer-btn-mobile')?.addEventListener('click', () => startSleepTimer(parseInt(document.getElementById('timer-minutes-mobile')?.value || '0')));
             document.getElementById('cancel-timer-btn-mobile')?.addEventListener('click', cancelSleepTimer);
 
             // Lyrics Radial Menu
-            dom.lyrics.radialMenu.toggleBtn?.addEventListener('click', () => dom.lyrics.radialMenu.container.classList.toggle('active')); // Added null check
+            dom.lyrics.radialMenu.toggleBtn?.addEventListener('click', () => dom.lyrics.radialMenu.container?.classList.toggle('active')); // Optional chaining
             document.getElementById('radial-font-size-increase')?.addEventListener('click', () => { // Added null check
                 state.lyrics.fontSize++;
                 applyLyricsThemeAndFontStyles();
@@ -2834,8 +2935,10 @@
             // Reload Library button listener
             dom.mainContent.reloadLibraryBtn?.addEventListener('click', async () => { // Added null check
                 dom.mainContent.reloadLibraryBtn.classList.add('hidden'); // Hide button while reloading
-                dom.mainContent.initialLoadingOverlay.classList.remove('hidden');
-                dom.mainContent.initialLoadingOverlay.classList.add('opacity-100');
+                if (dom.mainContent.initialLoadingOverlay) { // Add null check
+                    dom.mainContent.initialLoadingOverlay.classList.remove('hidden');
+                    dom.mainContent.initialLoadingOverlay.classList.add('opacity-100');
+                }
                 await fetchAudiusData(); // Re-fetch all data
                 loadCustomCategory(document.querySelector('#category-menu .nav-item.active')?.dataset.category || 'all'); // Re-render current category
             });
@@ -2889,7 +2992,7 @@
                     } else if (state.isPlaying) {
                         // If it was playing and still playing, just re-acquire wake lock
                         requestWakeLock();
-                        // Bắt đầu kiểm tra Wake Lock định kỳ nếu ứng dụng hiện lại và đang phát
+                        // Bắt đầu kiểm tra Wake Lock định kỳ khi ứng dụng hiện lại và đang phát
                         if (!state.wakeLockInterval) {
                             state.wakeLockInterval = setInterval(requestWakeLock, 60000);
                         }
@@ -2898,11 +3001,49 @@
             });
         }
 
+        // Function to clear all caches and reload the page
+        async function clearAppCacheAndReload() {
+            showMessage("Đang xóa dữ liệu cũ và tải lại ứng dụng...", "Xóa Cache", false); // Show persistent message
+
+            if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+                try {
+                    // Unregister all service workers
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    for (let reg of registrations) {
+                        await reg.unregister();
+                        console.log(`Service Worker unregistered: ${reg.scope}`);
+                    }
+
+                    // Clear all caches
+                    const cacheNames = await caches.keys();
+                    for (let cacheName of cacheNames) {
+                        await caches.delete(cacheName);
+                        console.log(`Cache deleted: ${cacheName}`);
+                    }
+
+                    // Clear localStorage for a fresh start (optional, but good for full reset)
+                    localStorage.clear();
+                    console.log('Local Storage cleared.');
+
+                    showMessage("Đã xóa cache thành công. Đang tải lại...", "Xóa Cache", true, 2000);
+                    setTimeout(() => window.location.reload(true), 1000); // Hard reload
+                } catch (error) {
+                    console.error("Lỗi khi xóa cache:", error);
+                    showMessage("Lỗi khi xóa cache. Vui lòng thử lại thủ công.", "Lỗi Xóa Cache");
+                }
+            } else {
+                // Fallback for browsers without Service Worker or if not controlled
+                console.warn("Service Worker không khả dụng hoặc không được kiểm soát. Đang thực hiện tải lại cứng.");
+                localStorage.clear(); // Clear local storage as a fallback
+                window.location.reload(true); // Hard reload
+            }
+        }
+
         async function initializeApp() {
             // 1. Setup initial UI
-            createStars(100, dom.splashScreen.querySelector('.stars'));
-            createStars(50, dom.splashScreen.querySelector('.stars2'));
-            createStars(20, dom.splashScreen.querySelector('.stars3'));
+            createStars(100, dom.splashScreen?.querySelector('.stars')); // Optional chaining
+            createStars(50, dom.splashScreen?.querySelector('.stars2')); // Optional chaining
+            createStars(20, dom.splashScreen?.querySelector('.stars3')); // Optional chaining
             await loadAndInjectSVG();
             cacheLogoElements();
             
@@ -2928,7 +3069,7 @@
                 btn.innerHTML = cat.name;
                 btn.dataset.category = cat.id;
                 btn.onclick = () => loadCustomCategory(cat.id);
-                dom.mainContent.categoryMenu.appendChild(btn);
+                dom.mainContent.categoryMenu?.appendChild(btn); // Optional chaining
             });
             setupNavEvents();
             renderPlatformLinks();
@@ -2940,14 +3081,16 @@
             
             // 5. Fetch data and render song list
             renderSkeletonLoader(CONFIG.INITIAL_LOAD_SIZE); // Show skeleton for initial load size
-            dom.mainContent.initialLoadingOverlay.classList.remove('hidden'); // Show initial loading overlay
-            dom.mainContent.initialLoadingOverlay.classList.add('opacity-100');
+            if (dom.mainContent.initialLoadingOverlay) { // Add null check here
+                dom.mainContent.initialLoadingOverlay.classList.remove('hidden');
+                dom.mainContent.initialLoadingOverlay.classList.add('opacity-100');
+            }
 
             await fetchAudiusData(); // This now fetches all data into originalSongData
 
             // If fetchAudiusData failed, show the reload button
             if (state.originalSongData.length === 0) {
-                dom.mainContent.reloadLibraryBtn.classList.remove('hidden');
+                dom.mainContent.reloadLibraryBtn?.classList.remove('hidden'); // Optional chaining
             }
 
             // 6. Restore previous playback state or handle shared link
@@ -2981,9 +3124,9 @@
                         // Inform the user that they might need to click play due to browser policies
                         showMessage(`Đã tải bài hát "${state.currentFilteredSongs[displayIndex].title}". Vui lòng nhấn nút Play để bắt đầu nghe.`, "Sẵn sàng phát nhạc", true, 5000);
                         // Add visual cue to play button
-                        dom.playerBar.playPauseBtn.classList.add('attention-bounce');
+                        dom.playerBar.playPauseBtn?.classList.add('attention-bounce'); // Optional chaining
                         setTimeout(() => {
-                            dom.playerBar.playPauseBtn.classList.remove('attention-bounce');
+                            dom.playerBar.playPauseBtn?.classList.remove('attention-bounce'); // Optional chaining
                         }, 2400); // Remove after 3 bounces (0.8s * 3)
                     } else {
                         // Fallback if song is not found in filtered list
@@ -2999,7 +3142,7 @@
                 // Nếu không có ID bài hát trong URL, khôi phục trạng thái phát lại trước đó
                 const savedPlaybackState = loadStateFromLocalStorage(CONFIG.STORAGE_KEYS.PLAYBACK_STATE, null);
                 if (savedPlaybackState) {
-                    dom.mainContent.searchInput.value = savedPlaybackState.currentSearchQuery || '';
+                    if (dom.mainContent.searchInput) dom.mainContent.searchInput.value = savedPlaybackState.currentSearchQuery || ''; // Optional chaining
                     loadCustomCategory(savedPlaybackState.currentCategory || 'all');
                     const songIndex = state.currentFilteredSongs.findIndex(s => s.id === savedPlaybackState.songId); // Check in filtered songs
                     if (songIndex !== -1) {
@@ -3017,8 +3160,8 @@
 
             // 7. Final UI updates and splash screen
             updateUI();
-            dom.splashScreen.classList.add('visible');
-            setTimeout(() => dom.splashScreen.classList.remove('visible'), 2000);
+            dom.splashScreen?.classList.add('visible'); // Optional chaining
+            setTimeout(() => dom.splashScreen?.classList.remove('visible'), 2000); // Optional chaining
             
             requestNotificationPermission();
 
@@ -3032,3 +3175,4 @@
     </script>
 </body>
 </html>
+�
