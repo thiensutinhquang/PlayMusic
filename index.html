@@ -15,6 +15,7 @@
     <link rel="preconnect" href="https://unpkg.com">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <link rel="preconnect" href="https://api.audius.co">
     <!-- Assuming common discovery hosts, add more if known -->
     <link rel="preconnect" href="https://discoveryprovider.audius.co"> 
@@ -965,7 +966,7 @@
                     </div>
                     <div id="song-list-body"></div>
                     <!-- Initial Loading Overlay -->
-                    <div id="initial-loading-overlay" class="absolute inset-0 bg-bg-current flex items-center justify-center flex-col text-muted-current z-10 transition-opacity duration-500">
+                    <div id="initial-loading-overlay" class="absolute inset-0 bg-bg-current flex items-center justify-content-center flex-col text-muted-current z-10 transition-opacity duration-500">
                         <i class="ph-bold ph-spinner-gap animate-spin text-4xl text-primary-color mb-4"></i>
                         <p>Đang tải thư viện nhạc...</p>
                     </div>
@@ -1184,7 +1185,7 @@
                     });
                 })
                 .catch(err => console.log('ServiceWorker đăng ký thất bại:', err));
-        });
+        }); // Missing closing parenthesis and brace here
     } else {
         console.warn("Service Workers không được hỗ trợ trong môi trường này. Các tính năng PWA có thể bị hạn chế.");
     }
@@ -2206,13 +2207,14 @@
             }
 
             let shareUrl = song.permalink;
-            // Decode URI component to handle special characters like Vietnamese accents
-            shareUrl = decodeURIComponent(shareUrl);
-            // Ensure it starts with https://audius.co/
+            // REMOVED: shareUrl = decodeURIComponent(shareUrl); // This was likely the problem. Audius permalinks are already URL-encoded.
+
+            // Ensure it starts with https://audius.co/ if it's a relative path
             if (!shareUrl.startsWith('http://') && !shareUrl.startsWith('https://')) {
-                shareUrl = `https://audius.co${shareUrl}`; 
+                shareUrl = `https://audius.co${shareUrl}`;
             }
-            
+            // Now, shareUrl should be a fully valid, URL-encoded string.
+
             const shareData = {
                 title: `Nghe "${song.title}" - ${song.artist}`,
                 text: `Nghe bài hát "${song.title}" của ${song.artist} trên Play Nhạc MSTQ.`,
