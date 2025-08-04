@@ -1185,7 +1185,7 @@
                     });
                 })
                 .catch(err => console.log('ServiceWorker đăng ký thất bại:', err));
-        }); // Missing closing parenthesis and brace here
+        }); 
     } else {
         console.warn("Service Workers không được hỗ trợ trong môi trường này. Các tính năng PWA có thể bị hạn chế.");
     }
@@ -2207,13 +2207,24 @@
             }
 
             let shareUrl = song.permalink;
-            // REMOVED: shareUrl = decodeURIComponent(shareUrl); // This was likely the problem. Audius permalinks are already URL-encoded.
-
             // Ensure it starts with https://audius.co/ if it's a relative path
             if (!shareUrl.startsWith('http://') && !shareUrl.startsWith('https://')) {
                 shareUrl = `https://audius.co${shareUrl}`;
             }
-            // Now, shareUrl should be a fully valid, URL-encoded string.
+            
+            // Attempt to decode the pathname to match the desktop working example
+            // This is the crucial part for mobile browser compatibility with non-ASCII characters in path
+            try {
+                const urlObj = new URL(shareUrl);
+                urlObj.pathname = decodeURIComponent(urlObj.pathname);
+                shareUrl = urlObj.toString();
+            } catch (e) {
+                console.warn("Lỗi khi xử lý URL chia sẻ (có thể do URL không hợp lệ), sử dụng permalink gốc:", e);
+                // Fallback: If URL parsing or decoding fails, use the original (encoded) permalink.
+                // shareUrl remains the initially constructed absolute URL.
+            }
+
+            console.log("URL được chia sẻ:", shareUrl); // Log the final URL for debugging
 
             const shareData = {
                 title: `Nghe "${song.title}" - ${song.artist}`,
@@ -2320,7 +2331,7 @@
             const formattedTime = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
             if(displayDesktop) displayDesktop.textContent = formattedTime;
             // On mobile, update the timer display in the mobile menu, not the song artist
-            if(displayMobile) displayMobile.textContent = formattedTime;
+            if(displayMobile) dom.playerBar.songArtist.textContent = formattedTime; // Corrected to display on song artist on mobile
         }
 
         function cancelSleepTimer() {
