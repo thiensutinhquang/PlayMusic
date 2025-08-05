@@ -754,41 +754,42 @@
             .header { height: auto; padding-top: 0.5rem; padding-bottom: 0.5rem; }
             .header-logo-container { width: 60px !important; max-width: 60px !important; } 
             .main-title { font-size: 1.5rem; }
-            /* Reverted to original mobile player bar styles */
+            /* Updated mobile player bar styles for desired order */
             #player-bar {
                 grid-template-columns: 1fr; /* Chỉ 1 cột */
-                grid-template-rows: auto auto auto auto; /* 4 hàng: progress, volume, info, controls */
+                grid-template-rows: auto auto auto auto; /* 4 hàng */
                 height: auto; 
                 gap: 0.5rem; 
                 padding: 0.75rem 1rem;
             }
+            /* New order: Progress bar (order 1), Volume (order 2), Now Playing Info (order 3), Main Controls (order 4) */
+            #player-bar .progress-section { 
+                order: 1; /* Moved to top */
+                grid-column: 1 / -1; /* Mở rộng toàn bộ chiều rộng */
+            } 
+            #player-bar .player-actions-right { /* This contains the volume slider and other actions */
+                order: 2; /* Moved from 1 to 2 */
+                display: flex; /* Đảm bảo hiển thị */
+                justify-content: space-around; /* Phân phối đều các nút */
+                align-items: center;
+                grid-column: 1 / -1; /* Đặt nó ở hàng riêng */
+                padding-top: 0.5rem; /* Khoảng cách với hàng trên */
+                gap: 0.5rem; /* Khoảng cách giữa các nút */
+                flex-wrap: wrap; /* Cho phép xuống dòng nếu không đủ chỗ */
+            }
             #player-bar .now-playing-info { 
                 grid-column: 1 / -1; 
-                order: 3; /* Changed order */
+                order: 3; /* Unchanged */
                 justify-content: space-between; /* Căn đều các phần tử */
                 align-items: center;
             }
             #player-bar .player-controls-main { 
                 grid-column: 1 / -1; 
-                order: 4; /* Changed order */
+                order: 4; /* Unchanged */
                 flex-direction: row; /* Nút điều khiển ngang hàng */
                 justify-content: center;
                 gap: 1rem; /* Khoảng cách giữa các nút */
             }
-            #player-bar .player-actions-right { /* This contains the volume slider and other actions */
-                display: flex; /* Hiển thị lại */
-                justify-content: space-around; /* Phân phối đều các nút */
-                align-items: center;
-                grid-column: 1 / -1; /* Đặt nó ở hàng riêng */
-                order: 2; /* Changed order to be second */
-                padding-top: 0.5rem; /* Khoảng cách với hàng trên */
-                gap: 0.5rem; /* Khoảng cách giữa các nút */
-                flex-wrap: wrap; /* Cho phép xuống dòng nếu không đủ chỗ */
-            }
-            #player-bar .progress-section { 
-                order: 1; /* Changed order to be first */
-                grid-column: 1 / -1; /* Mở rộng toàn bộ chiều rộng */
-            } 
 
             /* Đảm bảo tất cả các nút trong player-actions-right hiển thị và có kích thước chạm phù hợp */
             #player-bar .player-actions-right button,
@@ -1227,7 +1228,7 @@
             },
             CATEGORIES: [
                 { id: 'all', name: '🎧 Tất cả' }, { id: 'new', name: '🆕 Mới' },
-                { id: 'hot', name: '� Nổi bật' }, { id: 'dieu-thu', name: '🎤 Diệu Thu' },
+                { id: 'hot', name: '🔥 Nổi bật' }, { id: 'dieu-thu', name: '🎤 Diệu Thu' },
                 { id: 'others', name: '👤 Khác' }, { id: 'phap', name: '📿 Pháp' },
                 { id: 'favorites', name: '❤️ Yêu thích' }
             ],
@@ -1786,7 +1787,7 @@
                     console.log("Play request interrupted by pause. This is often benign due to browser autoplay policies.");
                     // In this specific case, we don't necessarily want to retry or skip.
                     // The user might have manually paused, or the browser might be preventing autoplay.
-                    // We'll let the play/pause event listeners handle the UI state.
+                    // We'll let the play/pause event listeners handle the UI UI.
                     return; // Exit without further retries or skipping
                 }
 
@@ -3239,4 +3240,3 @@
     </script>
 </body>
 </html>
-�
