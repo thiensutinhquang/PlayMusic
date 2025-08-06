@@ -1698,7 +1698,7 @@
                     dom.mainContent.initialLoadingOverlay.classList.add('opacity-0');
                     setTimeout(() => dom.mainContent.initialLoadingOverlay.classList.add('hidden'), 500);
                 }
-                state.networkStatus = 'online';
+                state.networkStatus = 'online'; // Cập nhật trạng thái mạng thành online khi tải thành công
                 updateNetworkStatusUI();
 
                 window.fuse = new Fuse(state.originalSongData, { keys: ['title', 'artist', 'genre'], includeScore: true, threshold: 0.4 });
