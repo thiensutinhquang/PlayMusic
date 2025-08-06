@@ -1614,13 +1614,11 @@
         // ==============================================
         // API & DATA FETCHING
         // ==============================================
-        async function fetchAudiusData() {
-            // Add a timeout for the fetch request
+        async function fetchAudiusData(retryAttempt = 0) { // Thêm tham số retryAttempt
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 30000); // Increased to 30 seconds for more robustness
+            const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 seconds timeout
 
             try {
-                // Cập nhật trạng thái mạng sang "đang kết nối lại"
                 state.networkStatus = 'reconnecting';
                 updateNetworkStatusUI();
 
@@ -1654,13 +1652,11 @@
                 state.audiusHosts = hosts;
                 state.currentAudiusHost = state.audiusHosts[Math.floor(Math.random() * state.audiusHosts.length)];
 
-                // Show initial loading overlay
-                if (dom.mainContent.initialLoadingOverlay) { // Add null check
+                if (dom.mainContent.initialLoadingOverlay) {
                     dom.mainContent.initialLoadingOverlay.classList.remove('hidden');
                     dom.mainContent.initialLoadingOverlay.classList.add('opacity-100');
                 }
 
-                // Fetch user ID
                 const userResponse = await fetch(`${state.currentAudiusHost}/v1/users/search?query=${CONFIG.USER_HANDLE}&app_name=MSTQPlayer`, { signal: controller.signal });
                 if (!userResponse.ok) {
                     throw new Error(`Không thể tìm thấy người dùng "${CONFIG.USER_HANDLE}" trên Audius. Mã lỗi: ${userResponse.status}`);
@@ -1671,9 +1667,8 @@
                 }
                 const userId = userData.data[0].id;
                 
-                // Fetch all tracks for search functionality
                 state.isFetchingAllData = true;
-                const allTracksResponse = await fetch(`${state.currentAudiusHost}/v1/users/${userId}/tracks?limit=10000&app_name=MSTQPlayer`, { signal: controller.signal }); // Increased limit for full fetch
+                const allTracksResponse = await fetch(`${state.currentAudiusHost}/v1/users/${userId}/tracks?limit=10000&app_name=MSTQPlayer`, { signal: controller.signal });
                 if (!allTracksResponse.ok) {
                     throw new Error(`Không thể tải danh sách bài hát từ Audius. Mã lỗi: ${allTracksResponse.status}`);
                 }
@@ -1684,7 +1679,6 @@
                         id: track.id,
                         title: track.title,
                         artist: track.user ? track.user.name : 'Nghệ sĩ không xác định',
-                        // Ưu tiên ảnh 150x150 cho danh sách, 480x480 cho player bar
                         artwork: track.artwork ? (track.artwork['150x150'] || track.artwork.url) : `data:image/svg+xml;base64,` + btoa(`<svg xmlns="http://www.w3.org/2000/svg" width="150" height="150" viewBox="0 0 150 150"><rect width="150" height="150" fill="#1e293b"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="60" fill="#f1f5f9">${track.title.charAt(0) || '?'}</text></svg>`),
                         artwork_full: track.artwork ? (track.artwork['480x480'] || track.artwork.url) : `data:image/svg+xml;base64,` + btoa(`<svg xmlns="http://www.w3.org/2000/svg" width="480" height="480" viewBox="0 0 480 480"><rect width="480" height="480" fill="#1e293b"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="180" fill="#f1f5f9">${track.title.charAt(0) || '?'}</text></svg>`),
                         duration: track.duration,
@@ -1699,40 +1693,50 @@
                 }
 
                 state.isFetchingAllData = false;
-                if (dom.mainContent.initialLoadingOverlay) { // Add null check
+                if (dom.mainContent.initialLoadingOverlay) {
                     dom.mainContent.initialLoadingOverlay.classList.remove('opacity-100');
                     dom.mainContent.initialLoadingOverlay.classList.add('opacity-0');
                     setTimeout(() => dom.mainContent.initialLoadingOverlay.classList.add('hidden'), 500);
                 }
-                state.networkStatus = 'online'; // Cập nhật trạng thái mạng thành online khi tải thành công
+                state.networkStatus = 'online';
                 updateNetworkStatusUI();
 
-                window.fuse = new Fuse(state.originalSongData, { keys: ['title', 'artist', 'genre'], includeScore: true, threshold: 0.4 }); // Initialize Fuse.js here
+                window.fuse = new Fuse(state.originalSongData, { keys: ['title', 'artist', 'genre'], includeScore: true, threshold: 0.4 });
                 
             } catch (error) {
                 console.error("Lỗi khi lấy dữ liệu từ Audius:", error);
-                if (dom.mainContent.songsContainer) { // Add null check
+                if (dom.mainContent.songsContainer) {
                     dom.mainContent.songsContainer.innerHTML = '<p class="text-center text-red-500 col-span-full">Lỗi khi tải danh sách nhạc. Vui lòng thử lại sau.</p>';
                 }
-                // Cập nhật thông báo cho người dùng
-                showMessage(
-                    `Không thể tải danh sách nhạc từ Audius: ${error.message}. ` +
-                    `Vui lòng kiểm tra kết nối internet. Nếu lỗi vẫn tiếp diễn, ` +
-                    `hãy vào **Menu Giao diện** (biểu tượng bảng màu) và chọn **"Xóa Cache & Tải lại"** để khắc phục.`,
-                    "Lỗi tải dữ liệu",
-                    false // Không tự động đóng, để người dùng đọc kỹ
-                );
                 state.networkStatus = 'offline'; // Cập nhật trạng thái mạng thành offline khi lỗi
                 updateNetworkStatusUI();
+
+                if (retryAttempt < CONFIG.MAX_AUDIO_RETRIES) {
+                    const delay = Math.pow(2, retryAttempt) * 1000; // Exponential backoff
+                    showMessage(
+                        `Lỗi tải dữ liệu: ${error.message}. Đang thử lại sau ${delay / 1000} giây... (Thử lại ${retryAttempt + 1}/${CONFIG.MAX_AUDIO_RETRIES})`,
+                        "Lỗi kết nối",
+                        true,
+                        delay + 500 // Show message a bit longer than delay
+                    );
+                    setTimeout(() => fetchAudiusData(retryAttempt + 1), delay);
+                } else {
+                    showMessage(
+                        `Không thể tải danh sách nhạc từ Audius sau nhiều lần thử: ${error.message}. ` +
+                        `Vui lòng kiểm tra kết nối internet. Nếu lỗi vẫn tiếp diễn, ` +
+                        `hãy vào **Menu Giao diện** (biểu tượng bảng màu) và chọn **"Xóa Cache & Tải lại"** để khắc phục.`,
+                        "Lỗi tải dữ liệu",
+                        false // Không tự động đóng, để người dùng đọc kỹ
+                    );
+                }
                 
-                // Ensure loading overlay is hidden even on error
-                if (dom.mainContent.initialLoadingOverlay) { // Add null check
+                if (dom.mainContent.initialLoadingOverlay) {
                     dom.mainContent.initialLoadingOverlay.classList.remove('opacity-100');
                     dom.mainContent.initialLoadingOverlay.classList.add('opacity-0');
                     setTimeout(() => dom.mainContent.initialLoadingOverlay.classList.add('hidden'), 500);
                 }
             } finally {
-                clearTimeout(timeoutId); // Clear the timeout regardless of success or failure
+                clearTimeout(timeoutId);
             }
         }
 
