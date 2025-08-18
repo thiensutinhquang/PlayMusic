@@ -832,7 +832,7 @@
 </head>
 <body>
     <!-- Màn hình chờ -->
-    <div id="splash-screen">
+    <div id="splash-screen" class="hidden">
         <div class="stars"></div> <div class="stars2"></div> <div class="stars3"></div>
         <div id="splash-logo-container"> <div id="splash-logo-placeholder"></div> </div>
     </div>
@@ -952,7 +952,7 @@
                     </div>
                     <div id="song-list-body"></div>
                     <!-- Initial Loading Overlay -->
-                    <div id="initial-loading-overlay" class="absolute inset-0 bg-bg-current flex items-center justify-content-center flex-col text-muted-current z-10 transition-opacity duration-500">
+                    <div id="initial-loading-overlay" class="absolute inset-0 bg-bg-current flex items-center justify-content-center flex-col text-muted-current z-10 transition-opacity duration-500 hidden">
                         <i class="ph-bold ph-spinner-gap animate-spin text-4xl text-primary-color mb-4"></i>
                         <p>Đang tải thư viện nhạc...</p>
                     </div>
@@ -1057,7 +1057,7 @@
     <script>
     // --- PWA Service Worker Logic ---
     const swCode = `
-        const CACHE_NAME = 'mstq-music-cache-v10';
+        const CACHE_NAME = 'mstq-music-cache-v11';
         const BASE_URL = 'https://thiensutinhquang.github.io/PlayMusic/';
         const urlsToCache = [
             BASE_URL, BASE_URL + 'index.html',
@@ -1590,7 +1590,14 @@
         // ==============================================
         // API & DATA FETCHING
         // ==============================================
-        async function fetchAudiusData(retryAttempt = 0, isCacheCleared = false) {
+        async function fetchAudiusData(retryAttempt = 0) {
+            // Cải tiến: Thêm cờ để tránh nhiều yêu cầu cùng lúc
+            if (state.isFetchingAllData) {
+                console.log('Đang trong quá trình tải dữ liệu, bỏ qua yêu cầu trùng lặp.');
+                return;
+            }
+            state.isFetchingAllData = true;
+
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 30000);
 
@@ -1643,7 +1650,6 @@
                 }
                 const userId = userData.data[0].id;
                 
-                state.isFetchingAllData = true;
                 const allTracks = [];
                 let offset = 0;
                 let hasMore = true;
@@ -2984,13 +2990,86 @@
             loadCustomCategory(document.querySelector('#category-menu .nav-item.active')?.dataset.category || 'all');
         }
 
+        // Tách hàm xử lý link chia sẻ ra thành một hàm riêng biệt để tái sử dụng
+        async function handleSharedLink(songToPlayId) {
+            // Hiển thị skeleton loader khi bắt đầu xử lý link
+            if (dom.mainContent.initialLoadingOverlay) {
+                dom.mainContent.initialLoadingOverlay.classList.remove('hidden');
+                dom.mainContent.initialLoadingOverlay.classList.add('opacity-100');
+            }
+
+            // Gọi API để lấy thông tin bài hát cụ thể từ ID
+            let songData = null;
+            try {
+                const songResponse = await fetch(`${state.currentAudiusHost}/v1/tracks/${songToPlayId}?app_name=MSTQPlayer`);
+                if (!songResponse.ok) {
+                    throw new Error('Không thể tìm thấy bài hát được chia sẻ.');
+                }
+                const trackData = await songResponse.json();
+                if (trackData && trackData.data) {
+                    const track = trackData.data;
+                    songData = {
+                        id: track.id,
+                        title: track.title,
+                        artist: track.user ? track.user.name : 'Nghệ sĩ không xác định',
+                        artwork: track.artwork ? (track.artwork['150x150'] || track.artwork.url) : `data:image/svg+xml;base64,` + btoa(`<svg xmlns="http://www.w3.org/2000/svg" width="150" height="150" viewBox="0 0 150 150"><rect width="150" height="150" fill="#1e293b"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="60" fill="#f1f5f9">${track.title.charAt(0) || '?'}</text></svg>`),
+                        artwork_full: track.artwork ? (track.artwork['480x480'] || track.artwork.url) : `data:image/svg+xml;base64,` + btoa(`<svg xmlns="http://www.w3.org/2000/svg" width="480" height="480" viewBox="0 0 480 480"><rect width="480" height="480" fill="#1e293b"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="180" fill="#f1f5f9">${track.title.charAt(0) || '?'}</text></svg>`),
+                        duration: track.duration,
+                        description: track.description || 'Không có lời bài hát cho bài này.',
+                        isFavorite: state.favoriteSongIds.includes(track.id),
+                        genre: track.genre || 'Không xác định',
+                        permalink: track.permalink
+                    };
+                }
+            } catch (error) {
+                console.error("Lỗi khi tải bài hát từ link chia sẻ:", error);
+                showMessage("Không thể tải bài hát từ liên kết này. Vui lòng kiểm tra lại.", "Lỗi tải bài hát");
+            } finally {
+                if (dom.mainContent.initialLoadingOverlay) {
+                    dom.mainContent.initialLoadingOverlay.classList.remove('opacity-100');
+                    dom.mainContent.initialLoadingOverlay.classList.add('opacity-0');
+                    setTimeout(() => dom.mainContent.initialLoadingOverlay.classList.add('hidden'), 500);
+                }
+            }
+
+            if (songData) {
+                // Thêm bài hát được chia sẻ vào đầu danh sách nếu nó chưa có
+                const existingIndex = state.originalSongData.findIndex(s => s.id === songData.id);
+                if (existingIndex === -1) {
+                    state.originalSongData.unshift(songData);
+                }
+                
+                // Cập nhật danh sách hiển thị
+                const sharedSongCategory = songData.genre ? 
+                                            Object.keys(CONFIG.GENRE_MAP).find(key => CONFIG.GENRE_MAP[key].toLowerCase() === songData.genre.toLowerCase()) || 'all'
+                                            : 'all';
+                loadCustomCategory(sharedSongCategory);
+                
+                const playIndex = state.currentFilteredSongs.findIndex(s => s.id === songToPlayId);
+                if (playIndex !== -1) {
+                    state.currentSongIndex = playIndex;
+                    updateUI();
+                    showMessage(`Đã tải bài hát "${songData.title}". Vui lòng nhấn nút Play để bắt đầu nghe.`, "Sẵn sàng phát nhạc", true, 5000);
+                    dom.playerBar.playPauseBtn?.classList.add('attention-bounce');
+                    setTimeout(() => {
+                        dom.playerBar.playPauseBtn?.classList.remove('attention-bounce');
+                    }, 2400);
+                }
+            } else {
+                loadCustomCategory('all');
+                showMessage("Không tìm thấy bài hát được chia sẻ. Vui lòng chọn bài khác.", "Lỗi");
+            }
+        }
+
+
         async function initializeApp() {
-            createStars(100, dom.splashScreen?.querySelector('.stars'));
-            createStars(50, dom.splashScreen?.querySelector('.stars2'));
-            createStars(20, dom.splashScreen?.querySelector('.stars3'));
-            await loadAndInjectSVG();
-            cacheLogoElements();
-            
+            // Xóa màn hình splash ngay lập tức
+            if (dom.splashScreen) {
+                dom.splashScreen.classList.remove('visible');
+                dom.splashScreen.classList.add('hidden');
+            }
+
+            // 1. Load settings from Local Storage
             state.isShuffling = loadStateFromLocalStorage(CONFIG.STORAGE_KEYS.SHUFFLE, false);
             state.repeatMode = loadStateFromLocalStorage(CONFIG.STORAGE_KEYS.REPEAT, 'all');
             state.favoriteSongIds = loadStateFromLocalStorage(CONFIG.STORAGE_KEYS.FAVORITES, []);
@@ -3000,6 +3079,9 @@
             updateVolumeUI();
             applyTheme();
 
+            // 2. Render static components
+            await loadAndInjectSVG();
+            cacheLogoElements();
             renderPresetThemes('preset-themes-desktop');
             renderPresetThemes('preset-themes-mobile');
 
@@ -3018,65 +3100,32 @@
             
             setupEventListeners();
             setupBroadcastChannel();
-            
+
+            // 3. Hiển thị skeleton loader và bắt đầu tải dữ liệu
             renderSkeletonLoader(CONFIG.INITIAL_LOAD_SIZE);
-            if (dom.mainContent.initialLoadingOverlay) {
-                dom.mainContent.initialLoadingOverlay.classList.remove('hidden');
-                dom.mainContent.initialLoadingOverlay.classList.add('opacity-100');
-            }
-
-            await fetchAudiusData();
-
-            if (state.originalSongData.length === 0) {
-                dom.mainContent.reloadLibraryBtn?.classList.remove('hidden');
-            }
 
             const urlParams = new URLSearchParams(window.location.search);
             const songToPlayId = urlParams.get('play');
 
             if (songToPlayId) {
-                const songIndex = state.originalSongData.findIndex(s => s.id === songToPlayId);
-                if (songIndex !== -1) {
-                    const sharedSongCategory = state.originalSongData[songIndex].genre ? 
-                                                Object.keys(CONFIG.GENRE_MAP).find(key => CONFIG.GENRE_MAP[key].toLowerCase() === state.originalSongData[songIndex].genre.toLowerCase()) || 'all'
-                                                : 'all';
-                    loadCustomCategory(sharedSongCategory);
-                    const displayIndex = state.currentFilteredSongs.findIndex(s => s.id === songToPlayId);
-                    if (displayIndex !== -1) {
-                        if (displayIndex >= state.currentDisplayStartIndex + state.currentDisplayData.length || displayIndex < state.currentDisplayStartIndex) {
-                            let newDisplayStartIndex = Math.max(0, displayIndex - Math.floor(CONFIG.PAGE_SIZE / 2));
-                            newDisplayStartIndex = Math.min(newDisplayStartIndex, state.currentFilteredSongs.length - CONFIG.PAGE_SIZE);
-                            if (newDisplayStartIndex < 0) newDisplayStartIndex = 0;
-
-                            state.currentDisplayData = state.currentFilteredSongs.slice(newDisplayStartIndex, newDisplayStartIndex + CONFIG.PAGE_SIZE);
-                            state.currentDisplayStartIndex = newDisplayStartIndex;
-                            renderSongs(state.currentDisplayData);
-                        }
-                        playSong(displayIndex);
-                        showMessage(`Đã tải bài hát "${state.currentFilteredSongs[displayIndex].title}". Vui lòng nhấn nút Play để bắt đầu nghe.`, "Sẵn sàng phát nhạc", true, 5000);
-                        dom.playerBar.playPauseBtn?.classList.add('attention-bounce');
-                        setTimeout(() => {
-                            dom.playerBar.playPauseBtn?.classList.remove('attention-bounce');
-                        }, 2400);
-                    } else {
-                        loadCustomCategory('all');
-                        showMessage("Không tìm thấy bài hát được chia sẻ. Vui lòng chọn bài khác.", "Lỗi");
-                    }
-                } else {
-                    loadCustomCategory('all');
-                    showMessage("Không tìm thấy bài hát được chia sẻ. Vui lòng chọn bài khác.", "Lỗi");
-                }
+                await fetchAudiusData();
+                await handleSharedLink(songToPlayId);
             } else {
+                await fetchAudiusData();
                 const savedPlaybackState = loadStateFromLocalStorage(CONFIG.STORAGE_KEYS.PLAYBACK_STATE, null);
-                if (savedPlaybackState) {
-                    if (dom.mainContent.searchInput) dom.mainContent.searchInput.value = savedPlaybackState.currentSearchQuery || '';
-                    loadCustomCategory(savedPlaybackState.currentCategory || 'all');
-                    const songIndex = state.currentFilteredSongs.findIndex(s => s.id === savedPlaybackState.songId);
+                if (savedPlaybackState && savedPlaybackState.songId && state.originalSongData.length > 0) {
+                    const songIndex = state.originalSongData.findIndex(s => s.id === savedPlaybackState.songId);
                     if (songIndex !== -1) {
-                        state.currentSongIndex = songIndex;
-                        updateUI();
-                        dom.audioPlayer.currentTime = savedPlaybackState.currentTime || 0;
-                        showMessage("Đã khôi phục phiên nghe nhạc trước đó. Nhấn nút Play để tiếp tục.", "Chào mừng trở lại!", true, 2500);
+                        loadCustomCategory(savedPlaybackState.currentCategory || 'all');
+                        const restoredSongIndex = state.currentFilteredSongs.findIndex(s => s.id === savedPlaybackState.songId);
+                        if (restoredSongIndex !== -1) {
+                            state.currentSongIndex = restoredSongIndex;
+                            dom.audioPlayer.currentTime = savedPlaybackState.currentTime || 0;
+                            updateUI();
+                            showMessage("Đã khôi phục phiên nghe nhạc trước đó. Nhấn nút Play để tiếp tục.", "Chào mừng trở lại!", true, 2500);
+                        } else {
+                             loadCustomCategory('all');
+                        }
                     } else {
                         loadCustomCategory('all');
                     }
@@ -3084,13 +3133,12 @@
                     loadCustomCategory('all');
                 }
             }
+            
+            if (state.originalSongData.length === 0) {
+                dom.mainContent.reloadLibraryBtn?.classList.remove('hidden');
+            }
 
             updateUI();
-            dom.splashScreen?.classList.add('visible');
-            setTimeout(() => dom.splashScreen?.classList.remove('visible'), 2000);
-            
-            requestNotificationPermission();
-
             toggleScrollNavVisibility();
             window.addEventListener('resize', throttle(toggleScrollNavVisibility, 200));
         };
