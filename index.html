@@ -17,8 +17,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <link rel="preconnect" href="https://api.audius.co">
-    <!-- Assuming common discovery hosts, add more if known -->
-    <link rel="preconnect" href="https://discoveryprovider.audius.co"> 
+    <link rel="preconnect" href="https://discoveryprovider.audius.co">
     <link rel="preconnect" href="https://discoveryprovider2.audius.co">
 
     <!-- Libraries -->
@@ -31,7 +30,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Fuse.js for fuzzy search -->
     <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2"></script>
     
     <style>
@@ -40,24 +38,23 @@
         ============================================== */
         :root {
             /* Màu chủ đạo */
-            --primary-color: #f59e0b;       /* Cam hổ phách */
-            --primary-hover: #d97706;       /* Cam đậm hơn */
-            --secondary-color: #3b82f6;     /* Xanh dương trung tính */
-            --danger-color: #ef4444;        /* Đỏ cảnh báo */
+            --primary-color: #f59e0b;
+            --primary-hover: #d97706;
+            --secondary-color: #3b82f6;
+            --danger-color: #ef4444;
 
             /* Giao diện Sáng (Tone Trắng Kem + Cam Hổ Phách Ấm) */
-            --bg-light: #fdfcfb;            /* Trắng kem dịu */
-            --card-bg-light: #ffffff;       /* Nền thẻ trắng */
-            --text-light: #1f2937;          /* Xám đậm dễ đọc */
-            --text-muted-light: #64748b;    /* Xám mờ vừa đủ */
-            --border-light: #dbeafe;        /* Xanh xám nhẹ */
-            --logo-bg-light: #fef9ef;       /* Nền logo hơi vàng nhạt */
+            --bg-light: #fdfcfb;
+            --card-bg-light: #ffffff;
+            --text-light: #1f2937;
+            --text-muted-light: #64748b;
+            --border-light: #dbeafe;
+            --logo-bg-light: #fef9ef;
 
             /* Màu cho nút "Tải thêm nhạc" */
-            --load-more-bg: #FFD700;        /* Vàng kim */
-            --load-more-text: #8B4513;      /* Nâu đỏ */
-            --load-more-hover-bg: #DAA520;  /* Vàng kim đậm hơn khi hover */
-
+            --load-more-bg: #FFD700;
+            --load-more-text: #8B4513;
+            --load-more-hover-bg: #DAA520;
 
             /* Giá trị mặc định áp dụng */
             --bg-current: var(--bg-light);
@@ -66,22 +63,22 @@
             --text-muted-current: var(--text-muted-light);
             --border-current: var(--border-light);
             --logo-bg-current: var(--logo-bg-light);
-            --font-sans: 'Be Vietnam Pro', sans-serif; /* Added back font variable */
+            --font-sans: 'Be Vietnam Pro', sans-serif;
         }
 
         /* Giao diện Tối (Tone Than Xám + Cam Vàng Nổi Bật) */
         body.dark-mode {
-            --bg-current: #1a1c23;          /* Than đậm dịu mắt */
-            --card-bg-current: #232732;     /* Xám xanh lạnh */
-            --text-current: #f1f5f9;        /* Trắng hơi xám dễ nhìn */
-            --text-muted-current: #cbd5e1;  /* Xám trắng rõ ràng hơn */
-            --border-current: #3b4252;      /* Viền rõ trên nền tối */
-            --logo-bg-current: #1f2530;     /* Logo nền than xanh */
+            --bg-current: #1a1c23;
+            --card-bg-current: #232732;
+            --text-current: #f1f5f9;
+            --text-muted-current: #cbd5e1;
+            --border-current: #3b4252;
+            --logo-bg-current: #1f2530;
 
             /* Màu cho nút "Tải thêm nhạc" trong Dark Mode */
-            --load-more-bg: #FFD700;        /* Vàng kim */
-            --load-more-text: #8B4513;      /* Nâu đỏ */
-            --load-more-hover-bg: #DAA520;  /* Vàng kim đậm hơn khi hover */
+            --load-more-bg: #FFD700;
+            --load-more-text: #8B4513;
+            --load-more-hover-bg: #DAA520;
         }
         
         /* ==============================================
@@ -90,14 +87,14 @@
         html { scroll-behavior: smooth; }
         
         body {
-            font-family: var(--font-sans); /* Changed to use font variable */
+            font-family: var(--font-sans);
             background-color: var(--bg-current);
             color: var(--text-current);
             transition: background-color var(--transition-slow), color var(--transition-fast);
             line-height: 1.6;
-            padding-bottom: 250px; /* Increased padding-bottom for more space */
+            padding-bottom: 250px;
             overflow-x: hidden;
-            touch-action: manipulation; /* Ngăn chặn các cử chỉ chạm mặc định của trình duyệt */
+            touch-action: manipulation;
         }
         
         .container { max-width: 1280px; margin: 0 auto; padding: 1rem 1.5rem; }
@@ -109,7 +106,7 @@
             border: 1px solid var(--border-current);
             transition: var(--transition-slow);
             padding: 1.25rem 1.5rem;
-            will-change: transform, box-shadow; /* Optimize for hover effects - kept as per user's model */
+            will-change: transform, box-shadow;
         }
         .card:hover {
             transform: translateY(-4px);
@@ -177,7 +174,6 @@
             color: var(--primary-color); margin: 0.5rem 0; width: 100%;
         }
         
-        /* Reverted to original @apply structure for nav items */
         .nav-item {
             display: inline-flex; align-items: center; gap: 0.5rem; 
             background-color: transparent; color: var(--text-muted-current); 
@@ -190,7 +186,6 @@
         .nav-item.active { color: var(--primary-color); font-weight: 700; background-color: var(--bg-current); border-color: var(--primary-color); }
 
         .dropdown-container { position: relative; }
-        /* Reverted to original @apply structure for dropdown toggle */
         .dropdown-toggle {
             display: inline-flex; align-items: center; gap: 0.5rem; background-color: transparent;
             color: var(--text-muted-current); padding: 0.6rem 1rem; border-radius: 8px;
@@ -209,7 +204,7 @@
             width: 220px; z-index: 1010; opacity: 0; transform: translateY(10px); 
             transition: opacity 0.3s ease, transform 0.3s ease; padding: 0.5rem; 
         }
-        .dropdown-menu.show { display: block; opacity: 1; transform: translateY(0); } /* Added back .show rule */
+        .dropdown-menu.show { display: block; opacity: 1; transform: translateY(0); }
         .dropdown-menu a { 
             display: flex; align-items: center; gap: 1rem; padding: 0.75rem 1rem; 
             color: var(--text-muted-current); text-decoration: none; 
@@ -225,7 +220,6 @@
         .preset-theme-btn:hover { transform: scale(1.05); box-shadow: var(--shadow-md); }
         .preset-theme-btn.active { border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.4); }
 
-        /* Reverted to original @apply structure for timer action buttons */
         .timer-action-btn {
             width: 100%; padding: 0.75rem 1rem; border-radius: 8px; font-weight: 600; 
             transition: all 0.2s ease-in-out; cursor: pointer; text-align: center;
@@ -286,11 +280,11 @@
         ============================================== */
         #player-bar {
             position: fixed; bottom: 0; left: 0; right: 0; height: 90px;
-            background-color: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); /* Reverted blur value */
+            background-color: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px);
             border-top: 1px solid var(--border-current); z-index: 1001;
             padding: 0 1.5rem; display: grid; 
             grid-template-columns: 3.5fr 2fr 1.2fr; align-items: center; gap: 1rem;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); /* Transition cho tất cả thuộc tính */
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
         body.fullscreen-player-active #player-bar {
             transform: translateY(100%);
@@ -304,13 +298,12 @@
             will-change: opacity;
         }
         #player-bar .now-playing-info.fade-out { opacity: 0; }
-        /* Reverted img tag and removed album-art-placeholder class */
         #player-bar .now-playing-info img {
             width: 56px; height: 56px; border-radius: 8px; object-fit: cover;
             transition: transform 0.3s ease-out, box-shadow 0.3s ease-out; flex-shrink: 0;
             will-change: transform, box-shadow;
         }
-        #player-bar .now-playing-info img.animate-pulse { /* Kept pulse animation for image */
+        #player-bar .now-playing-info img.animate-pulse {
             animation: pulse-placeholder 1.5s infinite alternate;
         }
         @keyframes pulse-placeholder {
@@ -324,21 +317,20 @@
             display: flex;
             flex-direction: column;
             justify-content: center;
-            min-height: 56px; /* Đảm bảo chiều cao cho 2 dòng tiêu đề */
+            min-height: 56px;
         }
 
         #player-bar .player-controls-main {
             display: flex; flex-direction: column; align-items: center;
             gap: 0.5rem; min-width: 0;
         }
-        /* Reverted to original styles for player buttons */
         #player-bar .player-buttons { display: flex; align-items: center; gap: 1rem; }
         #player-bar .player-buttons button {
             background: none; border: none; color: var(--text-muted-current);
             font-size: 1.5rem; cursor: pointer; transition: var(--transition-fast);
-            min-width: 48px; /* Đảm bảo kích thước chạm tối thiểu */
-            min-height: 48px; /* Đảm bảo kích thước chạm tối thiểu */
-            display: flex; /* Để căn giữa icon nếu cần */
+            min-width: 48px;
+            min-height: 48px;
+            display: flex;
             align-items: center;
             justify-content: center;
         }
@@ -347,7 +339,7 @@
         #player-bar .player-buttons #play-pause-btn {
             background-color: var(--primary-color); color: white;
             width: 44px; height: 44px; border-radius: 50%; font-size: 1.5rem;
-            min-width: 44px; /* Giữ nguyên kích thước đặc biệt */
+            min-width: 44px;
             min-height: 44px;
         }
         #player-bar .player-buttons #play-pause-btn:hover { background-color: var(--primary-hover); }
@@ -365,7 +357,7 @@
         .progress-container { 
             flex-grow: 1; height: 8px; background-color: var(--border-current);
             border-radius: 4px; overflow: hidden; cursor: pointer; position: relative;
-            will-change: width; /* For progress bar updates */
+            will-change: width;
         }
         .progress-bar { height: 100%; background-color: var(--primary-color); border-radius: 4px; transition: width 0.1s linear; }
         #progress-tooltip {
@@ -378,13 +370,12 @@
         .progress-container:hover #progress-tooltip { opacity: 1; }
 
         #player-bar .player-actions-right { display: flex; align-items: center; justify-content: flex-end; gap: 1rem; }
-        /* Reverted to original styles for player action buttons */
         #player-bar .player-actions-right button {
             background: none; border: none; color: var(--text-muted-current); font-size: 1.25rem;
             cursor: pointer; transition: color var(--transition-fast);
-            min-width: 48px; /* Đảm bảo kích thước chạm tối thiểu */
-            min-height: 48px; /* Đảm bảo kích thước chạm tối thiểu */
-            display: flex; /* Để căn giữa icon nếu cần */
+            min-width: 48px;
+            min-height: 48px;
+            display: flex;
             align-items: center;
             justify-content: center;
         }
@@ -449,7 +440,6 @@
             gap: 1rem; padding: 0.5rem 1rem; border-bottom: 1px solid var(--border-current);
             color: var(--text-muted-current); font-size: 0.8rem; font-weight: 600; text-transform: uppercase;
         }
-        /* Reverted to original styles for song list item */
         .song-list-item {
             display: grid; grid-template-columns: 40px 1fr auto auto;
             gap: 1rem; align-items: center; padding: 0.75rem 1rem;
@@ -469,23 +459,21 @@
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             opacity: 0; transition: opacity var(--transition-fast); font-size: 1.5rem;
         }
-        .song-list-item:hover .index-number, .song-list-item.active-song .index-number { opacity: 1; } /* Reverted to 1 to be visible on hover/active */
+        .song-list-item:hover .index-number, .song-list-item.active-song .index-number { opacity: 1; }
         .song-list-item.active-song .play-button { opacity: 1; }
         .song-list-item .song-info { display: flex; align-items: center; gap: 1rem; min-width: 0; }
-        /* Reverted img tag and removed artwork-placeholder class */
         .song-list-item .artwork { width: 40px; height: 40px; border-radius: 4px; object-fit: cover; }
         .song-list-item .title-artist { min-width: 0; }
         .song-list-item .title { font-weight: 600; }
         .song-list-item .artist { font-size: 0.875rem; color: var(--text-muted-current); }
         .song-list-item.active-song .title { color: var(--primary-color); }
-        /* Reverted to original styles for lyrics button */
         .song-list-item .lyrics-button {
             background: none; border: none; color: var(--text-muted-current);
             font-size: 1.25rem; cursor: pointer; transition: color var(--transition-fast);
             padding: 0.5rem; border-radius: 6px;
-            min-width: 48px; /* Đảm bảo kích thước chạm tối thiểu */
-            min-height: 48px; /* Đảm bảo kích thước chạm tối thiểu */
-            display: flex; /* Để căn giữa icon nếu cần */
+            min-width: 48px;
+            min-height: 48px;
+            display: flex;
             align-items: center;
             justify-content: center;
         }
@@ -495,7 +483,6 @@
         @keyframes pulse-icon { from { transform: scale(1); opacity: 1; } to { transform: scale(1.2); opacity: 0.7; } }
 
         /* NÂNG CẤP: Skeleton & Empty States */
-        /* Reverted to original skeleton styles */
         .skeleton { animation: skeleton-loading 1.5s linear infinite alternate; }
         @keyframes skeleton-loading { 0% { background-color: var(--border-current); } 100% { background-color: var(--bg-current); } }
         .skeleton-text { width: 75%; height: 1.25rem; margin-bottom: 0.5rem; border-radius: 4px; }
@@ -512,12 +499,12 @@
         /* NÂNG CẤP: Tự động xuống dòng cho tên bài hát */
         .marquee-text {
             display: -webkit-box;
-            -webkit-line-clamp: 2; /* Giới hạn 2 dòng */
+            -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
             text-overflow: ellipsis;
-            white-space: normal; /* Cho phép xuống dòng */
-            word-break: break-word; /* Ngắt từ nếu cần */
+            white-space: normal;
+            word-break: break-word;
             line-height: 1.3;
         }
 
@@ -528,28 +515,34 @@
             border-radius: 3px;
         }
         
-        /* Reverted to original scroll nav styles */
-        #scroll-nav-container {
-            position: fixed; bottom: 110px; /* Adjusted position to be above the player bar */
+        .attention-bounce {
+            animation: attention-bounce 0.8s ease-in-out 3;
+        }
+        @keyframes attention-bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .scroll-nav-container {
+            position: fixed; bottom: 110px;
             right: 20px; z-index: 999; display: flex; flex-direction: column; gap: 0.75rem;
             opacity: 0; visibility: hidden; transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
         }
-        #scroll-nav-container.show { opacity: 1; visibility: visible; }
-        #scroll-nav-container button {
-            width: 48px; /* Tăng kích thước nút cuộn */
-            height: 48px; /* Tăng kích thước nút cuộn */
+        .scroll-nav-container.show { opacity: 1; visibility: visible; }
+        .scroll-nav-container button {
+            width: 48px;
+            height: 48px;
             background-color: rgba(0, 0, 0, 0.3); color: white;
             border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
             cursor: pointer; box-shadow: var(--shadow-md); transition: all 0.2s; backdrop-filter: blur(4px);
         }
-        #scroll-nav-container button:hover { background-color: var(--primary-color); color: white; transform: scale(1.1); }
-        #scroll-nav-container button i { font-size: 1.25rem; }
+        .scroll-nav-container button:hover { background-color: var(--primary-color); color: white; transform: scale(1.1); }
+        .scroll-nav-container button i { font-size: 1.25rem; }
 
         /* ==============================================
         MODAL & POPUP
         ============================================== */
-        /* Reverted to original modal styles */
         .custom-alert-modal {
             position: fixed; inset: 0; background-color: rgba(0, 0, 0, 0.6);
             display: flex; justify-content: center; align-items: center;
@@ -596,16 +589,14 @@
             flex-grow: 1; padding: 2rem; overflow-y: auto; text-align: center;
             line-height: 1.8; transition: background-color 0.3s, color 0.3s;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
-            overscroll-behavior: contain; /* Ngăn cuộn nền khi cuộn lời bài hát */
+            overscroll-behavior: contain;
         }
-        /* NÂNG CẤP: Hiệu ứng chuyển trang lời bài hát */
         .lyrics-fade-in { animation: fadeIn 0.5s ease-in-out; }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
         .lyrics-popup-content p { margin-bottom: 0.5rem; }
-        /* Reverted to original pagination button styles */
         .lyrics-pagination {
             display: flex; justify-content: center; align-items: center; gap: 1rem;
             padding: 1rem; background-color: var(--card-bg-current);
@@ -619,7 +610,6 @@
         .lyrics-pagination button.disabled { opacity: 0.3; cursor: not-allowed; }
         .lyrics-pagination span { font-weight: 600; color: var(--text-current); }
 
-        /* Reverted to original radial menu styles */
         #lyrics-radial-menu-container {
             position: fixed; bottom: 110px; right: 20px; z-index: 1600;
             width: 50px; height: 50px; display: flex; justify-content: center;
@@ -662,22 +652,20 @@
             transform: translateX(100%); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             padding: 1.5rem; display: flex; flex-direction: column;
         }
-        /* FIX: Corrected selector for mobile menu to slide in */
         .mobile-nav-overlay.active .mobile-nav-content { transform: translateX(0); }
         .mobile-nav-content .close-mobile-menu {
             background: none; border: none; font-size: 2rem; color: var(--text-muted-current);
             cursor: pointer; align-self: flex-end; margin-bottom: 1rem;
         }
         .mobile-nav-content .close-mobile-menu:hover { color: var(--text-current); }
-        /* Reverted to original mobile nav item styles */
         .mobile-nav-content .nav-item { 
             width: 100%; justify-content: flex-start; margin-bottom: 0.75rem; font-size: 1.1rem; padding: 0.8rem 1.2rem; 
-            min-height: 48px; /* Đảm bảo kích thước chạm tối thiểu */
+            min-height: 48px;
         }
         .mobile-nav-content .dropdown-container { width: 100%; }
         .mobile-nav-content .dropdown-toggle { 
             width: 100%; justify-content: flex-start; font-size: 1.1rem; padding: 0.8rem 1.2rem; 
-            min-height: 48px; /* Đảm bảo kích thước chạm tối thiểu */
+            min-height: 48px;
         }
         .mobile-nav-content .dropdown-menu {
             position: static; width: 100%; box-shadow: none; border: none; padding: 0;
@@ -685,66 +673,64 @@
         }
         .mobile-nav-content .dropdown-menu a { padding-left: 3rem; font-size: 1rem; padding-top: 0.6rem; padding-bottom: 0.6rem; }
         
-        /* Reverted to original minimized player bar styles */
         body.player-bar-minimized #player-bar {
-            height: 60px; /* Chiều cao ngắn hơn */
-            grid-template-columns: auto 1fr; /* Chỉ hiển thị thông tin và điều khiển */
+            height: 60px;
+            grid-template-columns: auto 1fr;
             padding: 0 0.75rem;
         }
 
         body.player-bar-minimized #player-bar .now-playing-info .text-info {
-            display: none; /* Ẩn thông tin văn bản */
+            display: none;
         }
 
         body.player-bar-minimized #player-bar .now-playing-info img {
-            width: 48px; /* Thu nhỏ ảnh bìa */
+            width: 48px;
             height: 48px;
         }
 
         body.player-bar-minimized #player-bar .player-controls-main {
-            flex-direction: row; /* Đặt các nút ngang hàng */
-            justify-content: flex-end; /* Căn điều khiển sang phải trên di động */
+            flex-direction: row;
+            justify-content: flex-end;
         }
 
         body.player-bar-minimized #player-bar .player-buttons {
-            gap: 0.5rem; /* Giảm khoảng cách */
+            gap: 0.5rem;
         }
 
         body.player-bar-minimized #player-bar .player-buttons #play-pause-btn {
-            width: 36px; /* Thu nhỏ nút play/pause */
+            width: 36px;
             height: 36px;
             font-size: 1.2rem;
         }
 
         body.player-bar-minimized #player-bar .player-buttons button {
-            font-size: 1.2rem; /* Thu nhỏ icon nút */
+            font-size: 1.2rem;
             min-width: 36px;
             min-height: 36px;
         }
 
         body.player-bar-minimized #player-bar .progress-section,
         body.player-bar-minimized #player-bar .player-actions-right {
-            display: none; /* Ẩn thanh tiến trình và các hành động bên phải */
+            display: none;
         }
 
 
         @media (max-width: 1024px) {
             .desktop-nav { display: none; }
             .header-layout-wrapper { flex-direction: row; justify-content: space-between; align-items: center; padding: 0 1rem; }
-            .header-logo-container { width: 80px !important; max-width: 80px !important; min-width: 60px !important; } 
+            .header-logo-container { width: 80px !important; max-width: 80px !important; min-width: 60px !important; }
             .header-main-content {
                 display: flex; flex-grow: 1; flex-direction: row;
                 justify-content: center; align-items: center; text-align: center;
             }
-            .header .main-title { display: block; font-size: 1.8rem; margin: 0; flex-grow: 1; } /* Reverted to display: block */
+            .header .main-title { display: block; font-size: 1.8rem; margin: 0; flex-grow: 1; }
             .hamburger-menu-wrapper { display: block; flex-shrink: 0; margin-left: auto; }
-            /* Reverted to original hamburger menu styles */
             .hamburger-menu {
                 display: block; font-size: 2.5rem; padding: 0.5rem; border-radius: 8px;
                 background-color: transparent; color: var(--text-current);
                 transition: var(--transition-fast); cursor: pointer; border: 2px solid transparent;
-                min-width: 48px; /* Đảm bảo kích thước chạm tối thiểu */
-                min-height: 48px; /* Đảm bảo kích thước chạm tối thiểu */
+                min-width: 48px;
+                min-height: 48px;
             }
             .hamburger-menu:hover { background-color: var(--bg-current); border-color: var(--primary-color); }
             .header .desktop-nav { display: none; }
@@ -752,68 +738,63 @@
 
         @media (max-width: 768px) {
             .header { height: auto; padding-top: 0.5rem; padding-bottom: 0.5rem; }
-            .header-logo-container { width: 60px !important; max-width: 60px !important; } 
+            .header-logo-container { width: 60px !important; max-width: 60px !important; }
             .main-title { font-size: 1.5rem; }
-            /* Updated mobile player bar styles for desired order */
             #player-bar {
-                grid-template-columns: 1fr; /* Chỉ 1 cột */
-                grid-template-rows: auto auto auto auto; /* 4 hàng */
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto auto auto;
                 height: auto; 
                 gap: 0.5rem; 
                 padding: 0.75rem 1rem;
             }
-            /* New order: Progress bar (order 1), Volume (order 2), Now Playing Info (order 3), Main Controls (order 4) */
             #player-bar .progress-section { 
-                order: 1; /* Moved to top */
-                grid-column: 1 / -1; /* Mở rộng toàn bộ chiều rộng */
-            } 
-            #player-bar .player-actions-right { /* This contains the volume slider and other actions */
-                order: 2; /* Moved from 1 to 2 */
-                display: flex; /* Đảm bảo hiển thị */
-                justify-content: space-around; /* Phân phối đều các nút */
+                order: 1;
+                grid-column: 1 / -1;
+            }
+            #player-bar .player-actions-right {
+                order: 2;
+                display: flex;
+                justify-content: space-around;
                 align-items: center;
-                grid-column: 1 / -1; /* Đặt nó ở hàng riêng */
-                padding-top: 0.5rem; /* Khoảng cách với hàng trên */
-                gap: 0.5rem; /* Khoảng cách giữa các nút */
-                flex-wrap: wrap; /* Cho phép xuống dòng nếu không đủ chỗ */
+                grid-column: 1 / -1;
+                padding-top: 0.5rem;
+                gap: 0.5rem;
+                flex-wrap: wrap;
             }
             #player-bar .now-playing-info { 
                 grid-column: 1 / -1; 
-                order: 3; /* Unchanged */
-                justify-content: space-between; /* Căn đều các phần tử */
+                order: 3;
+                justify-content: space-between;
                 align-items: center;
             }
             #player-bar .player-controls-main { 
                 grid-column: 1 / -1; 
-                order: 4; /* Unchanged */
-                flex-direction: row; /* Nút điều khiển ngang hàng */
+                order: 4;
+                flex-direction: row;
                 justify-content: center;
-                gap: 1rem; /* Khoảng cách giữa các nút */
+                gap: 1rem;
             }
-
-            /* Đảm bảo tất cả các nút trong player-actions-right hiển thị và có kích thước chạm phù hợp */
             #player-bar .player-actions-right button,
             #player-bar .player-actions-right .volume-container {
-                display: flex; /* Đảm bảo hiển thị */
-                min-width: 48px; /* Kích thước chạm tối thiểu */
-                min-height: 48px; /* Kích thước chạm tối thiểu */
-                font-size: 1.5rem; /* Kích thước icon lớn hơn */
+                display: flex;
+                min-width: 48px;
+                min-height: 48px;
+                font-size: 1.5rem;
                 align-items: center;
                 justify-content: center;
             }
             #player-bar .player-actions-right .volume-container {
-                width: 100%; /* Cho phép chiếm toàn bộ chiều rộng nếu cần */
-                max-width: 250px; /* Giới hạn chiều rộng tối đa */
-                margin: 0 auto; /* Căn giữa */
+                width: 100%;
+                max-width: 250px;
+                margin: 0 auto;
             }
             #player-bar .player-actions-right .volume-percentage {
-                flex-shrink: 0; /* Phần trăm không co lại */
-                min-width: 30px; /* Đảm bảo đủ chỗ cho chữ */
+                flex-shrink: 0;
+                min-width: 30px;
             }
-            /* Reverted to original minimized player bar styles for mobile */
             body.player-bar-minimized #player-bar {
-                height: 60px; /* Giữ chiều cao nhất quán */
-                grid-template-columns: auto 1fr; /* Chỉ hiển thị thông tin và điều khiển */
+                height: 60px;
+                grid-template-columns: auto 1fr;
                 padding: 0 0.75rem;
             }
             body.player-bar-minimized #player-bar .now-playing-info {
@@ -825,7 +806,7 @@
             }
             body.player-bar-minimized #player-bar .player-controls-main {
                 flex-direction: row;
-                justify-content: flex-end; /* Căn điều khiển sang phải trên di động */
+                justify-content: flex-end;
             }
             body.player-bar-minimized #player-bar .player-buttons {
                 gap: 0.5rem;
@@ -841,10 +822,10 @@
                 min-height: 36px;
             }
             body.player-bar-minimized #player-bar .now-playing-info .text-info {
-                display: none; /* Vẫn ẩn thông báo văn bản */
+                display: none;
             }
             body.player-bar-minimized #player-bar .player-actions-right {
-                display: none; /* Vẫn ẩn các hành động bên phải */
+                display: none;
             }
         }
     </style>
@@ -977,7 +958,7 @@
                     </div>
                 </div>
                 <audio id="audio-player" style="display: none;" crossOrigin="anonymous" preload="auto" playsinline webkit-playsinline></audio>
-                <audio id="audio-preloader" style="display: none;" crossOrigin="anonymous" preload="auto"></audio> <!-- Thêm audio preloader -->
+                <audio id="audio-preloader" style="display: none;" crossOrigin="anonymous" preload="auto"></audio>
                 <!-- Pagination / Load More -->
                 <div id="pagination-controls" class="mt-6 text-center">
                     <button id="load-more-btn" class="px-8 py-4 rounded-lg font-semibold transition-colors duration-200 shadow-lg text-lg w-full max-w-xs hidden"
@@ -1076,7 +1057,7 @@
     <script>
     // --- PWA Service Worker Logic ---
     const swCode = `
-        const CACHE_NAME = 'mstq-music-cache-v10'; // Nâng cấp phiên bản cache để kích hoạt cập nhật
+        const CACHE_NAME = 'mstq-music-cache-v10';
         const BASE_URL = 'https://thiensutinhquang.github.io/PlayMusic/';
         const urlsToCache = [
             BASE_URL, BASE_URL + 'index.html',
@@ -1091,7 +1072,7 @@
 
         self.addEventListener('install', event => {
             console.log('ServiceWorker: Đang cài đặt, cache tài nguyên...');
-            self.skipWaiting(); // Kích hoạt Service Worker mới ngay lập tức
+            self.skipWaiting();
             event.waitUntil(
                 caches.open(CACHE_NAME).then(cache => {
                     return cache.addAll(urlsToCache);
@@ -1112,7 +1093,7 @@
                         })
                     );
                 }).then(() => {
-                    return clients.claim(); // Cho phép Service Worker mới kiểm soát các trang đã mở
+                    return clients.claim();
                 })
             );
         });
@@ -1121,7 +1102,6 @@
             const { request } = event;
             const url = new URL(request.url);
 
-            // Luôn lấy từ mạng cho các API của Audius để có dữ liệu mới nhất
             if (url.hostname.includes('audius.co') || url.hostname.includes('staked.cloud')) {
                 event.respondWith(
                     fetch(request).catch(err => {
@@ -1131,7 +1111,6 @@
                 return;
             }
 
-            // Chiến lược Cache First cho các tài sản tĩnh
             event.respondWith(
                 caches.match(request).then(cachedResponse => {
                     if (cachedResponse) {
@@ -1182,7 +1161,6 @@
                             newWorker.addEventListener('statechange', () => {
                                 if (newWorker.state === 'activated') {
                                     console.log('ServiceWorker mới đã được kích hoạt. Đang tải lại trang...');
-                                    // Tải lại trang để áp dụng Service Worker mới
                                     window.location.reload(true); 
                                 }
                             });
@@ -1203,7 +1181,6 @@
     sheet.insertRule(`.bounce-animation { animation: bounce-animation 0.3s ease-in-out; }`, sheet.cssRules.length);
     sheet.insertRule(`@keyframes bounce-category-btn { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }`, sheet.cssRules.length);
     sheet.insertRule(`.bounce-category-btn { animation: bounce-category-btn 0.3s ease-out; }`, sheet.cssRules.length);
-    // New animation for attention cue
     sheet.insertRule(`@keyframes attention-bounce { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`, sheet.cssRules.length);
     sheet.insertRule(`.attention-bounce { animation: attention-bounce 0.8s ease-in-out 3; }`, sheet.cssRules.length);
 
@@ -1213,12 +1190,12 @@
         // CẤU HÌNH & BIẾN TOÀN CỤC
         // ==============================================
         const CONFIG = {
-            APP_VERSION: '1.0.1', // Thêm số phiên bản ứng dụng
+            APP_VERSION: '1.0.1',
             API_KEY: "08c897eb7784e03007e0769d01f2ca1c6a2001b4",
             USER_HANDLE: "minhsutinhquang",
             MAX_AUDIO_RETRIES: 3,
             STORAGE_KEYS: {
-                APP_VERSION: 'appVersion', // Key lưu phiên bản ứng dụng
+                APP_VERSION: 'appVersion',
                 THEME: 'themeState',
                 SHUFFLE: 'isShuffling',
                 REPEAT: 'repeatMode',
@@ -1234,7 +1211,7 @@
             ],
             GENRE_MAP: { 'new': "Pop", 'hot': "Country", 'dieu-thu': "Classical", 'others': "Reggae", 'phap': "Podcasts" },
             LYRICS: {
-                FONTS: ['Be Vietnam Pro, sans-serif','Arial, sans-serif','Verdana, sans-serif','Tahoma, sans-serif',"'Times New Roman', serif"], /* Reverted font list */
+                FONTS: ['Be Vietnam Pro, sans-serif','Arial, sans-serif','Verdana, sans-serif','Tahoma, sans-serif',"'Times New Roman', serif"],
                 THEMES: [
                     { id: 'auto_day', name: "Sáng", bgColor: "#FFFFFF", textColor: "#1e293b" },
                     { id: 'auto_night', name: "Tối", bgColor: "#1e293b", textColor: "#e2e8f0" },
@@ -1256,13 +1233,13 @@
                 { name: 'Telegram', url: 'https://t.me/thiensutinhquang', icon: 'ph-telegram-logo', color: '#24A1DE' },
                 { name: 'Zalo', url: 'https://zalo.me/g/vjkhzt168', icon: 'zalo-svg', color: '#0068FF' }
             ],
-            PAGE_SIZE: 20, // Số lượng bài hát tải mỗi lần phân trang
-            INITIAL_LOAD_SIZE: 20, // Số lượng bài hát tải ban đầu
-            APP_THEMES: [ // Defined app themes
+            PAGE_SIZE: 20,
+            INITIAL_LOAD_SIZE: 20,
+            APP_THEMES: [
                 { id: 'light', name: 'Sáng', bgColor: '#fdfcfb', cardBgColor: '#ffffff', textColor: '#1f2937', textMutedColor: '#64748b', borderColor: '#dbeafe', logoBgColor: '#fef9ef' },
                 { id: 'dark', name: 'Tối', bgColor: '#1a1c23', cardBgColor: '#232732', textColor: '#f1f5f9', textMutedColor: '#cbd5e1', borderColor: '#3b4252', logoBgColor: '#1f2530' },
-                { id: 'modern', name: 'Hiện đại', bgColor: '#228B22', cardBgColor: '#339B33', textColor: '#FFD700', textMutedColor: '#FFDD77', borderColor: '#44AA44', logoBgColor: '#1A7A1A' }, // Kept from original
-                { id: 'tinhquang', name: 'MSTQ độc quyền', bgColor: '#1a0b2a', cardBgColor: '#2a1b4a', textColor: '#FFD700', textMutedColor: '#e0e0e0', borderColor: '#4a2a6a', logoBgColor: '#100818' }, // Kept from original
+                { id: 'modern', name: 'Hiện đại', bgColor: '#228B22', cardBgColor: '#339B33', textColor: '#FFD700', textMutedColor: '#FFDD77', borderColor: '#44AA44', logoBgColor: '#1A7A1A' },
+                { id: 'tinhquang', name: 'MSTQ độc quyền', bgColor: '#1a0b2a', cardBgColor: '#2a1b4a', textColor: '#FFD700', textMutedColor: '#e0e0e0', borderColor: '#4a2a6a', logoBgColor: '#100818' },
                 { id: 'zen', name: 'Zen', bgColor: '#e6f0ec', cardBgColor: '#ffffff', textColor: '#1f2937', textMutedColor: '#4b5563', borderColor: '#cbd5e1', logoBgColor: '#f5fdfb' },
                 { id: 'midnight', name: 'Midnight', bgColor: '#1a1c23', cardBgColor: '#232732', textColor: '#f1f5f9', textMutedColor: '#cbd5e1', borderColor: '#3b4252', logoBgColor: '#1f2530' },
                 { id: 'sunset', name: 'Sunset', bgColor: '#ffedd5', cardBgColor: '#fff7ed', textColor: '#1f2937', textMutedColor: '#4b5563', borderColor: '#fcd34d', logoBgColor: '#fef3c7' },
@@ -1281,7 +1258,7 @@
                 hamburgerMenu: document.getElementById('hamburger-menu'),
                 mobileNavOverlay: document.getElementById('mobile-nav-overlay'),
                 closeMobileMenu: document.getElementById('close-mobile-menu'),
-                networkStatusIndicator: document.getElementById('network-status-indicator'), // Thêm indicator mạng
+                networkStatusIndicator: document.getElementById('network-status-indicator'),
             },
             playerBar: {
                 container: document.getElementById('player-bar'),
@@ -1339,7 +1316,7 @@
                 loadMoreBtn: document.getElementById('load-more-btn'),
                 allSongsLoadedMsg: document.getElementById('all-songs-loaded-msg'),
                 loadingMoreSpinner: document.getElementById('loading-more-spinner'),
-                reloadLibraryBtn: document.getElementById('reload-library-btn'), // Thêm nút reload
+                reloadLibraryBtn: document.getElementById('reload-library-btn'),
             },
             modals: {
                 alert: document.getElementById('custom-alert-modal'),
@@ -1354,24 +1331,24 @@
                 toBottomBtn: document.getElementById('scroll-to-bottom-btn'),
             },
             audioPlayer: document.getElementById('audio-player'),
-            audioPreloader: document.getElementById('audio-preloader') // Thêm audio preloader
+            audioPreloader: document.getElementById('audio-preloader')
         };
         
         // Global State
         let state = {
-            originalSongData: [], // To store all songs for search
-            currentFilteredSongs: [], // All songs filtered by category/search, potentially shuffled
-            currentDisplayData: [], // The actual subset of songs currently rendered in the UI
-            currentDisplayStartIndex: 0, // The index in currentFilteredSongs where currentDisplayData starts
+            originalSongData: [],
+            currentFilteredSongs: [],
+            currentDisplayData: [],
+            currentDisplayStartIndex: 0,
             audiusHosts: [],
             currentAudiusHost: null,
-            currentSongIndex: -1, // Index of the currently playing song within currentFilteredSongs
+            currentSongIndex: -1,
             isPlaying: false,
             isShuffling: false,
             repeatMode: 'all',
             favoriteSongIds: [],
             wakeLock: null,
-            wakeLockInterval: null, // Thêm biến để lưu trữ interval của Wake Lock
+            wakeLockInterval: null,
             lastVolume: 1,
             lyrics: {
                 pages: [],
@@ -1386,12 +1363,13 @@
                 interval: null
             },
             logoElements: {},
-            lastScrollY: 0, // Track scroll position for player bar minimization
-            songsLoadedCount: 0, // This will now represent the end index of currentDisplayData within currentFilteredSongs
-            isFetchingAllData: false, // Flag to prevent multiple full data fetches
-            isSearching: false, // Flag to indicate if search is active
-            draggedItem: null, // Declare draggedItem here once
-            networkStatus: 'online', // Thêm trạng thái mạng
+            lastScrollY: 0,
+            songsLoadedCount: 0,
+            isFetchingAllData: false,
+            isSearching: false,
+            draggedItem: null,
+            networkStatus: 'online',
+            isRetryingFetch: false,
         };
 
         // ==============================================
@@ -1404,8 +1382,8 @@
                 clearTimeout(messageTimer);
             }
             if (dom.modals.alertTitle) dom.modals.alertTitle.textContent = title;
-            if (dom.modals.alertMessage) dom.modals.alertMessage.innerHTML = message; // Use innerHTML for bold text
-            if (dom.modals.alertOkBtn) { // Added null check
+            if (dom.modals.alertMessage) dom.modals.alertMessage.innerHTML = message;
+            if (dom.modals.alertOkBtn) {
                 dom.modals.alertOkBtn.style.display = autoDismiss ? 'none' : 'inline-block';
             }
             if (dom.modals.alert) dom.modals.alert.classList.add('show');
@@ -1453,7 +1431,7 @@
         }
 
         function cacheLogoElements() {
-            if (dom.header.logoPlaceholder) { // Kiểm tra null trước khi truy cập
+            if (dom.header.logoPlaceholder) {
                 state.logoElements = {
                     chakraSystem: dom.header.logoPlaceholder.querySelector('#chakra-system'),
                     humanBody: dom.header.logoPlaceholder.querySelector('#human-body'),
@@ -1529,7 +1507,7 @@
         
         function saveCurrentPlaybackState() {
             if (state.currentSongIndex === -1) return;
-            const song = state.currentFilteredSongs[state.currentSongIndex]; // Use currentFilteredSongs for persistence
+            const song = state.currentFilteredSongs[state.currentSongIndex];
             if (!song) return;
 
             const playbackState = {
@@ -1547,7 +1525,7 @@
         function applyTheme() {
             const theme = loadStateFromLocalStorage(CONFIG.STORAGE_KEYS.THEME, { mode: 'light' });
             dom.body.classList.remove('dark-mode');
-            dom.html.removeAttribute('data-theme'); // Remove data-theme to ensure dynamic CSS variables take precedence
+            dom.html.removeAttribute('data-theme');
             document.querySelectorAll('.preset-theme-btn').forEach(b => b.classList.remove('active'));
             
             const darkModeToggle = document.getElementById('darkModeToggle');
@@ -1560,18 +1538,16 @@
                 if(darkModeToggle) darkModeToggle.checked = true;
                 if(darkModeToggleMobile) darkModeToggleMobile.checked = true;
             } else if (theme.mode === 'preset' && theme.id) {
-                // No need to set data-theme attribute if using dynamic CSS variables
                 currentThemeObj = CONFIG.APP_THEMES.find(t => t.id === theme.id);
                 document.querySelectorAll(`.preset-theme-btn[data-theme="${theme.id}"]`).forEach(btn => btn.classList.add('active'));
                 if(darkModeToggle) darkModeToggle.checked = false;
-                if(darkModeToggleMobile) darkModeToggleMobile.checked = false; // Corrected ID
-            } else { // Default to light mode
+                if(darkModeToggleMobile) darkModeToggleMobile.checked = false;
+            } else {
                 currentThemeObj = CONFIG.APP_THEMES.find(t => t.id === 'light');
                 if(darkModeToggle) darkModeToggle.checked = false;
                 if(darkModeToggleMobile) darkModeToggleMobile.checked = false;
             }
 
-            // Apply dynamic CSS variables from the selected theme object
             if (currentThemeObj) {
                 document.documentElement.style.setProperty('--bg-current', currentThemeObj.bgColor);
                 document.documentElement.style.setProperty('--card-bg-current', currentThemeObj.cardBgColor);
@@ -1597,8 +1573,8 @@
         function renderPresetThemes(containerId) {
             const container = document.getElementById(containerId);
             if (!container) return;
-            container.innerHTML = ''; // Clear existing buttons
-            CONFIG.APP_THEMES.filter(theme => theme.id !== 'light' && theme.id !== 'dark').forEach(theme => { // Exclude light/dark as they have separate toggles
+            container.innerHTML = '';
+            CONFIG.APP_THEMES.filter(theme => theme.id !== 'light' && theme.id !== 'dark').forEach(theme => {
                 const btn = document.createElement('button');
                 btn.type = 'button';
                 btn.className = 'preset-theme-btn';
@@ -1614,9 +1590,9 @@
         // ==============================================
         // API & DATA FETCHING
         // ==============================================
-        async function fetchAudiusData(retryAttempt = 0) { // Thêm tham số retryAttempt
+        async function fetchAudiusData(retryAttempt = 0, isCacheCleared = false) {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 seconds timeout
+            const timeoutId = setTimeout(() => controller.abort(), 30000);
 
             try {
                 state.networkStatus = 'reconnecting';
@@ -1668,29 +1644,38 @@
                 const userId = userData.data[0].id;
                 
                 state.isFetchingAllData = true;
-                const allTracksResponse = await fetch(`${state.currentAudiusHost}/v1/users/${userId}/tracks?limit=10000&app_name=MSTQPlayer`, { signal: controller.signal });
-                if (!allTracksResponse.ok) {
-                    throw new Error(`Không thể tải danh sách bài hát từ Audius. Mã lỗi: ${allTracksResponse.status}`);
+                const allTracks = [];
+                let offset = 0;
+                let hasMore = true;
+
+                while (hasMore) {
+                    const tracksResponse = await fetch(`${state.currentAudiusHost}/v1/users/${userId}/tracks?limit=${CONFIG.PAGE_SIZE}&offset=${offset}&app_name=MSTQPlayer`, { signal: controller.signal });
+                    if (!tracksResponse.ok) {
+                        throw new Error(`Không thể tải danh sách bài hát từ Audius. Mã lỗi: ${tracksResponse.status}`);
+                    }
+                    const tracksData = await tracksResponse.json();
+                    
+                    if (tracksData && Array.isArray(tracksData.data)) {
+                        allTracks.push(...tracksData.data);
+                        hasMore = tracksData.data.length === CONFIG.PAGE_SIZE;
+                        offset += CONFIG.PAGE_SIZE;
+                    } else {
+                        hasMore = false;
+                    }
                 }
-                const allTracksData = await allTracksResponse.json();
                 
-                if (allTracksData && Array.isArray(allTracksData.data)) {
-                    state.originalSongData = allTracksData.data.map(track => ({
-                        id: track.id,
-                        title: track.title,
-                        artist: track.user ? track.user.name : 'Nghệ sĩ không xác định',
-                        artwork: track.artwork ? (track.artwork['150x150'] || track.artwork.url) : `data:image/svg+xml;base64,` + btoa(`<svg xmlns="http://www.w3.org/2000/svg" width="150" height="150" viewBox="0 0 150 150"><rect width="150" height="150" fill="#1e293b"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="60" fill="#f1f5f9">${track.title.charAt(0) || '?'}</text></svg>`),
-                        artwork_full: track.artwork ? (track.artwork['480x480'] || track.artwork.url) : `data:image/svg+xml;base64,` + btoa(`<svg xmlns="http://www.w3.org/2000/svg" width="480" height="480" viewBox="0 0 480 480"><rect width="480" height="480" fill="#1e293b"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="180" fill="#f1f5f9">${track.title.charAt(0) || '?'}</text></svg>`),
-                        duration: track.duration,
-                        description: track.description || 'Không có lời bài hát cho bài này.',
-                        isFavorite: state.favoriteSongIds.includes(track.id),
-                        genre: track.genre || 'Không xác định',
-                        permalink: track.permalink
-                    }));
-                } else {
-                    console.warn("Audius API did not return expected data structure for tracks. Setting originalSongData to empty array.");
-                    state.originalSongData = [];
-                }
+                state.originalSongData = allTracks.map(track => ({
+                    id: track.id,
+                    title: track.title,
+                    artist: track.user ? track.user.name : 'Nghệ sĩ không xác định',
+                    artwork: track.artwork ? (track.artwork['150x150'] || track.artwork.url) : `data:image/svg+xml;base64,` + btoa(`<svg xmlns="http://www.w3.org/2000/svg" width="150" height="150" viewBox="0 0 150 150"><rect width="150" height="150" fill="#1e293b"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="60" fill="#f1f5f9">${track.title.charAt(0) || '?'}</text></svg>`),
+                    artwork_full: track.artwork ? (track.artwork['480x480'] || track.artwork.url) : `data:image/svg+xml;base64,` + btoa(`<svg xmlns="http://www.w3.org/2000/svg" width="480" height="480" viewBox="0 0 480 480"><rect width="480" height="480" fill="#1e293b"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="180" fill="#f1f5f9">${track.title.charAt(0) || '?'}</text></svg>`),
+                    duration: track.duration,
+                    description: track.description || 'Không có lời bài hát cho bài này.',
+                    isFavorite: state.favoriteSongIds.includes(track.id),
+                    genre: track.genre || 'Không xác định',
+                    permalink: track.permalink
+                }));
 
                 state.isFetchingAllData = false;
                 if (dom.mainContent.initialLoadingOverlay) {
@@ -1698,7 +1683,7 @@
                     dom.mainContent.initialLoadingOverlay.classList.add('opacity-0');
                     setTimeout(() => dom.mainContent.initialLoadingOverlay.classList.add('hidden'), 500);
                 }
-                state.networkStatus = 'online'; // Cập nhật trạng thái mạng thành online khi tải thành công
+                state.networkStatus = 'online';
                 updateNetworkStatusUI();
 
                 window.fuse = new Fuse(state.originalSongData, { keys: ['title', 'artist', 'genre'], includeScore: true, threshold: 0.4 });
@@ -1708,25 +1693,29 @@
                 if (dom.mainContent.songsContainer) {
                     dom.mainContent.songsContainer.innerHTML = '<p class="text-center text-red-500 col-span-full">Lỗi khi tải danh sách nhạc. Vui lòng thử lại sau.</p>';
                 }
-                state.networkStatus = 'offline'; // Cập nhật trạng thái mạng thành offline khi lỗi
+                state.networkStatus = 'offline';
                 updateNetworkStatusUI();
 
-                if (retryAttempt < CONFIG.MAX_AUDIO_RETRIES) {
-                    const delay = Math.pow(2, retryAttempt) * 1000; // Exponential backoff
+                if (retryAttempt < CONFIG.MAX_AUDIO_RETRIES && !state.isRetryingFetch) {
+                    state.isRetryingFetch = true;
+                    const delay = Math.pow(2, retryAttempt) * 1000;
                     showMessage(
                         `Lỗi tải dữ liệu: ${error.message}. Đang thử lại sau ${delay / 1000} giây... (Thử lại ${retryAttempt + 1}/${CONFIG.MAX_AUDIO_RETRIES})`,
                         "Lỗi kết nối",
                         true,
-                        delay + 500 // Show message a bit longer than delay
+                        delay + 500
                     );
-                    setTimeout(() => fetchAudiusData(retryAttempt + 1), delay);
-                } else {
+                    setTimeout(async () => {
+                        await clearCacheAndRefetch();
+                        state.isRetryingFetch = false;
+                    }, delay);
+                } else if (retryAttempt >= CONFIG.MAX_AUDIO_RETRIES) {
                     showMessage(
                         `Không thể tải danh sách nhạc từ Audius sau nhiều lần thử: ${error.message}. ` +
                         `Vui lòng kiểm tra kết nối internet. Nếu lỗi vẫn tiếp diễn, ` +
                         `hãy vào **Menu Giao diện** (biểu tượng bảng màu) và chọn **"Xóa Cache & Tải lại"** để khắc phục.`,
                         "Lỗi tải dữ liệu",
-                        false // Không tự động đóng, để người dùng đọc kỹ
+                        false
                     );
                 }
                 
@@ -1746,7 +1735,6 @@
         async function playSongWithRetries(song, retryCount = 0, hostRetryAttempt = 0) {
             if (!song) return;
 
-            // If all hosts have been tried for this song, move to the next song
             if (hostRetryAttempt >= state.audiusHosts.length) {
                 console.warn(`Tất cả hosts đã được thử cho bài hát ${song.title}. Chuyển sang bài tiếp theo.`);
                 showMessage("Không thể phát bài hát này sau nhiều lần thử. Chuyển sang bài tiếp theo.", "Lỗi Phát Nhạc");
@@ -1754,18 +1742,17 @@
                 return;
             }
 
-            // Determine the current host to try
             let hostToTry = state.currentAudiusHost;
-            if (retryCount > 0) { // If this is a retry, cycle through hosts
+            if (retryCount > 0) {
                 const currentHostIndex = state.audiusHosts.indexOf(state.currentAudiusHost);
                 const nextHostIndex = (currentHostIndex + 1) % state.audiusHosts.length;
                 hostToTry = state.audiusHosts[nextHostIndex];
-                state.currentAudiusHost = hostToTry; // Update the global current host
+                state.currentAudiusHost = hostToTry;
             }
             
             console.log(`Đang thử phát ${song.title} từ ${hostToTry} (Lần thử ${retryCount + 1})`);
-            dom.playerBar.playPauseBtn?.classList.add('play-pause-loading'); // Optional chaining
-            dom.playerBar.albumArt?.classList.add('animate-pulse'); // Optional chaining
+            dom.playerBar.playPauseBtn?.classList.add('play-pause-loading');
+            dom.playerBar.albumArt?.classList.add('animate-pulse');
 
             dom.audioPlayer.src = `${hostToTry}/v1/tracks/${song.id}/stream?app_name=MSTQPlayer`;
             dom.audioPlayer.load();
@@ -1773,57 +1760,46 @@
             const playPromise = dom.audioPlayer.play();
 
             try {
-                // Add a timeout for the play promise itself
                 const playTimeoutPromise = new Promise((resolve, reject) => {
-                    const id = setTimeout(() => reject(new Error('Play timeout')), 10000); // 10 seconds for play()
+                    const id = setTimeout(() => reject(new Error('Play timeout')), 10000);
                     playPromise.then(resolve, reject).finally(() => clearTimeout(id));
                 });
                 
-                await playTimeoutPromise; // Wait for play to resolve or timeout
+                await playTimeoutPromise;
                 
-                // If play was successful, clear any previous retry state
                 state.lastPlayAttemptFailed = false;
 
             } catch (error) {
                 console.error(`Lỗi phát nhạc từ ${hostToTry}:`, error);
-                // Check if the error is due to interruption by pause (common browser policy)
                 if (error.name === 'AbortError' && error.message.includes('interrupted by a call to pause')) {
                     console.log("Play request interrupted by pause. This is often benign due to browser autoplay policies.");
-                    // In this specific case, we don't necessarily want to retry or skip.
-                    // The user might have manually paused, or the browser might be preventing autoplay.
-                    // We'll let the play/pause event listeners handle the UI UI.
-                    return; // Exit without further retries or skipping
+                    return;
                 }
 
-                // If it's a real playback error, try again with exponential backoff and potentially a new host
                 if (retryCount < CONFIG.MAX_AUDIO_RETRIES - 1) {
                     showMessage(`Lỗi phát nhạc. Đang thử kết nối khác... (Thử lại ${retryCount + 1})`, "Lỗi kết nối", true, 2500);
-                    // Exponential backoff before retrying
                     await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
-                    await playSongWithRetries(song, retryCount + 1, hostRetryAttempt + 1); // Increment host retry attempt
+                    await playSongWithRetries(song, retryCount + 1, hostRetryAttempt + 1);
                 } else {
                     showMessage("Không thể phát bài hát này sau nhiều lần thử. Chuyển sang bài tiếp theo.", "Lỗi Phát Nhạc");
-                    playNext(); // Move to next song if all retries fail
+                    playNext();
                 }
             }
         }
 
-        async function playSong(filteredIndex) { // Made async
+        async function playSong(filteredIndex) {
             if (filteredIndex < 0 || filteredIndex >= state.currentFilteredSongs.length) return;
             
-            state.currentSongIndex = filteredIndex; // This is the index in the full filtered list
+            state.currentSongIndex = filteredIndex;
             const song = state.currentFilteredSongs[filteredIndex];
 
-            // Determine if the song is outside the current displayed window
             const currentDisplayEndIndex = state.currentDisplayStartIndex + state.currentDisplayData.length;
             let needsRerender = false;
 
             if (filteredIndex < state.currentDisplayStartIndex || filteredIndex >= currentDisplayEndIndex) {
-                // Calculate new window start index, trying to center the playing song
                 let newDisplayStartIndex = Math.max(0, filteredIndex - Math.floor(CONFIG.PAGE_SIZE / 2));
-                // Ensure the window doesn't go beyond the end of currentFilteredSongs
                 newDisplayStartIndex = Math.min(newDisplayStartIndex, state.currentFilteredSongs.length - CONFIG.PAGE_SIZE);
-                if (newDisplayStartIndex < 0) newDisplayStartIndex = 0; // Handle cases where total songs < PAGE_SIZE
+                if (newDisplayStartIndex < 0) newDisplayStartIndex = 0;
 
                 state.currentDisplayData = state.currentFilteredSongs.slice(newDisplayStartIndex, newDisplayStartIndex + CONFIG.PAGE_SIZE);
                 state.currentDisplayStartIndex = newDisplayStartIndex;
@@ -1831,26 +1807,24 @@
             }
 
             if (needsRerender) {
-                renderSongs(state.currentDisplayData); // Re-render the new window of songs
+                renderSongs(state.currentDisplayData);
             }
 
             if (dom.playerBar.songTitle) dom.playerBar.songTitle.textContent = song.title;
             if (dom.playerBar.songArtist) dom.playerBar.songArtist.textContent = song.artist;
             if (dom.playerBar.albumArt) {
-                dom.playerBar.albumArt.src = song.artwork_full; // Use full artwork for player bar
+                dom.playerBar.albumArt.src = song.artwork_full;
                 dom.playerBar.albumArt.classList.remove('animate-pulse');
             }
             
-            await playSongWithRetries(song); // Await the retry mechanism
+            await playSongWithRetries(song);
 
-            // Scroll the active song into view within the *currently rendered* list
             const displayIndexInCurrentData = state.currentDisplayData.findIndex(s => s.id === song.id);
             const activeSongElement = document.querySelector(`.song-list-item[data-display-index="${displayIndexInCurrentData}"]`);
             if (activeSongElement) {
                 activeSongElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }
 
-            // Tải trước bài hát tiếp theo
             preloadNextSong();
         }
 
@@ -1858,7 +1832,7 @@
             if (state.currentFilteredSongs.length === 0) return;
 
             let newIndex = (state.currentSongIndex + 1) % state.currentFilteredSongs.length;
-            playSong(newIndex); // Call playSong with the index in the full filtered list
+            playSong(newIndex);
             triggerHapticFeedback(50);
         }
 
@@ -1866,7 +1840,7 @@
             if (state.currentFilteredSongs.length === 0) return;
 
             let newIndex = (state.currentSongIndex - 1 + state.currentFilteredSongs.length) % state.currentFilteredSongs.length;
-            playSong(newIndex); // Call playSong with the index in the full filtered list
+            playSong(newIndex);
             triggerHapticFeedback(50);
         }
         
@@ -1874,22 +1848,22 @@
             const songIndexInFavorites = state.favoriteSongIds.indexOf(songId);
             if (songIndexInFavorites > -1) {
                 state.favoriteSongIds.splice(songIndexInFavorites, 1);
-                showMessage("Đã xóa khỏi danh sách yêu thích.", "Thông báo", true, 2500); // Changed duration to 2.5 seconds
+                showMessage("Đã xóa khỏi danh sách yêu thích.", "Thông báo", true, 2500);
             } else {
                 state.favoriteSongIds.push(songId);
-                showMessage("Đã thêm vào danh sách yêu thích!", "Thông báo", true, 2500); // Changed duration to 2.5 seconds
+                showMessage("Đã thêm vào danh sách yêu thích!", "Thông báo", true, 2500);
             }
             saveStateToLocalStorage(CONFIG.STORAGE_KEYS.FAVORITES, state.favoriteSongIds);
             
-            const song = state.originalSongData.find(s => s.id === songId); // Use originalSongData
+            const song = state.originalSongData.find(s => s.id === songId);
             if(song) song.isFavorite = state.favoriteSongIds.includes(songId);
 
             const currentCategory = document.querySelector('#category-menu .nav-item.active')?.dataset.category;
             if (currentCategory === 'favorites') loadCustomCategory('favorites');
             
             updateUI();
-            dom.playerBar.favoriteBtn?.classList.add('bounce-animation'); // Optional chaining
-            setTimeout(() => dom.playerBar.favoriteBtn?.classList.remove('bounce-animation'), 300); // Optional chaining
+            dom.playerBar.favoriteBtn?.classList.add('bounce-animation');
+            setTimeout(() => dom.playerBar.favoriteBtn?.classList.remove('bounce-animation'), 300);
         }
         
         // ==============================================
@@ -1913,17 +1887,15 @@
                     </div>
                 `;
             }
-            if (dom.mainContent.songsContainer) { // Add null check
+            if (dom.mainContent.songsContainer) {
                 dom.mainContent.songsContainer.innerHTML = skeletonHTML;
             }
         }
 
-        // Function to add event listeners to song items
         function addSongEventListeners() {
             document.querySelectorAll('.song-list-item').forEach(item => {
                 item.addEventListener('click', (e) => {
-                    if (e.target.closest('.lyrics-button')) return; /* Prevent song play if lyrics button is clicked */
-                    // Get the song from the full filtered list based on its ID
+                    if (e.target.closest('.lyrics-button')) return;
                     const songId = state.currentDisplayData[parseInt(item.dataset.displayIndex)].id;
                     const filteredIndex = state.currentFilteredSongs.findIndex(s => s.id === songId);
                     if (filteredIndex !== -1) {
@@ -1935,25 +1907,25 @@
                     }
                 });
                 item.querySelector('.lyrics-button')?.addEventListener('click', (e) => {
-                    e.stopPropagation(); /* Prevent song play when lyrics button is clicked */
-                    const songId = state.currentDisplayData[parseInt(item.dataset.displayIndex)].id; /* Get ID from displayed song */
-                    const song = state.originalSongData.find(s => s.id === songId); /* Use originalSongData for lyrics lookup */
+                    e.stopPropagation();
+                    const songId = state.currentDisplayData[parseInt(item.dataset.displayIndex)].id;
+                    const song = state.originalSongData.find(s => s.id === songId);
                     if (song) showLyricsFullscreenPopup(song);
                 });
             });
         }
 
-        function renderSongs(tracksToRender) { // No longer needs 'append'
+        function renderSongs(tracksToRender) {
             const container = dom.mainContent.songsContainer;
-            const searchQuery = dom.mainContent.searchInput?.value.trim() || ''; // Optional chaining
+            const searchQuery = dom.mainContent.searchInput?.value.trim() || '';
             
-            if (container) { // Add null check
-                container.innerHTML = ''; // Always clear and re-render the current window of songs
+            if (container) {
+                container.innerHTML = '';
             }
 
             if (!tracksToRender || tracksToRender.length === 0) {
                 const currentCategory = document.querySelector('#category-menu .nav-item.active')?.dataset.category;
-                if (container) { // Add null check
+                if (container) {
                     if (currentCategory === 'favorites') {
                         container.innerHTML = `<div class="empty-state col-span-full"><i class="ph-bold ph-heart-break"></i><p>Bạn chưa có bài hát yêu thích nào.</p><p class="text-sm">Nhấn vào hình trái tim ❤️ ở một bài hát để thêm vào đây.</p></div>`;
                     } else if (state.isSearching && searchQuery.length > 0) {
@@ -1962,14 +1934,14 @@
                         container.innerHTML = '<p class="text-center text-muted-current col-span-full p-4">Không tìm thấy bài hát nào.</p>';
                     }
                 }
-                dom.mainContent.loadMoreBtn?.classList.add('hidden'); // Optional chaining
-                dom.mainContent.allSongsLoadedMsg?.classList.add('hidden'); // Optional chaining
+                dom.mainContent.loadMoreBtn?.classList.add('hidden');
+                dom.mainContent.allSongsLoadedMsg?.classList.add('hidden');
             } else {
-                tracksToRender.forEach((song, indexInDisplayedList) => { // indexInDisplayedList is the index within currentDisplayData
+                tracksToRender.forEach((song, indexInDisplayedList) => {
                     const songItem = document.createElement('div');
                     songItem.className = 'song-list-item';
-                    songItem.dataset.displayIndex = indexInDisplayedList; // This is now index within the *displayed* list
-                    songItem.style.setProperty('--i', indexInDisplayedList); // For animation delay
+                    songItem.dataset.displayIndex = indexInDisplayedList;
+                    songItem.style.setProperty('--i', indexInDisplayedList);
 
                     let titleHTML = song.title;
                     let artistHTML = song.artist;
@@ -1989,20 +1961,20 @@
                         <button type="button" class="lyrics-button" data-song-id="${song.id}" aria-label="Xem lời bài hát"><i class="ph-bold ph-book-open"></i></button>
                         <div class="duration">${new Date(song.duration * 1000).toISOString().substr(14, 5)}</div>
                     `;
-                    container?.appendChild(songItem); // Optional chaining
+                    container?.appendChild(songItem);
                 });
                 updatePaginationControls();
             }
-            addSongEventListeners(); // Re-add listeners to new elements
-            renderPopupSongList(state.currentDisplayData); // Popup list always reflects currentDisplayData
-            updateUI(); // Update player bar and active song state
+            addSongEventListeners();
+            renderPopupSongList(state.currentDisplayData);
+            updateUI();
         }
         
         function renderPopupSongList(songs) {
-            if (dom.playlist.list) { // Add null check
+            if (dom.playlist.list) {
                 dom.playlist.list.innerHTML = '';
                 if (!songs || songs.length === 0) {
-                    dom.playlist.list.innerHTML = '<li class="p-4 text-center text-muted-current">Danh sách phát trống.</li>'; /* Reverted padding */
+                    dom.playlist.list.innerHTML = '<li class="p-4 text-center text-muted-current">Danh sách phát trống.</li>';
                     return;
                 }
                 songs.forEach((song, index) => {
@@ -2011,7 +1983,7 @@
                     li.draggable = true;
                     li.dataset.displayIndex = index;
                     li.innerHTML = `<div class="song-info-text"><p class="font-semibold marquee-text">${song.title}</p><p class="artist-text marquee-text">${song.artist}</p></div>`;
-                    li.addEventListener('click', () => playSong(state.currentFilteredSongs.indexOf(song))); // Play song from its index in the full filtered list
+                    li.addEventListener('click', () => playSong(state.currentFilteredSongs.indexOf(song)));
                     dom.playlist.list.appendChild(li);
                 });
                 addDragAndDropListeners();
@@ -2020,44 +1992,41 @@
         
         function updateUI() {
             state.isPlaying = !dom.audioPlayer.paused;
-            const song = state.currentFilteredSongs[state.currentSongIndex]; // Always reference from currentFilteredSongs
+            const song = state.currentFilteredSongs[state.currentSongIndex];
             
-            // Player bar
             if (song) {
                 if (dom.playerBar.songTitle) dom.playerBar.songTitle.textContent = song.title;
                 if (dom.playerBar.songArtist) dom.playerBar.songArtist.textContent = song.artist;
                 if (dom.playerBar.albumArt) {
-                    dom.playerBar.albumArt.src = song.artwork_full; // Use full artwork for player bar
+                    dom.playerBar.albumArt.src = song.artwork_full;
                     dom.playerBar.albumArt.classList.remove('animate-pulse');
                 }
                 if (dom.playerBar.favoriteBtn) {
                     dom.playerBar.favoriteBtn.classList.toggle('liked', state.favoriteSongIds.includes(song.id));
                     dom.playerBar.favoriteBtn.innerHTML = state.favoriteSongIds.includes(song.id) ? '<i class="ph-fill ph-heart"></i>' : '<i class="ph-bold ph-heart"></i>';
                 }
-                if (dom.playerBar.trackNumber) dom.playerBar.trackNumber.textContent = state.currentSongIndex + 1; // Display actual track number
+                if (dom.playerBar.trackNumber) dom.playerBar.trackNumber.textContent = state.currentSongIndex + 1;
             } else {
                 if (dom.playerBar.songTitle) dom.playerBar.songTitle.textContent = "Chọn một bài hát";
                 if (dom.playerBar.songArtist) dom.playerBar.songArtist.textContent = "Để bắt đầu nghe nhạc";
                 if (dom.playerBar.albumArt) {
-                    dom.playerBar.albumArt.src = "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs="; /* Reverted to transparent GIF */
+                    dom.playerBar.albumArt.src = "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=";
                     dom.playerBar.albumArt.classList.add('animate-pulse');
                 }
                 if (dom.playerBar.trackNumber) dom.playerBar.trackNumber.textContent = '';
             }
 
-            // Play/Pause button
-            const isLoading = state.isPlaying && (dom.audioPlayer.readyState < 3 || dom.audioPlayer.seeking); // Also consider seeking as loading
+            const isLoading = state.isPlaying && (dom.audioPlayer.readyState < 3 || dom.audioPlayer.seeking);
             if (dom.playerBar.playPauseBtn) dom.playerBar.playPauseBtn.classList.toggle('play-pause-loading', isLoading);
             if (dom.playerBar.playIcon) dom.playerBar.playIcon.classList.toggle('hidden', state.isPlaying || isLoading);
             if (dom.playerBar.pauseIcon) dom.playerBar.pauseIcon.classList.toggle('hidden', !state.isPlaying || isLoading);
 
-            // Song list items
             document.querySelectorAll('.song-list-item').forEach(item => {
                 const songInDisplayedList = state.currentDisplayData[parseInt(item.dataset.displayIndex)];
                 const isActive = songInDisplayedList && songInDisplayedList.id === song?.id;
                 item.classList.toggle('active-song', isActive);
                 const indicatorIcon = item.querySelector('.play-button i');
-                if (indicatorIcon) { // Add null check for indicatorIcon
+                if (indicatorIcon) {
                     if (isActive && isLoading) {
                         indicatorIcon.className = 'ph-bold ph-spinner-gap animate-spin text-primary-color';
                     } else {
@@ -2066,67 +2035,60 @@
                 }
             });
 
-            // Popup playlist items
             document.querySelectorAll('#popup-song-list li').forEach(item => {
                 const songInPopupList = state.currentDisplayData[parseInt(item.dataset.displayIndex)];
                 const isActive = songInPopupList && songInPopupList.id === song?.id;
                 item.classList.toggle('active-song-in-list', isActive);
-                if (isActive && dom.playlist.container?.classList.contains('show')) { // Optional chaining
+                if (isActive && dom.playlist.container?.classList.contains('show')) {
                     item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                 }
             });
 
-            // Repeat button
-            dom.playerBar.repeatBtn?.classList.toggle('active-control', state.repeatMode !== 'none'); // Optional chaining
-            if (dom.playerBar.repeatBtn) { // Add null check
+            dom.playerBar.repeatBtn?.classList.toggle('active-control', state.repeatMode !== 'none');
+            if (dom.playerBar.repeatBtn) {
                 if (state.repeatMode === 'one') dom.playerBar.repeatBtn.innerHTML = '<i class="ph-bold ph-repeat-once"></i>';
                 else dom.playerBar.repeatBtn.innerHTML = '<i class="ph-bold ph-repeat"></i>';
             }
 
-            // Shuffle button
-            dom.playerBar.shuffleBtn?.classList.toggle('active-control', state.isShuffling); // Optional chaining
+            dom.playerBar.shuffleBtn?.classList.toggle('active-control', state.isShuffling);
             
-            // Logo animation
             toggleLogoAnimations(state.isPlaying);
             
-            // Media Session
             updateMediaSession();
         }
 
         function updateMediaSession() {
             if ('mediaSession' in navigator) {
                 try {
-                    const song = state.currentFilteredSongs[state.currentSongIndex]; // Always reference from currentFilteredSongs
+                    const song = state.currentFilteredSongs[state.currentSongIndex];
                     if (!song) {
                         navigator.mediaSession.metadata = null;
                         navigator.mediaSession.playbackState = "none";
-                        dom.playerBar.mediaSessionIndicator?.classList.remove('active'); // Optional chaining
+                        dom.playerBar.mediaSessionIndicator?.classList.remove('active');
                         return;
                     }
                     navigator.mediaSession.metadata = new MediaMetadata({
                         title: song.title, artist: song.artist, album: 'Âm nhạc TSTQ',
-                        artwork: [{ src: song.artwork_full, sizes: '512x512', type: 'image/jpeg' }] // Use full artwork for media session
+                        artwork: [{ src: song.artwork_full, sizes: '512x512', type: 'image/jpeg' }]
                     });
                     navigator.mediaSession.playbackState = state.isPlaying ? "playing" : "paused";
-                    dom.playerBar.mediaSessionIndicator?.classList.add('active'); // Optional chaining
+                    dom.playerBar.mediaSessionIndicator?.classList.add('active');
 
-                    // Set Media Session action handlers
                     navigator.mediaSession.setActionHandler('play', () => {
                         dom.audioPlayer.play();
-                        dom.playerBar.playPauseBtn?.classList.remove('attention-bounce'); // Optional chaining
+                        dom.playerBar.playPauseBtn?.classList.remove('attention-bounce');
                     });
                     navigator.mediaSession.setActionHandler('pause', () => dom.audioPlayer.pause());
                     navigator.mediaSession.setActionHandler('stop', () => dom.audioPlayer.pause());
-                    navigator.mediaSession.setActionHandler('nexttrack', () => { // Thêm phản hồi rung cho native controls
+                    navigator.mediaSession.setActionHandler('nexttrack', () => {
                         playNext();
                         triggerHapticFeedback(50);
                     });
-                    navigator.mediaSession.setActionHandler('previoustrack', () => { // Thêm phản hồi rung cho native controls
+                    navigator.mediaSession.setActionHandler('previoustrack', () => {
                         playPrev();
                         triggerHapticFeedback(50);
                     });
 
-                    // Update position state for progress bar
                     if ('setPositionState' in navigator.mediaSession) {
                         navigator.mediaSession.setPositionState({
                             duration: dom.audioPlayer.duration || 0,
@@ -2137,7 +2099,7 @@
 
                 } catch (error) {
                     console.error("Lỗi khi cập nhật Media Session:", error);
-                    dom.playerBar.mediaSessionIndicator?.classList.remove('active'); // Optional chaining
+                    dom.playerBar.mediaSessionIndicator?.classList.remove('active');
                 }
             }
         }
@@ -2150,7 +2112,7 @@
             if (dom.lyrics.title) dom.lyrics.title.textContent = song.title;
             paginateLyrics(song.description);
             applyLyricsThemeAndFontStyles();
-            dom.lyrics.popup?.classList.add('show'); // Optional chaining
+            dom.lyrics.popup?.classList.add('show');
         }
 
         function paginateLyrics(text) {
@@ -2172,30 +2134,30 @@
             if (!pages || pages.length === 0 || !pages[currentPage]) {
                 if (contentEl) contentEl.innerHTML = '<p class="text-muted-current">Không có lời bài hát.</p>';
                 if (dom.lyrics.pageIndicator) dom.lyrics.pageIndicator.textContent = 'Trang 0 / 0';
-                dom.lyrics.leftArrow?.classList.add('disabled'); // Optional chaining
-                dom.lyrics.rightArrow?.classList.add('disabled'); // Optional chaining
+                dom.lyrics.leftArrow?.classList.add('disabled');
+                dom.lyrics.rightArrow?.classList.add('disabled');
                 return;
             }
-            if (contentEl) { // Add null check
+            if (contentEl) {
                 contentEl.innerHTML = pages[currentPage].map(line => `<p>${line}</p>`).join('');
                 contentEl.classList.remove('lyrics-fade-in');
-                void contentEl.offsetWidth; // Trigger reflow
+                void contentEl.offsetWidth;
                 contentEl.classList.add('lyrics-fade-in');
             }
 
             if (dom.lyrics.pageIndicator) dom.lyrics.pageIndicator.textContent = `Trang ${currentPage + 1} / ${pages.length}`;
-            dom.lyrics.leftArrow?.classList.toggle('disabled', currentPage === 0); // Optional chaining
-            dom.lyrics.rightArrow?.classList.toggle('disabled', currentPage === pages.length - 1); // Optional chaining
+            dom.lyrics.leftArrow?.classList.toggle('disabled', currentPage === 0);
+            dom.lyrics.rightArrow?.classList.toggle('disabled', currentPage === pages.length - 1);
         }
 
         function applyLyricsThemeAndFontStyles() {
             const theme = CONFIG.LYRICS.THEMES.find(t => t.id === state.lyrics.themeId) || CONFIG.LYRICS.THEMES[0];
-            const popupContent = dom.lyrics.popup?.querySelector('.lyrics-popup-content'); // Optional chaining
-            if (popupContent) { // Add null check
+            const popupContent = dom.lyrics.popup?.querySelector('.lyrics-popup-content');
+            if (popupContent) {
                 popupContent.style.backgroundColor = theme.bgColor;
                 popupContent.style.color = theme.textColor;
             }
-            if (dom.lyrics.content) { // Add null check
+            if (dom.lyrics.content) {
                 dom.lyrics.content.style.fontSize = `${state.lyrics.fontSize}px`;
                 dom.lyrics.content.style.fontFamily = CONFIG.LYRICS.FONTS[state.lyrics.fontIndex];
             }
@@ -2220,31 +2182,27 @@
         // NEW FEATURES: SHARE & DOWNLOAD
         // ==============================================
         async function shareSong() {
-            const song = state.currentFilteredSongs[state.currentSongIndex]; // Use currentFilteredSongs
+            const song = state.currentFilteredSongs[state.currentSongIndex];
             if (!song || !song.permalink) {
                 showMessage("Không thể chia sẻ bài hát này.");
                 return;
             }
 
             let shareUrl = song.permalink;
-            // Ensure it starts with https://audius.co/ if it's a relative path
+            // Cải tiến: Thêm fallback để đảm bảo URL luôn đầy đủ
             if (!shareUrl.startsWith('http://') && !shareUrl.startsWith('https://')) {
                 shareUrl = `https://audius.co${shareUrl}`;
             }
             
-            // Attempt to decode the pathname to match the desktop working example
-            // This is the crucial part for mobile browser compatibility with non-ASCII characters in path
             try {
                 const urlObj = new URL(shareUrl);
                 urlObj.pathname = decodeURIComponent(urlObj.pathname);
                 shareUrl = urlObj.toString();
             } catch (e) {
                 console.warn("Lỗi khi xử lý URL chia sẻ (có thể do URL không hợp lệ), sử dụng permalink gốc:", e);
-                // Fallback: If URL parsing or decoding fails, use the original (encoded) permalink.
-                // shareUrl remains the initially constructed absolute URL.
             }
 
-            console.log("URL được chia sẻ:", shareUrl); // Log the final URL for debugging
+            console.log("URL được chia sẻ:", shareUrl);
 
             const shareData = {
                 title: `Nghe "${song.title}" - ${song.artist}`,
@@ -2263,23 +2221,22 @@
                 textArea.select();
                 try {
                     document.execCommand('copy');
-                    showMessage("Đã sao chép liên kết vào bộ nhớ tạm!", "Thông báo", true, 2500); // Changed duration to 2.5 seconds
+                    showMessage("Đã sao chép liên kết vào bộ nhớ tạm!", "Thông báo", true, 2500);
                 } catch (err) {
                     showMessage("Không thể sao chép liên kết.", "Lỗi");
                 }
                 document.body.removeChild(textArea);
             };
 
-            if (navigator.share && window.top === window.self) { // Kiểm tra navigator.share và nếu không phải trong iframe
+            if (navigator.share && window.top === window.self) {
                 try {
                     await navigator.share(shareData);
                 } catch (err) {
                     console.error('Lỗi khi chia sẻ:', err);
-                    // Nếu lỗi không phải do người dùng hủy bỏ, thì fallback sang copy
                     if (err.name !== 'AbortError') {
-                            copyToClipboard();
+                        copyToClipboard();
                     } else {
-                        showMessage("Đã hủy chia sẻ.", "Thông báo", true, 2500); // Changed duration to 2.5 seconds
+                        showMessage("Đã hủy chia sẻ.", "Thông báo", true, 2500);
                     }
                 }
             } else {
@@ -2288,7 +2245,7 @@
         }
 
         function downloadLyrics() {
-            const song = state.currentFilteredSongs[state.currentSongIndex]; // Use currentFilteredSongs
+            const song = state.currentFilteredSongs[state.currentSongIndex];
             if (!song || !song.description || song.description.trim() === 'Không có lời bài hát cho bài này.') {
                 showMessage("Không có lời bài hát để tải về.", "Thông báo");
                 return;
@@ -2315,16 +2272,16 @@
             }
             cancelSleepTimer();
             state.sleepTimer.endTime = Date.now() + minutes * 60 * 1000;
-            document.getElementById('start-timer-btn-desktop')?.classList.add('hidden'); // Optional chaining
-            document.getElementById('cancel-timer-btn-desktop')?.classList.remove('hidden'); // Optional chaining
-            document.getElementById('start-timer-btn-mobile')?.classList.add('hidden'); // Optional chaining
-            document.getElementById('cancel-timer-btn-mobile')?.classList.remove('hidden'); // Optional chaining
+            document.getElementById('start-timer-btn-desktop')?.classList.add('hidden');
+            document.getElementById('cancel-timer-btn-desktop')?.classList.remove('hidden');
+            document.getElementById('start-timer-btn-mobile')?.classList.add('hidden');
+            document.getElementById('cancel-timer-btn-mobile')?.classList.remove('hidden');
             updateSleepTimerDisplay();
             state.sleepTimer.interval = setInterval(() => {
                 if (Date.now() >= state.sleepTimer.endTime) {
                     dom.audioPlayer.pause();
                     cancelSleepTimer();
-                    showMessage("Hẹn giờ tắt nhạc đã kết thúc.", "Hẹn giờ", true, 2500); // Changed duration to 2.5 seconds
+                    showMessage("Hẹn giờ tắt nhạc đã kết thúc.", "Hẹn giờ", true, 2500);
                 } else {
                     updateSleepTimerDisplay();
                 }
@@ -2335,14 +2292,14 @@
             const displayDesktop = document.getElementById('timer-display-desktop');
             const displayMobile = document.getElementById('timer-display-mobile');
             if (!state.sleepTimer.endTime) {
-                    if(displayDesktop) displayDesktop.textContent = '00:00';
-                    if(displayMobile) displayMobile.textContent = '00:00';
+                if(displayDesktop) displayDesktop.textContent = '00:00';
+                if(displayMobile) displayMobile.textContent = '00:00';
                 return;
             }
             const remainingTimeMs = state.sleepTimer.endTime - Date.now();
             if (remainingTimeMs <= 0) {
                 if(displayDesktop) displayDesktop.textContent = '00:00';
-                if(displayMobile) dom.playerBar.songArtist.textContent = '00:00'; // Corrected to display on song artist on mobile
+                if(displayMobile) dom.playerBar.songArtist.textContent = '00:00';
                 return;
             }
             const totalSeconds = Math.floor(remainingTimeMs / 1000);
@@ -2350,8 +2307,7 @@
             const seconds = totalSeconds % 60;
             const formattedTime = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
             if(displayDesktop) displayDesktop.textContent = formattedTime;
-            // On mobile, update the timer display in the mobile menu, not the song artist
-            if(displayMobile) dom.playerBar.songArtist.textContent = formattedTime; // Corrected to display on song artist on mobile
+            if(displayMobile) dom.playerBar.songArtist.textContent = formattedTime;
         }
 
         function cancelSleepTimer() {
@@ -2359,10 +2315,10 @@
                 clearInterval(state.sleepTimer.interval);
                 state.sleepTimer.interval = null;
             }
-            document.getElementById('start-timer-btn-desktop')?.classList.remove('hidden'); // Optional chaining
-            document.getElementById('cancel-timer-btn-desktop')?.classList.add('hidden'); // Optional chaining
-            document.getElementById('start-timer-btn-mobile')?.classList.remove('hidden'); // Optional chaining
-            document.getElementById('cancel-timer-btn-mobile')?.classList.add('hidden'); // Optional chaining
+            document.getElementById('start-timer-btn-desktop')?.classList.remove('hidden');
+            document.getElementById('cancel-timer-btn-desktop')?.classList.add('hidden');
+            document.getElementById('start-timer-btn-mobile')?.classList.remove('hidden');
+            document.getElementById('cancel-timer-btn-mobile')?.classList.add('hidden');
             updateSleepTimerDisplay();
         }
 
@@ -2372,10 +2328,10 @@
         function setupNavEvents() {
             const hamburgerMenu = document.getElementById('hamburger-menu');
             const mobileNavOverlay = document.getElementById('mobile-nav-overlay');
-            const closeMobileMenu = document.getElementById('close-mobile-menu'); 
+            const closeMobileMenu = document.getElementById('close-mobile-menu');
             
-            hamburgerMenu?.addEventListener('click', () => mobileNavOverlay?.classList.add('active')); // Optional chaining
-            closeMobileMenu?.addEventListener('click', () => mobileNavOverlay?.classList.remove('active')); // Optional chaining
+            hamburgerMenu?.addEventListener('click', () => mobileNavOverlay?.classList.add('active'));
+            closeMobileMenu?.addEventListener('click', () => mobileNavOverlay?.classList.remove('active'));
             mobileNavOverlay?.addEventListener('click', (e) => {
                 if (e.target === mobileNavOverlay) mobileNavOverlay.classList.remove('active');
             });
@@ -2385,8 +2341,8 @@
                 const menu = document.getElementById(menuId);
                 toggle?.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    const isShown = menu?.classList.toggle('show'); // Optional chaining
-                    toggle?.classList.toggle('open', isShown); // Optional chaining
+                    const isShown = menu?.classList.toggle('show');
+                    toggle?.classList.toggle('open', isShown);
                     document.querySelectorAll('.dropdown-menu.show').forEach(openMenu => {
                         if (openMenu !== menu) openMenu.classList.remove('show');
                     });
@@ -2400,18 +2356,16 @@
             setupDropdown('theme-toggle-desktop', 'theme-menu-desktop');
             setupDropdown('timer-toggle-desktop', 'timer-menu-desktop');
             setupDropdown('platforms-toggle-mobile', 'platforms-menu-mobile');
-            setupDropdown('theme-toggle-mobile', 'mobile-theme-options'); /* Corrected ID for mobile theme dropdown */
+            setupDropdown('theme-toggle-mobile', 'mobile-theme-options');
             setupDropdown('timer-toggle-mobile', 'timer-menu-mobile');
 
             document.addEventListener('click', (e) => {
-                // Close all dropdowns if click is outside
                 if (!e.target.closest('.dropdown-container')) {
                     document.querySelectorAll('.dropdown-menu.show').forEach(menu => menu.classList.remove('show'));
                     document.querySelectorAll('.dropdown-toggle.open').forEach(toggle => toggle.classList.remove('open'));
                 }
             });
 
-            // Dark Mode toggles
             document.getElementById('darkModeToggle')?.addEventListener('change', (e) => {
                 changeTheme(e.target.checked ? 'dark' : 'light');
             });
@@ -2419,7 +2373,6 @@
                 changeTheme(e.target.checked ? 'dark' : 'light');
             });
 
-            // Clear Cache & Reload buttons
             document.getElementById('clear-cache-btn-desktop')?.addEventListener('click', (e) => {
                 e.preventDefault();
                 clearAppCacheAndReload();
@@ -2454,48 +2407,46 @@
         // ==============================================
         // DRAG & DROP LOGIC
         // ==============================================
-        let draggedItem = null; /* Reverted to let declaration */
+        let draggedItem = null;
 
         function addDragAndDropListeners() {
-            dom.playlist.list?.querySelectorAll('li[draggable="true"]').forEach(item => { // Optional chaining
+            dom.playlist.list?.querySelectorAll('li[draggable="true"]').forEach(item => {
                 item.addEventListener('dragstart', (e) => {
-                    draggedItem = e.currentTarget; /* Reverted to direct assignment */
-                    setTimeout(() => e.currentTarget?.classList.add('dragging'), 0); // Optional chaining
+                    draggedItem = e.currentTarget;
+                    setTimeout(() => e.currentTarget?.classList.add('dragging'), 0);
                 });
                 item.addEventListener('dragover', (e) => {
                     e.preventDefault();
-                    e.currentTarget?.classList.add('drag-over'); // Optional chaining
+                    e.currentTarget?.classList.add('drag-over');
                 });
-                item.addEventListener('dragleave', (e) => e.currentTarget?.classList.remove('drag-over')); // Optional chaining
+                item.addEventListener('dragleave', (e) => e.currentTarget?.classList.remove('drag-over'));
                 item.addEventListener('drop', (e) => {
                     e.preventDefault();
-                    e.currentTarget?.classList.remove('drag-over'); // Optional chaining
-                    if (draggedItem !== e.currentTarget) { /* Reverted to direct comparison */
-                        const fromIndex = parseInt(draggedItem.dataset.displayIndex); /* Reverted to direct access */
+                    e.currentTarget?.classList.remove('drag-over');
+                    if (draggedItem !== e.currentTarget) {
+                        const fromIndex = parseInt(draggedItem.dataset.displayIndex);
                         const toIndex = parseInt(e.currentTarget.dataset.displayIndex);
                         
                         const [reorderedItem] = state.currentDisplayData.splice(fromIndex, 1);
                         state.currentDisplayData.splice(toIndex, 0, reorderedItem);
                         
-                        // After reordering currentDisplayData, find the new index of the currently playing song in the full filtered list
                         const currentlyPlayingSongId = state.currentFilteredSongs[state.currentSongIndex]?.id;
                         if(currentlyPlayingSongId) {
-                            // Update currentFilteredSongs to reflect the reorder
                             const reorderedSongInFiltered = state.currentFilteredSongs.find(s => s.id === reorderedItem.id);
                             const originalIndexInFiltered = state.currentFilteredSongs.indexOf(reorderedSongInFiltered);
                             state.currentFilteredSongs.splice(originalIndexInFiltered, 1);
-                            state.currentFilteredSongs.splice(toIndex + state.currentDisplayStartIndex, 0, reorderedSongInFiltered); // Insert at the correct position in the full list
+                            state.currentFilteredSongs.splice(toIndex + state.currentDisplayStartIndex, 0, reorderedSongInFiltered);
 
                             state.currentSongIndex = state.currentFilteredSongs.findIndex(s => s.id === currentlyPlayingSongId);
                         }
                         
-                        renderPopupSongList(state.currentDisplayData); // Re-render popup list
-                        renderSongs(state.currentDisplayData); // Re-render main list
+                        renderPopupSongList(state.currentDisplayData);
+                        renderSongs(state.currentDisplayData);
                         updateUI();
                         triggerHapticFeedback(70);
                     }
                 });
-                item.addEventListener('dragend', (e) => e.currentTarget?.classList.remove('dragging')); /* Reverted to direct access */ // Optional chaining
+                item.addEventListener('dragend', (e) => e.currentTarget?.classList.remove('dragging'));
             });
         }
 
@@ -2510,73 +2461,67 @@
                 setTimeout(() => activeBtn.classList.remove('bounce-category-btn'), 300);
             }
             
-            if (dom.mainContent.searchInput) dom.mainContent.searchInput.value = ''; // Optional chaining
-            state.isSearching = false; // Reset search state when changing category
-            dom.mainContent.searchClearBtn?.classList.add('hidden'); // Optional chaining
+            if (dom.mainContent.searchInput) dom.mainContent.searchInput.value = '';
+            state.isSearching = false;
+            dom.mainContent.searchClearBtn?.classList.add('hidden');
 
             let filteredSongs;
             if (category === 'favorites') {
                 filteredSongs = state.originalSongData.filter(s => state.favoriteSongIds.includes(s.id));
             } else if (CONFIG.GENRE_MAP[category]) {
                 filteredSongs = state.originalSongData.filter(s => s.genre && s.genre.toLowerCase() === CONFIG.GENRE_MAP[category].toLowerCase());
-            } else { // 'all' or other categories
+            } else {
                 filteredSongs = [...state.originalSongData];
             }
 
-            // Apply shuffle if active for the current category (excluding favorites)
             if (state.isShuffling && category !== 'favorites') {
-                // Simple shuffle logic
                 for (let i = filteredSongs.length - 1; i > 0; i--) {
                     const j = Math.floor(Math.random() * (i + 1));
-                    [filteredSongs[i], filteredSongs[j]] = [filteredSongs[j], filteredSongs[i]]; // Corrected swap
+                    [filteredSongs[i], filteredSongs[j]] = [filteredSongs[j], filteredSongs[i]];
                 }
             }
 
             state.currentFilteredSongs = filteredSongs; 
-            state.currentDisplayStartIndex = 0; // Always start from the beginning for a new category
+            state.currentDisplayStartIndex = 0;
             state.currentDisplayData = state.currentFilteredSongs.slice(0, CONFIG.INITIAL_LOAD_SIZE);
             
-            renderSongs(state.currentDisplayData); // Render initial songs
-            updatePaginationControls(); // Update pagination controls based on the full filtered list
+            renderSongs(state.currentDisplayData);
+            updatePaginationControls();
         }
 
         function loadMoreSongs() {
-            dom.mainContent.loadMoreBtn?.classList.add('hidden'); // Optional chaining
-            dom.mainContent.loadingMoreSpinner?.classList.remove('hidden'); // Optional chaining
+            dom.mainContent.loadMoreBtn?.classList.add('hidden');
+            dom.mainContent.loadingMoreSpinner?.classList.remove('hidden');
             
-            setTimeout(() => { // Simulate loading delay
-                // Calculate the next chunk to load from currentFilteredSongs
+            setTimeout(() => {
                 const startIndex = state.currentDisplayStartIndex + state.currentDisplayData.length;
                 const endIndex = Math.min(startIndex + CONFIG.PAGE_SIZE, state.currentFilteredSongs.length);
                 const newSongs = state.currentFilteredSongs.slice(startIndex, endIndex);
 
-                state.currentDisplayData = [...state.currentDisplayData, ...newSongs]; // Append to current displayed songs
+                state.currentDisplayData = [...state.currentDisplayData, ...newSongs];
                 
-                renderSongs(state.currentDisplayData); // Re-render the expanded list
-                updateUI(); // Update player bar and active song state
+                renderSongs(state.currentDisplayData);
+                updateUI();
 
-                dom.mainContent.loadingMoreSpinner?.classList.add('hidden'); // Optional chaining
+                dom.mainContent.loadingMoreSpinner?.classList.add('hidden');
                 updatePaginationControls();
             }, 500);
         }
 
         function updatePaginationControls() {
-            // Hide all by default
-            dom.mainContent.loadMoreBtn?.classList.add('hidden'); // Optional chaining
-            dom.mainContent.allSongsLoadedMsg?.classList.add('hidden'); // Optional chaining
-            dom.mainContent.loadingMoreSpinner?.classList.add('hidden'); // Optional chaining
+            dom.mainContent.loadMoreBtn?.classList.add('hidden');
+            dom.mainContent.allSongsLoadedMsg?.classList.add('hidden');
+            dom.mainContent.loadingMoreSpinner?.classList.add('hidden');
 
             if (state.isSearching) {
-                // No load more button during search, as search operates on all data
                 return;
             }
 
-            // Show load more if there are more songs in currentFilteredSongs than currently displayed
             if (state.currentDisplayData.length < state.currentFilteredSongs.length) {
-                dom.mainContent.loadMoreBtn?.classList.remove('hidden'); // Optional chaining
+                dom.mainContent.loadMoreBtn?.classList.remove('hidden');
             } else {
-                if (state.currentFilteredSongs.length > 0) { // Only show "all loaded" if there are songs
-                    dom.mainContent.allSongsLoadedMsg?.classList.add('hidden'); // Optional chaining
+                if (state.currentFilteredSongs.length > 0) {
+                    dom.mainContent.allSongsLoadedMsg?.classList.add('hidden');
                 }
             }
         }
@@ -2599,13 +2544,10 @@
         // INITIALIZATION
         // ==============================================
         function toggleScrollNavVisibility() {
-            // Check if content height is greater than viewport height
             const isScrollable = document.documentElement.scrollHeight > window.innerHeight;
-            // Check if scroll position is not at the very top or bottom
             const isNotAtExtremes = window.scrollY > 0 && (window.scrollY + window.innerHeight) < document.documentElement.scrollHeight;
 
-            // Only show if scrollable AND not at the very top/bottom
-            dom.scrollNav.container?.classList.toggle('show', isScrollable && isNotAtExtremes); // Optional chaining
+            dom.scrollNav.container?.classList.toggle('show', isScrollable && isNotAtExtremes);
         }
 
         function updateVolumeUI() {
@@ -2613,7 +2555,7 @@
             const isMuted = dom.audioPlayer.muted;
             if (dom.playerBar.volumePercentage) dom.playerBar.volumePercentage.textContent = isMuted ? 0 : Math.round(volume * 100);
 
-            if (dom.playerBar.volumeIcon) { // Add null check
+            if (dom.playerBar.volumeIcon) {
                 if (isMuted || volume === 0) {
                     dom.playerBar.volumeIcon.className = 'ph-bold ph-speaker-slash volume-icon';
                 } else if (volume < 0.5) {
@@ -2628,22 +2570,20 @@
             dom.audioPlayer.muted = !dom.audioPlayer.muted;
             if (!dom.audioPlayer.muted && dom.audioPlayer.volume === 0) {
                 dom.audioPlayer.volume = state.lastVolume > 0 ? state.lastVolume : 0.5;
-                if (dom.playerBar.volumeSlider) dom.playerBar.volumeSlider.value = dom.audioPlayer.volume; // Optional chaining
+                if (dom.playerBar.volumeSlider) dom.playerBar.volumeSlider.value = dom.audioPlayer.volume;
             }
             updateVolumeUI();
-            showMessage(dom.audioPlayer.muted ? "Đã tắt tiếng" : "Đã bật tiếng", "Âm thanh", true, 2500); // Changed duration to 2.5 seconds
+            showMessage(dom.audioPlayer.muted ? "Đã tắt tiếng" : "Đã bật tiếng", "Âm thanh", true, 2500);
         }
 
-        // Preload next song logic
         function preloadNextSong() {
-            if (!dom.audioPreloader) return; // Ensure preloader element exists
+            if (!dom.audioPreloader) return;
 
             const nextIndex = (state.currentSongIndex + 1) % state.currentFilteredSongs.length;
             const nextSong = state.currentFilteredSongs[nextIndex];
 
             if (nextSong) {
                 const nextSongUrl = `${state.currentAudiusHost}/v1/tracks/${nextSong.id}/stream?app_name=MSTQPlayer`;
-                // Only preload if it's a different song and not already preloading
                 if (dom.audioPreloader.src !== nextSongUrl) {
                     console.log(`Đang tải trước bài hát: ${nextSong.title}`);
                     dom.audioPreloader.src = nextSongUrl;
@@ -2652,7 +2592,6 @@
             }
         }
 
-        // Function to update network status indicator in the header
         function updateNetworkStatusUI() {
             const indicator = dom.header.networkStatusIndicator;
             if (!indicator) return;
@@ -2667,54 +2606,49 @@
         }
         
         function setupEventListeners() {
-            // Player controls
-            dom.playerBar.playPauseBtn?.addEventListener('click', () => { // Added null check
+            dom.playerBar.playPauseBtn?.addEventListener('click', () => {
                 triggerHapticFeedback(50);
-                dom.playerBar.playPauseBtn?.classList.remove('attention-bounce'); // Optional chaining
-                if (state.currentSongIndex === -1 && state.currentFilteredSongs.length > 0) playSong(0); // Play first song from filtered list
+                dom.playerBar.playPauseBtn?.classList.remove('attention-bounce');
+                if (state.currentSongIndex === -1 && state.currentFilteredSongs.length > 0) playSong(0);
                 else if (dom.audioPlayer.paused) dom.audioPlayer.play();
                 else dom.audioPlayer.pause();
             });
-            dom.playerBar.nextBtn?.addEventListener('click', () => { playNext(); triggerHapticFeedback(50); }); // Added null check
-            dom.playerBar.prevBtn?.addEventListener('click', () => { playPrev(); triggerHapticFeedback(50); }); // Added null check
-            dom.playerBar.shuffleBtn?.addEventListener('click', () => { // Added null check
+            dom.playerBar.nextBtn?.addEventListener('click', () => { playNext(); triggerHapticFeedback(50); });
+            dom.playerBar.prevBtn?.addEventListener('click', () => { playPrev(); triggerHapticFeedback(50); });
+            dom.playerBar.shuffleBtn?.addEventListener('click', () => {
                 state.isShuffling = !state.isShuffling;
                 saveStateToLocalStorage(CONFIG.STORAGE_KEYS.SHUFFLE, state.isShuffling);
-                // When shuffling, re-render the current category's songs (which will apply pagination)
                 const currentCategory = document.querySelector('#category-menu .nav-item.active')?.dataset.category || 'all';
-                loadCustomCategory(currentCategory); // This will re-filter and re-shuffle if needed
+                loadCustomCategory(currentCategory);
                 updateUI(); triggerHapticFeedback(30);
             });
-            dom.playerBar.repeatBtn?.addEventListener('click', () => { // Added null check
+            dom.playerBar.repeatBtn?.addEventListener('click', () => {
                 const modes = ['none', 'all', 'one'];
                 state.repeatMode = modes[(modes.indexOf(state.repeatMode) + 1) % modes.length];
                 saveStateToLocalStorage(CONFIG.STORAGE_KEYS.REPEAT, state.repeatMode);
                 updateUI(); triggerHapticFeedback(30);
             });
-            dom.playerBar.favoriteBtn?.addEventListener('click', () => { // Added null check
-                if (state.currentSongIndex !== -1) toggleFavorite(state.currentFilteredSongs[state.currentSongIndex].id); // Use currentFilteredSongs
+            dom.playerBar.favoriteBtn?.addEventListener('click', () => {
+                if (state.currentSongIndex !== -1) toggleFavorite(state.currentFilteredSongs[state.currentSongIndex].id);
                 else showMessage("Vui lòng chọn một bài hát để yêu thích.");
                 triggerHapticFeedback(70);
             });
-            dom.playerBar.shareBtn?.addEventListener('click', shareSong); // Added null check
+            dom.playerBar.shareBtn?.addEventListener('click', shareSong);
             
-            // Audio events
             dom.audioPlayer.addEventListener('play', () => { 
                 state.isPlaying = true; 
                 updateUI(); 
                 requestWakeLock(); 
-                // Bắt đầu kiểm tra Wake Lock định kỳ khi phát nhạc
                 if (!state.wakeLockInterval) {
-                    state.wakeLockInterval = setInterval(requestWakeLock, 60000); // Mỗi 60 giây
+                    state.wakeLockInterval = setInterval(requestWakeLock, 60000);
                 }
                 broadcastChannel.postMessage({ type: 'PLAY_ACTION', payload: { isPlaying: true } });
             });
             dom.audioPlayer.addEventListener('pause', () => { 
                 state.isPlaying = false; 
                 updateUI(); 
-                dom.playerBar.albumArt?.classList.remove('animate-pulse'); // Optional chaining
+                dom.playerBar.albumArt?.classList.remove('animate-pulse');
                 releaseWakeLock(); 
-                // Dừng kiểm tra Wake Lock định kỳ khi tạm dừng
                 if (state.wakeLockInterval) {
                     clearInterval(state.wakeLockInterval);
                     state.wakeLockInterval = null;
@@ -2729,19 +2663,15 @@
                     if (dom.playerBar.currentTime) dom.playerBar.currentTime.textContent = new Date(currentTime * 1000).toISOString().substr(14, 5);
                     if (dom.playerBar.duration) dom.playerBar.duration.textContent = new Date(duration * 1000).toISOString().substr(14, 5);
 
-                    // Nâng cấp: Kiểm tra nếu bài hát gần hết (90%) và đang ở trạng thái tạm dừng không mong muốn
-                    // Thử phát lại để duy trì kết nối
                     const progress = currentTime / duration;
                     if (progress > 0.9 && dom.audioPlayer.paused && state.isPlaying) {
                         console.log('Bài hát gần hết, bị tạm dừng bất ngờ. Đang thử phát lại.');
                         dom.audioPlayer.play().catch(e => console.warn('Không thể tự động tiếp tục phát khi gần hết bài:', e));
                     }
-                    // Tải trước bài hát tiếp theo khi đạt 80%
-                    if (progress > 0.8 && progress < 0.9 && dom.audioPreloader) { // Kiểm tra để chỉ tải 1 lần
+                    if (progress > 0.8 && progress < 0.9 && dom.audioPreloader) {
                         preloadNextSong();
                     }
                 }
-                // Update Media Session position state for native player progress bar
                 if ('mediaSession' in navigator && navigator.mediaSession.setPositionState) {
                     navigator.mediaSession.setPositionState({
                         duration: duration || 0,
@@ -2752,24 +2682,21 @@
             }, 500));
             dom.audioPlayer.addEventListener('waiting', () => {
                 console.log('Audio is waiting for more data...');
-                if (state.isPlaying) { // Only show loading if it was supposed to be playing
-                    dom.playerBar.playPauseBtn?.classList.add('play-pause-loading'); // Optional chaining
-                    dom.playerBar.albumArt?.classList.add('animate-pulse'); // Optional chaining
-                    updateUI(); // Update UI to show spinner on active song too
+                if (state.isPlaying) {
+                    dom.playerBar.playPauseBtn?.classList.add('play-pause-loading');
+                    dom.playerBar.albumArt?.classList.add('animate-pulse');
+                    updateUI();
                 }
             });
             dom.audioPlayer.addEventListener('playing', () => {
                 console.log('Audio is playing again.');
-                dom.playerBar.playPauseBtn?.classList.remove('play-pause-loading'); // Optional chaining
-                dom.playerBar.albumArt?.classList.remove('animate-pulse'); // Optional chaining
-                updateUI(); // Ensure spinner is removed
+                dom.playerBar.playPauseBtn?.classList.remove('play-pause-loading');
+                dom.playerBar.albumArt?.classList.remove('animate-pulse');
+                updateUI();
             });
             dom.audioPlayer.addEventListener('stalled', () => {
                 console.warn('Audio playback stalled. Network or buffering issue.');
-                // For now, let the browser try to recover.
-                // If persistent, user might need to check network or we might need more aggressive host switching.
-                showMessage("Kết nối mạng không ổn định, đang tải lại...", "Lỗi mạng", true, 2500); // Changed duration to 2.5 seconds
-                // Gửi thông báo nếu có quyền
+                showMessage("Kết nối mạng không ổn định, đang tải lại...", "Lỗi mạng", true, 2500);
                 if (Notification.permission === 'granted' && state.isPlaying) {
                     new Notification('Kết nối không ổn định', {
                         body: 'Đang tải lại nhạc. Vui lòng kiểm tra kết nối mạng.',
@@ -2798,21 +2725,19 @@
                         break;
                 }
                 showMessage(errorMessage + " Tự động chuyển bài tiếp theo.", "Lỗi Phát Nhạc");
-                // Gửi thông báo nếu có quyền
                 if (Notification.permission === 'granted' && state.isPlaying) {
                     new Notification('Lỗi Phát Nhạc', {
                         body: `Bài hát dừng đột ngột: ${errorMessage}. Vui lòng quay lại ứng dụng.`,
                         icon: 'https://thiensutinhquang.github.io/PlayMusic/images/icons/icon-192x192.png'
                     });
                 }
-                playNext(); // Automatically try next song on error
+                playNext();
             });
             
-            // Progress bar
-            dom.playerBar.progressContainer?.addEventListener('click', (e) => { // Added null check
-                if(dom.audioPlayer.duration && dom.playerBar.progressContainer) dom.audioPlayer.currentTime = (e.offsetX / dom.playerBar.progressContainer.clientWidth) * dom.audioPlayer.duration; // Corrected ID
+            dom.playerBar.progressContainer?.addEventListener('click', (e) => {
+                if(dom.audioPlayer.duration && dom.playerBar.progressContainer) dom.audioPlayer.currentTime = (e.offsetX / dom.playerBar.progressContainer.clientWidth) * dom.audioPlayer.duration;
             });
-            dom.playerBar.progressContainer?.addEventListener('mousemove', throttle((e) => { // Added null check
+            dom.playerBar.progressContainer?.addEventListener('mousemove', throttle((e) => {
                 if (dom.audioPlayer.duration && dom.playerBar.progressContainer && dom.playerBar.progressTooltip) {
                     const hoverTime = (e.offsetX / dom.playerBar.progressContainer.clientWidth) * dom.audioPlayer.duration;
                     dom.playerBar.progressTooltip.textContent = new Date(hoverTime * 1000).toISOString().substr(14, 5);
@@ -2820,248 +2745,220 @@
                     dom.playerBar.progressTooltip.classList.remove('hidden');
                 }
             }, 50));
-            dom.playerBar.progressContainer?.addEventListener('mouseleave', () => dom.playerBar.progressTooltip?.classList.add('hidden')); // Optional chaining
+            dom.playerBar.progressContainer?.addEventListener('mouseleave', () => dom.playerBar.progressTooltip?.classList.add('hidden'));
 
-            // Volume
-            dom.playerBar.volumeSlider?.addEventListener('input', (e) => { // Added null check
-                dom.audioPlayer.muted = false; // Unmute when user adjusts volume
+            dom.playerBar.volumeSlider?.addEventListener('input', (e) => {
+                dom.audioPlayer.muted = false;
                 dom.audioPlayer.volume = e.target.value;
                 updateVolumeUI();
             });
-             dom.playerBar.volumeSlider?.addEventListener('change', (e) => { // Added null check
+             dom.playerBar.volumeSlider?.addEventListener('change', (e) => {
                 saveStateToLocalStorage(CONFIG.STORAGE_KEYS.VOLUME, e.target.value);
             });
-            dom.playerBar.volumeIcon?.addEventListener('click', toggleMute); // Added null check
+            dom.playerBar.volumeIcon?.addEventListener('click', toggleMute);
             
-            // Search
-            dom.mainContent.searchInput?.addEventListener('input', debounce(() => { // Added null check
-                const query = dom.mainContent.searchInput?.value.trim() || ''; // Optional chaining
-                state.isSearching = query.length > 0; // Update search flag
-                dom.mainContent.searchClearBtn?.classList.toggle('hidden', !state.isSearching); // Optional chaining
+            dom.mainContent.searchInput?.addEventListener('input', debounce(() => {
+                const query = dom.mainContent.searchInput?.value.trim() || '';
+                state.isSearching = query.length > 0;
+                dom.mainContent.searchClearBtn?.classList.toggle('hidden', !state.isSearching);
                 
                 if (state.isSearching) {
-                    dom.mainContent.loadingMoreSpinner?.classList.remove('hidden'); // Optional chaining
-                    dom.mainContent.loadMoreBtn?.classList.add('hidden'); // Optional chaining
-                    dom.mainContent.allSongsLoadedMsg?.classList.add('hidden'); // Optional chaining
+                    dom.mainContent.loadingMoreSpinner?.classList.remove('hidden');
+                    dom.mainContent.loadMoreBtn?.classList.add('hidden');
+                    dom.mainContent.allSongsLoadedMsg?.classList.add('hidden');
 
-                    // Initialize Fuse.js only when search is first used
                     if (!window.fuse) {
                         window.fuse = new Fuse(state.originalSongData, { keys: ['title', 'artist', 'genre'], includeScore: true, threshold: 0.4 });
                     }
                     const result = window.fuse.search(query);
-                    state.currentFilteredSongs = result.map(item => item.item); // Update filtered songs with search results
-                    state.currentDisplayStartIndex = 0; // Reset display start for search results
-                    state.currentDisplayData = state.currentFilteredSongs; // Display all search results
-                    renderSongs(state.currentDisplayData); // Render search results
-                    dom.mainContent.loadingMoreSpinner?.classList.add('hidden'); // Optional chaining
+                    state.currentFilteredSongs = result.map(item => item.item);
+                    state.currentDisplayStartIndex = 0;
+                    state.currentDisplayData = state.currentFilteredSongs;
+                    renderSongs(state.currentDisplayData);
+                    dom.mainContent.loadingMoreSpinner?.classList.add('hidden');
                 } else {
-                    // If search is cleared, reload the current category with pagination
                     loadCustomCategory(document.querySelector('#category-menu .nav-item.active')?.dataset.category || 'all');
                 }
             }, 300));
-            dom.mainContent.searchClearBtn?.addEventListener('click', () => { // Added null check
-                if (dom.mainContent.searchInput) dom.mainContent.searchInput.value = ''; // Optional chaining
+            dom.mainContent.searchClearBtn?.addEventListener('click', () => {
+                if (dom.mainContent.searchInput) dom.mainContent.searchInput.value = '';
                 state.isSearching = false;
-                dom.mainContent.searchClearBtn?.classList.add('hidden'); // Optional chaining
+                dom.mainContent.searchClearBtn?.classList.add('hidden');
                 loadCustomCategory(document.querySelector('#category-menu .nav-item.active')?.dataset.category || 'all');
             });
 
-            // Modals and Popups
-            dom.modals.alertOkBtn?.addEventListener('click', hideMessage); // Added null check
-            dom.playlist.toggleBtn?.addEventListener('click', () => { // Added null check
-                const isHidden = dom.playlist.container?.classList.toggle('hidden'); // Optional chaining
-                dom.playlist.container?.classList.toggle('show', !isHidden); // Optional chaining
+            dom.modals.alertOkBtn?.addEventListener('click', hideMessage);
+            dom.playlist.toggleBtn?.addEventListener('click', () => {
+                const isHidden = dom.playlist.container?.classList.toggle('hidden');
+                dom.playlist.container?.classList.toggle('show', !isHidden);
                 if (!isHidden) updateUI();
             });
-            dom.lyrics.openBtn?.addEventListener('click', () => showLyricsFullscreenPopup(state.currentFilteredSongs[state.currentSongIndex])); // Added null check // Use currentFilteredSongs
-            dom.lyrics.closeBtn?.addEventListener('click', () => dom.lyrics.popup?.classList.remove('show')); // Optional chaining
+            dom.lyrics.openBtn?.addEventListener('click', () => showLyricsFullscreenPopup(state.currentFilteredSongs[state.currentSongIndex]));
+            dom.lyrics.closeBtn?.addEventListener('click', () => dom.lyrics.popup?.classList.remove('show'));
             
-            // Timer
             document.getElementById('start-timer-btn-desktop')?.addEventListener('click', () => startSleepTimer(parseInt(document.getElementById('timer-minutes-desktop')?.value || '0')));
             document.getElementById('cancel-timer-btn-desktop')?.addEventListener('click', cancelSleepTimer);
             document.getElementById('start-timer-btn-mobile')?.addEventListener('click', () => startSleepTimer(parseInt(document.getElementById('timer-minutes-mobile')?.value || '0')));
             document.getElementById('cancel-timer-btn-mobile')?.addEventListener('click', cancelSleepTimer);
 
-            // Lyrics Radial Menu
-            dom.lyrics.radialMenu.toggleBtn?.addEventListener('click', () => dom.lyrics.radialMenu.container?.classList.toggle('active')); // Optional chaining
-            document.getElementById('radial-font-size-increase')?.addEventListener('click', () => { // Added null check
+            dom.lyrics.radialMenu.toggleBtn?.addEventListener('click', () => dom.lyrics.radialMenu.container?.classList.toggle('active'));
+            document.getElementById('radial-font-size-increase')?.addEventListener('click', () => {
                 state.lyrics.fontSize++;
                 applyLyricsThemeAndFontStyles();
                 saveStateToLocalStorage(CONFIG.LYRICS.STORAGE_KEYS.FONT_SIZE, state.lyrics.fontSize);
             });
-            document.getElementById('radial-font-size-decrease')?.addEventListener('click', () => { // Added null check
+            document.getElementById('radial-font-size-decrease')?.addEventListener('click', () => {
                 state.lyrics.fontSize = Math.max(12, state.lyrics.fontSize - 1);
                 applyLyricsThemeAndFontStyles();
                 saveStateToLocalStorage(CONFIG.LYRICS.STORAGE_KEYS.FONT_SIZE, state.lyrics.fontSize);
             });
-            document.getElementById('radial-lines-increase')?.addEventListener('click', () => { // Added null check
+            document.getElementById('radial-lines-increase')?.addEventListener('click', () => {
                 state.lyrics.linesPerPage++;
-                paginateLyrics(state.currentFilteredSongs[state.currentSongIndex]?.description || ''); // Use currentFilteredSongs
+                paginateLyrics(state.currentFilteredSongs[state.currentSongIndex]?.description || '');
                 saveStateToLocalStorage(CONFIG.LYRICS.STORAGE_KEYS.LINES_PER_PAGE, state.lyrics.linesPerPage);
             });
-             document.getElementById('radial-lines-decrease')?.addEventListener('click', () => { // Added null check
+            document.getElementById('radial-lines-decrease')?.addEventListener('click', () => {
                 state.lyrics.linesPerPage = Math.max(1, state.lyrics.linesPerPage - 1);
-                paginateLyrics(state.currentFilteredSongs[state.currentSongIndex]?.description || ''); // Use currentFilteredSongs
+                paginateLyrics(state.currentFilteredSongs[state.currentSongIndex]?.description || '');
                 saveStateToLocalStorage(CONFIG.LYRICS.STORAGE_KEYS.LINES_PER_PAGE, state.lyrics.linesPerPage);
             });
-            document.getElementById('radial-font-btn')?.addEventListener('click', () => { // Added null check
+            document.getElementById('radial-font-btn')?.addEventListener('click', () => {
                 state.lyrics.fontIndex = (state.lyrics.fontIndex + 1) % CONFIG.LYRICS.FONTS.length;
                 applyLyricsThemeAndFontStyles();
                 saveStateToLocalStorage(CONFIG.LYRICS.STORAGE_KEYS.FONT_INDEX, state.lyrics.fontIndex);
             });
-            document.getElementById('radial-theme-btn')?.addEventListener('click', () => { // Added null check
+            document.getElementById('radial-theme-btn')?.addEventListener('click', () => {
                 let currentThemeObjIndex = CONFIG.LYRICS.THEMES.findIndex(t => t.id === state.lyrics.themeId);
                 state.lyrics.themeId = CONFIG.LYRICS.THEMES[(currentThemeObjIndex + 1) % CONFIG.LYRICS.THEMES.length].id;
                 applyLyricsThemeAndFontStyles();
                 saveStateToLocalStorage(CONFIG.LYRICS.STORAGE_KEYS.THEME_ID, state.lyrics.themeId);
             });
-            dom.lyrics.radialMenu.downloadBtn?.addEventListener('click', downloadLyrics); // Added null check
+            dom.lyrics.radialMenu.downloadBtn?.addEventListener('click', downloadLyrics);
 
-            // Window events
             window.addEventListener('beforeunload', saveCurrentPlaybackState);
-            window.addEventListener('online', () => { // Lắng nghe sự kiện online
+            window.addEventListener('online', () => {
                 state.networkStatus = 'online';
                 updateNetworkStatusUI();
                 showMessage("Đã kết nối lại Internet.", "Trực tuyến", true, 2000);
-                // Tải lại thư viện nếu trước đó có lỗi và đang offline
                 if (state.originalSongData.length === 0) {
                     fetchAudiusData();
                 }
             });
-            window.addEventListener('offline', () => { // Lắng nghe sự kiện offline
+            window.addEventListener('offline', () => {
                 state.networkStatus = 'offline';
                 updateNetworkStatusUI();
                 showMessage("Mất kết nối Internet. Ứng dụng có thể không hoạt động ổn định.", "Ngoại tuyến", false);
             });
 
-            // Nâng cấp: Cuộn ẩn/hiện thanh player
             window.addEventListener('scroll', throttle(() => {
                 const currentScrollY = window.scrollY;
-                // Only apply minimization on larger screens
                 if (window.innerWidth > 768) {
-                    if (currentScrollY > state.lastScrollY && currentScrollY > 100) { // Scrolling down
+                    if (currentScrollY > state.lastScrollY && currentScrollY > 100) {
                         dom.body.classList.add('player-bar-minimized');
-                    } else if (currentScrollY < state.lastScrollY || currentScrollY <= 100) { // Scrolling up or at the top
+                    } else if (currentScrollY < state.lastScrollY || currentScrollY <= 100) {
                         dom.body.classList.remove('player-bar-minimized');
                     }
                 } else {
-                    // Ensure it's never minimized on mobile
                     dom.body.classList.remove('player-bar-minimized');
                 }
                 state.lastScrollY = currentScrollY;
-                toggleScrollNavVisibility(); // Update scroll nav visibility on scroll
-            }, 200)); // Throttle scroll event
+                toggleScrollNavVisibility();
+            }, 200));
 
-            // Nâng cấp: Swipe gestures on album art
             let touchStartX = 0;
             let touchStartY = 0;
             const albumArtElement = dom.playerBar.nowPlayingWrapper;
 
-            albumArtElement?.addEventListener('touchstart', (e) => { // Added null check
+            albumArtElement?.addEventListener('touchstart', (e) => {
                 touchStartX = e.touches[0].clientX;
                 touchStartY = e.touches[0].clientY;
             });
 
-            albumArtElement?.addEventListener('touchmove', (e) => { // Added null check
-                // Only prevent vertical scrolling if horizontal swipe is significant
+            albumArtElement?.addEventListener('touchmove', (e) => {
                 const touchMoveX = e.touches[0].clientX;
                 const touchMoveY = e.touches[0].clientY;
                 const diffX = touchMoveX - touchStartX;
                 const diffY = touchMoveY - touchStartY;
 
-                if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 10) { // If horizontal movement is more significant than vertical
-                    e.preventDefault(); // Prevent page scrolling
+                if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 10) {
+                    e.preventDefault();
                 }
-            }, { passive: false }); // `passive: false` to allow `preventDefault`
+            }, { passive: false });
 
-            albumArtElement?.addEventListener('touchend', (e) => { // Added null check
+            albumArtElement?.addEventListener('touchend', (e) => {
                 const touchEndX = e.changedTouches[0].clientX;
-                const diffX = touchEndX - touchStartX; // This should be diffX, not diffY
+                const diffX = touchEndX - touchStartX;
 
-                if (Math.abs(diffX) > 50) { // Swipe threshold
-                    if (diffX > 0) { // Swiped right
+                if (Math.abs(diffX) > 50) {
+                    if (diffX > 0) {
                         playPrev();
-                    } else { // Swiped left
+                    } else {
                         playNext();
                     }
                     triggerHapticFeedback(50);
                 }
             });
 
-            // Scroll navigation buttons
-            dom.scrollNav.toTopBtn?.addEventListener('click', () => { // Added null check
+            dom.scrollNav.toTopBtn?.addEventListener('click', () => {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
                 triggerHapticFeedback(30);
             });
-            dom.scrollNav.toBottomBtn?.addEventListener('click', () => { // Added null check
+            dom.scrollNav.toBottomBtn?.addEventListener('click', () => {
                 window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' });
                 triggerHapticFeedback(30);
             });
 
-            // Load more button event listener
-            dom.mainContent.loadMoreBtn?.addEventListener('click', loadMoreSongs); // Added null check
+            dom.mainContent.loadMoreBtn?.addEventListener('click', loadMoreSongs);
 
-            // Reload Library button listener
-            dom.mainContent.reloadLibraryBtn?.addEventListener('click', async () => { // Added null check
-                dom.mainContent.reloadLibraryBtn.classList.add('hidden'); // Hide button while reloading
-                if (dom.mainContent.initialLoadingOverlay) { // Add null check
+            dom.mainContent.reloadLibraryBtn?.addEventListener('click', async () => {
+                dom.mainContent.reloadLibraryBtn.classList.add('hidden');
+                if (dom.mainContent.initialLoadingOverlay) {
                     dom.mainContent.initialLoadingOverlay.classList.remove('hidden');
                     dom.mainContent.initialLoadingOverlay.classList.add('opacity-100');
                 }
-                await fetchAudiusData(); // Re-fetch all data
-                loadCustomCategory(document.querySelector('#category-menu .nav-item.active')?.dataset.category || 'all'); // Re-render current category
+                await fetchAudiusData();
+                loadCustomCategory(document.querySelector('#category-menu .nav-item.active')?.dataset.category || 'all');
             });
 
 
-            // NÂNG CẤP: Keyboard Shortcuts
             document.addEventListener('keydown', (e) => {
-                // Bỏ qua nếu đang gõ trong ô input
                 if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
                 switch (e.code) {
                     case 'Space':
-                        e.preventDefault(); // Ngăn cuộn trang
-                        dom.playerBar.playPauseBtn?.click(); // Added null check
+                        e.preventDefault();
+                        dom.playerBar.playPauseBtn?.click();
                         break;
                     case 'ArrowRight':
-                        dom.playerBar.nextBtn?.click(); // Added null check
+                        dom.playerBar.nextBtn?.click();
                         break;
                     case 'ArrowLeft':
-                        dom.playerBar.prevBtn?.click(); // Added null check
+                        dom.playerBar.prevBtn?.click();
                         break;
                 }
             });
 
-            // Add visibility change listener for wake lock management
             document.addEventListener('visibilitychange', () => {
                 if (document.hidden) {
-                    // App is going to background
                     releaseWakeLock();
-                    // Dừng kiểm tra Wake Lock định kỳ khi ứng dụng ẩn
                     if (state.wakeLockInterval) {
                         clearInterval(state.wakeLockInterval);
                         state.wakeLockInterval = null;
                     }
                 } else {
-                    // App is coming to foreground
                     if (state.isPlaying && dom.audioPlayer.paused && dom.audioPlayer.currentTime > 0) {
-                        // If it was playing and now paused (likely by OS), try to resume
-                        requestWakeLock(); // Re-acquire wake lock
-                        // Bắt đầu kiểm tra Wake Lock định kỳ khi ứng dụng hiện lại và đang phát
+                        requestWakeLock();
                         if (!state.wakeLockInterval) {
                             state.wakeLockInterval = setInterval(requestWakeLock, 60000);
                         }
                         dom.audioPlayer.play().catch(e => {
                             console.warn("Could not resume playback on foreground:", e);
-                            // Inform user if play fails due to policy (e.g., no user gesture)
                             if (e.name === 'NotAllowedError') {
                                 showMessage("Vui lòng nhấn nút Play để tiếp tục nghe nhạc.", "Tiếp tục phát nhạc", true, 3000);
                             }
                         });
                     } else if (state.isPlaying) {
-                        // If it was playing and still playing, just re-acquire wake lock
                         requestWakeLock();
-                        // Bắt đầu kiểm tra Wake Lock định kỳ khi ứng dụng hiện lại và đang phát
                         if (!state.wakeLockInterval) {
                             state.wakeLockInterval = setInterval(requestWakeLock, 60000);
                         }
@@ -3070,53 +2967,30 @@
             });
         }
 
-        // Function to clear all caches and reload the page
-        async function clearAppCacheAndReload() {
-            showMessage("Đang xóa dữ liệu cũ và tải lại ứng dụng...", "Xóa Cache", false); // Show persistent message
-
-            if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-                try {
-                    // Unregister all service workers
-                    const registrations = await navigator.serviceWorker.getRegistrations();
-                    for (let reg of registrations) {
-                        await reg.unregister();
-                        console.log(`Service Worker unregistered: ${reg.scope}`);
-                    }
-
-                    // Clear all caches
-                    const cacheNames = await caches.keys();
-                    for (let cacheName of cacheNames) {
-                        await caches.delete(cacheName);
-                        console.log(`Cache deleted: ${cacheName}`);
-                    }
-
-                    // Clear localStorage for a fresh start (optional, but good for full reset)
-                    localStorage.clear();
-                    console.log('Local Storage cleared.');
-
-                    showMessage("Đã xóa cache thành công. Đang tải lại...", "Xóa Cache", true, 2000);
-                    setTimeout(() => window.location.reload(true), 1000); // Hard reload
-                } catch (error) {
-                    console.error("Lỗi khi xóa cache:", error);
-                    showMessage("Lỗi khi xóa cache. Vui lòng thử lại thủ công.", "Lỗi Xóa Cache");
+        async function clearCacheAndRefetch() {
+            // Xóa tất cả cache
+            try {
+                const cacheNames = await caches.keys();
+                for (let cacheName of cacheNames) {
+                    await caches.delete(cacheName);
+                    console.log(`Cache deleted: ${cacheName}`);
                 }
-            } else {
-                // Fallback for browsers without Service Worker or if not controlled
-                console.warn("Service Worker không khả dụng hoặc không được kiểm soát. Đang thực hiện tải lại cứng.");
-                localStorage.clear(); // Clear local storage as a fallback
-                window.location.reload(true); // Hard reload
+                console.log('Tất cả cache đã được xóa.');
+            } catch (error) {
+                console.error("Lỗi khi xóa cache:", error);
             }
+            // Thử tải lại dữ liệu sau khi xóa cache
+            await fetchAudiusData(0); // Bắt đầu lại với 0 lần thử lại
+            loadCustomCategory(document.querySelector('#category-menu .nav-item.active')?.dataset.category || 'all');
         }
 
         async function initializeApp() {
-            // 1. Setup initial UI
-            createStars(100, dom.splashScreen?.querySelector('.stars')); // Optional chaining
-            createStars(50, dom.splashScreen?.querySelector('.stars2')); // Optional chaining
-            createStars(20, dom.splashScreen?.querySelector('.stars3')); // Optional chaining
+            createStars(100, dom.splashScreen?.querySelector('.stars'));
+            createStars(50, dom.splashScreen?.querySelector('.stars2'));
+            createStars(20, dom.splashScreen?.querySelector('.stars3'));
             await loadAndInjectSVG();
             cacheLogoElements();
             
-            // 2. Load settings from Local Storage
             state.isShuffling = loadStateFromLocalStorage(CONFIG.STORAGE_KEYS.SHUFFLE, false);
             state.repeatMode = loadStateFromLocalStorage(CONFIG.STORAGE_KEYS.REPEAT, 'all');
             state.favoriteSongIds = loadStateFromLocalStorage(CONFIG.STORAGE_KEYS.FAVORITES, []);
@@ -3126,11 +3000,9 @@
             updateVolumeUI();
             applyTheme();
 
-            // Render preset theme buttons
             renderPresetThemes('preset-themes-desktop');
             renderPresetThemes('preset-themes-mobile');
 
-            // 3. Render static components (already done above for categories)
             CONFIG.CATEGORIES.forEach(cat => {
                 const btn = document.createElement('button');
                 btn.type = 'button';
@@ -3138,103 +3010,87 @@
                 btn.innerHTML = cat.name;
                 btn.dataset.category = cat.id;
                 btn.onclick = () => loadCustomCategory(cat.id);
-                dom.mainContent.categoryMenu?.appendChild(btn); // Optional chaining
+                dom.mainContent.categoryMenu?.appendChild(btn);
             });
             setupNavEvents();
             renderPlatformLinks();
             positionRadialItems();
             
-            // 4. Setup all event listeners
             setupEventListeners();
             setupBroadcastChannel();
             
-            // 5. Fetch data and render song list
-            renderSkeletonLoader(CONFIG.INITIAL_LOAD_SIZE); // Show skeleton for initial load size
-            if (dom.mainContent.initialLoadingOverlay) { // Add null check here
+            renderSkeletonLoader(CONFIG.INITIAL_LOAD_SIZE);
+            if (dom.mainContent.initialLoadingOverlay) {
                 dom.mainContent.initialLoadingOverlay.classList.remove('hidden');
                 dom.mainContent.initialLoadingOverlay.classList.add('opacity-100');
             }
 
-            await fetchAudiusData(); // This now fetches all data into originalSongData
+            await fetchAudiusData();
 
-            // If fetchAudiusData failed, show the reload button
             if (state.originalSongData.length === 0) {
-                dom.mainContent.reloadLibraryBtn?.classList.remove('hidden'); // Optional chaining
+                dom.mainContent.reloadLibraryBtn?.classList.remove('hidden');
             }
 
-            // 6. Restore previous playback state or handle shared link
             const urlParams = new URLSearchParams(window.location.search);
             const songToPlayId = urlParams.get('play');
 
             if (songToPlayId) {
-                // Nếu có ID bài hát trong URL, ưu tiên phát bài hát đó
                 const songIndex = state.originalSongData.findIndex(s => s.id === songToPlayId);
                 if (songIndex !== -1) {
-                    // Load the category of the shared song, then play it
                     const sharedSongCategory = state.originalSongData[songIndex].genre ? 
                                                 Object.keys(CONFIG.GENRE_MAP).find(key => CONFIG.GENRE_MAP[key].toLowerCase() === state.originalSongData[songIndex].genre.toLowerCase()) || 'all'
                                                 : 'all';
                     loadCustomCategory(sharedSongCategory);
-                    // Ensure the song is in currentDisplayData before playing
                     const displayIndex = state.currentFilteredSongs.findIndex(s => s.id === songToPlayId);
                     if (displayIndex !== -1) {
-                             // Ensure the song is within the initially loaded set or load it
-                            if (displayIndex >= state.currentDisplayStartIndex + state.currentDisplayData.length || displayIndex < state.currentDisplayStartIndex) {
-                                // If the song is not in the current window, adjust the window
-                                let newDisplayStartIndex = Math.max(0, displayIndex - Math.floor(CONFIG.PAGE_SIZE / 2));
-                                newDisplayStartIndex = Math.min(newDisplayStartIndex, state.currentFilteredSongs.length - CONFIG.PAGE_SIZE);
-                                if (newDisplayStartIndex < 0) newDisplayStartIndex = 0;
+                        if (displayIndex >= state.currentDisplayStartIndex + state.currentDisplayData.length || displayIndex < state.currentDisplayStartIndex) {
+                            let newDisplayStartIndex = Math.max(0, displayIndex - Math.floor(CONFIG.PAGE_SIZE / 2));
+                            newDisplayStartIndex = Math.min(newDisplayStartIndex, state.currentFilteredSongs.length - CONFIG.PAGE_SIZE);
+                            if (newDisplayStartIndex < 0) newDisplayStartIndex = 0;
 
-                                state.currentDisplayData = state.currentFilteredSongs.slice(newDisplayStartIndex, newDisplayStartIndex + CONFIG.PAGE_SIZE);
-                                state.currentDisplayStartIndex = newDisplayStartIndex;
-                                renderSongs(state.currentDisplayData);
-                            }
-                        playSong(displayIndex); // Play the song using its index in the filtered list
-                        // Inform the user that they might need to click play due to browser policies
+                            state.currentDisplayData = state.currentFilteredSongs.slice(newDisplayStartIndex, newDisplayStartIndex + CONFIG.PAGE_SIZE);
+                            state.currentDisplayStartIndex = newDisplayStartIndex;
+                            renderSongs(state.currentDisplayData);
+                        }
+                        playSong(displayIndex);
                         showMessage(`Đã tải bài hát "${state.currentFilteredSongs[displayIndex].title}". Vui lòng nhấn nút Play để bắt đầu nghe.`, "Sẵn sàng phát nhạc", true, 5000);
-                        // Add visual cue to play button
-                        dom.playerBar.playPauseBtn?.classList.add('attention-bounce'); // Optional chaining
+                        dom.playerBar.playPauseBtn?.classList.add('attention-bounce');
                         setTimeout(() => {
-                            dom.playerBar.playPauseBtn?.classList.remove('attention-bounce'); // Optional chaining
-                        }, 2400); // Remove after 3 bounces (0.8s * 3)
+                            dom.playerBar.playPauseBtn?.classList.remove('attention-bounce');
+                        }, 2400);
                     } else {
-                        // Fallback if song is not found in filtered list
                         loadCustomCategory('all');
                         showMessage("Không tìm thấy bài hát được chia sẻ. Vui lòng chọn bài khác.", "Lỗi");
                     }
                 } else {
-                    // Nếu không tìm thấy bài hát, tải danh mục mặc định
                     loadCustomCategory('all');
                     showMessage("Không tìm thấy bài hát được chia sẻ. Vui lòng chọn bài khác.", "Lỗi");
                 }
             } else {
-                // Nếu không có ID bài hát trong URL, khôi phục trạng thái phát lại trước đó
                 const savedPlaybackState = loadStateFromLocalStorage(CONFIG.STORAGE_KEYS.PLAYBACK_STATE, null);
                 if (savedPlaybackState) {
-                    if (dom.mainContent.searchInput) dom.mainContent.searchInput.value = savedPlaybackState.currentSearchQuery || ''; // Optional chaining
+                    if (dom.mainContent.searchInput) dom.mainContent.searchInput.value = savedPlaybackState.currentSearchQuery || '';
                     loadCustomCategory(savedPlaybackState.currentCategory || 'all');
-                    const songIndex = state.currentFilteredSongs.findIndex(s => s.id === savedPlaybackState.songId); // Check in filtered songs
+                    const songIndex = state.currentFilteredSongs.findIndex(s => s.id === savedPlaybackState.songId);
                     if (songIndex !== -1) {
                         state.currentSongIndex = songIndex;
-                        updateUI(); 
+                        updateUI();
                         dom.audioPlayer.currentTime = savedPlaybackState.currentTime || 0;
-                        showMessage("Đã khôi phục phiên nghe nhạc trước đó. Nhấn nút Play để tiếp tục.", "Chào mừng trở lại!", true, 2500); // 2.5 seconds duration
+                        showMessage("Đã khôi phục phiên nghe nhạc trước đó. Nhấn nút Play để tiếp tục.", "Chào mừng trở lại!", true, 2500);
                     } else {
-                        loadCustomCategory('all'); // Fallback nếu bài hát đã lưu không còn tồn tại
+                        loadCustomCategory('all');
                     }
                 } else {
-                    loadCustomCategory('all'); // Tải danh mục tất cả nếu không có trạng thái lưu
+                    loadCustomCategory('all');
                 }
             }
 
-            // 7. Final UI updates and splash screen
             updateUI();
-            dom.splashScreen?.classList.add('visible'); // Optional chaining
-            setTimeout(() => dom.splashScreen?.classList.remove('visible'), 2000); // Optional chaining
+            dom.splashScreen?.classList.add('visible');
+            setTimeout(() => dom.splashScreen?.classList.remove('visible'), 2000);
             
             requestNotificationPermission();
 
-            // Cập nhật hiển thị nút cuộn sau khi tải trang và khi thay đổi kích thước cửa sổ
             toggleScrollNavVisibility();
             window.addEventListener('resize', throttle(toggleScrollNavVisibility, 200));
         };
