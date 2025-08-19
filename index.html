@@ -2131,16 +2131,17 @@
         // ==============================================
         async function shareSong() {
             const song = state.currentFilteredSongs[state.currentSongIndex];
-            if (!song || !song.id) { // Check for song.id
+            // SỬA LỖI: Kiểm tra 'permalink' thay vì 'id' để đảm bảo có link chia sẻ.
+            if (!song || !song.permalink) {
                 showMessage("Không thể chia sẻ bài hát này.");
                 return;
             }
         
-            // LỘT XÁC: Tạo link chia sẻ trỏ về chính ứng dụng này
-            const baseUrl = window.location.origin + window.location.pathname;
-            const shareUrl = `${baseUrl}?play=${song.id}`;
+            // SỬA LỖI & LỘT XÁC: Tạo link chia sẻ trực tiếp đến trang Audius của bài hát.
+            // Điều này đảm bảo link hoạt động ngay lập tức trên mọi trình duyệt.
+            const shareUrl = `https://audius.co${song.permalink}`;
         
-            console.log("URL được chia sẻ:", shareUrl);
+            console.log("URL được chia sẻ (đã sửa lỗi):", shareUrl);
         
             const shareData = {
                 title: `Nghe "${song.title}" - ${song.artist}`,
@@ -2927,7 +2928,7 @@
                         id: track.id,
                         title: track.title,
                         artist: track.user ? track.user.name : 'Nghệ sĩ không xác định',
-                        artwork: track.artwork ? (track.artwork['150x150'] || track.artwork.url) : `data:image/svg+xml;base64,` + btoa(`<svg xmlns="http://www.w3.org/2000/svg" width="150" height="150" viewBox="0 0 150 150"><rect width="150" height="150" fill="#1e293b"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="60" fill="#f1f5f9">${track.title.charAt(0) || '?'}</text></svg>`),
+                        artwork: track.artwork ? (track.artwork['150x150'] || track.artwork.url) : `data:image/svg+xml;base64,` + btoa(`<svg xmlns="http://www.w3.org/2000/svg" width="150" height="150" viewBox="0 0 150" 150"><rect width="150" height="150" fill="#1e293b"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="60" fill="#f1f5f9">${track.title.charAt(0) || '?'}</text></svg>`),
                         artwork_full: track.artwork ? (track.artwork['480x480'] || track.artwork.url) : `data:image/svg+xml;base64,` + btoa(`<svg xmlns="http://www.w3.org/2000/svg" width="480" height="480" viewBox="0 0 480 480"><rect width="480" height="480" fill="#1e293b"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="180" fill="#f1f5f9">${track.title.charAt(0) || '?'}</text></svg>`),
                         duration: track.duration,
                         description: track.description || 'Không có lời bài hát cho bài này.',
