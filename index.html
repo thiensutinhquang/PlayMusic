@@ -23,14 +23,14 @@
     <!-- Libraries -->
     <!-- Optimization: Preload critical scripts -->
     <link rel="preload" href="https://cdn.tailwindcss.com" as="script">
-    <link rel="preload" href="https://unpkg.com/@phosphor-icons/web" as="script">
-    <link rel="preload" href="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2" as="script">
+    <link rel="preload" href="https://unpkg.com/@phosphor-icons/web" as="script" crossorigin="anonymous">
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2" as="script" crossorigin="anonymous">
     <link rel="preload" href="https://fonts.gstatic.com/s/bevietnampro/v11/QdVN_sc_f5t3g4N_LqR_2_NPg_jC_gL_g_bC_gW_g.woff2" as="font" type="font/woff2" crossorigin>
 
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web" crossorigin="anonymous"></script>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2" crossorigin="anonymous"></script>
     
     <style>
         /* ==============================================
@@ -192,9 +192,6 @@
             text-decoration: none; font-weight: 500; font-size: 0.95rem; border: 2px solid transparent;
             transition: var(--transition-fast); white-space: nowrap; cursor: pointer; 
         }
-        .dropdown-toggle:hover { color: var(--text-current); background-color: var(--bg-current); transform: translateY(-2px); }
-        .dropdown-toggle.active { color: var(--primary-color); font-weight: 700; background-color: var(--bg-current); border-color: var(--primary-color); }
-        .dropdown-toggle .ph-caret-down { transition: transform 0.2s ease-in-out; }
         .dropdown-toggle.open .ph-caret-down { transform: rotate(180deg); }
 
         .dropdown-menu {
@@ -236,7 +233,7 @@
         #player-bar .player-actions-right button.liked { color: var(--danger-color); }
 
         /* ==============================================
-        MÀN HÌNH CHÀO (SPLASH SCREEN)
+        MÀN HÌNH CHỜ (SPLASH SCREEN)
         ============================================== */
         #splash-screen { 
             position: fixed; inset: 0; z-index: 9999; 
@@ -252,19 +249,31 @@
         /* ==============================================
         HIỆU ỨNG LOGO & VŨ TRỤ
         ============================================== */
-        #header-logo-placeholder #human-body.breathing-effect { animation: breathe 2s infinite alternate ease-in-out; }
-        #header-logo-placeholder #chakra-system.energy-flow-active { stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: flow-animation 3s linear infinite; }
-        #header-logo-placeholder #logo-text-trucchichantam.highlight-text { fill: gold; }
+        /* Loại bỏ các keyframes không cần thiết để tối ưu hiệu suất */
+        .header-logo-container {
+            /* Giữ lại style cơ bản, loại bỏ các hiệu ứng phức tạp */
+            padding: 10px;
+            box-sizing: content-box;
+            border-radius: 12px;
+            border: 1px solid var(--border-current);
+            background-color: var(--logo-bg-current);
+        }
+        #header-logo-placeholder::before,
+        #header-logo-placeholder #human-body.breathing-effect,
+        #header-logo-placeholder #chakra-system.energy-flow-active,
+        #header-logo-placeholder #logo-text-trucchichantam.highlight-text {
+            /* Loại bỏ toàn bộ các hiệu ứng animation */
+            animation: none !important;
+            transform: none !important;
+            opacity: 1 !important;
+            filter: none !important;
+        }
 
         .stars, .stars2, .stars3 {
             position: absolute; top: 0; left: 0; right: 0; bottom: 0;
             width: 100%; height: 100%; display: block; background: transparent;
+            animation: none; /* Loại bỏ animation cho các ngôi sao */
         }
-        .stars { animation: rotate-stars 150s linear infinite; }
-        .stars2 { animation: rotate-stars 100s linear infinite; }
-        .stars3 { animation: rotate-stars 50s linear infinite; }
-        @keyframes rotate-stars { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        @keyframes twinkle { 0% { transform: scale(0.5); opacity: 0.5; } 50% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(0.5); opacity: 0.5; } }
 
         /* ==============================================
         NỘI DUNG CHÍNH
@@ -556,15 +565,16 @@
             transform: translateY(-20px); transition: transform 0.3s ease;
         }
         .custom-alert-modal.show .custom-alert-content { transform: translateY(0); }
-        .custom-alert-content h3 { font-size: 1.5rem; font-weight: bold; margin-bottom: 1rem; }
-        .custom-alert-content p { margin-bottom: 1.5rem; color: var(--text-muted-current); }
         .custom-alert-content button {
-            background-color: var(--primary-color); color: white; padding: 0.75rem 1.5rem;
-            border-radius: 8px; font-weight: 600; transition: background-color 0.2s ease;
-            cursor: pointer; border: none;
+            background: none; /* Bỏ màu nền cho nút OK để nó tự biến mất */
+            border: none;
+            color: transparent; /* Ẩn chữ OK */
+            padding: 0;
+            width: 0;
+            height: 0;
+            cursor: default;
         }
-        .custom-alert-content button:hover { background-color: var(--primary-hover); }
-
+    
         #lyrics-fullscreen-popup {
             position: fixed; inset: 0; background-color: var(--bg-current);
             z-index: 1500; display: flex; flex-direction: column;
@@ -611,7 +621,8 @@
         .lyrics-pagination span { font-weight: 600; color: var(--text-current); }
 
         #lyrics-radial-menu-container {
-            position: fixed; bottom: 110px; right: 20px; z-index: 1600;
+            position: fixed; bottom: 110px;
+            right: 20px; z-index: 1600;
             width: 50px; height: 50px; display: flex; justify-content: center;
             align-items: center; transition: all 0.3s ease-out;
         }
@@ -709,12 +720,12 @@
             min-height: 36px;
         }
 
-        body.player-bar-minimized #player-bar .progress-section,
+        body.player-bar-minimized #player-bar .now-playing-info .text-info {
+            display: none;
+        }
         body.player-bar-minimized #player-bar .player-actions-right {
             display: none;
         }
-
-
         @media (max-width: 1024px) {
             .desktop-nav { display: none; }
             .header-layout-wrapper { flex-direction: row; justify-content: space-between; align-items: center; padding: 0 1rem; }
@@ -761,66 +772,6 @@
                 gap: 0.5rem;
                 flex-wrap: wrap;
             }
-            #player-bar .now-playing-info { 
-                grid-column: 1 / -1; 
-                order: 3;
-                justify-content: space-between;
-                align-items: center;
-            }
-            #player-bar .player-controls-main { 
-                grid-column: 1 / -1; 
-                order: 4;
-                flex-direction: row;
-                justify-content: center;
-                gap: 1rem;
-            }
-            #player-bar .player-actions-right button,
-            #player-bar .player-actions-right .volume-container {
-                display: flex;
-                min-width: 48px;
-                min-height: 48px;
-                font-size: 1.5rem;
-                align-items: center;
-                justify-content: center;
-            }
-            #player-bar .player-actions-right .volume-container {
-                width: 100%;
-                max-width: 250px;
-                margin: 0 auto;
-            }
-            #player-bar .player-actions-right .volume-percentage {
-                flex-shrink: 0;
-                min-width: 30px;
-            }
-            body.player-bar-minimized #player-bar {
-                height: 60px;
-                grid-template-columns: auto 1fr;
-                padding: 0 0.75rem;
-            }
-            body.player-bar-minimized #player-bar .now-playing-info {
-                gap: 0.5rem;
-            }
-            body.player-bar-minimized #player-bar .now-playing-info img {
-                width: 48px;
-                height: 48px;
-            }
-            body.player-bar-minimized #player-bar .player-controls-main {
-                flex-direction: row;
-                justify-content: flex-end;
-            }
-            body.player-bar-minimized #player-bar .player-buttons {
-                gap: 0.5rem;
-            }
-            body.player-bar-minimized #player-bar .player-buttons #play-pause-btn {
-                width: 36px;
-                height: 36px;
-                font-size: 1.2rem;
-            }
-            body.player-bar-minimized #player-bar .player-buttons button {
-                font-size: 1.2rem;
-                min-width: 36px;
-                min-height: 36px;
-            }
             body.player-bar-minimized #player-bar .now-playing-info .text-info {
                 display: none;
             }
@@ -831,17 +782,12 @@
     </style>
 </head>
 <body>
-    <!-- Màn hình chờ -->
-    <div id="splash-screen" class="hidden">
-        <div class="stars"></div> <div class="stars2"></div> <div class="stars3"></div>
-        <div id="splash-logo-container"> <div id="splash-logo-placeholder"></div> </div>
-    </div>
-
-    <!-- Header -->
     <header class="header">
         <div class="container header-layout-wrapper">
             <div class="header-logo-container">
-                <a href="#"> <div id="header-logo-placeholder"></div> </a>
+                <a href="#">
+                    <img id="header-logo-placeholder" src="https://raw.githubusercontent.com/thiensutinhquang/GiaoLy/main/logo%20Thien%20Su%20Tinh%20Quang.png" alt="Logo">
+                </a>
             </div>
             <div class="header-main-content">
                 <h1 class="main-title">PLAY NHẠC MSTQ</h1>
@@ -952,7 +898,7 @@
                     </div>
                     <div id="song-list-body"></div>
                     <!-- Initial Loading Overlay -->
-                    <div id="initial-loading-overlay" class="absolute inset-0 bg-bg-current flex items-center justify-content-center flex-col text-muted-current z-10 transition-opacity duration-500 hidden">
+                    <div id="initial-loading-overlay" class="absolute inset-0 bg-bg-current flex items-center justify-content-center flex-col text-muted-current z-10 transition-opacity duration-500">
                         <i class="ph-bold ph-spinner-gap animate-spin text-4xl text-primary-color mb-4"></i>
                         <p>Đang tải thư viện nhạc...</p>
                     </div>
@@ -1050,21 +996,19 @@
             <div class="radial-item" id="radial-lines-decrease" style="--x: 0px; --y: 0px;" aria-label="Giảm số dòng"><i class="ph-fill ph-list-dashes"></i><span class="radial-label">Dòng-</span></div>
             <div class="radial-item" id="radial-font-btn" style="--x: 0px; --y: 0px;" aria-label="Đổi phông chữ"><i class="ph-fill ph-font"></i><span class="radial-label">Phông</span></div>
             <div class="radial-item" id="radial-theme-btn" style="--x: 0px; --y: 0px;" aria-label="Đổi màu nền"><i class="ph-fill ph-palette"></i><span class="radial-label">Màu</span></div>
-            <div class="radial-item" id="radial-download-lyrics" style="--x: 0px; --y: 0px;" aria-label="Tải lời bài hát"><i class="ph-fill ph-download-simple"></i><span class="radial-label">Tải về</span></div>
         </div>
     </div>
     
     <script>
     // --- PWA Service Worker Logic ---
     const swCode = `
-        const CACHE_NAME = 'mstq-music-cache-v11';
+        const CACHE_NAME = 'mstq-music-cache-v13';
         const BASE_URL = 'https://thiensutinhquang.github.io/PlayMusic/';
         const urlsToCache = [
             BASE_URL, BASE_URL + 'index.html',
             'https://cdn.tailwindcss.com', 'https://unpkg.com/@phosphor-icons/web',
             'https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap',
-            'https://cdn.jsdelivr.net/npm/fuse.js@6.6.2',
-            'https://raw.githubusercontent.com/thiensutinhquang/PlayMusic/main/LOGOvectorFULL.svg',
+            'https://raw.githubusercontent.com/thiensutinhquang/GiaoLy/main/logo%20Thien%20Su%20Tinh%20Quang.png',
             BASE_URL + 'images/icons/icon-192x192.png', BASE_URL + 'images/icons/icon-512x512.png',
             BASE_URL + 'images/icons/play.png', BASE_URL + 'images/icons/pause.png',
             BASE_URL + 'images/icons/next.png', BASE_URL + 'images/icons/prev.png'
@@ -1183,6 +1127,39 @@
     sheet.insertRule(`.bounce-category-btn { animation: bounce-category-btn 0.3s ease-out; }`, sheet.cssRules.length);
     sheet.insertRule(`@keyframes attention-bounce { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`, sheet.cssRules.length);
     sheet.insertRule(`.attention-bounce { animation: attention-bounce 0.8s ease-in-out 3; }`, sheet.cssRules.length);
+
+
+    // Cải tiến: Khai báo hàm này ở phạm vi toàn cục
+    async function clearCacheAndReload() {
+        if ('serviceWorker' in navigator) {
+            // FIX: Only attempt to unregister if the document is visible to avoid "invalid state" errors.
+            if (document.visibilityState === 'visible') {
+                try {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    for (const reg of registrations) {
+                        await reg.unregister();
+                    }
+                    console.log('Tất cả Service Worker đã được hủy đăng ký.');
+                } catch (error) {
+                    console.error("Lỗi khi hủy đăng ký Service Worker (sẽ bỏ qua và tiếp tục):", error);
+                }
+            } else {
+                 console.log('Document không hiển thị, bỏ qua việc hủy đăng ký Service Worker.');
+            }
+        }
+    
+        // Xóa tất cả cache
+        try {
+            const cacheNames = await caches.keys();
+            await Promise.all(cacheNames.map(cacheName => caches.delete(cacheName)));
+            console.log('Tất cả cache đã được xóa.');
+        } catch (error) {
+            console.error("Lỗi khi xóa cache:", error);
+        }
+    
+        // Tải lại trang
+        window.location.reload(true);
+    }
 
 
     document.addEventListener('DOMContentLoaded', async () => {
@@ -1400,55 +1377,20 @@
             }
         }
         
-        function createStars(count, container) {
-            if (!container) return;
-            for (let i = 0; i < count; i++) {
-                const star = document.createElement('div');
-                star.className = 'absolute bg-white rounded-full';
-                const size = Math.random() * 2 + 1;
-                star.style.cssText = `width:${size}px; height:${size}px; top:${Math.random()*100}%; left:${Math.random()*100}%; animation:twinkle ${Math.random()*5+3}s linear infinite; animation-delay:${Math.random()*3}s;`;
-                container.appendChild(star);
+        // Cải tiến: Load logo trực tiếp từ URL hình ảnh, bỏ qua các hiệu ứng cũ
+        function loadAndInjectLogo() {
+            const logoPlaceholder = document.getElementById('header-logo-placeholder');
+            if (logoPlaceholder) {
+                // Đã cập nhật đường dẫn theo yêu cầu mới
+                logoPlaceholder.src = 'https://raw.githubusercontent.com/thiensutinhquang/GiaoLy/main/logo%20Thien%20Su%20Tinh%20Quang.png';
+                logoPlaceholder.alt = 'Logo Thien Su Tinh Quang';
             }
         }
-
-        async function loadAndInjectSVG() {
-            try {
-                const response = await fetch('https://raw.githubusercontent.com/thiensutinhquang/PlayMusic/main/LOGOvectorFULL.svg');
-                if (!response.ok) throw new Error('Không tải được SVG');
-                const svgText = await response.text();
-                if (document.getElementById('splash-logo-placeholder')) {
-                    document.getElementById('splash-logo-placeholder').innerHTML = svgText;
-                }
-                if (dom.header.logoPlaceholder) {
-                    dom.header.logoPlaceholder.innerHTML = svgText;
-                }
-            } catch (error) {
-                console.error("Lỗi tải SVG:", error);
-                if (dom.header.logoPlaceholder) {
-                    dom.header.logoPlaceholder.innerHTML = `<div class="w-16 h-16 bg-primary-color rounded-full flex items-center justify-center text-white font-bold text-2xl">M</div>`;
-                }
-            }
-        }
-
-        function cacheLogoElements() {
-            if (dom.header.logoPlaceholder) {
-                state.logoElements = {
-                    chakraSystem: dom.header.logoPlaceholder.querySelector('#chakra-system'),
-                    humanBody: dom.header.logoPlaceholder.querySelector('#human-body'),
-                    trucChiChanTamText: dom.header.logoPlaceholder.querySelector('#logo-text-trucchichantam'),
-                };
-            }
-        }
-
-        function toggleLogoAnimations(isActive) {
-            Object.values(state.logoElements).forEach(el => {
-                if(el) {
-                    el.classList.toggle('breathing-effect', isActive && el.id.includes('human'));
-                    el.classList.toggle('energy-flow-active', isActive && el.id.includes('chakra'));
-                    el.classList.toggle('highlight-text', isActive && el.id.includes('text'));
-                }
-            });
-        }
+        
+        // Cải tiến: Loại bỏ hoàn toàn các hàm liên quan đến hiệu ứng logo và màn hình chờ
+        function toggleLogoAnimations(isActive) { }
+        function createStars(count, container) { }
+        function cacheLogoElements() { }
 
         async function requestWakeLock() {
             if ('wakeLock' in navigator && !state.wakeLock) {
@@ -1492,7 +1434,7 @@
                 await Notification.requestPermission();
             }
         }
-
+        
         // ==============================================
         // STATE & LOCAL STORAGE MANAGEMENT
         // ==============================================
@@ -1635,10 +1577,10 @@
                 state.audiusHosts = hosts;
                 state.currentAudiusHost = state.audiusHosts[Math.floor(Math.random() * state.audiusHosts.length)];
 
-                if (dom.mainContent.initialLoadingOverlay) {
-                    dom.mainContent.initialLoadingOverlay.classList.remove('hidden');
-                    dom.mainContent.initialLoadingOverlay.classList.add('opacity-100');
-                }
+                // if (dom.mainContent.initialLoadingOverlay) {
+                //     dom.mainContent.initialLoadingOverlay.classList.remove('hidden');
+                //     dom.mainContent.initialLoadingOverlay.classList.add('opacity-100');
+                // }
 
                 const userResponse = await fetch(`${state.currentAudiusHost}/v1/users/search?query=${CONFIG.USER_HANDLE}&app_name=MSTQPlayer`, { signal: controller.signal });
                 if (!userResponse.ok) {
@@ -1655,7 +1597,7 @@
                 let hasMore = true;
 
                 while (hasMore) {
-                    const tracksResponse = await fetch(`${state.currentAudiusHost}/v1/users/${userId}/tracks?limit=${CONFIG.PAGE_SIZE}&offset=${offset}&app_name=MSTQPlayer`, { signal: controller.signal });
+                    const tracksResponse = await fetch(`${state.currentAudiusHost}/v1/users/${userId}/tracks?limit=${CONFIG.PAGE_SIZE}&offset=${offset}&app_name=MSTQPlayer`);
                     if (!tracksResponse.ok) {
                         throw new Error(`Không thể tải danh sách bài hát từ Audius. Mã lỗi: ${tracksResponse.status}`);
                     }
@@ -1712,7 +1654,7 @@
                         delay + 500
                     );
                     setTimeout(async () => {
-                        await clearCacheAndRefetch();
+                        await clearCacheAndReload();
                         state.isRetryingFetch = false;
                     }, delay);
                 } else if (retryAttempt >= CONFIG.MAX_AUDIO_RETRIES) {
@@ -2189,33 +2131,23 @@
         // ==============================================
         async function shareSong() {
             const song = state.currentFilteredSongs[state.currentSongIndex];
-            if (!song || !song.permalink) {
+            if (!song || !song.id) { // Check for song.id
                 showMessage("Không thể chia sẻ bài hát này.");
                 return;
             }
-
-            let shareUrl = song.permalink;
-            // Cải tiến: Thêm fallback để đảm bảo URL luôn đầy đủ
-            if (!shareUrl.startsWith('http://') && !shareUrl.startsWith('https://')) {
-                shareUrl = `https://audius.co${shareUrl}`;
-            }
-            
-            try {
-                const urlObj = new URL(shareUrl);
-                urlObj.pathname = decodeURIComponent(urlObj.pathname);
-                shareUrl = urlObj.toString();
-            } catch (e) {
-                console.warn("Lỗi khi xử lý URL chia sẻ (có thể do URL không hợp lệ), sử dụng permalink gốc:", e);
-            }
-
+        
+            // LỘT XÁC: Tạo link chia sẻ trỏ về chính ứng dụng này
+            const baseUrl = window.location.origin + window.location.pathname;
+            const shareUrl = `${baseUrl}?play=${song.id}`;
+        
             console.log("URL được chia sẻ:", shareUrl);
-
+        
             const shareData = {
                 title: `Nghe "${song.title}" - ${song.artist}`,
                 text: `Nghe bài hát "${song.title}" của ${song.artist} trên Play Nhạc MSTQ.`,
                 url: shareUrl
             };
-
+        
             const copyToClipboard = () => {
                 const textArea = document.createElement("textarea");
                 textArea.value = shareUrl;
@@ -2233,7 +2165,7 @@
                 }
                 document.body.removeChild(textArea);
             };
-
+        
             if (navigator.share && window.top === window.self) {
                 try {
                     await navigator.share(shareData);
@@ -2381,11 +2313,11 @@
 
             document.getElementById('clear-cache-btn-desktop')?.addEventListener('click', (e) => {
                 e.preventDefault();
-                clearAppCacheAndReload();
+                clearCacheAndReload();
             });
             document.getElementById('clear-cache-btn-mobile')?.addEventListener('click', (e) => {
                 e.preventDefault();
-                clearAppCacheAndReload();
+                clearCacheAndReload();
             });
         }
         
@@ -2646,7 +2578,8 @@
                 updateUI(); 
                 requestWakeLock(); 
                 if (!state.wakeLockInterval) {
-                    state.wakeLockInterval = setInterval(requestWakeLock, 60000);
+                    clearInterval(state.wakeLockInterval);
+                    state.wakeLockInterval = null;
                 }
                 broadcastChannel.postMessage({ type: 'PLAY_ACTION', payload: { isPlaying: true } });
             });
@@ -2973,24 +2906,6 @@
             });
         }
 
-        async function clearCacheAndRefetch() {
-            // Xóa tất cả cache
-            try {
-                const cacheNames = await caches.keys();
-                for (let cacheName of cacheNames) {
-                    await caches.delete(cacheName);
-                    console.log(`Cache deleted: ${cacheName}`);
-                }
-                console.log('Tất cả cache đã được xóa.');
-            } catch (error) {
-                console.error("Lỗi khi xóa cache:", error);
-            }
-            // Thử tải lại dữ liệu sau khi xóa cache
-            await fetchAudiusData(0); // Bắt đầu lại với 0 lần thử lại
-            loadCustomCategory(document.querySelector('#category-menu .nav-item.active')?.dataset.category || 'all');
-        }
-
-        // Tách hàm xử lý link chia sẻ ra thành một hàm riêng biệt để tái sử dụng
         async function handleSharedLink(songToPlayId) {
             // Hiển thị skeleton loader khi bắt đầu xử lý link
             if (dom.mainContent.initialLoadingOverlay) {
@@ -3063,12 +2978,6 @@
 
 
         async function initializeApp() {
-            // Xóa màn hình splash ngay lập tức
-            if (dom.splashScreen) {
-                dom.splashScreen.classList.remove('visible');
-                dom.splashScreen.classList.add('hidden');
-            }
-
             // 1. Load settings from Local Storage
             state.isShuffling = loadStateFromLocalStorage(CONFIG.STORAGE_KEYS.SHUFFLE, false);
             state.repeatMode = loadStateFromLocalStorage(CONFIG.STORAGE_KEYS.REPEAT, 'all');
@@ -3080,8 +2989,7 @@
             applyTheme();
 
             // 2. Render static components
-            await loadAndInjectSVG();
-            cacheLogoElements();
+            loadAndInjectLogo();
             renderPresetThemes('preset-themes-desktop');
             renderPresetThemes('preset-themes-mobile');
 
@@ -3107,11 +3015,11 @@
             const urlParams = new URLSearchParams(window.location.search);
             const songToPlayId = urlParams.get('play');
 
+            await fetchAudiusData();
+
             if (songToPlayId) {
-                await fetchAudiusData();
                 await handleSharedLink(songToPlayId);
             } else {
-                await fetchAudiusData();
                 const savedPlaybackState = loadStateFromLocalStorage(CONFIG.STORAGE_KEYS.PLAYBACK_STATE, null);
                 if (savedPlaybackState && savedPlaybackState.songId && state.originalSongData.length > 0) {
                     const songIndex = state.originalSongData.findIndex(s => s.id === savedPlaybackState.songId);
@@ -3141,6 +3049,18 @@
             updateUI();
             toggleScrollNavVisibility();
             window.addEventListener('resize', throttle(toggleScrollNavVisibility, 200));
+
+            // FIX: Improved application version check
+            const currentAppVersion = '1.0.2';
+            const lastVersion = localStorage.getItem(CONFIG.STORAGE_KEYS.APP_VERSION);
+
+            if (lastVersion !== currentAppVersion) {
+                // Save the new version immediately to prevent loops.
+                localStorage.setItem(CONFIG.STORAGE_KEYS.APP_VERSION, currentAppVersion);
+                // The existing Service Worker 'updatefound' logic will handle the reload.
+                // This message informs the user that an update has happened behind the scenes.
+                showMessage(`Ứng dụng đã được cập nhật lên phiên bản ${currentAppVersion} ở chế độ nền.`, "Đã cập nhật", true, 4000);
+            }
         };
 
         initializeApp();
