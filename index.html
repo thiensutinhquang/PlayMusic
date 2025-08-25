@@ -1105,7 +1105,11 @@
                             newWorker.addEventListener('statechange', () => {
                                 if (newWorker.state === 'activated') {
                                     console.log('ServiceWorker mới đã được kích hoạt. Đang tải lại trang...');
-                                    window.location.reload(true); 
+                                    // Thay đổi ở đây: không dùng window.location.reload(true) trực tiếp
+                                    const currentUrl = new URL(window.location.href);
+                                    currentUrl.searchParams.set('_cb', Date.now().toString());
+                                    window.history.replaceState(null, '', currentUrl.toString());
+                                    window.location.reload();
                                 }
                             });
                         }
@@ -1158,7 +1162,10 @@
         }
     
         // Tải lại trang
-        window.location.reload(true);
+        const url = new URL(window.location.href);
+        url.searchParams.set('_cb', Date.now().toString());
+        window.history.replaceState(null, '', url.toString());
+        window.location.reload();
     }
 
 
@@ -2238,7 +2245,7 @@
             const remainingTimeMs = state.sleepTimer.endTime - Date.now();
             if (remainingTimeMs <= 0) {
                 if(displayDesktop) displayDesktop.textContent = '00:00';
-                if(displayMobile) dom.playerBar.songArtist.textContent = '00:00';
+                if(displayMobile) displayMobile.textContent = '00:00';
                 return;
             }
             const totalSeconds = Math.floor(remainingTimeMs / 1000);
@@ -2246,7 +2253,7 @@
             const seconds = totalSeconds % 60;
             const formattedTime = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
             if(displayDesktop) displayDesktop.textContent = formattedTime;
-            if(displayMobile) dom.playerBar.songArtist.textContent = formattedTime;
+            if(displayMobile) displayMobile.textContent = formattedTime;
         }
 
         function cancelSleepTimer() {
@@ -2258,6 +2265,7 @@
             document.getElementById('cancel-timer-btn-desktop')?.classList.add('hidden');
             document.getElementById('start-timer-btn-mobile')?.classList.remove('hidden');
             document.getElementById('cancel-timer-btn-mobile')?.classList.add('hidden');
+            state.sleepTimer.endTime = null;
             updateSleepTimerDisplay();
         }
 
