@@ -1579,6 +1579,18 @@
         // ==============================================
         // API & DATA FETCHING
         // ==============================================
+        async function selectAudiusHost(hosts) {
+            const checks = hosts.map(host =>
+                fetch(`${host}/health_check`).then(res => {
+                    if (!res.ok) {
+                        throw new Error(`Host ${host} không khỏe mạnh`);
+                    }
+                    return host;
+                })
+            );
+            return Promise.any(checks);
+        }
+
         async function fetchAudiusData(retryAttempt = 0) {
             // Cải tiến: Thêm cờ để tránh nhiều yêu cầu cùng lúc
             if (state.isFetchingAllData) {
@@ -1622,7 +1634,8 @@
                     throw new Error('Không có host Audius nào khả dụng.');
                 }
                 state.audiusHosts = hosts;
-                state.currentAudiusHost = state.audiusHosts[Math.floor(Math.random() * state.audiusHosts.length)];
+                // Sử dụng selectAudiusHost để chọn host nhanh nhất
+                state.currentAudiusHost = await selectAudiusHost(state.audiusHosts);
 
                 // if (dom.mainContent.initialLoadingOverlay) {
                 //     dom.mainContent.initialLoadingOverlay.classList.remove('hidden');
@@ -2096,7 +2109,7 @@
                         navigator.mediaSession.setPositionState({
                             duration: dom.audioPlayer.duration || 0,
                             playbackRate: dom.audioPlayer.playbackRate,
-                            position: dom.audioPlayer.currentTime
+                            position: currentTime
                         });
                     }
 
