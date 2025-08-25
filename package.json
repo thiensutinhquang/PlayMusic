@@ -1,0 +1,20 @@
+ (cd "$(git rev-parse --show-toplevel)" && git apply --3way <<'EOF' 
+diff --git a//dev/null b/package.json
+index 0000000000000000000000000000000000000000..650ba064fa474d09383dedc7de01f1b94af6aa0c 100644
+--- a//dev/null
++++ b/package.json
+@@ -0,0 +1,11 @@
++{
++  "name": "playmusic",
++  "version": "1.0.0",
++  "type": "module",
++  "scripts": {
++    "test": "vitest"
++  },
++  "devDependencies": {
++    "vitest": "^1.0.0"
++  }
++}
+ 
+EOF
+)
