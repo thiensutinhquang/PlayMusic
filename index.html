@@ -33,7 +33,8 @@
     <script src="https://unpkg.com/@phosphor-icons/web" crossorigin="anonymous"></script>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2" crossorigin="anonymous"></script>
-    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/no-sleep/0.12.0/NoSleep.min.js" crossorigin="anonymous"></script>
+
     <style>
         /* ==============================================
         HỆ THỐNG THIẾT KẾ & BIẾN TOÀN CỤC (CSS VARIABLES)
@@ -1335,6 +1336,7 @@
             favoriteSongIds: [],
             wakeLock: null,
             wakeLockInterval: null,
+            noSleep: null, // Thêm biến noSleep vào state
             lastVolume: 1,
             lyrics: {
                 pages: [],
@@ -1402,15 +1404,34 @@
         function cacheLogoElements() { }
 
         async function requestWakeLock() {
-            if ('wakeLock' in navigator && !state.wakeLock) {
-                try { state.wakeLock = await navigator.wakeLock.request('screen'); } 
-                catch (err) { console.log('Không thể khóa màn hình:', err.message); }
+            if ('wakeLock' in navigator && navigator.wakeLock) { // Kiểm tra navigator.wakeLock có tồn tại
+                try {
+                    state.wakeLock = await navigator.wakeLock.request('screen');
+                    console.log('Wake Lock đã được kích hoạt.');
+                } catch (err) {
+                    console.warn('Không thể kích hoạt Wake Lock API:', err.message);
+                    // Fallback to NoSleep.js if Wake Lock API fails
+                    if (!state.noSleep) state.noSleep = new NoSleep();
+                    state.noSleep.enable();
+                    console.log('Sử dụng NoSleep.js để giữ màn hình thức.');
+                }
+            } else {
+                // Fallback to NoSleep.js if Wake Lock API is not supported
+                if (!state.noSleep) state.noSleep = new NoSleep();
+                state.noSleep.enable();
+                console.log('Wake Lock API không được hỗ trợ, sử dụng NoSleep.js để giữ màn hình thức.');
             }
         }
 
         function releaseWakeLock() {
             if (state.wakeLock) {
-                state.wakeLock.release().then(() => { state.wakeLock = null; });
+                state.wakeLock.release().then(() => { 
+                    state.wakeLock = null;
+                    console.log('Wake Lock đã được giải phóng.');
+                });
+            } else if (state.noSleep) {
+                state.noSleep.disable();
+                console.log('NoSleep.js đã được tắt.');
             }
         }
         
@@ -1575,7 +1596,7 @@
 
                 let hosts;
                 try {
-                    const response = await fetch('https://api.audius.co', { signal: controller.signal });
+                    const response = await fetch(`https://api.audius.co?api_key=${CONFIG.API_KEY}`, { signal: controller.signal });
                     if (!response.ok) {
                         console.warn('Không thể lấy danh sách host từ Audius API, sử dụng danh sách dự phòng.');
                         hosts = ['https://discoveryprovider.audius.co', 'https://discoveryprovider2.audius.co', 'https://discoveryprovider3.audius.co', 'https://dn-dn.audius.co', 'https://discoveryprovider.audius.prod-us-2.staked.cloud'];
@@ -1608,7 +1629,7 @@
                 //     dom.mainContent.initialLoadingOverlay.classList.add('opacity-100');
                 // }
 
-                const userResponse = await fetch(`${state.currentAudiusHost}/v1/users/search?query=${CONFIG.USER_HANDLE}&app_name=MSTQPlayer`, { signal: controller.signal });
+                const userResponse = await fetch(`${state.currentAudiusHost}/v1/users/search?query=${CONFIG.USER_HANDLE}&app_name=MSTQPlayer&api_key=${CONFIG.API_KEY}`, { signal: controller.signal });
                 if (!userResponse.ok) {
                     throw new Error(`Không thể tìm thấy người dùng "${CONFIG.USER_HANDLE}" trên Audius. Mã lỗi: ${userResponse.status}`);
                 }
@@ -1623,7 +1644,7 @@
                 let hasMore = true;
 
                 while (hasMore) {
-                    const tracksResponse = await fetch(`${state.currentAudiusHost}/v1/users/${userId}/tracks?limit=${CONFIG.PAGE_SIZE}&offset=${offset}&app_name=MSTQPlayer`);
+                    const tracksResponse = await fetch(`${state.currentAudiusHost}/v1/users/${userId}/tracks?limit=${CONFIG.PAGE_SIZE}&offset=${offset}&app_name=MSTQPlayer&api_key=${CONFIG.API_KEY}`);
                     if (!tracksResponse.ok) {
                         throw new Error(`Không thể tải danh sách bài hát từ Audius. Mã lỗi: ${tracksResponse.status}`);
                     }
@@ -1729,11 +1750,11 @@
             dom.playerBar.albumArt?.classList.add('animate-pulse');
 
             // Kiểm tra nếu audioPreloader đã tải trước bài hát này
-            if (dom.audioPreloader.src.endsWith(`/tracks/${song.id}/stream?app_name=MSTQPlayer`)) {
+            if (dom.audioPreloader.src.endsWith(`/tracks/${song.id}/stream?app_name=MSTQPlayer&api_key=${CONFIG.API_KEY}`)) {
                 dom.audioPlayer.src = dom.audioPreloader.src;
                 console.log(`Tái sử dụng nguồn đã preload cho bài hát: ${song.title}`);
             } else {
-                dom.audioPlayer.src = `${hostToTry}/v1/tracks/${song.id}/stream?app_name=MSTQPlayer`;
+                dom.audioPlayer.src = `${hostToTry}/v1/tracks/${song.id}/stream?app_name=MSTQPlayer&api_key=${CONFIG.API_KEY}`;
             }
             dom.audioPlayer.load();
 
@@ -2571,7 +2592,7 @@
             const nextSong = state.currentFilteredSongs[nextIndex];
 
             if (nextSong) {
-                const nextSongUrl = `${state.currentAudiusHost}/v1/tracks/${nextSong.id}/stream?app_name=MSTQPlayer`;
+                const nextSongUrl = `${state.currentAudiusHost}/v1/tracks/${nextSong.id}/stream?app_name=MSTQPlayer&api_key=${CONFIG.API_KEY}`;
                 if (dom.audioPreloader.src !== nextSongUrl) {
                     console.log(`Đang tải trước bài hát: ${nextSong.title}`);
                     dom.audioPreloader.src = nextSongUrl;
@@ -2645,6 +2666,9 @@
             });
             dom.audioPlayer.addEventListener('ended', () => { if (state.repeatMode !== 'none') playNext(); else { state.isPlaying = false; updateUI(); } });
             dom.audioPlayer.addEventListener('timeupdate', throttle(() => {
+                // Bỏ qua cập nhật DOM khi trang không hiển thị để tiết kiệm CPU và pin
+                if (document.hidden) return; 
+
                 const { currentTime, duration } = dom.audioPlayer;
                 if(duration && isFinite(duration)) {
                     if (dom.playerBar.progressBar) dom.playerBar.progressBar.style.width = `${(currentTime / duration) * 100}%`;
@@ -2992,7 +3016,7 @@
             // Gọi API để lấy thông tin bài hát cụ thể từ ID
             let songData = null;
             try {
-                const songResponse = await fetch(`${state.currentAudiusHost}/v1/tracks/${songToPlayId}?app_name=MSTQPlayer`);
+                const songResponse = await fetch(`${state.currentAudiusHost}/v1/tracks/${songToPlayId}?app_name=MSTQPlayer&api_key=${CONFIG.API_KEY}`);
                 if (!songResponse.ok) {
                     throw new Error('Không thể tìm thấy bài hát được chia sẻ.');
                 }
