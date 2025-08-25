@@ -1632,7 +1632,6 @@
                     permalink: track.permalink
                 }));
 
-                state.isFetchingAllData = false;
                 if (dom.mainContent.initialLoadingOverlay) {
                     dom.mainContent.initialLoadingOverlay.classList.remove('opacity-100');
                     dom.mainContent.initialLoadingOverlay.classList.add('opacity-0');
@@ -1680,6 +1679,7 @@
                     setTimeout(() => dom.mainContent.initialLoadingOverlay.classList.add('hidden'), 500);
                 }
             } finally {
+                state.isFetchingAllData = false; // Đặt lại cờ này trong khối finally
                 clearTimeout(timeoutId);
             }
         }
@@ -2156,7 +2156,20 @@
                 url: shareUrl
             };
         
-            const copyToClipboard = () => {
+            const copyToClipboard = async () => {
+                // Ưu tiên sử dụng Clipboard API hiện đại
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    try {
+                        await navigator.clipboard.writeText(shareUrl);
+                        showMessage("Đã sao chép liên kết vào bộ nhớ tạm!", "Thông báo", true, 2500);
+                        return; // Sao chép thành công, thoát hàm
+                    } catch (err) {
+                        console.error('Clipboard API failed:', err);
+                        // Nếu Clipboard API thất bại, sẽ thử phương pháp dự phòng bên dưới
+                    }
+                }
+
+                // Phương pháp dự phòng (document.execCommand)
                 const textArea = document.createElement("textarea");
                 textArea.value = shareUrl;
                 textArea.style.position = "fixed";
@@ -2180,13 +2193,13 @@
                 } catch (err) {
                     console.error('Lỗi khi chia sẻ:', err);
                     if (err.name !== 'AbortError') {
-                        copyToClipboard();
+                        await copyToClipboard(); // Đảm bảo await ở đây
                     } else {
                         showMessage("Đã hủy chia sẻ.", "Thông báo", true, 2500);
                     }
                 }
             } else {
-                copyToClipboard();
+                await copyToClipboard(); // Đảm bảo await ở đây
             }
         }
 
