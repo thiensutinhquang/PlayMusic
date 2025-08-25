@@ -8,6 +8,8 @@
     <!-- PWA Manifest & Theme -->
     <link rel="manifest" href="https://thiensutinhquang.github.io/PlayMusic/manifest.json">
     <meta name="theme-color" content="#f59e0b">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="https://thiensutinhquang.github.io/PlayMusic/images/icons/icon-192x192.png">
 
     <!-- Optimization: Preconnect to critical domains -->
@@ -1445,13 +1447,30 @@
         // ==============================================
         // STATE & LOCAL STORAGE MANAGEMENT
         // ==============================================
+        const memoryStorage = new Map();
+
         function saveStateToLocalStorage(key, value) {
-            localStorage.setItem(key, JSON.stringify(value));
+            try {
+                localStorage.setItem(key, JSON.stringify(value));
+            } catch (err) {
+                console.warn('localStorage.setItem failed:', err);
+                memoryStorage.set(key, value); // Fallback to in-memory storage
+            }
         }
 
         function loadStateFromLocalStorage(key, defaultValue) {
-            const storedValue = localStorage.getItem(key);
-            return storedValue ? JSON.parse(storedValue) : defaultValue;
+            try {
+                const storedValue = localStorage.getItem(key);
+                if (storedValue !== null) {
+                    return JSON.parse(storedValue);
+                }
+            } catch (err) {
+                console.warn('localStorage.getItem failed:', err);
+                if (memoryStorage.has(key)) {
+                    return memoryStorage.get(key); // Fallback to in-memory storage
+                }
+            }
+            return defaultValue;
         }
         
         function saveCurrentPlaybackState() {
@@ -1654,7 +1673,7 @@
                     state.isRetryingFetch = true;
                     const delay = Math.pow(2, retryAttempt) * 1000;
                     showMessage(
-                        `Lỗi tải dữ liệu: ${error.message}. Đang thử lại sau ${delay / 1000} giây... (Thử lại ${retryAttempt + 1}/${CONFIG.MAX_AUDIO_RETRIES})`,
+                        `Lỗi tải dữ liệu: ${error.message}. Đang thử lại sau ${delay / 1000} giây... (Thử lại ${retryAttempt + 1}/${CONFIG.MAX_AUDIO_RETRIES})})`,
                         "Lỗi kết nối",
                         true,
                         delay + 500
@@ -1709,7 +1728,13 @@
             dom.playerBar.playPauseBtn?.classList.add('play-pause-loading');
             dom.playerBar.albumArt?.classList.add('animate-pulse');
 
-            dom.audioPlayer.src = `${hostToTry}/v1/tracks/${song.id}/stream?app_name=MSTQPlayer`;
+            // Kiểm tra nếu audioPreloader đã tải trước bài hát này
+            if (dom.audioPreloader.src.endsWith(`/tracks/${song.id}/stream?app_name=MSTQPlayer`)) {
+                dom.audioPlayer.src = dom.audioPreloader.src;
+                console.log(`Tái sử dụng nguồn đã preload cho bài hát: ${song.title}`);
+            } else {
+                dom.audioPlayer.src = `${hostToTry}/v1/tracks/${song.id}/stream?app_name=MSTQPlayer`;
+            }
             dom.audioPlayer.load();
 
             const playPromise = dom.audioPlayer.play();
@@ -1780,6 +1805,8 @@
                 activeSongElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }
 
+            // Xóa src của preloader sau khi đã sử dụng để nó sẵn sàng cho bài hát tiếp theo
+            if (dom.audioPreloader) dom.audioPreloader.src = '';
             preloadNextSong();
         }
 
@@ -2267,7 +2294,7 @@
             const seconds = totalSeconds % 60;
             const formattedTime = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
             if(displayDesktop) displayDesktop.textContent = formattedTime;
-            if(displayMobile) displayMobile.textContent = formattedTime;
+            if(displayMobile) dom.playerBar.songArtist.textContent = formattedTime;
         }
 
         function cancelSleepTimer() {
@@ -2600,9 +2627,8 @@
                 state.isPlaying = true; 
                 updateUI(); 
                 requestWakeLock(); 
-                if (!state.wakeLockInterval) {
-                    clearInterval(state.wakeLockInterval);
-                    state.wakeLockInterval = null;
+                if (!state.wakeLockInterval) { // Kiểm tra nếu interval chưa được thiết lập
+                    state.wakeLockInterval = setInterval(requestWakeLock, 60000); // Thiết lập lại
                 }
                 broadcastChannel.postMessage({ type: 'PLAY_ACTION', payload: { isPlaying: true } });
             });
@@ -2708,6 +2734,33 @@
                 }
             }, 50));
             dom.playerBar.progressContainer?.addEventListener('mouseleave', () => dom.playerBar.progressTooltip?.classList.add('hidden'));
+
+            dom.playerBar.progressContainer?.addEventListener('touchstart', (e) => {
+                if (dom.audioPlayer.duration && dom.playerBar.progressContainer) {
+                    const rect = dom.playerBar.progressContainer.getBoundingClientRect();
+                    const touchX = e.touches[0].clientX - rect.left;
+                    dom.audioPlayer.currentTime = (touchX / dom.playerBar.progressContainer.clientWidth) * dom.audioPlayer.duration;
+                    if (dom.playerBar.progressTooltip) {
+                        dom.playerBar.progressTooltip.textContent = new Date(dom.audioPlayer.currentTime * 1000).toISOString().substr(14, 5);
+                        dom.playerBar.progressTooltip.style.left = `${touchX}px`;
+                        dom.playerBar.progressTooltip.classList.remove('hidden');
+                    }
+                }
+            }, { passive: true });
+
+            dom.playerBar.progressContainer?.addEventListener('touchmove', throttle((e) => {
+                if (dom.audioPlayer.duration && dom.playerBar.progressContainer && dom.playerBar.progressTooltip) {
+                    const rect = dom.playerBar.progressContainer.getBoundingClientRect();
+                    const touchX = e.touches[0].clientX - rect.left;
+                    const hoverTime = (touchX / dom.playerBar.progressContainer.clientWidth) * dom.audioPlayer.duration;
+                    dom.audioPlayer.currentTime = hoverTime;
+                    dom.playerBar.progressTooltip.textContent = new Date(hoverTime * 1000).toISOString().substr(14, 5);
+                    dom.playerBar.progressTooltip.style.left = `${touchX}px`;
+                    dom.playerBar.progressTooltip.classList.remove('hidden');
+                }
+            }, 50), { passive: true });
+
+            dom.playerBar.progressContainer?.addEventListener('touchend', () => dom.playerBar.progressTooltip?.classList.add('hidden'));
 
             dom.playerBar.volumeSlider?.addEventListener('input', (e) => {
                 dom.audioPlayer.muted = false;
