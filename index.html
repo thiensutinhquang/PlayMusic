@@ -2,15 +2,15 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Play Nhạc MSTQ - Bản Nâng Cấp Toàn Diện</title>
 
     <!-- PWA Manifest & Theme -->
-    <link rel="manifest" href="https://thiensutinhquang.github.io/PlayMusic/manifest.json">
+    <link rel="manifest" href="./manifest.json">
     <meta name="theme-color" content="#f59e0b">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="https://thiensutinhquang.github.io/PlayMusic/images/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" href="./images/icons/icon-192x192.png">
 
     <!-- Optimization: Preconnect to critical domains -->
     <link rel="preconnect" href="https://cdn.tailwindcss.com">
@@ -29,15 +29,15 @@
     <link rel="preload" href="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2" as="script" crossorigin="anonymous">
     <link rel="preload" href="https://fonts.gstatic.com/s/bevietnampro/v11/QdVN_sc_f5t3g4N_LqR_2_NPg_jC_gL_g_bC_gW_g.woff2" as="font" type="font/woff2" crossorigin>
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/@phosphor-icons/web" crossorigin="anonymous"></script>
+    <script src="https://cdn.tailwindcss.com" defer></script>
+    <script src="https://unpkg.com/@phosphor-icons/web" crossorigin="anonymous" defer></script>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/no-sleep/0.12.0/NoSleep.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2" crossorigin="anonymous" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/no-sleep/0.12.0/NoSleep.min.js" crossorigin="anonymous" defer></script>
 
     <style>
         /* ==============================================
-        HỆ THỐNG THIẾT KẾ & BIẾN TOÀN CỤC (CSS VARIABLES)
+        HỆ THỐC THIẾT KẾ & BIẾN TOÀN CỤC (CSS VARIABLES)
         ============================================== */
         :root {
             /* Màu chủ đạo */
@@ -67,6 +67,7 @@
             --border-current: var(--border-light);
             --logo-bg-current: var(--logo-bg-light);
             --font-sans: 'Be Vietnam Pro', sans-serif;
+            --player-bar-height: 90px; /* Chiều cao cố định của thanh phát nhạc */
         }
 
         /* Giao diện Tối (Tone Than Xám + Cam Vàng Nổi Bật) */
@@ -95,7 +96,11 @@
             color: var(--text-current);
             transition: background-color var(--transition-slow), color var(--transition-fast);
             line-height: 1.6;
-            padding-bottom: 250px;
+            /* Sử dụng safe-area-inset để xử lý notch */
+            padding-top: env(safe-area-inset-top);
+            padding-right: env(safe-area-inset-right);
+            padding-bottom: calc(var(--player-bar-height) + env(safe-area-inset-bottom)); /* Điều chỉnh padding-bottom */
+            padding-left: env(safe-area-inset-left);
             overflow-x: hidden;
             touch-action: manipulation;
         }
@@ -144,13 +149,9 @@
         }
         
         #header-logo-placeholder {
-            width: 100%; height: 100%; display: flex; align-items: center;
-            justify-content: center; position: relative; overflow: hidden; 
-            border-radius: 8px;
-        }
-        #header-logo-placeholder svg {
             width: 100%; height: 100%; object-fit: cover;
             position: relative; z-index: 1; 
+            border-radius: 8px;
         }
 
         #header-logo-placeholder::before {
@@ -291,10 +292,12 @@
         TRÌNH PHÁT NHẠC - THANH ĐIỀU KHIỂN DƯỚI
         ============================================== */
         #player-bar {
-            position: fixed; bottom: 0; left: 0; right: 0; height: 90px;
-            background-color: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px);
+            position: fixed; bottom: 0; left: 0; right: 0;
+            height: calc(var(--player-bar-height) + env(safe-area-inset-bottom)); /* Điều chỉnh chiều cao theo safe-area */
+            background-color: rgba(255, 255, 255, 0.7); backdrop-filter: blur(8px);
             border-top: 1px solid var(--border-current); z-index: 1001;
-            padding: 0 1.5rem; display: grid; 
+            padding: 0 1.5rem; padding-bottom: env(safe-area-inset-bottom); /* Điều chỉnh padding-bottom */
+            display: grid; 
             grid-template-columns: 3.5fr 2fr 1.2fr; align-items: center; gap: 1rem;
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
@@ -474,7 +477,6 @@
         .song-list-item:hover .index-number, .song-list-item.active-song .index-number { opacity: 1; }
         .song-list-item.active-song .play-button { opacity: 1; }
         .song-list-item .song-info { display: flex; align-items: center; gap: 1rem; min-width: 0; }
-        .song-list-item .artwork { width: 40px; height: 40px; border-radius: 4px; object-fit: cover; }
         .song-list-item .title-artist { min-width: 0; }
         .song-list-item .title { font-weight: 600; }
         .song-list-item .artist { font-size: 0.875rem; color: var(--text-muted-current); }
@@ -1006,9 +1008,9 @@
     // --- PWA Service Worker Logic ---
     const swCode = `
         const CACHE_NAME = 'mstq-music-cache-v13';
-        const BASE_URL = 'https://thiensutinhquang.github.io/PlayMusic/';
+        const BASE_URL = self.registration.scope;
         const urlsToCache = [
-            BASE_URL, BASE_URL + 'index.html',
+            BASE_URL, BASE_URL + 'index.html', BASE_URL + 'manifest.json',
             'https://cdn.tailwindcss.com', 'https://unpkg.com/@phosphor-icons/web',
             'https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap',
             'https://raw.githubusercontent.com/thiensutinhquang/GiaoLy/main/logo%20Thien%20Su%20Tinh%20Quang.png',
@@ -2115,6 +2117,8 @@
                         dom.playerBar.mediaSessionIndicator?.classList.remove('active');
                         return;
                     }
+                    // Destructure currentTime and duration from dom.audioPlayer
+                    const { currentTime, duration } = dom.audioPlayer; 
                     navigator.mediaSession.metadata = new MediaMetadata({
                         title: song.title, artist: song.artist, album: 'Âm nhạc TSTQ',
                         artwork: [{ src: song.artwork_full, sizes: '512x512', type: 'image/jpeg' }]
@@ -2139,7 +2143,7 @@
 
                     if ('setPositionState' in navigator.mediaSession) {
                         navigator.mediaSession.setPositionState({
-                            duration: dom.audioPlayer.duration || 0,
+                            duration: duration || 0,
                             playbackRate: dom.audioPlayer.playbackRate,
                             position: currentTime
                         });
@@ -2750,6 +2754,8 @@
                     }
                 }
                 if ('mediaSession' in navigator && navigator.mediaSession.setPositionState) {
+                    // Destructure currentTime and duration from dom.audioPlayer
+                    const { currentTime, duration } = dom.audioPlayer; 
                     navigator.mediaSession.setPositionState({
                         duration: duration || 0,
                         playbackRate: dom.audioPlayer.playbackRate,
