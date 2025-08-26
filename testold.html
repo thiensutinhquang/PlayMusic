@@ -2,13 +2,15 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Play Nhạc MSTQ - Bản Nâng Cấp Toàn Diện</title>
 
     <!-- PWA Manifest & Theme -->
-    <link rel="manifest" href="https://thiensutinhquang.github.io/PlayMusic/manifest.json">
+    <link rel="manifest" href="./manifest.json">
     <meta name="theme-color" content="#f59e0b">
-    <link rel="apple-touch-icon" href="https://thiensutinhquang.github.io/PlayMusic/images/icons/icon-192x192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="./images/icons/icon-192x192.png">
 
     <!-- Optimization: Preconnect to critical domains -->
     <link rel="preconnect" href="https://cdn.tailwindcss.com">
@@ -27,14 +29,15 @@
     <link rel="preload" href="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2" as="script" crossorigin="anonymous">
     <link rel="preload" href="https://fonts.gstatic.com/s/bevietnampro/v11/QdVN_sc_f5t3g4N_LqR_2_NPg_jC_gL_g_bC_gW_g.woff2" as="font" type="font/woff2" crossorigin>
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/@phosphor-icons/web" crossorigin="anonymous"></script>
+    <script src="https://cdn.tailwindcss.com" defer></script>
+    <script src="https://unpkg.com/@phosphor-icons/web" crossorigin="anonymous" defer></script>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2" crossorigin="anonymous"></script>
-    
+    <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2" crossorigin="anonymous" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/no-sleep/0.12.0/NoSleep.min.js" crossorigin="anonymous" defer></script>
+
     <style>
         /* ==============================================
-        HỆ THỐNG THIẾT KẾ & BIẾN TOÀN CỤC (CSS VARIABLES)
+        HỆ THỐC THIẾT KẾ & BIẾN TOÀN CỤC (CSS VARIABLES)
         ============================================== */
         :root {
             /* Màu chủ đạo */
@@ -64,6 +67,7 @@
             --border-current: var(--border-light);
             --logo-bg-current: var(--logo-bg-light);
             --font-sans: 'Be Vietnam Pro', sans-serif;
+            --player-bar-height: 90px; /* Chiều cao cố định của thanh phát nhạc */
         }
 
         /* Giao diện Tối (Tone Than Xám + Cam Vàng Nổi Bật) */
@@ -92,7 +96,11 @@
             color: var(--text-current);
             transition: background-color var(--transition-slow), color var(--transition-fast);
             line-height: 1.6;
-            padding-bottom: 250px;
+            /* Sử dụng safe-area-inset để xử lý notch */
+            padding-top: env(safe-area-inset-top);
+            padding-right: env(safe-area-inset-right);
+            padding-bottom: calc(var(--player-bar-height) + env(safe-area-inset-bottom)); /* Điều chỉnh padding-bottom */
+            padding-left: env(safe-area-inset-left);
             overflow-x: hidden;
             touch-action: manipulation;
         }
@@ -141,13 +149,9 @@
         }
         
         #header-logo-placeholder {
-            width: 100%; height: 100%; display: flex; align-items: center;
-            justify-content: center; position: relative; overflow: hidden; 
-            border-radius: 8px;
-        }
-        #header-logo-placeholder svg {
             width: 100%; height: 100%; object-fit: cover;
             position: relative; z-index: 1; 
+            border-radius: 8px;
         }
 
         #header-logo-placeholder::before {
@@ -288,10 +292,12 @@
         TRÌNH PHÁT NHẠC - THANH ĐIỀU KHIỂN DƯỚI
         ============================================== */
         #player-bar {
-            position: fixed; bottom: 0; left: 0; right: 0; height: 90px;
-            background-color: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px);
+            position: fixed; bottom: 0; left: 0; right: 0;
+            height: calc(var(--player-bar-height) + env(safe-area-inset-bottom)); /* Điều chỉnh chiều cao theo safe-area */
+            background-color: rgba(255, 255, 255, 0.7); backdrop-filter: blur(8px);
             border-top: 1px solid var(--border-current); z-index: 1001;
-            padding: 0 1.5rem; display: grid; 
+            padding: 0 1.5rem; padding-bottom: env(safe-area-inset-bottom); /* Điều chỉnh padding-bottom */
+            display: grid; 
             grid-template-columns: 3.5fr 2fr 1.2fr; align-items: center; gap: 1rem;
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
@@ -471,7 +477,6 @@
         .song-list-item:hover .index-number, .song-list-item.active-song .index-number { opacity: 1; }
         .song-list-item.active-song .play-button { opacity: 1; }
         .song-list-item .song-info { display: flex; align-items: center; gap: 1rem; min-width: 0; }
-        .song-list-item .artwork { width: 40px; height: 40px; border-radius: 4px; object-fit: cover; }
         .song-list-item .title-artist { min-width: 0; }
         .song-list-item .title { font-weight: 600; }
         .song-list-item .artist { font-size: 0.875rem; color: var(--text-muted-current); }
@@ -1003,9 +1008,9 @@
     // --- PWA Service Worker Logic ---
     const swCode = `
         const CACHE_NAME = 'mstq-music-cache-v13';
-        const BASE_URL = 'https://thiensutinhquang.github.io/PlayMusic/';
+        const BASE_URL = self.registration.scope;
         const urlsToCache = [
-            BASE_URL, BASE_URL + 'index.html',
+            BASE_URL, BASE_URL + 'index.html', BASE_URL + 'manifest.json',
             'https://cdn.tailwindcss.com', 'https://unpkg.com/@phosphor-icons/web',
             'https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap',
             'https://raw.githubusercontent.com/thiensutinhquang/GiaoLy/main/logo%20Thien%20Su%20Tinh%20Quang.png',
@@ -1105,7 +1110,11 @@
                             newWorker.addEventListener('statechange', () => {
                                 if (newWorker.state === 'activated') {
                                     console.log('ServiceWorker mới đã được kích hoạt. Đang tải lại trang...');
-                                    window.location.reload(true); 
+                                    // Thay đổi ở đây: không dùng window.location.reload(true) trực tiếp
+                                    const currentUrl = new URL(window.location.href);
+                                    currentUrl.searchParams.set('_cb', Date.now().toString());
+                                    window.history.replaceState(null, '', currentUrl.toString());
+                                    window.location.reload();
                                 }
                             });
                         }
@@ -1158,7 +1167,10 @@
         }
     
         // Tải lại trang
-        window.location.reload(true);
+        const url = new URL(window.location.href);
+        url.searchParams.set('_cb', Date.now().toString());
+        window.history.replaceState(null, '', url.toString());
+        window.location.reload();
     }
 
 
@@ -1167,7 +1179,7 @@
         // CẤU HÌNH & BIẾN TOÀN CỤC
         // ==============================================
         const CONFIG = {
-            APP_VERSION: '1.0.1',
+            APP_VERSION: '1.0.2',
             API_KEY: "08c897eb7784e03007e0769d01f2ca1c6a2001b4",
             USER_HANDLE: "minhsutinhquang",
             MAX_AUDIO_RETRIES: 3,
@@ -1326,6 +1338,9 @@
             favoriteSongIds: [],
             wakeLock: null,
             wakeLockInterval: null,
+            noSleep: null, // Thêm biến noSleep vào state
+            preloadController: null, // Controller để hủy yêu cầu preload
+            preloadedSongId: null,   // ID của bài hát đang được preload
             lastVolume: 1,
             lyrics: {
                 pages: [],
@@ -1393,15 +1408,34 @@
         function cacheLogoElements() { }
 
         async function requestWakeLock() {
-            if ('wakeLock' in navigator && !state.wakeLock) {
-                try { state.wakeLock = await navigator.wakeLock.request('screen'); } 
-                catch (err) { console.log('Không thể khóa màn hình:', err.message); }
+            if ('wakeLock' in navigator && navigator.wakeLock) { // Kiểm tra navigator.wakeLock có tồn tại
+                try {
+                    state.wakeLock = await navigator.wakeLock.request('screen');
+                    console.log('Wake Lock đã được kích hoạt.');
+                } catch (err) {
+                    console.warn('Không thể kích hoạt Wake Lock API:', err.message);
+                    // Fallback to NoSleep.js if Wake Lock API fails
+                    if (!state.noSleep) state.noSleep = new NoSleep();
+                    state.noSleep.enable();
+                    console.log('Sử dụng NoSleep.js để giữ màn hình thức.');
+                }
+            } else {
+                // Fallback to NoSleep.js if Wake Lock API is not supported
+                if (!state.noSleep) state.noSleep = new NoSleep();
+                state.noSleep.enable();
+                console.log('Wake Lock API không được hỗ trợ, sử dụng NoSleep.js để giữ màn hình thức.');
             }
         }
 
         function releaseWakeLock() {
             if (state.wakeLock) {
-                state.wakeLock.release().then(() => { state.wakeLock = null; });
+                state.wakeLock.release().then(() => { 
+                    state.wakeLock = null;
+                    console.log('Wake Lock đã được giải phóng.');
+                });
+            } else if (state.noSleep) {
+                state.noSleep.disable();
+                console.log('NoSleep.js đã được tắt.');
             }
         }
         
@@ -1438,13 +1472,30 @@
         // ==============================================
         // STATE & LOCAL STORAGE MANAGEMENT
         // ==============================================
+        const memoryStorage = new Map();
+
         function saveStateToLocalStorage(key, value) {
-            localStorage.setItem(key, JSON.stringify(value));
+            try {
+                localStorage.setItem(key, JSON.stringify(value));
+            } catch (err) {
+                console.warn('localStorage.setItem failed:', err);
+                memoryStorage.set(key, value); // Fallback to in-memory storage
+            }
         }
 
         function loadStateFromLocalStorage(key, defaultValue) {
-            const storedValue = localStorage.getItem(key);
-            return storedValue ? JSON.parse(storedValue) : defaultValue;
+            try {
+                const storedValue = localStorage.getItem(key);
+                if (storedValue !== null) {
+                    return JSON.parse(storedValue);
+                }
+            } catch (err) {
+                console.warn('localStorage.getItem failed:', err);
+                if (memoryStorage.has(key)) {
+                    return memoryStorage.get(key); // Fallback to in-memory storage
+                }
+            }
+            return defaultValue;
         }
         
         function saveCurrentPlaybackState() {
@@ -1532,6 +1583,18 @@
         // ==============================================
         // API & DATA FETCHING
         // ==============================================
+        async function selectAudiusHost(hosts) {
+            const checks = hosts.map(host =>
+                fetch(`${host}/health_check`).then(res => {
+                    if (!res.ok) {
+                        throw new Error(`Host ${host} không khỏe mạnh`);
+                    }
+                    return host;
+                })
+            );
+            return Promise.any(checks);
+        }
+
         async function fetchAudiusData(retryAttempt = 0) {
             // Cải tiến: Thêm cờ để tránh nhiều yêu cầu cùng lúc
             if (state.isFetchingAllData) {
@@ -1549,7 +1612,7 @@
 
                 let hosts;
                 try {
-                    const response = await fetch('https://api.audius.co', { signal: controller.signal });
+                    const response = await fetch(`https://api.audius.co?api_key=${CONFIG.API_KEY}`, { signal: controller.signal });
                     if (!response.ok) {
                         console.warn('Không thể lấy danh sách host từ Audius API, sử dụng danh sách dự phòng.');
                         hosts = ['https://discoveryprovider.audius.co', 'https://discoveryprovider2.audius.co', 'https://discoveryprovider3.audius.co', 'https://dn-dn.audius.co', 'https://discoveryprovider.audius.prod-us-2.staked.cloud'];
@@ -1575,14 +1638,15 @@
                     throw new Error('Không có host Audius nào khả dụng.');
                 }
                 state.audiusHosts = hosts;
-                state.currentAudiusHost = state.audiusHosts[Math.floor(Math.random() * state.audiusHosts.length)];
+                // Sử dụng selectAudiusHost để chọn host nhanh nhất
+                state.currentAudiusHost = await selectAudiusHost(state.audiusHosts);
 
                 // if (dom.mainContent.initialLoadingOverlay) {
                 //     dom.mainContent.initialLoadingOverlay.classList.remove('hidden');
                 //     dom.mainContent.initialLoadingOverlay.classList.add('opacity-100');
                 // }
 
-                const userResponse = await fetch(`${state.currentAudiusHost}/v1/users/search?query=${CONFIG.USER_HANDLE}&app_name=MSTQPlayer`, { signal: controller.signal });
+                const userResponse = await fetch(`${state.currentAudiusHost}/v1/users/search?query=${CONFIG.USER_HANDLE}&app_name=MSTQPlayer&api_key=${CONFIG.API_KEY}`, { signal: controller.signal });
                 if (!userResponse.ok) {
                     throw new Error(`Không thể tìm thấy người dùng "${CONFIG.USER_HANDLE}" trên Audius. Mã lỗi: ${userResponse.status}`);
                 }
@@ -1597,7 +1661,7 @@
                 let hasMore = true;
 
                 while (hasMore) {
-                    const tracksResponse = await fetch(`${state.currentAudiusHost}/v1/users/${userId}/tracks?limit=${CONFIG.PAGE_SIZE}&offset=${offset}&app_name=MSTQPlayer`);
+                    const tracksResponse = await fetch(`${state.currentAudiusHost}/v1/users/${userId}/tracks?limit=${CONFIG.PAGE_SIZE}&offset=${offset}&app_name=MSTQPlayer&api_key=${CONFIG.API_KEY}`);
                     if (!tracksResponse.ok) {
                         throw new Error(`Không thể tải danh sách bài hát từ Audius. Mã lỗi: ${tracksResponse.status}`);
                     }
@@ -1625,7 +1689,6 @@
                     permalink: track.permalink
                 }));
 
-                state.isFetchingAllData = false;
                 if (dom.mainContent.initialLoadingOverlay) {
                     dom.mainContent.initialLoadingOverlay.classList.remove('opacity-100');
                     dom.mainContent.initialLoadingOverlay.classList.add('opacity-0');
@@ -1648,7 +1711,7 @@
                     state.isRetryingFetch = true;
                     const delay = Math.pow(2, retryAttempt) * 1000;
                     showMessage(
-                        `Lỗi tải dữ liệu: ${error.message}. Đang thử lại sau ${delay / 1000} giây... (Thử lại ${retryAttempt + 1}/${CONFIG.MAX_AUDIO_RETRIES})`,
+                        `Lỗi tải dữ liệu: ${error.message}. Đang thử lại sau ${delay / 1000} giây... (Thử lại ${retryAttempt + 1}/${CONFIG.MAX_AUDIO_RETRIES})})`,
                         "Lỗi kết nối",
                         true,
                         delay + 500
@@ -1673,6 +1736,7 @@
                     setTimeout(() => dom.mainContent.initialLoadingOverlay.classList.add('hidden'), 500);
                 }
             } finally {
+                state.isFetchingAllData = false; // Đặt lại cờ này trong khối finally
                 clearTimeout(timeoutId);
             }
         }
@@ -1702,14 +1766,34 @@
             dom.playerBar.playPauseBtn?.classList.add('play-pause-loading');
             dom.playerBar.albumArt?.classList.add('animate-pulse');
 
-            dom.audioPlayer.src = `${hostToTry}/v1/tracks/${song.id}/stream?app_name=MSTQPlayer`;
+            // Kiểm tra nếu audioPreloader đã tải trước bài hát này
+            if (state.preloadedSongId === song.id && dom.audioPreloader.src) {
+                dom.audioPlayer.src = dom.audioPreloader.src;
+                console.log(`Tái sử dụng nguồn đã preload cho bài hát: ${song.title}`);
+            } else {
+                dom.audioPlayer.src = `${hostToTry}/v1/tracks/${song.id}/stream?app_name=MSTQPlayer&api_key=${CONFIG.API_KEY}`;
+            }
             dom.audioPlayer.load();
+
+            let canplayTriggered = false;
+            const canplayPromise = new Promise(resolve => {
+                dom.audioPlayer.addEventListener('canplay', () => {
+                    canplayTriggered = true;
+                    resolve();
+                }, { once: true });
+            });
+
+            // Chờ sự kiện 'canplay' hoặc một timeout hợp lý (ví dụ: 10 giây)
+            await Promise.race([
+                canplayPromise,
+                new Promise(resolve => setTimeout(resolve, 10000)) // Tăng timeout lên 10 giây
+            ]);
 
             const playPromise = dom.audioPlayer.play();
 
             try {
                 const playTimeoutPromise = new Promise((resolve, reject) => {
-                    const id = setTimeout(() => reject(new Error('Play timeout')), 10000);
+                    const id = setTimeout(() => reject(new Error('Play timeout')), 15000); // Tăng timeout cho play() lên 15 giây
                     playPromise.then(resolve, reject).finally(() => clearTimeout(id));
                 });
                 
@@ -1724,13 +1808,19 @@
                     return;
                 }
 
-                if (retryCount < CONFIG.MAX_AUDIO_RETRIES - 1) {
-                    showMessage(`Lỗi phát nhạc. Đang thử kết nối khác... (Thử lại ${retryCount + 1})`, "Lỗi kết nối", true, 2500);
-                    await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
-                    await playSongWithRetries(song, retryCount + 1, hostRetryAttempt + 1);
+                // Nếu canplay chưa được kích hoạt, có nghĩa là âm thanh chưa sẵn sàng
+                if (!canplayTriggered) {
+                    if (retryCount < CONFIG.MAX_AUDIO_RETRIES - 1) {
+                        showMessage(`Không tải được âm thanh từ host ${hostToTry}. Đang thử host khác... (Thử lại ${retryCount + 1})`, "Lỗi kết nối", true, 2500);
+                        await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
+                        await playSongWithRetries(song, retryCount + 1, hostRetryAttempt + 1);
+                    } else {
+                        showMessage("Không thể phát bài hát này sau nhiều lần thử. Chuyển sang bài tiếp theo.", "Lỗi Phát Nhạc");
+                        playNext();
+                    }
                 } else {
-                    showMessage("Không thể phát bài hát này sau nhiều lần thử. Chuyển sang bài tiếp theo.", "Lỗi Phát Nhạc");
-                    playNext();
+                    // Nếu canplay đã được kích hoạt nhưng vẫn lỗi khi play, có thể là vấn đề khác
+                    showMessage("Không thể phát bài hát này.", "Lỗi Phát Nhạc");
                 }
             }
         }
@@ -1738,6 +1828,12 @@
         async function playSong(filteredIndex) {
             if (filteredIndex < 0 || filteredIndex >= state.currentFilteredSongs.length) return;
             
+            // Hủy yêu cầu preload hiện tại nếu có
+            if (state.preloadController) {
+                state.preloadController.abort();
+                state.preloadController = null;
+            }
+
             state.currentSongIndex = filteredIndex;
             const song = state.currentFilteredSongs[filteredIndex];
 
@@ -1773,6 +1869,12 @@
                 activeSongElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }
 
+            // Xóa src của preloader sau khi đã sử dụng để nó sẵn sàng cho bài hát tiếp theo
+            if (dom.audioPreloader && dom.audioPreloader.src) {
+                URL.revokeObjectURL(dom.audioPreloader.src); // Giải phóng Object URL
+                dom.audioPreloader.removeAttribute('src'); // Xóa thuộc tính src
+            }
+            state.preloadedSongId = null; // Đặt lại ID bài hát đã preload
             preloadNextSong();
         }
 
@@ -2015,6 +2117,8 @@
                         dom.playerBar.mediaSessionIndicator?.classList.remove('active');
                         return;
                     }
+                    // Destructure currentTime and duration from dom.audioPlayer
+                    const { currentTime, duration } = dom.audioPlayer; 
                     navigator.mediaSession.metadata = new MediaMetadata({
                         title: song.title, artist: song.artist, album: 'Âm nhạc TSTQ',
                         artwork: [{ src: song.artwork_full, sizes: '512x512', type: 'image/jpeg' }]
@@ -2039,9 +2143,9 @@
 
                     if ('setPositionState' in navigator.mediaSession) {
                         navigator.mediaSession.setPositionState({
-                            duration: dom.audioPlayer.duration || 0,
+                            duration: duration || 0,
                             playbackRate: dom.audioPlayer.playbackRate,
-                            position: dom.audioPlayer.currentTime
+                            position: currentTime
                         });
                     }
 
@@ -2139,7 +2243,8 @@
         
             // SỬA LỖI & LỘT XÁC: Tạo link chia sẻ trực tiếp đến trang Audius của bài hát.
             // Điều này đảm bảo link hoạt động ngay lập tức trên mọi trình duyệt.
-            const shareUrl = `https://audius.co${song.permalink}`;
+            // Sử dụng URL constructor để chuẩn hóa permalink
+            const shareUrl = new URL(song.permalink, 'https://audius.co').href;
         
             console.log("URL được chia sẻ (đã sửa lỗi):", shareUrl);
         
@@ -2149,7 +2254,20 @@
                 url: shareUrl
             };
         
-            const copyToClipboard = () => {
+            const copyToClipboard = async () => {
+                // Ưu tiên sử dụng Clipboard API hiện đại
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    try {
+                        await navigator.clipboard.writeText(shareUrl);
+                        showMessage("Đã sao chép liên kết vào bộ nhớ tạm!", "Thông báo", true, 2500);
+                        return; // Sao chép thành công, thoát hàm
+                    } catch (err) {
+                        console.error('Clipboard API failed:', err);
+                        // Nếu Clipboard API thất bại, sẽ thử phương pháp dự phòng bên dưới
+                    }
+                }
+
+                // Phương pháp dự phòng (document.execCommand)
                 const textArea = document.createElement("textarea");
                 textArea.value = shareUrl;
                 textArea.style.position = "fixed";
@@ -2173,13 +2291,13 @@
                 } catch (err) {
                     console.error('Lỗi khi chia sẻ:', err);
                     if (err.name !== 'AbortError') {
-                        copyToClipboard();
+                        await copyToClipboard(); // Đảm bảo await ở đây
                     } else {
                         showMessage("Đã hủy chia sẻ.", "Thông báo", true, 2500);
                     }
                 }
             } else {
-                copyToClipboard();
+                await copyToClipboard(); // Đảm bảo await ở đây
             }
         }
 
@@ -2238,7 +2356,7 @@
             const remainingTimeMs = state.sleepTimer.endTime - Date.now();
             if (remainingTimeMs <= 0) {
                 if(displayDesktop) displayDesktop.textContent = '00:00';
-                if(displayMobile) dom.playerBar.songArtist.textContent = '00:00';
+                if(displayMobile) displayMobile.textContent = '00:00';
                 return;
             }
             const totalSeconds = Math.floor(remainingTimeMs / 1000);
@@ -2258,6 +2376,7 @@
             document.getElementById('cancel-timer-btn-desktop')?.classList.add('hidden');
             document.getElementById('start-timer-btn-mobile')?.classList.remove('hidden');
             document.getElementById('cancel-timer-btn-mobile')?.classList.add('hidden');
+            state.sleepTimer.endTime = null;
             updateSleepTimerDisplay();
         }
 
@@ -2522,12 +2641,32 @@
             const nextSong = state.currentFilteredSongs[nextIndex];
 
             if (nextSong) {
-                const nextSongUrl = `${state.currentAudiusHost}/v1/tracks/${nextSong.id}/stream?app_name=MSTQPlayer`;
-                if (dom.audioPreloader.src !== nextSongUrl) {
-                    console.log(`Đang tải trước bài hát: ${nextSong.title}`);
-                    dom.audioPreloader.src = nextSongUrl;
-                    dom.audioPreloader.load();
+                const nextSongUrl = `${state.currentAudiusHost}/v1/tracks/${nextSong.id}/stream?app_name=MSTQPlayer&api_key=${CONFIG.API_KEY}`;
+                
+                // Hủy yêu cầu preload hiện tại nếu có
+                if (state.preloadController) {
+                    state.preloadController.abort();
+                    state.preloadController = null;
                 }
+
+                const controller = new AbortController();
+                state.preloadController = controller;
+                state.preloadedSongId = nextSong.id;
+
+                fetch(nextSongUrl, { signal: controller.signal })
+                    .then(res => res.blob())
+                    .then(blob => {
+                        if (controller.signal.aborted) return; // Kiểm tra lại sau khi fetch hoàn tất
+                        const objectUrl = URL.createObjectURL(blob);
+                        dom.audioPreloader.src = objectUrl;
+                        dom.audioPreloader.load();
+                        console.log(`Đã tải trước bài hát: ${nextSong.title}`);
+                    })
+                    .catch(err => {
+                        if (err.name !== 'AbortError') {
+                            console.error('Lỗi preload:', err);
+                        }
+                    });
             }
         }
 
@@ -2578,9 +2717,8 @@
                 state.isPlaying = true; 
                 updateUI(); 
                 requestWakeLock(); 
-                if (!state.wakeLockInterval) {
-                    clearInterval(state.wakeLockInterval);
-                    state.wakeLockInterval = null;
+                if (!state.wakeLockInterval) { // Kiểm tra nếu interval chưa được thiết lập
+                    state.wakeLockInterval = setInterval(requestWakeLock, 60000); // Thiết lập lại
                 }
                 broadcastChannel.postMessage({ type: 'PLAY_ACTION', payload: { isPlaying: true } });
             });
@@ -2597,6 +2735,9 @@
             });
             dom.audioPlayer.addEventListener('ended', () => { if (state.repeatMode !== 'none') playNext(); else { state.isPlaying = false; updateUI(); } });
             dom.audioPlayer.addEventListener('timeupdate', throttle(() => {
+                // Bỏ qua cập nhật DOM khi trang không hiển thị để tiết kiệm CPU và pin
+                if (document.hidden) return; 
+
                 const { currentTime, duration } = dom.audioPlayer;
                 if(duration && isFinite(duration)) {
                     if (dom.playerBar.progressBar) dom.playerBar.progressBar.style.width = `${(currentTime / duration) * 100}%`;
@@ -2613,6 +2754,8 @@
                     }
                 }
                 if ('mediaSession' in navigator && navigator.mediaSession.setPositionState) {
+                    // Destructure currentTime and duration from dom.audioPlayer
+                    const { currentTime, duration } = dom.audioPlayer; 
                     navigator.mediaSession.setPositionState({
                         duration: duration || 0,
                         playbackRate: dom.audioPlayer.playbackRate,
@@ -2686,6 +2829,33 @@
                 }
             }, 50));
             dom.playerBar.progressContainer?.addEventListener('mouseleave', () => dom.playerBar.progressTooltip?.classList.add('hidden'));
+
+            dom.playerBar.progressContainer?.addEventListener('touchstart', (e) => {
+                if (dom.audioPlayer.duration && dom.playerBar.progressContainer) {
+                    const rect = dom.playerBar.progressContainer.getBoundingClientRect();
+                    const touchX = e.touches[0].clientX - rect.left;
+                    dom.audioPlayer.currentTime = (touchX / dom.playerBar.progressContainer.clientWidth) * dom.audioPlayer.duration;
+                    if (dom.playerBar.progressTooltip) {
+                        dom.playerBar.progressTooltip.textContent = new Date(dom.audioPlayer.currentTime * 1000).toISOString().substr(14, 5);
+                        dom.playerBar.progressTooltip.style.left = `${touchX}px`;
+                        dom.playerBar.progressTooltip.classList.remove('hidden');
+                    }
+                }
+            }, { passive: true });
+
+            dom.playerBar.progressContainer?.addEventListener('touchmove', throttle((e) => {
+                if (dom.audioPlayer.duration && dom.playerBar.progressContainer && dom.playerBar.progressTooltip) {
+                    const rect = dom.playerBar.progressContainer.getBoundingClientRect();
+                    const touchX = e.touches[0].clientX - rect.left;
+                    const hoverTime = (touchX / dom.playerBar.progressContainer.clientWidth) * dom.audioPlayer.duration;
+                    dom.audioPlayer.currentTime = hoverTime;
+                    dom.playerBar.progressTooltip.textContent = new Date(hoverTime * 1000).toISOString().substr(14, 5);
+                    dom.playerBar.progressTooltip.style.left = `${touchX}px`;
+                    dom.playerBar.progressTooltip.classList.remove('hidden');
+                }
+            }, 50), { passive: true });
+
+            dom.playerBar.progressContainer?.addEventListener('touchend', () => dom.playerBar.progressTooltip?.classList.add('hidden'));
 
             dom.playerBar.volumeSlider?.addEventListener('input', (e) => {
                 dom.audioPlayer.muted = false;
@@ -2803,7 +2973,7 @@
                 }
                 state.lastScrollY = currentScrollY;
                 toggleScrollNavVisibility();
-            }, 200));
+            }, 200), { passive: true });
 
             let touchStartX = 0;
             let touchStartY = 0;
@@ -2917,7 +3087,7 @@
             // Gọi API để lấy thông tin bài hát cụ thể từ ID
             let songData = null;
             try {
-                const songResponse = await fetch(`${state.currentAudiusHost}/v1/tracks/${songToPlayId}?app_name=MSTQPlayer`);
+                const songResponse = await fetch(`${state.currentAudiusHost}/v1/tracks/${songToPlayId}?app_name=MSTQPlayer&api_key=${CONFIG.API_KEY}`);
                 if (!songResponse.ok) {
                     throw new Error('Không thể tìm thấy bài hát được chia sẻ.');
                 }
@@ -3052,7 +3222,7 @@
             window.addEventListener('resize', throttle(toggleScrollNavVisibility, 200));
 
             // FIX: Improved application version check
-            const currentAppVersion = '1.0.2';
+            const currentAppVersion = CONFIG.APP_VERSION; // Sử dụng biến CONFIG.APP_VERSION
             const lastVersion = localStorage.getItem(CONFIG.STORAGE_KEYS.APP_VERSION);
 
             if (lastVersion !== currentAppVersion) {
