@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // CẤU HÌNH & BIẾN TOÀN CỤC
     // ==============================================
     const CONFIG = {
-        APP_VERSION: '1.3.0',
+        APP_VERSION: '1.3.1',
         API_KEY: "08c897eb7784e03007e0769d01f2ca1c6a2001b4",
         USER_HANDLE: "minhsutinhquang",
         MAX_AUDIO_RETRIES: 3,
@@ -492,6 +492,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ==============================================
     function renderSkeletonLoader(count = 10) {
         const container = dom.mainContent.songsContainer;
+        if (!container) return;
         container.innerHTML = ''; // Clear existing content
         const fragment = document.createDocumentFragment();
         for (let i = 0; i < count; i++) {
