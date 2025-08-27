@@ -7,6 +7,7 @@ const ALL_CACHES = [STATIC_CACHE_NAME, AUDIO_CACHE_NAME];
 const urlsToCache = [
     './',
     './index.html',
+    './app.js', // Add app.js to the static cache
     './manifest.json',
     'https://cdn.tailwindcss.com',
     'https://unpkg.com/@phosphor-icons/web',
@@ -19,6 +20,7 @@ const urlsToCache = [
 
 self.addEventListener('install', event => {
     console.log('ServiceWorker: Installing new version...');
+    self.skipWaiting(); // Ensure the new service worker activates immediately
     event.waitUntil(
         caches.open(STATIC_CACHE_NAME).then(cache => {
             return cache.addAll(urlsToCache);
