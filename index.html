@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>Play Nhạc MSTQ - Ver 1.2.0</title>
+    <title>Play Nhạc MSTQ - Ver 1.3.0</title>
 
     <!-- PWA Manifest & Theme -->
     <link rel="manifest" href="./manifest.json">
@@ -911,8 +911,8 @@
                         <i class="ph-bold ph-spinner-gap animate-spin mr-2"></i>Đang tải thêm...
                     </p>
                 </div>
-                <audio id="audio-player" style="display: none;" crossOrigin="anonymous" preload="metadata" playsinline webkit-playsinline></audio>
-                <audio id="audio-preloader" style="display: none;" crossOrigin="anonymous" preload="metadata"></audio>
+                <audio id="audio-player" style="display: none;" crossOrigin="anonymous" preload="auto" playsinline webkit-playsinline></audio>
+                <audio id="audio-preloader" style="display: none;" crossOrigin="anonymous" preload="auto" playsinline webkit-playsinline></audio>
             </div>
         </div>
     </main>
@@ -994,92 +994,10 @@
     </div>
     
     <script>
-    // --- PWA Service Worker Logic ---
-    const swCode = `
-        const CACHE_NAME = 'mstq-music-cache-v14'; // Incremented cache version
-        const BASE_URL = self.registration.scope;
-        const urlsToCache = [
-            BASE_URL, BASE_URL + 'index.html', BASE_URL + 'manifest.json',
-            'https://cdn.tailwindcss.com', 'https://unpkg.com/@phosphor-icons/web',
-            'https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap',
-            'https://raw.githubusercontent.com/thiensutinhquang/GiaoLy/main/logo%20Thien%20Su%20Tinh%20Quang.png',
-            BASE_URL + 'images/icons/icon-192x192.png', BASE_URL + 'images/icons/icon-512x512.png'
-        ];
-
-        self.addEventListener('install', event => {
-            console.log('ServiceWorker: Installing new version...');
-            self.skipWaiting();
-            event.waitUntil(
-                caches.open(CACHE_NAME).then(cache => {
-                    return cache.addAll(urlsToCache);
-                }).catch(error => console.error('ServiceWorker: Failed to cache resources during install:', error))
-            );
-        });
-
-        self.addEventListener('activate', event => {
-            console.log('ServiceWorker: Activating new version.');
-            event.waitUntil(
-                caches.keys().then(cacheNames => {
-                    return Promise.all(
-                        cacheNames.map(cacheName => {
-                            if (cacheName !== CACHE_NAME) {
-                                console.log('ServiceWorker: Deleting old cache:', cacheName);
-                                return caches.delete(cacheName);
-                            }
-                        })
-                    );
-                }).then(() => {
-                    return self.clients.claim();
-                })
-            );
-        });
-
-        self.addEventListener('fetch', event => {
-            const { request } = event;
-            const url = new URL(request.url);
-
-            // Network-first for API calls to ensure fresh data
-            if (url.hostname.includes('audius.co') || url.hostname.includes('staked.cloud')) {
-                event.respondWith(
-                    fetch(request).catch(err => {
-                        console.error("ServiceWorker: Audius API fetch failed:", err);
-                        // Optionally, you could try to serve a cached response if available
-                        return caches.match(request).then(cachedResponse => {
-                             return cachedResponse || new Response(JSON.stringify({error: "offline"}), { headers: { 'Content-Type': 'application/json' } });
-                        });
-                    })
-                );
-                return;
-            }
-
-            // Cache-first for static assets
-            event.respondWith(
-                caches.match(request).then(cachedResponse => {
-                    if (cachedResponse) {
-                        return cachedResponse;
-                    }
-                    return fetch(request).then(networkResponse => {
-                        if (networkResponse && networkResponse.status === 200) {
-                            const responseToCache = networkResponse.clone();
-                            caches.open(CACHE_NAME).then(cache => {
-                                cache.put(request, responseToCache);
-                            });
-                        }
-                        return networkResponse;
-                    }).catch(error => {
-                        console.log('ServiceWorker: Fetch failed, not in cache:', error);
-                        // You can return a fallback page here if you have one
-                    });
-                })
-            );
-        });
-    `;
-
+    // --- PWA Service Worker Registration ---
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-            const blob = new Blob([swCode], { type: 'application/javascript' });
-            const swUrl = URL.createObjectURL(blob);
-            navigator.serviceWorker.register(swUrl)
+            navigator.serviceWorker.register('./sw.js')
                 .then(reg => console.log('ServiceWorker registered successfully:', reg.scope))
                 .catch(err => console.log('ServiceWorker registration failed:', err));
         }); 
@@ -1124,7 +1042,7 @@
         // CẤU HÌNH & BIẾN TOÀN CỤC
         // ==============================================
         const CONFIG = {
-            APP_VERSION: '1.2.0',
+            APP_VERSION: '1.3.0',
             API_KEY: "08c897eb7784e03007e0769d01f2ca1c6a2001b4",
             USER_HANDLE: "minhsutinhquang",
             MAX_AUDIO_RETRIES: 3,
@@ -1303,6 +1221,7 @@
             hasMoreSongsToLoad: true, // Flag for infinite scroll
             currentOffset: 0, // Pagination offset
             userId: null, // To store the Audius User ID
+            userHasInteracted: false, // Flag to track first user interaction
         };
 
         // ==============================================
@@ -1335,21 +1254,18 @@
         }
         
         async function requestWakeLock() {
-            // Use native Wake Lock API if available
             if ('wakeLock' in navigator && navigator.wakeLock) {
                 try {
                     state.wakeLock = await navigator.wakeLock.request('screen');
                     console.log('Screen Wake Lock activated.');
                 } catch (err) {
                     console.warn(`Wake Lock API failed: ${err.name}, ${err.message}. Falling back to NoSleep.js.`);
-                    // Fallback to NoSleep.js
                     if (state.noSleep) {
                         state.noSleep.enable();
                         console.log('NoSleep.js enabled as fallback.');
                     }
                 }
             } else {
-                // Fallback to NoSleep.js if Wake Lock API is not supported
                 if (state.noSleep) {
                     state.noSleep.enable();
                     console.log('Wake Lock API not supported. NoSleep.js enabled.');
@@ -1366,8 +1282,6 @@
                     console.log('Screen Wake Lock released.');
                 });
             }
-            // NoSleep.js doesn't have a public property to check if it's enabled,
-            // so we just call disable(). It's idempotent.
             if (state.noSleep) {
                 state.noSleep.disable();
                 console.log('NoSleep.js disabled.');
@@ -1430,7 +1344,6 @@
             if(darkModeToggle) darkModeToggle.checked = theme.mode === 'dark';
             if(darkModeToggleMobile) darkModeToggleMobile.checked = theme.mode === 'dark';
 
-            // Defensive check for CONFIG and CONFIG.APP_THEMES
             if (!CONFIG || !CONFIG.APP_THEMES) {
                 console.error("Theme configuration is not available.");
                 return;
@@ -1438,12 +1351,10 @@
 
             let currentThemeObj = CONFIG.APP_THEMES.find(t => t.id === (theme.mode === 'preset' ? theme.id : theme.mode));
             
-            // If the specific theme isn't found, default to light theme
             if (!currentThemeObj) {
                 currentThemeObj = CONFIG.APP_THEMES.find(t => t.id === 'light') || CONFIG.APP_THEMES[0];
             }
 
-            // Correctly set CSS variables
             if (currentThemeObj) {
                 document.documentElement.style.setProperty('--bg-current', currentThemeObj.bgColor);
                 document.documentElement.style.setProperty('--card-bg-current', currentThemeObj.cardBgColor);
@@ -1463,7 +1374,7 @@
 
         function renderPresetThemes(containerId) {
             const container = document.getElementById(containerId);
-            if (!container || !CONFIG.APP_THEMES) return; // Defensive check
+            if (!container || !CONFIG.APP_THEMES) return;
             container.innerHTML = CONFIG.APP_THEMES
                 .filter(theme => theme.id !== 'light' && theme.id !== 'dark')
                 .map(theme => `<button type="button" class="preset-theme-btn" data-theme="${theme.id}" style="background-color: ${theme.bgColor}; border-color: ${theme.borderColor};" title="${theme.name}"></button>`)
@@ -1519,9 +1430,8 @@
                     state.allSongs = [...state.allSongs, ...newSongs];
                     state.currentOffset += newSongs.length;
                     
-                    // Re-apply current filter to the newly loaded data
                     const currentCategory = document.querySelector('#category-menu .nav-item.active')?.dataset.category || 'all';
-                    filterAndDisplaySongs(currentCategory, false); // false = append
+                    filterAndDisplaySongs(currentCategory, false); 
 
                 } else {
                     state.hasMoreSongsToLoad = false;
@@ -1538,9 +1448,9 @@
         // MUSIC PLAYER CORE
         // ==============================================
         function preloadSpecificSong(songId) {
-            if (state.preloadedSongId === songId) return; // Already preloading this one
+            if (state.preloadedSongId === songId) return; 
 
-            state.preloadController.abort(); // Abort previous preload
+            state.preloadController.abort(); 
             state.preloadController = new AbortController();
             state.preloadedSongId = songId;
 
@@ -1549,6 +1459,9 @@
                 .then(response => response.blob())
                 .then(blob => {
                     if (state.preloadController.signal.aborted) return;
+                    if (dom.audioPreloader.src && dom.audioPreloader.src.startsWith('blob:')) {
+                        URL.revokeObjectURL(dom.audioPreloader.src);
+                    }
                     const objectURL = URL.createObjectURL(blob);
                     dom.audioPreloader.src = objectURL;
                     dom.audioPreloader.load();
@@ -1583,6 +1496,8 @@
             try {
                 await dom.audioPlayer.play();
                 updateUI();
+                dom.audioPreloader.removeAttribute('src');
+                state.preloadedSongId = null;
             } catch (error) {
                 console.error("Playback error:", error);
                 showMessage("Không thể phát bài hát này.", "Lỗi", true, 3000);
@@ -1635,6 +1550,7 @@
                 const songId = item.dataset.songId;
 
                 item.addEventListener('click', (e) => {
+                    if (!state.userHasInteracted) state.userHasInteracted = true;
                     if (e.target.closest('.lyrics-button')) return;
                     const songIndex = state.currentFilteredSongs.findIndex(s => s.id === songId);
                     if (songIndex !== -1) {
@@ -1717,6 +1633,12 @@
             dom.playerBar.repeatBtn.classList.toggle('active-control', state.repeatMode !== 'none');
             dom.playerBar.repeatBtn.innerHTML = state.repeatMode === 'one' ? '<i class="ph-bold ph-repeat-once"></i>' : '<i class="ph-bold ph-repeat"></i>';
             dom.playerBar.shuffleBtn.classList.toggle('active-control', state.isShuffling);
+
+            if (!state.userHasInteracted && state.currentSongIndex === 0 && !state.isPlaying) {
+                dom.playerBar.playPauseBtn.classList.add('attention-bounce');
+            } else {
+                dom.playerBar.playPauseBtn.classList.remove('attention-bounce');
+            }
             
             updateMediaSession();
         }
@@ -1778,7 +1700,6 @@
             dom.lyrics.content.style.fontFamily = CONFIG.LYRICS.FONTS[state.lyrics.fontIndex];
         }
         
-        // ... Other helper functions like shareSong, timer, etc. remain the same ...
         async function shareSong() {
             const song = state.currentFilteredSongs[state.currentSongIndex];
             if (!song || !song.permalink) {
@@ -1852,6 +1773,7 @@
         function setupEventListeners() {
             // Player controls
             dom.playerBar.playPauseBtn.addEventListener('click', () => {
+                if (!state.userHasInteracted) state.userHasInteracted = true;
                 if (state.currentSongIndex === -1 && state.currentFilteredSongs.length > 0) playSong(0);
                 else dom.audioPlayer.paused ? dom.audioPlayer.play() : dom.audioPlayer.pause();
             });
@@ -1897,11 +1819,9 @@
         }
 
         async function initializeApp() {
-            // Add this at the beginning
             try {
                 if (typeof NoSleep !== 'undefined') {
                     state.noSleep = new NoSleep();
-                    console.log("NoSleep.js initialized successfully.");
                 } else {
                     console.warn("NoSleep.js library not loaded or defined.");
                 }
@@ -1911,13 +1831,11 @@
 
             document.title = `Play Nhạc MSTQ - Ver ${CONFIG.APP_VERSION}`;
             
-            // Load settings
             state.isShuffling = loadStateFromLocalStorage(CONFIG.STORAGE_KEYS.SHUFFLE, false);
             state.repeatMode = loadStateFromLocalStorage(CONFIG.STORAGE_KEYS.REPEAT, 'all');
             state.favoriteSongIds = loadStateFromLocalStorage(CONFIG.STORAGE_KEYS.FAVORITES, []);
             dom.audioPlayer.volume = loadStateFromLocalStorage(CONFIG.STORAGE_KEYS.VOLUME, 1);
             
-            // Render UI
             applyTheme();
             loadAndInjectLogo();
             renderPresetThemes('preset-themes-desktop');
@@ -1932,20 +1850,19 @@
             });
             document.querySelector('#category-menu .nav-item').classList.add('active');
 
-            // Setup events
             setupEventListeners();
             
-            // Fetch initial data
             const apiReady = await initializeApi();
             if (apiReady) {
-                await fetchSongPage(); // Fetch the first page
-            } else {
-                dom.mainContent.initialLoadingOverlay.classList.add('hidden');
+                await fetchSongPage(); 
+                if (state.currentFilteredSongs.length > 0) {
+                    state.currentSongIndex = 0;
+                    updateUI();
+                }
             }
             
             dom.mainContent.initialLoadingOverlay.classList.add('hidden');
             
-            // Check for version updates
             const lastVersion = localStorage.getItem(CONFIG.STORAGE_KEYS.APP_VERSION);
             if (lastVersion !== CONFIG.APP_VERSION) {
                 localStorage.setItem(CONFIG.STORAGE_KEYS.APP_VERSION, CONFIG.APP_VERSION);
