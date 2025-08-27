@@ -30,7 +30,7 @@
   };
 
   root.NoSleep = NoSleep;
-})(window); // FIX: Changed 'this' to 'window' to correctly attach to the global scope
+})(window);
 
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // CẤU HÌNH & BIẾN TOÀN CỤC
     // ==============================================
     const CONFIG = {
-        APP_VERSION: '1.3.1',
+        APP_VERSION: '1.3.2',
         API_KEY: "08c897eb7784e03007e0769d01f2ca1c6a2001b4",
         USER_HANDLE: "minhsutinhquang",
         MAX_AUDIO_RETRIES: 3,
