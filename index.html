@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>Play Nhạc MSTQ - Ver 1.3.0</title>
+    <title>Play Nhạc MSTQ - Ver 1.3.1</title>
 
     <!-- PWA Manifest & Theme -->
     <link rel="manifest" href="./manifest.json">
@@ -24,17 +24,17 @@
 
     <!-- Libraries -->
     <!-- Optimization: Preload critical scripts -->
-    <link rel="preload" href="https://cdn.tailwindcss.com" as="script">
+    <link rel="preload" href="https://cdn.tailwindcss.com" as="script" crossorigin="anonymous">
     <link rel="preload" href="https://unpkg.com/@phosphor-icons/web" as="script" crossorigin="anonymous">
     <link rel="preload" href="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2" as="script" crossorigin="anonymous">
     <link rel="preload" href="https://fonts.gstatic.com/s/bevietnampro/v11/QdVN_sc_f5t3g4N_LqR_2_NPg_jC_gL_g_bC_gW_g.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="./app.js" as="script" crossorigin="anonymous">
 
     <script src="https://cdn.tailwindcss.com" defer></script>
     <script src="https://unpkg.com/@phosphor-icons/web" crossorigin="anonymous" defer></script>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2" crossorigin="anonymous" defer></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/no-sleep/0.12.0/NoSleep.min.js" crossorigin="anonymous" defer></script>
-
+    
     <style>
         /* ==============================================
         HỆ THỐC THIẾT KẾ & BIẾN TOÀN CỤC (CSS VARIABLES)
@@ -58,6 +58,13 @@
             --load-more-bg: #FFD700;
             --load-more-text: #8B4513;
             --load-more-hover-bg: #DAA520;
+            
+            /* FIX: Defined missing CSS variables */
+            --transition-fast: all 0.2s ease-in-out;
+            --transition-slow: all 0.4s ease-in-out;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
 
             /* Giá trị mặc định áp dụng */
             --bg-current: var(--bg-light);
@@ -795,7 +802,7 @@
     <header class="header">
         <div class="container header-layout-wrapper">
             <a href="./">
-                <img id="header-logo-placeholder" src="https://raw.githubusercontent.com/thiensutinhquang/GiaoLy/main/logo%20Thien%20Su%20Tinh%20Quang.png" alt="Logo">
+                <img id="header-logo-placeholder" src="https://raw.githubusercontent.com/thiensutinhquang/GiaoLy/main/logo%20Thien%20Su%20Tinh%20Quang.png" alt="Logo" width="150" height="150">
             </a>
             <div class="header-main-content">
                 <h1 class="main-title">PLAY NHẠC MSTQ</h1>
@@ -916,8 +923,8 @@
                         <i class="ph-bold ph-spinner-gap animate-spin mr-2"></i>Đang tải thêm...
                     </p>
                 </div>
-                <audio id="audio-player" style="display: none;" crossOrigin="anonymous" preload="auto" playsinline webkit-playsinline></audio>
-                <audio id="audio-preloader" style="display: none;" crossOrigin="anonymous" preload="auto" playsinline webkit-playsinline></audio>
+                <audio id="audio-player" style="display: none;" crossorigin="anonymous" preload="auto" playsinline webkit-playsinline></audio>
+                <audio id="audio-preloader" style="display: none;" crossorigin="anonymous" preload="auto" playsinline webkit-playsinline></audio>
             </div>
         </div>
     </main>
