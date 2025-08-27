@@ -1,5 +1,38 @@
 // app.js
 
+// --- NoSleep.js integrated library ---
+(function(root) {
+  var NoSleep = function() {
+    if (this._wakeLock) {
+      this._wakeLock.addEventListener('release', function() {
+        console.log('Wake Lock released.');
+      });
+    }
+  };
+
+  NoSleep.prototype.enable = function() {
+    var self = this;
+    if (navigator.wakeLock) {
+      navigator.wakeLock.request('screen').then(function(wakeLock) {
+        self._wakeLock = wakeLock;
+        console.log('Wake Lock active.');
+      }).catch(function(err) {
+        console.error('Wake Lock request failed: ', err);
+      });
+    }
+  };
+
+  NoSleep.prototype.disable = function() {
+    if (this._wakeLock) {
+      this._wakeLock.release();
+      this._wakeLock = null;
+    }
+  };
+
+  root.NoSleep = NoSleep;
+})(window); // FIX: Changed 'this' to 'window' to correctly attach to the global scope
+
+
 document.addEventListener('DOMContentLoaded', async () => {
     // ==============================================
     // CẤU HÌNH & BIẾN TOÀN CỤC
