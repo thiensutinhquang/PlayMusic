@@ -1,13 +1,13 @@
 // sw.js
 
-const STATIC_CACHE_NAME = 'mstq-static-cache-v1.3.0';
-const AUDIO_CACHE_NAME = 'mstq-audio-cache-v1.3.0';
+const STATIC_CACHE_NAME = 'mstq-static-cache-v1.3.2';
+const AUDIO_CACHE_NAME = 'mstq-audio-cache-v1.3.2';
 const ALL_CACHES = [STATIC_CACHE_NAME, AUDIO_CACHE_NAME];
 
+// Note: app.js and index.html are not listed here because the service worker is now inline.
+// The primary file to cache is the main HTML file itself ('./').
 const urlsToCache = [
     './',
-    './index.html',
-    './app.js', // Add app.js to the static cache
     './manifest.json',
     'https://cdn.tailwindcss.com',
     'https://unpkg.com/@phosphor-icons/web',
@@ -23,7 +23,9 @@ self.addEventListener('install', event => {
     self.skipWaiting(); // Ensure the new service worker activates immediately
     event.waitUntil(
         caches.open(STATIC_CACHE_NAME).then(cache => {
-            return cache.addAll(urlsToCache);
+            // We don't add all URLs here anymore as the main app is self-contained.
+            // We cache the root page to enable offline startup.
+            return cache.add('./'); 
         }).catch(error => console.error('ServiceWorker: Failed to cache static resources during install:', error))
     );
 });
@@ -77,12 +79,12 @@ self.addEventListener('fetch', event => {
         return;
     }
 
-    // Strategy for static assets: Cache-first
+    // Strategy for static assets and the main page: Cache-first
     event.respondWith(
         caches.match(request).then(cachedResponse => {
             return cachedResponse || fetch(request).then(networkResponse => {
                 // Cache newly fetched static assets
-                if (networkResponse.ok) {
+                if (networkResponse.ok && urlsToCache.includes(request.url)) {
                     const responseToCache = networkResponse.clone();
                     caches.open(STATIC_CACHE_NAME).then(cache => {
                         cache.put(request, responseToCache);
