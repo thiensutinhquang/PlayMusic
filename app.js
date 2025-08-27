@@ -490,6 +490,30 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ==============================================
     // UI RENDERING & UPDATES (RE-ARCHITECTED)
     // ==============================================
+    function renderSkeletonLoader(count = 10) {
+        const container = dom.mainContent.songsContainer;
+        container.innerHTML = ''; // Clear existing content
+        const fragment = document.createDocumentFragment();
+        for (let i = 0; i < count; i++) {
+            const skeletonItem = document.createElement('div');
+            skeletonItem.className = 'song-list-item skeleton';
+            skeletonItem.innerHTML = `
+                <div class="song-index-play"><span class="index-number"></span></div>
+                <div class="song-info">
+                    <div class="skeleton-img"></div>
+                    <div class="title-artist w-full">
+                        <div class="skeleton-text"></div>
+                        <div class="skeleton-text-sm"></div>
+                    </div>
+                </div>
+                <div></div> 
+                <div class="duration"><div class="skeleton-text-sm w-10"></div></div>
+            `;
+            fragment.appendChild(skeletonItem);
+        }
+        container.appendChild(fragment);
+    }
+
     function renderSongs(songsToRender, append = false) {
         const container = dom.mainContent.songsContainer;
         if (!append) {
@@ -866,8 +890,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         renderPresetThemes('preset-themes-mobile');
         CONFIG.CATEGORIES.forEach(cat => {
             const btn = document.createElement('button');
+            btn.type = 'button';
             btn.className = 'nav-item text-xs';
-            btn.innerHTML = cat.name;
+            btn.textContent = cat.name;
             btn.dataset.category = cat.id;
             btn.onclick = () => filterAndDisplaySongs(cat.id, true);
             dom.mainContent.categoryMenu.appendChild(btn);
@@ -875,6 +900,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.querySelector('#category-menu .nav-item').classList.add('active');
 
         setupEventListeners();
+        renderSkeletonLoader();
         
         const apiReady = await initializeApi();
         if (apiReady) {
@@ -889,7 +915,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         const lastVersion = localStorage.getItem(CONFIG.STORAGE_KEYS.APP_VERSION);
         if (lastVersion !== CONFIG.APP_VERSION) {
-            localStorage.setItem(CONFIG.STORAGE_KEYS.APP_VERSION, CONFIG.APP_VERSION);
+            localStorage.setItem(CONFIG.APP_VERSION, CONFIG.APP_VERSION);
             showMessage(`Ứng dụng đã được cập nhật lên phiên bản ${CONFIG.APP_VERSION}.`, "Đã cập nhật", true, 4000);
         }
     };
