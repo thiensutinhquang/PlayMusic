@@ -1,377 +1,838 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Play Music 🎵</title>
-  <meta name="description" content="Kho nhạc phát trực tiếp từ Vercel Blob" />
-  <style>
-    :root{
-      --bg:#0b0b0e; --card:#141419; --muted:#8b8ca3; --text:#f5f7ff; --acc:#7c9cff;
-      --acc2:#b16cff; --border:#232331;
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;
-      background:linear-gradient(180deg,#0a0a0d, #111222 50%, #0a0a0d);
-      color:var(--text);
-    }
-    .wrap{max-width:980px; margin:24px auto; padding:0 16px}
-    header{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px}
-    .brand{display:flex; align-items:center; gap:10px}
-    .logo{
-      width:42px;height:42px;border-radius:12px;
-      background: radial-gradient(120% 120% at 30% 20%, var(--acc2), var(--acc) 45%, #222 70%);
-      box-shadow:0 10px 30px #0006, inset 0 0 10px #fff2;
-    }
-    h1{font-size:20px; margin:0; letter-spacing:.3px}
-    .tools{display:flex; gap:8px; flex-wrap:wrap}
-    .input{
-      background:var(--card); border:1px solid var(--border); color:var(--text);
-      padding:10px 12px; border-radius:10px; outline:none; min-width:230px;
-    }
-    .btn{
-      background:linear-gradient(180deg,#2832ff,#6b2cff);
-      color:white; border:none; padding:10px 14px; border-radius:10px;
-      cursor:pointer; font-weight:600; letter-spacing:.2px;
-      box-shadow:0 10px 30px #0006;
-    }
-    .btn.secondary{background:#1c1d27}
-    .grid{
-      display:grid; grid-template-columns:1fr 360px; gap:16px;
-    }
-    @media (max-width:900px){ .grid{grid-template-columns:1fr} }
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 
-    /* Player card */
-    .player{
-      background:linear-gradient(180deg,#161621, #0f0f16);
-      border:1px solid var(--border); border-radius:16px; padding:16px;
-      position:sticky; top:16px;
-    }
-    .np{display:flex; gap:14px; align-items:center}
-    .art{
-      width:96px; height:96px; border-radius:12px; flex:0 0 96px; overflow:hidden;
-      background:#222; border:1px solid var(--border)
-    }
-    .art img{width:100%; height:100%; object-fit:cover}
-    .meta{min-width:0}
-    .title{font-size:18px; font-weight:700; margin:0 0 4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-    .artist{color:var(--muted); font-size:14px; margin:0}
-    .prog{margin:12px 0 6px}
-    .bar{height:8px; background:#1b1b26; border-radius:999px; position:relative; cursor:pointer; border:1px solid var(--border)}
-    .fill{position:absolute; top:0; left:0; height:100%; width:0%; background:linear-gradient(90deg,var(--acc),var(--acc2))}
-    .time{display:flex; justify-content:space-between; font-size:12px; color:var(--muted)}
-    .controls{display:flex; align-items:center; gap:8px; margin-top:10px; flex-wrap:wrap}
-    .kbtn{
-      background:#1a1b25; border:1px solid var(--border); color:var(--text);
-      padding:8px 12px; border-radius:10px; cursor:pointer; min-width:42px; text-align:center
-    }
-    .kbtn.big{padding:10px 16px; font-weight:700}
-    .vol{display:flex; align-items:center; gap:8px; margin-left:auto}
-    .vol input[type="range"]{width:120px}
+// --- ICONS (Inline SVG for single-file compilation) ---
+const PlayIcon = ({ size = 24 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>;
+const PauseIcon = ({ size = 24 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>;
+const SkipBackIcon = ({ size = 24 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" y1="19" x2="5" y2="5"></line></svg>;
+const SkipForwardIcon = ({ size = 24 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg>;
+const RepeatIcon = ({ active }) => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={active ? 'var(--primary)' : 'currentColor'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 2l4 4-4 4"></path><path d="M3 11v-1a4 4 0 0 1 4-4h14"></path><path d="M7 22l-4-4 4-4"></path><path d="M21 13v1a4 4 0 0 1-4 4H3"></path></svg>;
+const ShuffleIcon = ({ active }) => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={active ? 'var(--primary)' : 'currentColor'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="16 17 21 17 21 22"></polyline><line x1="4" y1="4" x2="15" y2="15"></line></svg>;
+const Volume2Icon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>;
+const MusicIcon = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>;
+const SearchIcon = ({ active, size = 24 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>;
+const HomeIcon = ({ active }) => <svg width="24" height="24" viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>;
+const LibraryIcon = ({ active }) => <svg width="24" height="24" viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>;
+const SettingsIcon = ({ active }) => <svg width="24" height="24" viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>;
+const ChevronDownIcon = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>;
+const ExternalLinkIcon = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>;
+const TrashIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>;
+const ListMusicIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v6m-6-3h12M17.5 2.5 10 9l-5-4L0 10l5 4 5-4 7.5 6.5Z"/></svg>;
+const Mic2Icon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 13-4.5 4.5"/><path d="m13 12 4.5-4.5"/><path d="M8.5 2.5 4 7l5 5"/><path d="m12 13 5 5"/><path d="M15.5 21.5 21 16l-5-5"/></svg>;
 
-    /* List */
-    .list{
-      background:var(--card); border:1px solid var(--border); border-radius:16px; overflow:hidden;
+// --- THEME ---
+const themes = {
+  dark: { name: 'Tối', c1: '#0b0d12', c2: '#12151c' },
+  light: { name: 'Sáng', c1: '#ffffff', c2: '#f6f7fb' },
+  tinhquang: { name: 'Tinh Quang', c1: '#0d1220', c2: '#6ea8ff' },
+  cucquang: { name: 'Cực Quang', c1: '#8a5bff', c2: '#7bffea' },
+  binhminh: { name: 'Bình Minh', c1: '#ffcf6b', c2: '#ff7a45' },
+  hukhong: { name: 'Hư Không', c1: '#0c0e11', c2: '#1b2027' },
+  senvang: { name: 'Sen Vàng', c1: '#fff7d6', c2: '#ffd66e' },
+  lucbao: { name: 'Lục Bảo', c1: '#a8ff78', c2: '#f4ff81' },
+};
+
+
+// --- DATA ---
+const platformLinks = [
+    { href: "https://sites.google.com/view/thiensutinhquang", text: "Website (Google Sites)" },
+    { href: "https://www.youtube.com/@MinhSuTinhQuang", text: "YouTube Channel" },
+    { href: "https://thiensutinhquang.github.io/Playlist-YouTube/", text: "Playlist YouTube" },
+    { href: "https://open.spotify.com/artist/your-artist-id", text: "Spotify" },
+    { href: "https://www.facebook.com/your-page", text: "Facebook Page" },
+    { href: "https://zalo.me/your-id", text: "Zalo" },
+];
+
+// --- Helper Functions ---
+const formatTime = (seconds) => {
+  if (isNaN(seconds) || seconds < 0) return '0:00';
+  const minutes = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${minutes}:${secs.toString().padStart(2, '0')}`;
+};
+
+const hapticFeedback = () => {
+    if (window.navigator && window.navigator.vibrate) {
+        navigator.vibrate(10);
     }
-    .row{
-      display:grid; grid-template-columns:48px 1fr 80px; gap:10px;
-      padding:10px 14px; border-bottom:1px solid var(--border); align-items:center; cursor:pointer
+};
+
+const generateColorFromString = (str) => {
+    if (!str) return [190, 60, 40]; // Default color
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        hash = str.charCodeAt(i) + ((hash << 5) - hash);
     }
-    .row:hover{background:#181827}
-    .row.active{background:#1b1930}
-    .row .idx{color:#9aa0b3}
-    .row .ttl{white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-    .row .dur{text-align:right; color:#9aa0b3}
-    .empty{
-      padding:20px; color:var(--muted); text-align:center;
-    }
-    footer{margin:22px 0; color:var(--muted); font-size:12px}
-    .link{color:#9fb7ff; text-decoration:none}
-  </style>
-</head>
-<body>
-  <div class="wrap">
-    <header>
-      <div class="brand">
-        <div class="logo" aria-hidden="true"></div>
-        <div>
-          <h1>Play Music</h1>
-          <div style="color:var(--muted); font-size:12px">Phát nhạc từ <code>/api/songs</code></div>
+    const h = hash % 360;
+    return [h, 60, 40]; // Saturation and Lightness are fixed for aesthetic consistency
+};
+
+
+// --- API Configuration ---
+let API_ENDPOINT = location.hostname.endsWith('.vercel.app') ? '/api/songs' : 'https://play-music-wine.vercel.app/api/songs';
+const params = new URLSearchParams(location.search);
+if (params.get('api')) API_ENDPOINT = params.get('api');
+
+// --- Components ---
+
+const TopAppBar = () => (
+    <header className="fixed top-0 inset-x-0 z-30 p-4 flex items-center justify-between bg-[var(--bg)]/80 backdrop-blur-lg border-b border-[var(--border)]">
+        <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-[var(--gradient)] flex items-center justify-center">
+                <MusicIcon />
+            </div>
+            <h1 className="text-lg font-bold text-[var(--text)]">Play Nhạc</h1>
         </div>
-      </div>
-      <div class="tools">
-        <input id="q" class="input" type="search" placeholder="Tìm bài hát..." />
-        <button id="btnReload" class="btn secondary">↻ Reload</button>
-        <a class="btn" href="https://play-music-wine.vercel.app/api/songs" target="_blank" rel="noopener">Mở API</a>
-      </div>
+         <div className="md:hidden relative">
+            <button onClick={() => { hapticFeedback(); /* logic to open search */ }} className="w-10 h-10 flex items-center justify-center">
+                 <SearchIcon size={22} />
+            </button>
+        </div>
     </header>
+);
 
-    <div class="grid">
-      <!-- Danh sách -->
-      <section class="list" id="list">
-        <div class="empty">Đang tải playlist...</div>
-      </section>
+const BottomNavBar = ({ activeView, setActiveView }) => {
+    const navItems = [
+        { id: 'home', label: 'Trang chủ', icon: <HomeIcon active={activeView === 'home'} /> },
+        { id: 'search', label: 'Tìm kiếm', icon: <SearchIcon active={activeView === 'search'} /> },
+        { id: 'library', label: 'Thư viện', icon: <LibraryIcon active={activeView === 'library'} /> },
+        { id: 'settings', label: 'Cài đặt', icon: <SettingsIcon active={activeView === 'settings'} /> },
+    ];
 
-      <!-- Player -->
-      <aside class="player">
-        <div class="np">
-          <div class="art"><img id="art" alt="artwork" src="" /></div>
-          <div class="meta">
-            <h2 id="npTitle" class="title">Chưa phát</h2>
-            <p id="npArtist" class="artist">—</p>
-          </div>
-        </div>
+    return (
+        <nav className="fixed bottom-0 inset-x-0 h-16 bg-[var(--nav-bg)] backdrop-blur-lg border-t border-[var(--border)] z-40">
+            <div className="grid grid-cols-4 h-full">
+                {navItems.map(item => (
+                    <button
+                        key={item.id}
+                        onClick={() => { hapticFeedback(); setActiveView(item.id); }}
+                        className={`flex flex-col items-center justify-center gap-1 text-xs transition-colors duration-200 ${activeView === item.id ? 'text-[var(--primary)]' : 'text-[var(--muted)] hover:text-[var(--text)]'}`}
+                    >
+                        {item.icon}
+                        <span className="font-medium">{item.label}</span>
+                    </button>
+                ))}
+            </div>
+        </nav>
+    );
+};
 
-        <div class="prog">
-          <div class="bar" id="bar"><div class="fill" id="fill"></div></div>
-          <div class="time"><span id="cur">0:00</span><span id="dur">0:00</span></div>
-        </div>
-
-        <div class="controls">
-          <button class="kbtn" id="prev">⏮</button>
-          <button class="kbtn big" id="play">▶️</button>
-          <button class="kbtn" id="next">⏭</button>
-
-          <button class="kbtn" id="loop" title="Lặp">🔁</button>
-          <button class="kbtn" id="shuffle" title="Ngẫu nhiên">🔀</button>
-
-          <div class="vol">
-            <span>🔊</span>
-            <input id="vol" type="range" min="0" max="1" step="0.01" value="0.9" />
-          </div>
-        </div>
-
-        <audio id="audio" preload="metadata" crossorigin="anonymous"></audio>
-      </aside>
-    </div>
-
-    <footer>
-      ⌨️ Phím tắt: <b>Space</b> phát/tạm dừng · <b>←/→</b> tua 5s · <b>↑/↓</b> âm lượng · <b>N/P</b> kế/ trước
-    </footer>
-  </div>
-
-  <script>
-    // Dùng URL đầy đủ của Vercel khi chạy ngoài Vercel (GitHub Pages, domain riêng, v.v.)
-    let API = location.hostname.endsWith('.vercel.app')
-      ? '/api/songs'   // nếu đang mở trang trên chính Vercel
-      : 'https://play-music-wine.vercel.app/api/songs';  // còn lại (GitHub Pages)
-
-    // (tuỳ chọn) cho phép override qua query ?api=
-    const p = new URLSearchParams(location.search);
-    if (p.get('api')) API = p.get('api');
+const MiniPlayer = ({ currentSong, isPlaying, onPlayPause, onNext, openNowPlaying, progress }) => {
+    const progressRef = useRef(null);
+    if (!currentSong) return null;
     
-    const $ = sel => document.querySelector(sel);
-    const listEl = $('#list');
-    const qEl = $('#q');
-    const btnReload = $('#btnReload');
+    const progressPercent = (progress.duration > 0) ? (progress.current / progress.duration) * 100 : 0;
 
-    const audio = $('#audio');
-    const playBtn = $('#play');
-    const prevBtn = $('#prev');
-    const nextBtn = $('#next');
-    const loopBtn = $('#loop');
-    const shuffleBtn = $('#shuffle');
-    const vol = $('#vol');
+    return (
+        <div
+            onClick={openNowPlaying}
+            className="fixed bottom-[68px] left-2 right-2 rounded-2xl shadow-[var(--shadow)] bg-[var(--card)]/95 backdrop-blur-md border border-[var(--border)] p-2 z-40 cursor-pointer overflow-hidden group"
+        >
+            <div className="flex items-center gap-3 relative z-10">
+                <img
+                    src={currentSong.artwork || 'https://placehold.co/64x64/1f2937/9ca3af?text=🎵'}
+                    alt={currentSong.title}
+                    className="w-12 h-12 rounded-lg object-cover"
+                />
+                <div className="flex-grow min-w-0">
+                    <p className="font-semibold text-[15px] text-[var(--text)] truncate">{currentSong.title}</p>
+                    <p className="text-sm text-[var(--muted)] truncate">{currentSong.artist || 'minhsutinhquang'}</p>
+                </div>
+                <div className="flex items-center gap-2 pr-2">
+                     <button
+                        onClick={(e) => { e.stopPropagation(); hapticFeedback(); onPlayPause(); }}
+                        className="w-11 h-11 flex items-center justify-center text-[var(--text)] rounded-full hover:bg-[var(--border)] transition-colors"
+                    >
+                        {isPlaying ? <PauseIcon size={20} /> : <PlayIcon size={20} />}
+                    </button>
+                     <button
+                        onClick={(e) => { e.stopPropagation(); hapticFeedback(); onNext(); }}
+                        className="w-11 h-11 flex items-center justify-center text-[var(--text)] rounded-full hover:bg-[var(--border)] transition-colors"
+                    >
+                        <SkipForwardIcon size={20}/>
+                    </button>
+                </div>
+            </div>
+             <div ref={progressRef} className="absolute bottom-0 left-0 right-0 h-1 bg-[var(--muted)]/20 z-0 group-hover:h-2 transition-all duration-200">
+                 <div className="h-full bg-[var(--primary)]" style={{ width: `${progressPercent}%` }}></div>
+             </div>
+        </div>
+    );
+};
 
-    const art = $('#art');
-    const tTitle = $('#npTitle');
-    const tArtist = $('#npArtist');
-    const bar = $('#bar');
-    const fill = $('#fill');
-    const curT = $('#cur');
-    const durT = $('#dur');
+const NowPlayingView = ({
+    isOpen, closeNowPlaying, currentSong, isPlaying, onPlayPause, onNext, onPrev,
+    progress, handleSeek, isLoop, toggleLoop, isShuffle, toggleShuffle, volume, setVolume,
+    playlist, onSelectSong,
+}) => {
+    const [isQueueOpen, setIsQueueOpen] = useState(false);
+    const [isLyricsOpen, setIsLyricsOpen] = useState(false);
+    
+    if (!isOpen || !currentSong) return null;
+    
+    const [hue, sat, light] = generateColorFromString(currentSong.id);
+    const backgroundStyle = {
+      background: `linear-gradient(180deg, hsl(${hue}, ${sat}%, ${light-10}%) 0%, var(--bg) 70%)`,
+    };
 
-    let songs = [];
-    let order = [];      // thứ tự phát (để hỗ trợ shuffle)
-    let idx = -1;        // index hiện tại trong 'order'
-    let isShuffle = JSON.parse(localStorage.getItem('shuffle') || 'false');
-    let isLoop = JSON.parse(localStorage.getItem('loop') || 'false');
+    const MainContent = () => (
+        <>
+            <main className="flex-grow flex flex-col items-center justify-center text-center px-4 pt-4 pb-8">
+                <div className="w-full max-w-xs aspect-square rounded-2xl overflow-hidden shadow-2xl bg-[var(--border)] mb-8">
+                    <img
+                        src={currentSong.artwork || 'https://placehold.co/400x400/1f2937/9ca3af?text=MSTQ'}
+                        alt={currentSong.title}
+                        className="w-full h-full object-cover"
+                    />
+                </div>
+                <h2 className="text-2xl lg:text-3xl font-bold text-[var(--text)]">{currentSong.title}</h2>
+                <p className="text-[var(--muted)] mt-2 text-base lg:text-lg">{currentSong.artist || 'minhsutinhquang'}</p>
+            </main>
+            <footer className="flex-shrink-0">
+                <div className="mb-4">
+                    <input
+                        type="range"
+                        min="0"
+                        max={progress.duration || 100}
+                        value={progress.current}
+                        onChange={handleSeek}
+                        className="w-full h-2 bg-[var(--muted)]/20 rounded-lg appearance-none cursor-pointer range-lg accent-[var(--primary)]"
+                    />
+                    <div className="flex justify-between text-xs text-[var(--muted)] mt-2">
+                        <span>{formatTime(progress.current)}</span>
+                        <span>{formatTime(progress.duration)}</span>
+                    </div>
+                </div>
+                <div className="flex items-center justify-center gap-4">
+                    <button onClick={() => { hapticFeedback(); toggleShuffle(); }} className="p-3 text-[var(--muted)] hover:text-[var(--text)] transition-colors"><ShuffleIcon active={isShuffle} /></button>
+                    <button onClick={() => { hapticFeedback(); onPrev(); }} className="p-3 text-[var(--text)] hover:opacity-80 transition"><SkipBackIcon size={32} /></button>
+                    <button onClick={() => { hapticFeedback(); onPlayPause(); }} className="w-20 h-20 bg-[var(--primary)] rounded-full flex items-center justify-center text-[var(--primary-fg)] hover:opacity-90 transition shadow-lg shadow-[var(--primary)]/30">
+                        {isPlaying ? <PauseIcon size={40} /> : <PlayIcon size={40} />}
+                    </button>
+                    <button onClick={() => { hapticFeedback(); onNext(); }} className="p-3 text-[var(--text)] hover:opacity-80 transition"><SkipForwardIcon size={32} /></button>
+                    <button onClick={() => { hapticFeedback(); toggleLoop(); }} className="p-3 text-[var(--muted)] hover:text-[var(--text)] transition-colors"><RepeatIcon active={isLoop} /></button>
+                </div>
+                <div className="flex items-center justify-around mt-6">
+                    <button onClick={()=>setIsLyricsOpen(true)} className="p-2 text-[var(--muted)] hover:text-[var(--text)]"><Mic2Icon/></button>
+                     <div className="flex items-center gap-3 max-w-xs mx-auto">
+                        <Volume2Icon />
+                        <input
+                            type="range"
+                            min="0" max="1" step="0.01"
+                            value={volume}
+                            onChange={(e) => setVolume(parseFloat(e.target.value))}
+                            className="w-full h-1.5 bg-[var(--muted)]/20 rounded-lg appearance-none cursor-pointer range-sm accent-[var(--primary)]"
+                        />
+                    </div>
+                    <button onClick={()=>setIsQueueOpen(true)} className="p-2 text-[var(--muted)] hover:text-[var(--text)]"><ListMusicIcon/></button>
+                </div>
+            </footer>
+        </>
+    );
 
-    shuffleBtn.classList.toggle('active', isShuffle);
-    loopBtn.classList.toggle('active', isLoop);
+    const QueueContent = () => (
+        <div className="h-full flex flex-col">
+            <h3 className="text-xl font-bold text-center mb-4 p-4">Danh sách phát</h3>
+            <div className="flex-grow overflow-y-auto px-2 space-y-1">
+                {playlist.map(song => (
+                    <div
+                        key={song.id}
+                        onClick={() => onSelectSong(song)}
+                        className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer ${song.id === currentSong.id ? 'bg-[var(--primary)]/20' : 'hover:bg-[var(--card)]'}`}
+                    >
+                         <div className={`w-8 text-center text-sm font-mono flex-shrink-0 ${song.id === currentSong.id ? 'text-[var(--primary)]' : 'text-[var(--muted)]'}`}>
+                            {parseInt(song.id, 10)}
+                        </div>
+                        <img src={song.artwork || 'https://placehold.co/64x64/1f2937/9ca3af?text=🎵'} className="w-10 h-10 rounded-md object-cover" />
+                        <div className="flex-grow min-w-0">
+                            <p className={`font-medium truncate ${song.id === currentSong.id ? 'text-[var(--primary)]' : 'text-[var(--text)]'}`}>{song.title}</p>
+                            <p className="text-sm text-[var(--muted)] truncate">{song.artist || 'minhsutinhquang'}</p>
+                        </div>
+                        <span className="text-sm text-[var(--muted)]">{formatTime(song.duration)}</span>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+    
+    const LyricsContent = () => (
+        <div className="h-full flex flex-col items-center justify-center text-center p-8">
+            <h3 className="text-xl font-bold mb-4">Lời bài hát</h3>
+            <p className="text-[var(--muted)]">Tính năng lời bài hát sẽ sớm được ra mắt.</p>
+        </div>
+    );
 
-    async function fetchSongs(){
-      listEl.innerHTML = `<div class="empty">Đang tải playlist...</div>`;
-      try{
-        const res = await fetch(API, { cache: 'no-store' });
-        const data = await res.json();
-        songs = Array.isArray(data) ? data : [];
-        if(!songs.length){
-          listEl.innerHTML = `<div class="empty">Chưa có bài nào. Hãy upload vào Blob prefix <code>music/</code>.</div>`;
-          return;
-        }
-        buildOrder();
-        renderList(songs);
-        restoreLast();
-      }catch(e){
-        listEl.innerHTML = `<div class="empty">Không tải được playlist: ${e?.message || e}</div>`;
-      }
+    return (
+        <div className="fixed inset-0 bg-[var(--bg)] z-50 flex flex-col p-4 animate-slide-up">
+             <div className="absolute top-0 left-0 right-0 h-full -z-10 transition-all duration-500" style={backgroundStyle} />
+            <header className="flex-shrink-0 flex items-center justify-between">
+                <button onClick={isQueueOpen || isLyricsOpen ? () => {setIsQueueOpen(false); setIsLyricsOpen(false)} : closeNowPlaying} className="w-11 h-11 flex items-center justify-center rounded-full hover:bg-[var(--card)]/50">
+                    <ChevronDownIcon />
+                </button>
+                <div className="text-center">
+                     <p className="font-bold text-[var(--text)]">{ isQueueOpen ? "Tiếp theo" : isLyricsOpen ? "Lời bài hát" : currentSong.title }</p>
+                </div>
+                <div className="w-11 h-11"></div>
+            </header>
+            
+            <div className="flex-grow min-h-0">
+                { isQueueOpen ? <QueueContent /> : isLyricsOpen ? <LyricsContent /> : <MainContent /> }
+            </div>
+        </div>
+    );
+};
+
+const PlaylistView = ({ songs, onSelectSong, currentSong, filter }) => {
+  const filteredSongs = songs.filter(song => 
+    song.title.toLowerCase().includes(filter.toLowerCase()) ||
+    (song.artist || 'minhsutinhquang').toLowerCase().includes(filter.toLowerCase())
+  );
+  
+  if (!songs.length) {
+      return (
+        <div className="px-4 text-center py-20 text-[var(--muted)]">
+            <p className="text-lg font-medium">Đang tải danh sách nhạc...</p>
+            <div className="mt-6 space-y-4 animate-pulse">
+                {[...Array(5)].map((_, i) => (
+                     <div key={i} className="flex items-center gap-4 p-3 rounded-lg">
+                        <div className="w-14 h-14 rounded-lg bg-[var(--card)]"></div>
+                        <div className="flex-grow min-w-0 space-y-2">
+                           <div className="h-4 bg-[var(--card)] rounded w-3/4"></div>
+                           <div className="h-3 bg-[var(--card)] rounded w-1/2"></div>
+                        </div>
+                        <div className="h-3 bg-[var(--card)] rounded w-10"></div>
+                    </div>
+                ))}
+            </div>
+        </div>
+      );
+  }
+
+  return (
+    <div className="px-4">
+        <h2 className="text-2xl font-bold text-[var(--text)] mb-4">Danh sách phát</h2>
+        <div className="space-y-2">
+            {filteredSongs.length > 0 ? (
+            filteredSongs.map((song) => (
+                <div
+                key={song.id}
+                onClick={() => onSelectSong(song)}
+                className={`flex items-center gap-3 p-3 rounded-2xl cursor-pointer transition-colors duration-200 ${currentSong?.id === song.id ? 'bg-[var(--primary)]/20' : 'hover:bg-[var(--card)]/50'}`}
+                >
+                <div className={`w-8 text-center text-sm font-mono flex-shrink-0 ${currentSong?.id === song.id ? 'text-[var(--primary)]' : 'text-[var(--muted)]'}`}>
+                    {parseInt(song.id, 10)}
+                </div>
+                <div className="w-14 h-14 rounded-lg overflow-hidden bg-[var(--border)] flex-shrink-0">
+                    <img src={song.artwork || 'https://placehold.co/64x64/1f2937/9ca3af?text=🎵'} alt={song.title} className="w-full h-full object-cover"/>
+                </div>
+                <div className="flex-grow min-w-0">
+                    <p className={`font-semibold truncate text-[15px] ${currentSong?.id === song.id ? 'text-[var(--primary)]' : 'text-[var(--text)]'}`}>
+                    {song.title}
+                    </p>
+                    <p className="text-sm text-[var(--muted)] truncate">{song.artist || 'minhsutinhquang'}</p>
+                </div>
+                <div className="text-sm text-[var(--muted)] flex-shrink-0">
+                    {formatTime(song.duration)}
+                </div>
+                </div>
+            ))
+            ) : (
+            <p className="text-[var(--muted)] text-center py-10">Không tìm thấy bài hát nào khớp.</p>
+            )}
+        </div>
+    </div>
+  );
+};
+
+const SettingsView = ({ theme, setTheme, handleClearCache, startTimer, timeLeft, stopAtEndOfTrack, setStopAtEndOfTrack }) => {
+    return (
+        <div className="px-4 space-y-8">
+            <div>
+                <h2 className="text-2xl font-bold text-[var(--text)] mb-4">Cài đặt</h2>
+            </div>
+            
+            {/* Giao diện */}
+            <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-[var(--text)]">Giao diện</h3>
+                <div className="bg-[var(--card)] rounded-2xl p-4">
+                    <div className="grid grid-cols-3 gap-3">
+                        {Object.entries(themes).map(([key, value]) => (
+                             <button
+                                key={key}
+                                onClick={() => setTheme(key)}
+                                data-theme={key}
+                                aria-current={theme === key}
+                                className="theme-swatch"
+                             >
+                               <span className="dot" style={{'--c1': value.c1, '--c2': value.c2}}></span>
+                               <span className="text-sm font-medium">{value.name}</span>
+                             </button>
+                        ))}
+                    </div>
+                </div>
+            </div>
+
+            {/* Hẹn giờ */}
+            <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-[var(--text)]">Hẹn giờ tắt nhạc</h3>
+                <div className="bg-[var(--card)] rounded-2xl p-4">
+                    {timeLeft !== null ? (
+                        <div className="text-center py-2">
+                            <p className="text-[var(--muted)]">Sẽ dừng sau</p>
+                            <p className="text-3xl font-bold text-[var(--primary)] font-mono">{formatTime(timeLeft)}</p>
+                        </div>
+                    ) : stopAtEndOfTrack ? (
+                         <div className="text-center py-2">
+                             <p className="text-lg font-medium text-[var(--primary)]">Sẽ dừng sau khi hết bài này</p>
+                         </div>
+                    ) : (
+                         <div className="text-center py-2">
+                             <p className="text-[var(--muted)]">Hẹn giờ đang tắt</p>
+                         </div>
+                    )}
+                    <div className="grid grid-cols-3 gap-2 mt-4">
+                        {[15, 30, 60].map(min => (
+                             <button key={min} onClick={() => startTimer(min)} className="p-3 bg-[var(--border)] rounded-lg hover:bg-[var(--muted)]/20 transition-colors font-medium">{min} phút</button>
+                        ))}
+                    </div>
+                     <div className="flex items-center justify-between mt-4 p-3 bg-[var(--border)] rounded-lg">
+                        <label htmlFor="stop-at-end" className="font-medium">Tắt khi hết bài</label>
+                        <input
+                            type="checkbox"
+                            id="stop-at-end"
+                            checked={stopAtEndOfTrack}
+                            onChange={(e) => setStopAtEndOfTrack(e.target.checked)}
+                            className="h-5 w-5 rounded text-[var(--primary)] bg-[var(--card)] border-[var(--border)] focus:ring-[var(--primary)]"
+                        />
+                     </div>
+                     <button onClick={() => startTimer(null)} className="w-full mt-2 p-3 rounded-lg hover:bg-[var(--border)] transition-colors">Tắt hẹn giờ</button>
+                </div>
+            </div>
+
+            {/* Các nền tảng */}
+            <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-[var(--text)]">Các nền tảng khác</h3>
+                <div className="bg-[var(--card)] rounded-2xl p-2 space-y-1">
+                    {platformLinks.map(link => (
+                         <a href={link.href} key={link.href} target="_blank" rel="noopener" className="flex items-center justify-between p-4 rounded-lg hover:bg-[var(--border)] transition-colors">
+                            <span className="font-medium">{link.text}</span>
+                            <ExternalLinkIcon />
+                         </a>
+                    ))}
+                </div>
+            </div>
+
+             {/* Dữ liệu */}
+            <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-[var(--text)]">Dữ liệu ứng dụng</h3>
+                 <div className="bg-[var(--card)] rounded-2xl p-4">
+                    <button onClick={handleClearCache} className="w-full flex items-center gap-3 p-4 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors">
+                        <TrashIcon />
+                        <span className="font-medium">Xóa Cache & Tải lại</span>
+                    </button>
+                    <p className="text-xs text-[var(--muted)] mt-2 text-center">Hành động này sẽ xóa dữ liệu đã lưu (như theme) và tải lại ứng dụng.</p>
+                 </div>
+            </div>
+        </div>
+    );
+}
+
+
+// --- Main App Component ---
+export default function App() {
+  // State
+  const [songs, setSongs] = useState([]);
+  const [currentSong, setCurrentSong] = useState(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [playlist, setPlaylist] = useState([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isShuffle, setIsShuffle] = useState(false);
+  const [isLoop, setIsLoop] = useState(false);
+  const [volume, setVolume] = useState(0.9);
+  const [progress, setProgress] = useState({ current: 0, duration: 0 });
+  const [filter, setFilter] = useState('');
+  const [theme, setTheme] = useState(localStorage.getItem('music-theme') || 'lucbao');
+  const [activeView, setActiveView] = useState('home');
+  const [isNowPlayingOpen, setIsNowPlayingOpen] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(null);
+  const [stopAtEndOfTrack, setStopAtEndOfTrack] = useState(false);
+
+  // Refs
+  const audioRef = useRef(new Audio());
+  const timerRef = useRef({ timeout: null, interval: null });
+
+  // --- Theme Effect ---
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('music-theme', theme);
+  }, [theme]);
+  
+  // --- Timer ---
+  const startTimer = useCallback((durationInMinutes) => {
+    hapticFeedback();
+    clearTimeout(timerRef.current.timeout);
+    clearInterval(timerRef.current.interval);
+    setStopAtEndOfTrack(false);
+
+    if (durationInMinutes === null || durationInMinutes <= 0) {
+        setTimeLeft(null);
+        return;
     }
 
-    function buildOrder(){
-      order = songs.map((_, i) => i);
-      if(isShuffle) shuffle(order);
-    }
+    const durationInSeconds = durationInMinutes * 60;
+    setTimeLeft(durationInSeconds);
 
-    function renderList(items){
-      const kw = (qEl.value || '').toLowerCase().trim();
-      const rows = items
-        .map((s, i) => ({s, i}))
-        .filter(({s}) => !kw || (s.title||'').toLowerCase().includes(kw) || (s.artist||'').toLowerCase().includes(kw))
-        .map(({s, i}) => {
-          const d = fmt(s.duration);
-          return `
-            <div class="row" data-i="${i}">
-              <div class="idx">${String(i+1).padStart(2,'0')}</div>
-              <div class="ttl">${escapeHtml(s.title || 'Untitled')} — <span style="color:#9aa0b3">${escapeHtml(s.artist || 'minhsutinhquang')}</span></div>
-              <div class="dur">${d}</div>
-            </div>`;
-        }).join('');
-      listEl.innerHTML = rows || `<div class="empty">Không thấy bài nào phù hợp.</div>`;
-      [...listEl.querySelectorAll('.row')].forEach(el=>{
-        el.addEventListener('click', ()=>{
-          const i = +el.getAttribute('data-i');
-          playByIndex(i);
+    timerRef.current.interval = setInterval(() => {
+        setTimeLeft(prevTime => {
+            if (prevTime !== null && prevTime <= 1) {
+                clearInterval(timerRef.current.interval);
+                return 0;
+            }
+            return prevTime !== null ? prevTime - 1 : null;
         });
-      });
-      highlightActive();
-    }
+    }, 1000);
 
-    function highlightActive(){
-      [...listEl.querySelectorAll('.row')].forEach(el => el.classList.remove('active'));
-      if(idx>=0){
-        const real = order[idx];
-        const row = listEl.querySelector(`.row[data-i="${real}"]`);
-        if(row) row.classList.add('active');
+    timerRef.current.timeout = setTimeout(() => {
+        setIsPlaying(false);
+        setTimeLeft(null);
+        clearInterval(timerRef.current.interval);
+    }, durationInSeconds * 1000);
+  }, []);
+  
+  const handleSetStopAtEndOfTrack = (value) => {
+      hapticFeedback();
+      setStopAtEndOfTrack(value);
+      if (value) {
+          clearTimeout(timerRef.current.timeout);
+          clearInterval(timerRef.current.interval);
+          setTimeLeft(null);
       }
-    }
+  }
 
-    function playByIndex(realIndex){
-      // tìm vị trí realIndex trong order, hoặc push lên đầu
-      const pos = order.indexOf(realIndex);
-      if(pos !== -1) idx = pos; else { order.unshift(realIndex); idx = 0; }
-      playCurrent();
-    }
-
-    function playCurrent(){
-      if(idx<0 || idx>=order.length) idx = 0;
-      const s = songs[ order[idx] ];
-      if(!s) return;
-      audio.src = s.stream_url;
-      audio.play().catch(()=>{ /* chờ user interaction */ });
-
-      tTitle.textContent = s.title || 'Untitled';
-      tArtist.textContent = s.artist || 'minhsutinhquang';
-      art.src = s.artwork || 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300"><rect width="100%" height="100%" fill="%231a1b25"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="%239aa0b3" font-family="sans-serif" font-size="22">No Artwork</text></svg>';
-      document.title = `▶ ${s.title || 'Play Music'} – Play Music`;
-
-      playBtn.textContent = '⏸';
-      highlightActive();
-      saveLast();
-    }
-
-    function nextTrack(){
-      if(isLoop) return playCurrent();
-      idx = (idx + 1) % order.length;
-      playCurrent();
-    }
-    function prevTrack(){
-      if(audio.currentTime > 3){ audio.currentTime = 0; return; }
-      idx = (idx - 1 + order.length) % order.length;
-      playCurrent();
-    }
-
-    // helpers
-    function shuffle(a){
-      for(let i=a.length-1;i>0;i--){
-        const j = Math.floor(Math.random()*(i+1));
-        [a[i],a[j]] = [a[j],a[i]];
+  useEffect(() => {
+    return () => {
+        clearTimeout(timerRef.current.timeout);
+        clearInterval(timerRef.current.interval);
+    };
+  }, []);
+  
+  const handleClearCache = useCallback(async () => {
+      hapticFeedback();
+      try {
+        if ('caches' in window) {
+          const keys = await caches.keys();
+          await Promise.all(keys.map(k => caches.delete(k)));
+        }
+        localStorage.clear();
+        location.reload();
+      } catch (err) {
+        console.error("Cache clearing failed:", err);
+        location.reload();
       }
-      return a;
-    }
-    function fmt(sec){
-      if(!isFinite(sec) || sec==null) return '0:00';
-      sec = Math.floor(sec);
-      const m = Math.floor(sec/60), s = sec%60;
-      return m+':' + String(s).padStart(2,'0');
-    }
-    function escapeHtml(s){
-      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    }
+  }, []);
 
-    // events
-    playBtn.onclick = ()=>{
-      if(audio.paused){ audio.play(); playBtn.textContent='⏸'; }
-      else { audio.pause(); playBtn.textContent='▶️'; }
+  // --- Playback Handlers ---
+  const handleNext = useCallback(() => {
+    if (stopAtEndOfTrack) {
+        setIsPlaying(false);
+        setStopAtEndOfTrack(false);
+        return;
+    }
+    if (!playlist.length) return;
+    if (isLoop) {
+      audioRef.current.currentTime = 0;
+      audioRef.current.play();
+      return;
+    }
+    const nextIndex = (currentIndex + 1) % playlist.length;
+    setCurrentIndex(nextIndex);
+    setCurrentSong(playlist[nextIndex]);
+    setIsPlaying(true);
+  }, [currentIndex, playlist, isLoop, stopAtEndOfTrack]);
+
+  // --- Effects ---
+  useEffect(() => {
+    const fetchSongs = async () => {
+      try {
+        const res = await fetch(API_ENDPOINT, { cache: 'no-store' });
+        if (!res.ok) throw new Error('Network response was not ok');
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          setSongs(data);
+          setPlaylist(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch songs:", error);
+      }
     };
-    nextBtn.onclick = nextTrack;
-    prevBtn.onclick = prevTrack;
-    loopBtn.onclick = ()=>{
-      isLoop = !isLoop; localStorage.setItem('loop', JSON.stringify(isLoop));
-      loopBtn.classList.toggle('active', isLoop);
-    };
-    shuffleBtn.onclick = ()=>{
-      isShuffle = !isShuffle; localStorage.setItem('shuffle', JSON.stringify(isShuffle));
-      buildOrder(); highlightActive();
-    };
-    vol.oninput = ()=>{ audio.volume = +vol.value; };
-
-    audio.addEventListener('timeupdate', ()=>{
-      const p = audio.currentTime / (audio.duration || 1);
-      fill.style.width = (p*100)+'%';
-      curT.textContent = fmt(audio.currentTime);
-      if(isFinite(audio.duration)) durT.textContent = fmt(audio.duration);
-    });
-    audio.addEventListener('ended', nextTrack);
-    audio.addEventListener('loadedmetadata', ()=>{
-      durT.textContent = fmt(audio.duration);
-      // nếu API thiếu duration, cập nhật hiển thị hàng đang active:
-      highlightActive();
-    });
-
-    bar.addEventListener('click', (e)=>{
-      const r = bar.getBoundingClientRect();
-      const ratio = Math.min(1, Math.max(0, (e.clientX - r.left)/r.width));
-      if(isFinite(audio.duration)) audio.currentTime = ratio * audio.duration;
-    });
-
-    qEl.addEventListener('input', ()=>renderList(songs));
-    btnReload.addEventListener('click', fetchSongs);
-
-    // keyboard
-    window.addEventListener('keydown', (e)=>{
-      if (e.target.matches('input,textarea')) return;
-      if (e.code === 'Space'){ e.preventDefault(); playBtn.click(); }
-      else if (e.key === 'ArrowRight'){ audio.currentTime = Math.min(audio.currentTime + 5, (audio.duration||0)); }
-      else if (e.key === 'ArrowLeft'){ audio.currentTime = Math.max(audio.currentTime - 5, 0); }
-      else if (e.key.toLowerCase() === 'n'){ nextTrack(); }
-      else if (e.key.toLowerCase() === 'p'){ prevTrack(); }
-      else if (e.key === 'ArrowUp'){ audio.volume = Math.min(1, audio.volume + 0.05); vol.value = audio.volume; }
-      else if (e.key === 'ArrowDown'){ audio.volume = Math.max(0, audio.volume - 0.05); vol.value = audio.volume; }
-    });
-
-    // persist last song
-    function saveLast(){
-      const data = { order, idx, vol: audio.volume };
-      localStorage.setItem('pm_state', JSON.stringify(data));
-    }
-    function restoreLast(){
-      try{
-        const s = JSON.parse(localStorage.getItem('pm_state')||'null');
-        if(!s) return;
-        order = Array.isArray(s.order) && s.order.every(n=>Number.isInteger(n)) ? s.order.filter(i=>i<songs.length) : order;
-        idx = (typeof s.idx==='number' && s.idx<order.length) ? s.idx : idx;
-        if(typeof s.vol==='number'){ audio.volume = s.vol; vol.value = s.vol; }
-        if(idx<0) idx = 0;
-        playCurrent();
-      }catch{}
-    }
-
-    // boot
     fetchSongs();
-  </script>
-</body>
-</html>
+  }, []);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    const handleTimeUpdate = () => setProgress({ current: audio.currentTime, duration: audio.duration });
+    const handleEnded = () => handleNext();
+    const handleCanPlay = () => setProgress(p => ({ ...p, duration: audio.duration }));
+
+    audio.addEventListener('timeupdate', handleTimeUpdate);
+    audio.addEventListener('ended', handleEnded);
+    audio.addEventListener('canplay', handleCanPlay);
+    return () => {
+      audio.removeEventListener('timeupdate', handleTimeUpdate);
+      audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener('canplay', handleCanPlay);
+    };
+  }, [handleNext]);
+  
+  useEffect(() => { 
+    if(audioRef.current) { audioRef.current.volume = volume; }
+  }, [volume]);
+
+  useEffect(() => {
+    if (currentSong) {
+      document.title = `${isPlaying ? '▶' : '⏸'} ${currentSong.title} - MSTQ Music`;
+      if (audioRef.current.src !== currentSong.stream_url) {
+        audioRef.current.src = currentSong.stream_url;
+      }
+      if (isPlaying) {
+        audioRef.current.play().catch(e => console.error("Error playing audio:", e));
+      } else {
+        audioRef.current.pause();
+      }
+    } else {
+      document.title = 'Play Nhạc MSTQ';
+    }
+  }, [currentSong, isPlaying]);
+  
+  const handleSelectSong = (song) => {
+    const songIndexInPlaylist = playlist.findIndex(s => s.id === song.id);
+    setCurrentSong(song);
+    setCurrentIndex(songIndexInPlaylist > -1 ? songIndexInPlaylist : 0);
+    setIsPlaying(true);
+  };
+
+  const handlePlayPause = () => {
+    if (!currentSong && songs.length > 0) {
+      setCurrentSong(playlist[0]);
+      setCurrentIndex(0);
+    }
+    setIsPlaying(!isPlaying);
+  };
+
+  const handlePrev = () => {
+    if (!playlist.length) return;
+    if (audioRef.current.currentTime > 3) {
+      audioRef.current.currentTime = 0;
+      return;
+    }
+    const prevIndex = (currentIndex - 1 + playlist.length) % playlist.length;
+    setCurrentIndex(prevIndex);
+    setCurrentSong(playlist[prevIndex]);
+    setIsPlaying(true);
+  };
+
+  const handleSeek = (e) => {
+    if(audioRef.current.duration) {
+      audioRef.current.currentTime = e.target.value;
+      setProgress(p => ({ ...p, current: e.target.value }));
+    }
+  };
+  
+  const handleMiniPlayerSeek = (e) => {
+      e.stopPropagation();
+      const miniPlayer = e.currentTarget;
+      const rect = miniPlayer.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const seekTime = (x / rect.width) * progress.duration;
+      if (isFinite(seekTime)) {
+          audioRef.current.currentTime = seekTime;
+      }
+  };
+
+  const toggleShuffle = () => {
+    setIsShuffle(prev => {
+      const newShuffleState = !prev;
+      if (newShuffleState) {
+        const newPlaylist = [...songs];
+        const current = currentSong || songs[0];
+        const rest = newPlaylist.filter(s => s.id !== current?.id);
+        for (let i = rest.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [rest[i], rest[j]] = [rest[j], rest[i]];
+        }
+        setPlaylist(current ? [current, ...rest] : rest);
+        setCurrentIndex(0);
+      } else {
+        setPlaylist(songs);
+        const newIndex = songs.findIndex(s => s.id === currentSong?.id);
+        setCurrentIndex(newIndex > -1 ? newIndex : 0);
+      }
+      return newShuffleState;
+    });
+  };
+
+  const toggleLoop = () => setIsLoop(!isLoop);
+
+  const renderActiveView = () => {
+      switch(activeView) {
+          case 'home':
+              return <PlaylistView songs={songs} currentSong={currentSong} onSelectSong={handleSelectSong} filter={filter} />;
+          case 'search':
+              return <div className="px-4 text-center text-[var(--muted)] py-20">Tính năng tìm kiếm sẽ sớm ra mắt.</div>;
+          case 'library':
+               return <div className="px-4 text-center text-[var(--muted)] py-20">Thư viện cá nhân sẽ sớm ra mắt.</div>;
+          case 'settings':
+                return <SettingsView 
+                    theme={theme} setTheme={setTheme}
+                    handleClearCache={handleClearCache}
+                    startTimer={startTimer}
+                    timeLeft={timeLeft}
+                    stopAtEndOfTrack={stopAtEndOfTrack}
+                    setStopAtEndOfTrack={handleSetStopAtEndOfTrack}
+                />;
+          default:
+              return <PlaylistView songs={songs} currentSong={currentSong} onSelectSong={handleSelectSong} filter={filter} />;
+      }
+  }
+
+  // Calculate padding to avoid content being hidden by nav/player
+  const mainPaddingBottom = currentSong ? '160px' : '80px'; 
+
+  return (
+    <div className="bg-[var(--bg)] text-[var(--text)] min-h-screen font-sans transition-colors duration-300">
+      <TopAppBar />
+      <main className="pt-20" style={{ paddingBottom: mainPaddingBottom }}>
+        {renderActiveView()}
+      </main>
+      <MiniPlayer 
+        currentSong={currentSong}
+        isPlaying={isPlaying}
+        onPlayPause={handlePlayPause}
+        onNext={handleNext}
+        openNowPlaying={() => setIsNowPlayingOpen(true)}
+        progress={progress}
+        handleSeek={handleMiniPlayerSeek}
+      />
+      <BottomNavBar activeView={activeView} setActiveView={setActiveView} />
+      <NowPlayingView
+        isOpen={isNowPlayingOpen}
+        closeNowPlaying={() => setIsNowPlayingOpen(false)}
+        currentSong={currentSong}
+        playlist={playlist}
+        onSelectSong={handleSelectSong}
+        isPlaying={isPlaying}
+        onPlayPause={handlePlayPause}
+        onNext={handleNext}
+        onPrev={handlePrev}
+        progress={progress}
+        handleSeek={handleSeek}
+        isLoop={isLoop}
+        toggleLoop={toggleLoop}
+        isShuffle={isShuffle}
+        toggleShuffle={toggleShuffle}
+        volume={volume}
+        setVolume={setVolume}
+      />
+       {/* Global styles for animations, themes, etc. */}
+       <style>{`
+          /* Smooth transition */
+          :root, [data-theme] {
+            transition: background-color .2s ease, color .2s ease, border-color .2s ease, box-shadow .2s ease;
+          }
+          /* DEFAULT THEME (matches 'tinhquang') */
+          :root {
+            --bg:#0a0a0d; --card:#141419; --text:#f5f7ff; --muted:#8b8ca3;
+            --primary:#7c9cff; --primary-fg:#0a0a0d; --ring:#7c9cff66; --shadow:0 10px 30px rgba(0,0,0,.35);
+            --border: color-mix(in srgb, var(--text) 10%, transparent);
+            --nav-bg: rgba(20, 20, 25, 0.8);
+            --gradient: linear-gradient(135deg, #7c9cff 0%, #a2b9ff 100%);
+          }
+           /* Dark Theme */
+          [data-theme="dark"] {
+            --bg: #111827; --card: #1f2937; --text: #f9fafb; --muted: #9ca3af;
+            --primary: #f59e0b; --primary-fg: #111827; --ring: #f59e0b66; --shadow: 0 10px 30px rgba(0,0,0,.35);
+            --border: #374151; --nav-bg: rgba(31, 41, 55, 0.8);
+            --gradient: linear-gradient(135deg, #f59e0b 0%, #fBBF24 100%);
+          }
+          /* Light Theme */
+          [data-theme="light"] {
+            --bg: #f3f4f6; --card: #ffffff; --text: #111827; --muted: #6b7280;
+            --primary: #d97706; --primary-fg: #ffffff; --ring: #d9770666; --shadow: 0 10px 25px rgba(0,0,0,.1);
+            --border: #e5e7eb; --nav-bg: rgba(255, 255, 255, 0.8);
+            --gradient: linear-gradient(135deg, #fbbf24 0%, #f97316 100%);
+          }
+           /* Tinh Quang Theme */
+          [data-theme="tinhquang"] {
+             --bg:#0a0a0d; --card:#141419; --text:#f5f7ff; --muted:#8b8ca3;
+            --primary:#7c9cff; --primary-fg:#0a0a0d; --ring:#7c9cff66; --shadow:0 10px 30px rgba(0,0,0,.35);
+            --border: #232331; --nav-bg: rgba(20, 20, 25, 0.8);
+            --gradient: linear-gradient(135deg, #7c9cff 0%, #a2b9ff 100%);
+          }
+          /* --- 5 NEW THEMES --- */
+          /* 1) CỰC QUANG (Aurora Glow) */
+          [data-theme="cucquang"] {
+            --bg:#0a0b10; --card:#121527; --text:#e8ecff; --muted:#98a5d6;
+            --primary:#7bffea; --primary-fg:#051416; --ring:#7bffea66; --shadow:0 18px 40px rgba(0, 255, 214, .20);
+            --gradient:linear-gradient(135deg,#8a5bff 0%, #7bffea 100%);
+            --border: color-mix(in srgb, var(--text) 10%, transparent); --nav-bg: rgba(18, 21, 39, 0.8);
+          }
+          /* 2) BÌNH MINH (Sunrise) */
+          [data-theme="binhminh"] {
+            --bg:#0f0b07; --card:#1a1410; --text:#fff5eb; --muted:#e7c5a1;
+            --primary:#ff9d4d; --primary-fg:#2a1505; --ring:#ff9d4d66; --shadow:0 16px 36px rgba(255, 157, 77, .18);
+            --gradient:linear-gradient(135deg,#ffcf6b 0%, #ff7a45 100%);
+            --border: color-mix(in srgb, var(--text) 10%, transparent); --nav-bg: rgba(26, 20, 16, 0.8);
+          }
+          /* 3) HƯ KHÔNG (Void Glass) */
+          [data-theme="hukhong"] {
+            --bg:#070809; --card:#0c0e11cc; --text:#e9eef5; --muted:#9aa7b4;
+            --primary:#79a8ff; --primary-fg:#0a0d14; --ring:#79a8ff66; --shadow:0 20px 44px rgba(10, 14, 20, .6);
+            --gradient:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,0));
+            --border: color-mix(in srgb, var(--text) 10%, transparent); --nav-bg: rgba(12, 14, 17, 0.7);
+          }
+          [data-theme="hukhong"] .card { backdrop-filter: blur(10px); }
+          /* 4) SEN VÀNG (Lotus Gold) */
+          [data-theme="senvang"] {
+            --bg:#f6f3ea; --card:#ffffff; --text:#1a202c; --muted:#6b7280;
+            --primary:#d4a017; --primary-fg:#111; --ring:#d4a01755; --shadow:0 16px 36px rgba(212,160,23,.18);
+            --gradient:linear-gradient(135deg,#fff7d6 0%, #ffd66e 100%);
+            --border: #e5e7eb; --nav-bg: rgba(255, 255, 255, 0.8);
+          }
+          /* 5) LỤC BẢO (Emerald Sun) */
+          [data-theme="lucbao"] {
+            --bg:#081414; --card:#102424; --text:#e0f2f1; --muted:#80cbc4;
+            --primary:#f4ff81; --primary-fg:#1a2327; --ring:#f4ff8166; --shadow:0 18px 40px rgba(168, 255, 120, .20);
+            --gradient:linear-gradient(135deg, #a8ff78 0%, #f4ff81 100%);
+            --border: color-mix(in srgb, var(--text) 10%, transparent); --nav-bg: rgba(16, 36, 36, 0.8);
+          }
+
+          /* Theme Swatch Styles */
+          .theme-swatch {
+            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .5rem;
+            padding: .75rem; border-radius: 14px;
+            background: var(--card); color: var(--text);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            cursor: pointer; transition: all 0.2s ease-out;
+          }
+          .theme-swatch .dot {
+            width: 40px; height: 40px; border-radius: 9999px;
+            background: linear-gradient(135deg, var(--c1), var(--c2));
+            box-shadow: 0 0 0 2px rgba(0,0,0,0.1) inset, 0 4px 10px rgba(0,0,0,0.2);
+          }
+          .theme-swatch[aria-current="true"] {
+            outline: 3px solid var(--ring); outline-offset: 2px;
+            transform: scale(1.05);
+          }
+          
+          @keyframes slide-up {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+          }
+          .animate-slide-up {
+            animation: slide-up 0.3s ease-out;
+          }
+       `}</style>
+    </div>
+  );
+}
 
