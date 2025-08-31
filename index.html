@@ -4,13 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Play Nhạc MSTQ</title>
+    
+    <link rel="dns-prefetch" href="https://play-music-wine.vercel.app">
+    <link rel="preconnect" href="https://play-music-wine.vercel.app" crossorigin>
+
     <!-- Tailwind CSS -->
-    <script src="[https://cdn.tailwindcss.com/3.4.1](https://cdn.tailwindcss.com/3.4.1)"></script>
-    <!-- React Libraries -->
-    <script src="[https://unpkg.com/react@18/umd/react.development.js](https://unpkg.com/react@18/umd/react.development.js)" crossorigin></script>
-    <script src="[https://unpkg.com/react-dom@18/umd/react-dom.development.js](https://unpkg.com/react-dom@18/umd/react-dom.development.js)" crossorigin></script>
+    <script src="https://cdn.tailwindcss.com/3.4.1"></script>
+    
+    <!-- React Libraries (PROD) -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    
     <!-- Babel for JSX Transpilation -->
-    <script src="[https://unpkg.com/@babel/standalone/babel.min.js](https://unpkg.com/@babel/standalone/babel.min.js)"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <style>
       /* Smooth transition */
@@ -133,6 +139,25 @@
     <script type="text/babel" data-presets="react">
         const { useState, useEffect, useRef, useCallback } = React;
 
+        const SONGS_CACHE_KEY = 'mstq_songs_v1';
+        const saveSongsCache = (arr) => { try{ localStorage.setItem(SONGS_CACHE_KEY, JSON.stringify({t:Date.now(), d:arr})) }catch{} };
+        const loadSongsCache = () => { try{ const j = JSON.parse(localStorage.getItem(SONGS_CACHE_KEY)||''); return j?.d||[] }catch{ return [] } };
+
+        function useIncrementalVisible(total, step=18) {
+          const [visible, setVisible] = React.useState(step);
+          React.useEffect(() => { setVisible(step); }, [total]);
+          React.useEffect(() => {
+            const onScroll = () => {
+              if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 200) {
+                setVisible(v => Math.min(total, v + step));
+              }
+            };
+            window.addEventListener('scroll', onScroll, { passive:true });
+            return () => window.removeEventListener('scroll', onScroll);
+          }, [total, step]);
+          return visible;
+        }
+
         // --- ICONS (Inline SVG for single-file compilation) ---
         const PlayIcon = ({ size = 24 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>;
         const PauseIcon = ({ size = 24 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>;
@@ -167,12 +192,12 @@
 
         // --- DATA ---
         const platformLinks = [
-            { href: "[https://sites.google.com/view/thiensutinhquang](https://sites.google.com/view/thiensutinhquang)", text: "Website (Google Sites)" },
-            { href: "[https://www.youtube.com/@MinhSuTinhQuang](https://www.youtube.com/@MinhSuTinhQuang)", text: "YouTube Channel" },
-            { href: "[https://thiensutinhquang.github.io/Playlist-YouTube/](https://thiensutinhquang.github.io/Playlist-YouTube/)", text: "Playlist YouTube" },
-            { href: "[https://open.spotify.com/artist/your-artist-id](https://open.spotify.com/artist/your-artist-id)", text: "Spotify" },
-            { href: "[https://www.facebook.com/your-page](https://www.facebook.com/your-page)", text: "Facebook Page" },
-            { href: "[https://zalo.me/your-id](https://zalo.me/your-id)", text: "Zalo" },
+            { href: "https://sites.google.com/view/thiensutinhquang", text: "Website (Google Sites)" },
+            { href: "https://www.youtube.com/@MinhSuTinhQuang", text: "YouTube Channel" },
+            { href: "https://thiensutinhquang.github.io/Playlist-YouTube/", text: "Playlist YouTube" },
+            { href: "https://open.spotify.com/artist/your-artist-id", text: "Spotify" },
+            { href: "https://www.facebook.com/your-page", text: "Facebook Page" },
+            { href: "https://zalo.me/your-id", text: "Zalo" },
         ];
 
         // --- Helper Functions ---
@@ -201,7 +226,7 @@
 
 
         // --- API Configuration ---
-        let API_ENDPOINT = location.hostname.endsWith('.vercel.app') ? '/api/songs' : '[https://play-music-wine.vercel.app/api/songs](https://play-music-wine.vercel.app/api/songs)';
+        let API_ENDPOINT = location.hostname.endsWith('.vercel.app') ? '/api/songs' : 'https://play-music-wine.vercel.app/api/songs';
         const params = new URLSearchParams(location.search);
         if (params.get('api')) API_ENDPOINT = params.get('api');
 
@@ -261,7 +286,7 @@
                 >
                     <div className="flex items-center gap-3 relative z-10">
                         <img
-                            src={currentSong.artwork || '[https://placehold.co/64x64/1f2937/9ca3af?text=](https://placehold.co/64x64/1f2937/9ca3af?text=)🎵'}
+                            src={currentSong.artwork || 'https://placehold.co/64x64/1f2937/9ca3af?text=🎵'}
                             alt={currentSong.title}
                             className="w-12 h-12 rounded-lg object-cover"
                         />
@@ -314,7 +339,7 @@
                     <main className="flex-grow flex flex-col items-center justify-center text-center px-4 pt-4 pb-8">
                         <div className="w-full max-w-xs aspect-square rounded-2xl overflow-hidden shadow-2xl bg-[var(--border)] mb-8">
                             <img
-                                src={currentSong.artwork || '[https://placehold.co/400x400/1f2937/9ca3af?text=MSTQ](https://placehold.co/400x400/1f2937/9ca3af?text=MSTQ)'}
+                                src={currentSong.artwork || 'https://placehold.co/400x400/1f2937/9ca3af?text=MSTQ'}
                                 alt={currentSong.title}
                                 className="w-full h-full object-cover"
                             />
@@ -377,7 +402,7 @@
                                  <div className={`w-8 text-center text-sm font-mono flex-shrink-0 ${song.id === currentSong.id ? 'text-[var(--primary)]' : 'text-[var(--muted)]'}`}>
                                     {parseInt(song.id, 10)}
                                 </div>
-                                <img src={song.artwork || '[https://placehold.co/64x64/1f2937/9ca3af?text=](https://placehold.co/64x64/1f2937/9ca3af?text=)🎵'} className="w-10 h-10 rounded-md object-cover" />
+                                <img src={song.artwork || 'https://placehold.co/64x64/1f2937/9ca3af?text=🎵'} className="w-10 h-10 rounded-md object-cover" />
                                 <div className="flex-grow min-w-0">
                                     <p className={`font-medium truncate ${song.id === currentSong.id ? 'text-[var(--primary)]' : 'text-[var(--text)]'}`}>{song.title}</p>
                                     <p className="text-sm text-[var(--muted)] truncate">{song.artist || 'minhsutinhquang'}</p>
@@ -421,13 +446,14 @@
             song.title.toLowerCase().includes(filter.toLowerCase()) ||
             (song.artist || 'minhsutinhquang').toLowerCase().includes(filter.toLowerCase())
           );
+          const visibleCount = useIncrementalVisible(filteredSongs.length);
           
           if (isLoading) {
               return (
                 <div className="px-4 text-center py-20 text-[var(--muted)]">
                     <p className="text-lg font-medium">Đang tải danh sách nhạc...</p>
                     <div className="mt-6 space-y-4 animate-pulse">
-                        {[...Array(5)].map((_, i) => (
+                        {[...Array(3)].map((_, i) => (
                              <div key={i} className="flex items-center gap-4 p-3 rounded-lg">
                                 <div className="w-14 h-14 rounded-lg bg-[var(--card)]"></div>
                                 <div className="flex-grow min-w-0 space-y-2">
@@ -446,8 +472,8 @@
             <div className="px-4">
                 <h2 className="text-2xl font-bold text-[var(--text)] mb-4">Danh sách phát</h2>
                 <div className="space-y-2">
-                    {filteredSongs.length > 0 ? (
-                    filteredSongs.map((song) => (
+                    {filteredSongs.slice(0, visibleCount).length > 0 ? (
+                    filteredSongs.slice(0, visibleCount).map((song) => (
                         <div
                         key={song.id}
                         onClick={() => onSelectSong(song)}
@@ -457,7 +483,7 @@
                             {parseInt(song.id, 10)}
                         </div>
                         <div className="w-14 h-14 rounded-lg overflow-hidden bg-[var(--border)] flex-shrink-0">
-                            <img src={song.artwork || '[https://placehold.co/64x64/1f2937/9ca3af?text=](https://placehold.co/64x64/1f2937/9ca3af?text=)🎵'} alt={song.title} className="w-full h-full object-cover"/>
+                            <img loading="lazy" decoding="async" fetchpriority="low" src={song.artwork || 'https://placehold.co/64x64/1f2937/9ca3af?text=🎵'} alt={song.title} className="w-full h-full object-cover"/>
                         </div>
                         <div className="flex-grow min-w-0">
                             <p className={`font-semibold truncate text-[15px] ${currentSong?.id === song.id ? 'text-[var(--primary)]' : 'text-[var(--text)]'}`}>
@@ -755,56 +781,50 @@
           }, [currentIndex, playlist]);
 
           useEffect(() => {
-            const loadSongs = async () => {
-              let loadedFromCache = false;
-              // 1. Load from cache for instant UI
-              try {
-                const cachedData = localStorage.getItem('mstq-song-cache');
-                if (cachedData) {
-                  const { songs: cachedSongs } = JSON.parse(cachedData);
-                  if (Array.isArray(cachedSongs) && cachedSongs.length > 0) {
-                    setSongs(cachedSongs);
-                    setPlaylist(cachedSongs);
-                    setIsLoading(false);
-                    loadedFromCache = true;
-                  }
-                }
-              } catch (e) { /* silent fail */ }
+            // 1) show cache ngay lập tức
+            const cached = loadSongsCache();
+            if (cached.length) { 
+                setSongs(cached); 
+                setPlaylist(cached); 
+                setIsLoading(false);
+            }
 
-              // 2. Fetch fresh data to update in background
-              try {
-                const res = await fetch(API_ENDPOINT);
-                const freshSongs = await res.json();
-                if (Array.isArray(freshSongs)) {
-                  // Only update the master list. This avoids disrupting a shuffled playlist.
-                  setSongs(freshSongs);
-                  localStorage.setItem('mstq-song-cache', JSON.stringify({ timestamp: Date.now(), songs: freshSongs }));
-                  // If we didn't load from cache, we need to populate the initial playlist
-                  if (!loadedFromCache) {
-                     setPlaylist(freshSongs);
-                  }
+            // 2) revalidate với timeout và retry nhẹ
+            const fetchSongs = async () => {
+                const ctrl = new AbortController();
+                const t = setTimeout(()=>ctrl.abort(), 4000); // 4s là đủ để lần đầu
+                try {
+                    const res = await fetch(API_ENDPOINT, { cache: 'no-store', signal: ctrl.signal });
+                    clearTimeout(t);
+                    if (!res.ok) throw new Error('Bad status');
+                    const data = await res.json();
+                    if (Array.isArray(data) && data.length) {
+                        setSongs(data);
+                        setPlaylist(data);
+                        saveSongsCache(data); // lưu để lần sau mở là có ngay
+                    }
+                } catch (e) {
+                    // nếu lỗi mạng, vẫn giữ cache; thử lại nền sau 8s
+                    setTimeout(fetchSongs, 8000);
+                } finally {
+                    if (isLoading) {
+                        setIsLoading(false);
+                    }
                 }
-              } catch (error) {
-                console.error("Failed to fetch fresh songs:", error);
-              } finally {
-                // If still loading (because cache was empty), stop.
-                if (isLoading) {
-                    setIsLoading(false);
-                }
-              }
             };
-            loadSongs();
+            fetchSongs();
           }, []);
 
           useEffect(() => {
             const audio = audioRef.current;
             let rafId = null;
             let lastTs = 0;
-            const TICK = 250; // ms ~ 4Hz
+            const TICK = 250; 
 
             const loop = (ts) => {
+                const tick = document.hidden ? 1000 : TICK;
                 if (!audio.paused && audio.duration) {
-                    if (ts - lastTs >= TICK) {
+                    if (ts - lastTs >= tick) {
                         lastTs = ts;
                         setProgress({ current: audio.currentTime, duration: audio.duration });
                         if ('mediaSession' in navigator) {
