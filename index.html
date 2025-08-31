@@ -17,7 +17,7 @@ const ChevronDownIcon = () => <svg width="24" height="24" viewBox="0 0 24 24" fi
 const ExternalLinkIcon = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>;
 const TrashIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>;
 const ListMusicIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v6m-6-3h12M17.5 2.5 10 9l-5-4L0 10l5 4 5-4 7.5 6.5Z"/></svg>;
-const Mic2Icon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 13-4.5 4.5"/><path d="m13 12 4.5-4.5"/><path d="M8.5 2.5 4 7l5 5"/><path d="m12 13 5 5"/><path d="M15.5 21.5 21 16l-5-5"/></svg>;
+const Mic2Icon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 13-4.5 4.5"/><path d="m13 12 4.5-4.5"/><path d="M8.5 2.5 4 7l5 5"/><path d="m12 13 5 5"/><path d="m15.5 21.5 21 16l-5-5"/></svg>;
 
 // --- THEME ---
 const themes = {
@@ -74,7 +74,7 @@ if (params.get('api')) API_ENDPOINT = params.get('api');
 
 // --- Components ---
 
-const TopAppBar = () => (
+const TopAppBar = React.memo(() => (
     <header className="fixed top-0 inset-x-0 z-30 p-4 flex items-center justify-between bg-[var(--bg)]/80 backdrop-blur-lg border-b border-[var(--border)]">
         <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-[var(--gradient)] flex items-center justify-center">
@@ -88,9 +88,9 @@ const TopAppBar = () => (
             </button>
         </div>
     </header>
-);
+));
 
-const BottomNavBar = ({ activeView, setActiveView }) => {
+const BottomNavBar = React.memo(({ activeView, setActiveView }) => {
     const navItems = [
         { id: 'home', label: 'Trang chủ', icon: <HomeIcon active={activeView === 'home'} /> },
         { id: 'search', label: 'Tìm kiếm', icon: <SearchIcon active={activeView === 'search'} /> },
@@ -114,9 +114,9 @@ const BottomNavBar = ({ activeView, setActiveView }) => {
             </div>
         </nav>
     );
-};
+});
 
-const MiniPlayer = ({ currentSong, isPlaying, onPlayPause, onNext, openNowPlaying, progress }) => {
+const MiniPlayer = React.memo(({ currentSong, isPlaying, onPlayPause, onNext, openNowPlaying, progress }) => {
     const progressRef = useRef(null);
     if (!currentSong) return null;
     
@@ -157,9 +157,9 @@ const MiniPlayer = ({ currentSong, isPlaying, onPlayPause, onNext, openNowPlayin
              </div>
         </div>
     );
-};
+});
 
-const NowPlayingView = ({
+const NowPlayingView = React.memo(({
     isOpen, closeNowPlaying, currentSong, isPlaying, onPlayPause, onNext, onPrev,
     progress, handleSeek, isLoop, toggleLoop, isShuffle, toggleShuffle, volume, setVolume,
     playlist, onSelectSong,
@@ -279,9 +279,9 @@ const NowPlayingView = ({
             </div>
         </div>
     );
-};
+});
 
-const PlaylistView = ({ songs, onSelectSong, currentSong, filter }) => {
+const PlaylistView = React.memo(({ songs, onSelectSong, currentSong, filter }) => {
   const filteredSongs = songs.filter(song => 
     song.title.toLowerCase().includes(filter.toLowerCase()) ||
     (song.artist || 'minhsutinhquang').toLowerCase().includes(filter.toLowerCase())
@@ -341,9 +341,9 @@ const PlaylistView = ({ songs, onSelectSong, currentSong, filter }) => {
         </div>
     </div>
   );
-};
+});
 
-const SettingsView = ({ theme, setTheme, handleClearCache, startTimer, timeLeft, stopAtEndOfTrack, setStopAtEndOfTrack }) => {
+const SettingsView = React.memo(({ theme, setTheme, handleClearCache, startTimer, timeLeft, stopAtEndOfTrack, setStopAtEndOfTrack, powerSave, setPowerSave }) => {
     return (
         <div className="px-4 space-y-8">
             <div>
@@ -368,6 +368,23 @@ const SettingsView = ({ theme, setTheme, handleClearCache, startTimer, timeLeft,
                              </button>
                         ))}
                     </div>
+                </div>
+            </div>
+
+             {/* Tiết kiệm pin */}
+            <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-[var(--text)]">Tiết kiệm pin</h3>
+                <div className="bg-[var(--card)] rounded-2xl p-4 flex items-center justify-between">
+                    <div>
+                        <p className="font-medium">Tắt hiệu ứng nặng</p>
+                        <p className="text-sm text-[var(--muted)]">Giảm hiệu ứng blur, shadow, animation</p>
+                    </div>
+                    <input 
+                        type="checkbox" 
+                        checked={powerSave} 
+                        onChange={e=>setPowerSave(e.target.checked)} 
+                        className="h-6 w-6 rounded-md text-[var(--primary)] bg-[var(--border)] border-[var(--border)] focus:ring-2 focus:ring-[var(--primary)]" 
+                    />
                 </div>
             </div>
 
@@ -434,7 +451,7 @@ const SettingsView = ({ theme, setTheme, handleClearCache, startTimer, timeLeft,
             </div>
         </div>
     );
-}
+});
 
 
 // --- Main App Component ---
@@ -455,18 +472,56 @@ export default function App() {
   const [isNowPlayingOpen, setIsNowPlayingOpen] = useState(false);
   const [timeLeft, setTimeLeft] = useState(null);
   const [stopAtEndOfTrack, setStopAtEndOfTrack] = useState(false);
+  const [powerSave, setPowerSave] = useState(localStorage.getItem('power-save') === '1');
+
 
   // Refs
-  const audioRef = useRef(new Audio());
+  const audioRef = useRef(null);
+  if (!audioRef.current) {
+    const a = new Audio();
+    a.preload = 'metadata';      // không tải full khi chưa cần
+    a.playsInline = true;        // iOS phát trong nền/lockscreen
+    a.crossOrigin = 'anonymous'; // cho MediaSession ảnh/metadata
+    audioRef.current = a;
+  }
   const timerRef = useRef({ timeout: null, interval: null });
 
-  // --- Theme Effect ---
+  // --- Theme & Power-save Effects ---
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('music-theme', theme);
   }, [theme]);
   
+  useEffect(() => {
+    document.documentElement.toggleAttribute('data-powersave', powerSave);
+    localStorage.setItem('power-save', powerSave ? '1' : '0');
+  }, [powerSave]);
+  
+  useEffect(() => {
+    const onVis = () => {
+      document.documentElement.toggleAttribute('data-bg', document.hidden);
+    };
+    document.addEventListener('visibilitychange', onVis);
+    return () => document.removeEventListener('visibilitychange', onVis);
+  }, []);
+  
   // --- Timer ---
+  const smoothPause = useCallback(async (ms = 400) => {
+    const a = audioRef.current;
+    if (!a) return;
+    const startVolume = a.volume;
+    const steps = 10;
+    const stepDuration = ms / steps;
+  
+    for (let i = 1; i <= steps; i++) {
+      a.volume = startVolume * (1 - i / steps);
+      await new Promise(r => setTimeout(r, stepDuration));
+    }
+    a.pause();
+    a.volume = startVolume; // Restore for next play
+    setIsPlaying(false);
+  }, []);
+  
   const startTimer = useCallback((durationInMinutes) => {
     hapticFeedback();
     clearTimeout(timerRef.current.timeout);
@@ -492,11 +547,11 @@ export default function App() {
     }, 1000);
 
     timerRef.current.timeout = setTimeout(() => {
-        setIsPlaying(false);
+        smoothPause();
         setTimeLeft(null);
         clearInterval(timerRef.current.interval);
     }, durationInSeconds * 1000);
-  }, []);
+  }, [smoothPause]);
   
   const handleSetStopAtEndOfTrack = (value) => {
       hapticFeedback();
@@ -530,10 +585,10 @@ export default function App() {
       }
   }, []);
 
-  // --- Playback Handlers ---
+  // --- Playback Handlers & Effects ---
   const handleNext = useCallback(() => {
     if (stopAtEndOfTrack) {
-        setIsPlaying(false);
+        smoothPause();
         setStopAtEndOfTrack(false);
         return;
     }
@@ -547,9 +602,20 @@ export default function App() {
     setCurrentIndex(nextIndex);
     setCurrentSong(playlist[nextIndex]);
     setIsPlaying(true);
-  }, [currentIndex, playlist, isLoop, stopAtEndOfTrack]);
+  }, [currentIndex, playlist, isLoop, stopAtEndOfTrack, smoothPause]);
+  
+  const handlePrev = useCallback(() => {
+    if (!playlist.length) return;
+    if (audioRef.current.currentTime > 3) {
+      audioRef.current.currentTime = 0;
+      return;
+    }
+    const prevIndex = (currentIndex - 1 + playlist.length) % playlist.length;
+    setCurrentIndex(prevIndex);
+    setCurrentSong(playlist[prevIndex]);
+    setIsPlaying(true);
+  }, [currentIndex, playlist]);
 
-  // --- Effects ---
   useEffect(() => {
     const fetchSongs = async () => {
       try {
@@ -569,17 +635,44 @@ export default function App() {
 
   useEffect(() => {
     const audio = audioRef.current;
-    const handleTimeUpdate = () => setProgress({ current: audio.currentTime, duration: audio.duration });
+    let rafId = null;
+    let lastTs = 0;
+    const TICK = 250; // ms ~ 4Hz
+
+    const loop = (ts) => {
+        if (!audio.paused && audio.duration) {
+            if (ts - lastTs >= TICK) {
+                lastTs = ts;
+                setProgress({ current: audio.currentTime, duration: audio.duration });
+                if ('mediaSession' in navigator) {
+                     try {
+                        navigator.mediaSession.setPositionState?.({
+                            duration: audio.duration || 0,
+                            playbackRate: 1,
+                            position: audio.currentTime || 0
+                        });
+                    } catch {}
+                }
+            }
+        }
+        rafId = requestAnimationFrame(loop);
+    };
+    const start = () => { cancelAnimationFrame(rafId); rafId = requestAnimationFrame(loop); };
+    const stop  = () => { cancelAnimationFrame(rafId); };
     const handleEnded = () => handleNext();
     const handleCanPlay = () => setProgress(p => ({ ...p, duration: audio.duration }));
 
-    audio.addEventListener('timeupdate', handleTimeUpdate);
+    audio.addEventListener('play', start);
+    audio.addEventListener('pause', stop);
     audio.addEventListener('ended', handleEnded);
     audio.addEventListener('canplay', handleCanPlay);
+    start();
     return () => {
-      audio.removeEventListener('timeupdate', handleTimeUpdate);
-      audio.removeEventListener('ended', handleEnded);
-      audio.removeEventListener('canplay', handleCanPlay);
+        stop();
+        audio.removeEventListener('play', start);
+        audio.removeEventListener('pause', stop);
+        audio.removeEventListener('ended', handleEnded);
+        audio.removeEventListener('canplay', handleCanPlay);
     };
   }, [handleNext]);
   
@@ -596,12 +689,58 @@ export default function App() {
       if (isPlaying) {
         audioRef.current.play().catch(e => console.error("Error playing audio:", e));
       } else {
-        audioRef.current.pause();
+         audioRef.current.pause();
       }
     } else {
       document.title = 'Play Nhạc MSTQ';
     }
   }, [currentSong, isPlaying]);
+  
+  useEffect(() => {
+    if (!currentSong) return;
+    if ('mediaSession' in navigator) {
+        navigator.mediaSession.metadata = new MediaMetadata({
+            title: currentSong.title,
+            artist: currentSong.artist || 'minhsutinhquang',
+            artwork: currentSong.artwork ? [
+                { src: currentSong.artwork, sizes: '256x256', type: 'image/png' }
+            ] : []
+        });
+        navigator.mediaSession.setActionHandler('play',  () => setIsPlaying(true));
+        navigator.mediaSession.setActionHandler('pause', () => {
+            smoothPause();
+            setIsPlaying(false);
+        });
+        navigator.mediaSession.setActionHandler('previoustrack', handlePrev);
+        navigator.mediaSession.setActionHandler('nexttrack', handleNext);
+    }
+  }, [currentSong, handleNext, handlePrev, smoothPause]);
+  
+  useEffect(() => {
+    const a = audioRef.current;
+    if (!a) return;
+    if (progress.duration && progress.current > progress.duration - 5) {
+        const next = playlist[(currentIndex + 1) % playlist.length];
+        if (next && a.dataset.warmed !== next.id) {
+            fetch(next.stream_url, { method: 'HEAD', cache: 'no-store' }).catch(()=>{});
+            a.dataset.warmed = next.id;
+        }
+    }
+  }, [progress.current, progress.duration, currentIndex, playlist]);
+  
+   useEffect(() => {
+    const ch = new BroadcastChannel('mstq_music');
+    ch.onmessage = (msg) => {
+        if (msg.data.type === 'play' && isPlaying) {
+             const now = performance.now();
+             if (!msg.data.time || now - msg.data.time > 100) {
+                 audioRef.current.pause();
+                 setIsPlaying(false);
+             }
+        }
+    };
+    return () => ch.close();
+  }, [isPlaying]);
   
   const handleSelectSong = (song) => {
     const songIndexInPlaylist = playlist.findIndex(s => s.id === song.id);
@@ -615,19 +754,15 @@ export default function App() {
       setCurrentSong(playlist[0]);
       setCurrentIndex(0);
     }
-    setIsPlaying(!isPlaying);
-  };
 
-  const handlePrev = () => {
-    if (!playlist.length) return;
-    if (audioRef.current.currentTime > 3) {
-      audioRef.current.currentTime = 0;
-      return;
+    if (isPlaying) {
+        smoothPause();
+    } else {
+        setIsPlaying(true);
+        const ch = new BroadcastChannel('mstq_music');
+        ch.postMessage({ type: 'play', time: performance.now() });
+        ch.close();
     }
-    const prevIndex = (currentIndex - 1 + playlist.length) % playlist.length;
-    setCurrentIndex(prevIndex);
-    setCurrentSong(playlist[prevIndex]);
-    setIsPlaying(true);
   };
 
   const handleSeek = (e) => {
@@ -688,6 +823,8 @@ export default function App() {
                     timeLeft={timeLeft}
                     stopAtEndOfTrack={stopAtEndOfTrack}
                     setStopAtEndOfTrack={handleSetStopAtEndOfTrack}
+                    powerSave={powerSave}
+                    setPowerSave={setPowerSave}
                 />;
           default:
               return <PlaylistView songs={songs} currentSong={currentSong} onSelectSong={handleSelectSong} filter={filter} />;
@@ -830,6 +967,21 @@ export default function App() {
           }
           .animate-slide-up {
             animation: slide-up 0.3s ease-out;
+          }
+
+          /* Power Save & Background modes */
+          :root[data-bg] { --shadow: none; }
+          :root[data-powersave] {
+            --shadow: none;
+          }
+          :root[data-powersave] * { 
+             transition: none !important;
+             animation: none !important;
+          }
+          :root[data-powersave] .backdrop-blur-lg,
+          :root[data-powersave] .backdrop-blur-md { 
+            backdrop-filter: none; 
+            --nav-bg: var(--card);
           }
        `}</style>
     </div>
