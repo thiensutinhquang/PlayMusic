@@ -1,28 +1,30 @@
+// /api/songs.js  (Serverless Node.js)
 import { list } from '@vercel/blob';
 
-export const config = { runtime: 'edge' };
+export const config = {
+  runtime: 'nodejs18.x' // hoặc 'nodejs20.x' nếu project bạn là Node 20
+};
 
-export default async function handler(req) {
-  // Cho phép CORS để gọi từ web khác
+export default async function handler(req, res) {
+  // CORS
   if (req.method === 'OPTIONS') {
-    return new Response(null, {
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET,OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type,Authorization'
-      }
-    });
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
+    return res.status(204).end();
   }
 
   try {
-    // Lấy danh sách file trong Blob store (prefix "music/")
-    const { blobs } = await list({ prefix: 'music/' });
+    // Nếu store private, truyền token; public thì cũng OK khi có token
+    const { blobs } = await list({
+      prefix: 'music/',
+      token: process.env.BLOB_READ_WRITE_TOKEN
+    });
 
-    // Chỉ lọc file nhạc
     const tracks = blobs.filter(b => /\.(mp3|m4a|wav)$/i.test(b.pathname));
 
     const results = tracks.map((t, idx) => ({
-      id: (idx + 1).toString().padStart(3, '0'),
+      id: String(idx + 1).padStart(3, '0'),
       title: decodeURIComponent(t.pathname.split('/').pop().replace(/\.(mp3|m4a|wav)$/i, '')),
       artist: '',
       duration: null,
@@ -30,19 +32,11 @@ export default async function handler(req) {
       stream_url: t.url
     }));
 
-    return new Response(JSON.stringify(results), {
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
-    });
-  } catch (err) {
-    return new Response(JSON.stringify({ error: err.message }), {
-      status: 500,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
-    });
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Content-Type', 'application/json');
+    return res.status(200).send(JSON.stringify(results));
+  } catch (e) {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    return res.status(500).json({ error: e?.message || 'Internal Error' });
   }
 }
