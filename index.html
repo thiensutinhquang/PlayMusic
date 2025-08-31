@@ -116,8 +116,7 @@ const BottomNavBar = React.memo(({ activeView, setActiveView }) => {
     );
 });
 
-const MiniPlayer = React.memo(({ currentSong, isPlaying, onPlayPause, onNext, openNowPlaying, progress }) => {
-    const progressRef = useRef(null);
+const MiniPlayer = React.memo(({ currentSong, isPlaying, onPlayPause, onNext, openNowPlaying, progress, handleSeek }) => {
     if (!currentSong) return null;
     
     const progressPercent = (progress.duration > 0) ? (progress.current / progress.duration) * 100 : 0;
@@ -152,8 +151,11 @@ const MiniPlayer = React.memo(({ currentSong, isPlaying, onPlayPause, onNext, op
                     </button>
                 </div>
             </div>
-             <div ref={progressRef} className="absolute bottom-0 left-0 right-0 h-1 bg-[var(--muted)]/20 z-0 group-hover:h-2 transition-all duration-200">
-                 <div className="h-full bg-[var(--primary)]" style={{ width: `${progressPercent}%` }}></div>
+             <div 
+                 onClick={handleSeek}
+                 className="absolute bottom-0 left-0 right-0 h-1 bg-[var(--muted)]/20 z-0 group-hover:h-2 transition-all duration-200"
+             >
+                 <div className="h-full bg-[var(--primary)] pointer-events-none" style={{ width: `${progressPercent}%` }}></div>
              </div>
         </div>
     );
@@ -767,21 +769,23 @@ export default function App() {
 
   const handleSeek = (e) => {
     if(audioRef.current.duration) {
-      audioRef.current.currentTime = e.target.value;
-      setProgress(p => ({ ...p, current: e.target.value }));
-    }
-  };
-  
-  const handleMiniPlayerSeek = (e) => {
-      e.stopPropagation();
-      const miniPlayer = e.currentTarget;
-      const rect = miniPlayer.getBoundingClientRect();
+      const target = e.currentTarget;
+      const rect = target.getBoundingClientRect();
       const x = e.clientX - rect.left;
-      const seekTime = (x / rect.width) * progress.duration;
+      const seekTime = (x / rect.width) * audioRef.current.duration;
       if (isFinite(seekTime)) {
           audioRef.current.currentTime = seekTime;
       }
+    }
   };
+  
+  const handleNowPlayingSeek = (e) => {
+      if(audioRef.current.duration) {
+        audioRef.current.currentTime = e.target.value;
+        setProgress(p => ({ ...p, current: e.target.value }));
+      }
+  }
+
 
   const toggleShuffle = () => {
     setIsShuffle(prev => {
@@ -847,7 +851,7 @@ export default function App() {
         onNext={handleNext}
         openNowPlaying={() => setIsNowPlayingOpen(true)}
         progress={progress}
-        handleSeek={handleMiniPlayerSeek}
+        handleSeek={handleSeek}
       />
       <BottomNavBar activeView={activeView} setActiveView={setActiveView} />
       <NowPlayingView
@@ -861,7 +865,7 @@ export default function App() {
         onNext={handleNext}
         onPrev={handlePrev}
         progress={progress}
-        handleSeek={handleSeek}
+        handleSeek={handleNowPlayingSeek}
         isLoop={isLoop}
         toggleLoop={toggleLoop}
         isShuffle={isShuffle}
