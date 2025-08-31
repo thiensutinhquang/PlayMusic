@@ -20,7 +20,7 @@ export default async function handler(req, res) {
 
   try {
     // KHÔNG dùng prefix: lấy toàn bộ blob trong store
-    const { blobs } = await list({ token: process.env.BLOB_READ_WRITE_TOKEN });
+    const { blobs } = await list({ prefix: 'music/', token: process.env.BLOB_READ_WRITE_TOKEN });    
 
     const byPath = new Map(blobs.map(b => [b.pathname, b]));
     const AUDIO_RE = /\.(mp3|m4a|wav)$/i;
