@@ -1,13 +1,368 @@
-<script>
-fetch('/api/songs')
-  .then(r => r.json())
-  .then(list => {
-    const box = document.getElementById('playlist');
-    list.forEach(x => {
-      const d = document.createElement('div');
-      d.innerHTML = `<p><b>${x.title}</b></p><audio controls preload="metadata" src="${x.stream_url}"></audio>`;
-      box.appendChild(d);
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Play Music 🎵</title>
+  <meta name="description" content="Kho nhạc phát trực tiếp từ Vercel Blob" />
+  <style>
+    :root{
+      --bg:#0b0b0e; --card:#141419; --muted:#8b8ca3; --text:#f5f7ff; --acc:#7c9cff;
+      --acc2:#b16cff; --border:#232331;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;
+      background:linear-gradient(180deg,#0a0a0d, #111222 50%, #0a0a0d);
+      color:var(--text);
+    }
+    .wrap{max-width:980px; margin:24px auto; padding:0 16px}
+    header{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px}
+    .brand{display:flex; align-items:center; gap:10px}
+    .logo{
+      width:42px;height:42px;border-radius:12px;
+      background: radial-gradient(120% 120% at 30% 20%, var(--acc2), var(--acc) 45%, #222 70%);
+      box-shadow:0 10px 30px #0006, inset 0 0 10px #fff2;
+    }
+    h1{font-size:20px; margin:0; letter-spacing:.3px}
+    .tools{display:flex; gap:8px; flex-wrap:wrap}
+    .input{
+      background:var(--card); border:1px solid var(--border); color:var(--text);
+      padding:10px 12px; border-radius:10px; outline:none; min-width:230px;
+    }
+    .btn{
+      background:linear-gradient(180deg,#2832ff,#6b2cff);
+      color:white; border:none; padding:10px 14px; border-radius:10px;
+      cursor:pointer; font-weight:600; letter-spacing:.2px;
+      box-shadow:0 10px 30px #0006;
+    }
+    .btn.secondary{background:#1c1d27}
+    .grid{
+      display:grid; grid-template-columns:1fr 360px; gap:16px;
+    }
+    @media (max-width:900px){ .grid{grid-template-columns:1fr} }
+
+    /* Player card */
+    .player{
+      background:linear-gradient(180deg,#161621, #0f0f16);
+      border:1px solid var(--border); border-radius:16px; padding:16px;
+      position:sticky; top:16px;
+    }
+    .np{display:flex; gap:14px; align-items:center}
+    .art{
+      width:96px; height:96px; border-radius:12px; flex:0 0 96px; overflow:hidden;
+      background:#222; border:1px solid var(--border)
+    }
+    .art img{width:100%; height:100%; object-fit:cover}
+    .meta{min-width:0}
+    .title{font-size:18px; font-weight:700; margin:0 0 4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+    .artist{color:var(--muted); font-size:14px; margin:0}
+    .prog{margin:12px 0 6px}
+    .bar{height:8px; background:#1b1b26; border-radius:999px; position:relative; cursor:pointer; border:1px solid var(--border)}
+    .fill{position:absolute; top:0; left:0; height:100%; width:0%; background:linear-gradient(90deg,var(--acc),var(--acc2))}
+    .time{display:flex; justify-content:space-between; font-size:12px; color:var(--muted)}
+    .controls{display:flex; align-items:center; gap:8px; margin-top:10px; flex-wrap:wrap}
+    .kbtn{
+      background:#1a1b25; border:1px solid var(--border); color:var(--text);
+      padding:8px 12px; border-radius:10px; cursor:pointer; min-width:42px; text-align:center
+    }
+    .kbtn.big{padding:10px 16px; font-weight:700}
+    .vol{display:flex; align-items:center; gap:8px; margin-left:auto}
+    .vol input[type="range"]{width:120px}
+
+    /* List */
+    .list{
+      background:var(--card); border:1px solid var(--border); border-radius:16px; overflow:hidden;
+    }
+    .row{
+      display:grid; grid-template-columns:48px 1fr 80px; gap:10px;
+      padding:10px 14px; border-bottom:1px solid var(--border); align-items:center; cursor:pointer
+    }
+    .row:hover{background:#181827}
+    .row.active{background:#1b1930}
+    .row .idx{color:#9aa0b3}
+    .row .ttl{white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+    .row .dur{text-align:right; color:#9aa0b3}
+    .empty{
+      padding:20px; color:var(--muted); text-align:center;
+    }
+    footer{margin:22px 0; color:var(--muted); font-size:12px}
+    .link{color:#9fb7ff; text-decoration:none}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <h1>Play Music</h1>
+          <div style="color:var(--muted); font-size:12px">Phát nhạc từ <code>/api/songs</code></div>
+        </div>
+      </div>
+      <div class="tools">
+        <input id="q" class="input" type="search" placeholder="Tìm bài hát..." />
+        <button id="btnReload" class="btn secondary">↻ Reload</button>
+        <a class="btn" href="/api/songs" target="_blank" rel="noopener">Mở API</a>
+      </div>
+    </header>
+
+    <div class="grid">
+      <!-- Danh sách -->
+      <section class="list" id="list">
+        <div class="empty">Đang tải playlist...</div>
+      </section>
+
+      <!-- Player -->
+      <aside class="player">
+        <div class="np">
+          <div class="art"><img id="art" alt="artwork" src="" /></div>
+          <div class="meta">
+            <h2 id="npTitle" class="title">Chưa phát</h2>
+            <p id="npArtist" class="artist">—</p>
+          </div>
+        </div>
+
+        <div class="prog">
+          <div class="bar" id="bar"><div class="fill" id="fill"></div></div>
+          <div class="time"><span id="cur">0:00</span><span id="dur">0:00</span></div>
+        </div>
+
+        <div class="controls">
+          <button class="kbtn" id="prev">⏮</button>
+          <button class="kbtn big" id="play">▶️</button>
+          <button class="kbtn" id="next">⏭</button>
+
+          <button class="kbtn" id="loop" title="Lặp">🔁</button>
+          <button class="kbtn" id="shuffle" title="Ngẫu nhiên">🔀</button>
+
+          <div class="vol">
+            <span>🔊</span>
+            <input id="vol" type="range" min="0" max="1" step="0.01" value="0.9" />
+          </div>
+        </div>
+
+        <audio id="audio" preload="metadata" crossorigin="anonymous"></audio>
+      </aside>
+    </div>
+
+    <footer>
+      ⌨️ Phím tắt: <b>Space</b> phát/tạm dừng · <b>←/→</b> tua 5s · <b>↑/↓</b> âm lượng · <b>N/P</b> kế/ trước
+    </footer>
+  </div>
+
+  <script>
+    const API = '/api/songs';
+    const $ = sel => document.querySelector(sel);
+    const listEl = $('#list');
+    const qEl = $('#q');
+    const btnReload = $('#btnReload');
+
+    const audio = $('#audio');
+    const playBtn = $('#play');
+    const prevBtn = $('#prev');
+    const nextBtn = $('#next');
+    const loopBtn = $('#loop');
+    const shuffleBtn = $('#shuffle');
+    const vol = $('#vol');
+
+    const art = $('#art');
+    const tTitle = $('#npTitle');
+    const tArtist = $('#npArtist');
+    const bar = $('#bar');
+    const fill = $('#fill');
+    const curT = $('#cur');
+    const durT = $('#dur');
+
+    let songs = [];
+    let order = [];      // thứ tự phát (để hỗ trợ shuffle)
+    let idx = -1;        // index hiện tại trong 'order'
+    let isShuffle = JSON.parse(localStorage.getItem('shuffle') || 'false');
+    let isLoop = JSON.parse(localStorage.getItem('loop') || 'false');
+
+    shuffleBtn.classList.toggle('active', isShuffle);
+    loopBtn.classList.toggle('active', isLoop);
+
+    async function fetchSongs(){
+      listEl.innerHTML = `<div class="empty">Đang tải playlist...</div>`;
+      try{
+        const res = await fetch(API, { cache: 'no-store' });
+        const data = await res.json();
+        songs = Array.isArray(data) ? data : [];
+        if(!songs.length){
+          listEl.innerHTML = `<div class="empty">Chưa có bài nào. Hãy upload vào Blob prefix <code>music/</code>.</div>`;
+          return;
+        }
+        buildOrder();
+        renderList(songs);
+        restoreLast();
+      }catch(e){
+        listEl.innerHTML = `<div class="empty">Không tải được playlist: ${e?.message || e}</div>`;
+      }
+    }
+
+    function buildOrder(){
+      order = songs.map((_, i) => i);
+      if(isShuffle) shuffle(order);
+    }
+
+    function renderList(items){
+      const kw = (qEl.value || '').toLowerCase().trim();
+      const rows = items
+        .map((s, i) => ({s, i}))
+        .filter(({s}) => !kw || (s.title||'').toLowerCase().includes(kw) || (s.artist||'').toLowerCase().includes(kw))
+        .map(({s, i}) => {
+          const d = fmt(s.duration);
+          return `
+            <div class="row" data-i="${i}">
+              <div class="idx">${String(i+1).padStart(2,'0')}</div>
+              <div class="ttl">${escapeHtml(s.title || 'Untitled')}${s.artist? ' — <span style="color:#9aa0b3">'+escapeHtml(s.artist)+'</span>' : ''}</div>
+              <div class="dur">${d}</div>
+            </div>`;
+        }).join('');
+      listEl.innerHTML = rows || `<div class="empty">Không thấy bài nào phù hợp.</div>`;
+      [...listEl.querySelectorAll('.row')].forEach(el=>{
+        el.addEventListener('click', ()=>{
+          const i = +el.getAttribute('data-i');
+          playByIndex(i);
+        });
+      });
+      highlightActive();
+    }
+
+    function highlightActive(){
+      [...listEl.querySelectorAll('.row')].forEach(el => el.classList.remove('active'));
+      if(idx>=0){
+        const real = order[idx];
+        const row = listEl.querySelector(`.row[data-i="${real}"]`);
+        if(row) row.classList.add('active');
+      }
+    }
+
+    function playByIndex(realIndex){
+      // tìm vị trí realIndex trong order, hoặc push lên đầu
+      const pos = order.indexOf(realIndex);
+      if(pos !== -1) idx = pos; else { order.unshift(realIndex); idx = 0; }
+      playCurrent();
+    }
+
+    function playCurrent(){
+      if(idx<0 || idx>=order.length) idx = 0;
+      const s = songs[ order[idx] ];
+      if(!s) return;
+      audio.src = s.stream_url;
+      audio.play().catch(()=>{ /* chờ user interaction */ });
+
+      tTitle.textContent = s.title || 'Untitled';
+      tArtist.textContent = s.artist || '—';
+      art.src = s.artwork || 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300"><rect width="100%" height="100%" fill="%231a1b25"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="%239aa0b3" font-family="sans-serif" font-size="22">No Artwork</text></svg>';
+      document.title = `▶ ${s.title || 'Play Music'} – Play Music`;
+
+      playBtn.textContent = '⏸';
+      highlightActive();
+      saveLast();
+    }
+
+    function nextTrack(){
+      if(isLoop) return playCurrent();
+      idx = (idx + 1) % order.length;
+      playCurrent();
+    }
+    function prevTrack(){
+      if(audio.currentTime > 3){ audio.currentTime = 0; return; }
+      idx = (idx - 1 + order.length) % order.length;
+      playCurrent();
+    }
+
+    // helpers
+    function shuffle(a){
+      for(let i=a.length-1;i>0;i--){
+        const j = Math.floor(Math.random()*(i+1));
+        [a[i],a[j]] = [a[j],a[i]];
+      }
+      return a;
+    }
+    function fmt(sec){
+      if(!isFinite(sec) || sec==null) return '0:00';
+      sec = Math.floor(sec);
+      const m = Math.floor(sec/60), s = sec%60;
+      return m+':' + String(s).padStart(2,'0');
+    }
+    function escapeHtml(s){
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    // events
+    playBtn.onclick = ()=>{
+      if(audio.paused){ audio.play(); playBtn.textContent='⏸'; }
+      else { audio.pause(); playBtn.textContent='▶️'; }
+    };
+    nextBtn.onclick = nextTrack;
+    prevBtn.onclick = prevTrack;
+    loopBtn.onclick = ()=>{
+      isLoop = !isLoop; localStorage.setItem('loop', JSON.stringify(isLoop));
+      loopBtn.classList.toggle('active', isLoop);
+    };
+    shuffleBtn.onclick = ()=>{
+      isShuffle = !isShuffle; localStorage.setItem('shuffle', JSON.stringify(isShuffle));
+      buildOrder(); highlightActive();
+    };
+    vol.oninput = ()=>{ audio.volume = +vol.value; };
+
+    audio.addEventListener('timeupdate', ()=>{
+      const p = audio.currentTime / (audio.duration || 1);
+      fill.style.width = (p*100)+'%';
+      curT.textContent = fmt(audio.currentTime);
+      if(isFinite(audio.duration)) durT.textContent = fmt(audio.duration);
     });
-  });
-</script>
-<div id="playlist"></div>
+    audio.addEventListener('ended', nextTrack);
+    audio.addEventListener('loadedmetadata', ()=>{
+      durT.textContent = fmt(audio.duration);
+      // nếu API thiếu duration, cập nhật hiển thị hàng đang active:
+      highlightActive();
+    });
+
+    bar.addEventListener('click', (e)=>{
+      const r = bar.getBoundingClientRect();
+      const ratio = Math.min(1, Math.max(0, (e.clientX - r.left)/r.width));
+      if(isFinite(audio.duration)) audio.currentTime = ratio * audio.duration;
+    });
+
+    qEl.addEventListener('input', ()=>renderList(songs));
+    btnReload.addEventListener('click', fetchSongs);
+
+    // keyboard
+    window.addEventListener('keydown', (e)=>{
+      if (e.target.matches('input,textarea')) return;
+      if (e.code === 'Space'){ e.preventDefault(); playBtn.click(); }
+      else if (e.key === 'ArrowRight'){ audio.currentTime = Math.min(audio.currentTime + 5, (audio.duration||0)); }
+      else if (e.key === 'ArrowLeft'){ audio.currentTime = Math.max(audio.currentTime - 5, 0); }
+      else if (e.key.toLowerCase() === 'n'){ nextTrack(); }
+      else if (e.key.toLowerCase() === 'p'){ prevTrack(); }
+      else if (e.key === 'ArrowUp'){ audio.volume = Math.min(1, audio.volume + 0.05); vol.value = audio.volume; }
+      else if (e.key === 'ArrowDown'){ audio.volume = Math.max(0, audio.volume - 0.05); vol.value = audio.volume; }
+    });
+
+    // persist last song
+    function saveLast(){
+      const data = { order, idx, vol: audio.volume };
+      localStorage.setItem('pm_state', JSON.stringify(data));
+    }
+    function restoreLast(){
+      try{
+        const s = JSON.parse(localStorage.getItem('pm_state')||'null');
+        if(!s) return;
+        order = Array.isArray(s.order) && s.order.every(n=>Number.isInteger(n)) ? s.order.filter(i=>i<songs.length) : order;
+        idx = (typeof s.idx==='number' && s.idx<order.length) ? s.idx : idx;
+        if(typeof s.vol==='number'){ audio.volume = s.vol; vol.value = s.vol; }
+        if(idx<0) idx = 0;
+        playCurrent();
+      }catch{}
+    }
+
+    // boot
+    fetchSongs();
+  </script>
+</body>
+</html>
