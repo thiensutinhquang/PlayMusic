@@ -104,7 +104,7 @@
       <div class="tools">
         <input id="q" class="input" type="search" placeholder="Tìm bài hát..." />
         <button id="btnReload" class="btn secondary">↻ Reload</button>
-        <a class="btn" href="/api/songs" target="_blank" rel="noopener">Mở API</a>
+        <a class="btn" href="https://play-music-wine.vercel.app/api/songs" target="_blank" rel="noopener">Mở API</a>
       </div>
     </header>
 
@@ -153,7 +153,15 @@
   </div>
 
   <script>
-    const API = '/api/songs';
+    // Dùng URL đầy đủ của Vercel khi chạy ngoài Vercel (GitHub Pages, domain riêng, v.v.)
+    let API = location.hostname.endsWith('.vercel.app')
+      ? '/api/songs'   // nếu đang mở trang trên chính Vercel
+      : 'https://play-music-wine.vercel.app/api/songs';  // còn lại (GitHub Pages)
+
+    // (tuỳ chọn) cho phép override qua query ?api=
+    const p = new URLSearchParams(location.search);
+    if (p.get('api')) API = p.get('api');
+    
     const $ = sel => document.querySelector(sel);
     const listEl = $('#list');
     const qEl = $('#q');
@@ -366,3 +374,4 @@
   </script>
 </body>
 </html>
+
