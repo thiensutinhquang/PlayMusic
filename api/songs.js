@@ -1,7 +1,8 @@
 import { list } from '@vercel/blob';
 
+export const config = { runtime: 'nodejs20.x' }; // quan trọng
+
 export default async function handler(req, res) {
-  // CORS
   if (req.method === 'OPTIONS') {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
@@ -16,10 +17,11 @@ export default async function handler(req, res) {
     });
 
     const tracks = blobs.filter(b => /\.(mp3|m4a|wav)$/i.test(b.pathname));
-
     const results = tracks.map((t, i) => ({
       id: String(i + 1).padStart(3, '0'),
-      title: decodeURIComponent(t.pathname.split('/').pop().replace(/\.(mp3|m4a|wav)$/i, '')),
+      title: decodeURIComponent(
+        t.pathname.split('/').pop().replace(/\.(mp3|m4a|wav)$/i, '')
+      ),
       artist: '',
       duration: null,
       artwork: null,
