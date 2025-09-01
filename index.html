@@ -137,7 +137,7 @@
     <div id="root"></div>
 
     <script type="text/babel" data-presets="react">
-        const { useState, useEffect, useRef, useCallback } = React;
+        const { useState, useEffect, useRef, useCallback, useMemo } = React;
 
         const SONGS_CACHE_KEY = 'mstq_songs_v1';
         const saveSongsCache = (arr) => { try{ localStorage.setItem(SONGS_CACHE_KEY, JSON.stringify({t:Date.now(), d:arr})) }catch{} };
@@ -213,6 +213,27 @@
                 navigator.vibrate(10);
             }
         };
+        
+        const LRC_REGEX = /\[(\d{2}):(\d{2})[.:](\d{2,3})\](.*)/;
+        const parseLRC = (lrcText) => {
+            if (!lrcText) return null;
+            const lines = lrcText.split('\n');
+            const parsed = lines
+                .map(line => {
+                    const match = line.match(LRC_REGEX);
+                    if (match) {
+                        const [, minutes, seconds, ms, text] = match;
+                        const time = parseInt(minutes, 10) * 60 + parseInt(seconds, 10) + parseInt(ms, 10) / 1000;
+                        return { time, text: text.trim() };
+                    }
+                    if(line.trim().length > 0) return { time: null, text: line.trim() };
+                    return null;
+                })
+                .filter(Boolean);
+
+            return parsed.some(line => line.time !== null) ? parsed : lrcText;
+        };
+
 
         const generateColorFromString = (str) => {
             if (!str) return [190, 60, 40]; // Default color
@@ -318,6 +339,73 @@
                 </div>
             );
         });
+        
+        const LyricsContent = React.memo(({ lyricsText, currentTime }) => {
+            const lyricsContainerRef = useRef(null);
+            const activeLineRef = useRef(null);
+            
+            const parsedLyrics = useMemo(() => parseLRC(lyricsText), [lyricsText]);
+            
+            if (!parsedLyrics) {
+                 return (
+                    <div className="h-full flex flex-col items-center justify-center text-center p-8">
+                        <h3 className="text-xl font-bold mb-4">Lời bài hát</h3>
+                        <p className="text-[var(--muted)]">Lời bài hát không có sẵn cho bài này.</p>
+                    </div>
+                );
+            }
+            
+            if (typeof parsedLyrics === 'string') {
+                 return (
+                    <div className="h-full flex flex-col items-center p-4">
+                        <div className="w-full flex-grow overflow-y-auto">
+                           <p className="text-2xl/relaxed whitespace-pre-wrap p-4 text-center font-semibold text-[var(--muted)]">
+                                {parsedLyrics}
+                            </p>
+                        </div>
+                    </div>
+                );
+            }
+
+            let activeLineIndex = -1;
+            for(let i = parsedLyrics.length - 1; i >= 0; i--) {
+                if (parsedLyrics[i].time !== null && currentTime >= parsedLyrics[i].time) {
+                    activeLineIndex = i;
+                    break;
+                }
+            }
+
+            useEffect(() => {
+                if (activeLineRef.current && lyricsContainerRef.current) {
+                    const container = lyricsContainerRef.current;
+                    const activeLine = activeLineRef.current;
+                    const containerHeight = container.clientHeight;
+                    const lineTop = activeLine.offsetTop;
+                    const lineHeight = activeLine.offsetHeight;
+
+                    container.scrollTo({
+                        top: lineTop - (containerHeight / 2) + (lineHeight / 2),
+                        behavior: 'smooth'
+                    });
+                }
+            }, [activeLineIndex]);
+            
+            return (
+                 <div ref={lyricsContainerRef} className="h-full flex flex-col items-center p-4 overflow-y-auto scroll-smooth">
+                    <div className="w-full py-[40vh]">
+                    {parsedLyrics.map((line, index) => (
+                        <p 
+                            key={index} 
+                            ref={index === activeLineIndex ? activeLineRef : null}
+                            className={`transition-all duration-300 ease-in-out text-center font-semibold p-2 ${index === activeLineIndex ? 'text-[var(--primary)] text-3xl' : 'text-[var(--muted)] text-2xl opacity-50'}`}
+                        >
+                            {line.text || '...'}
+                        </p>
+                    ))}
+                    </div>
+                </div>
+            );
+        });
 
         const NowPlayingView = React.memo(({
             isOpen, closeNowPlaying, currentSong, isPlaying, onPlayPause, onNext, onPrev,
@@ -414,13 +502,6 @@
                 </div>
             );
             
-            const LyricsContent = () => (
-                <div className="h-full flex flex-col items-center justify-center text-center p-8">
-                    <h3 className="text-xl font-bold mb-4">Lời bài hát</h3>
-                    <p className="text-[var(--muted)]">Tính năng lời bài hát sẽ sớm được ra mắt.</p>
-                </div>
-            );
-
             return (
                 <div className="fixed inset-0 bg-[var(--bg)] z-50 flex flex-col p-4 animate-slide-up">
                      <div className="absolute top-0 left-0 right-0 h-full -z-10 transition-all duration-500" style={backgroundStyle} />
@@ -435,7 +516,7 @@
                     </header>
                     
                     <div className="flex-grow min-h-0">
-                        { isQueueOpen ? <QueueContent /> : isLyricsOpen ? <LyricsContent /> : <MainContent /> }
+                        { isQueueOpen ? <QueueContent /> : isLyricsOpen ? <LyricsContent lyricsText={currentSong.lyrics} currentTime={progress.current} /> : <MainContent /> }
                     </div>
                 </div>
             );
@@ -800,7 +881,9 @@
                     const data = await res.json();
                     if (Array.isArray(data) && data.length) {
                         setSongs(data);
-                        setPlaylist(data);
+                        if (!isShuffle) { // Only update playlist if not shuffling
+                            setPlaylist(data);
+                        }
                         saveSongsCache(data); // lưu để lần sau mở là có ngay
                     }
                 } catch (e) {
@@ -813,7 +896,7 @@
                 }
             };
             fetchSongs();
-          }, []);
+          }, [isShuffle]);
 
           useEffect(() => {
             const audio = audioRef.current;
@@ -995,7 +1078,7 @@
           const renderActiveView = () => {
               switch(activeView) {
                   case 'home':
-                      return <PlaylistView isLoading={isLoading} songs={songs} currentSong={currentSong} onSelectSong={handleSelectSong} filter={filter} />;
+                      return <PlaylistView isLoading={isLoading} songs={playlist} currentSong={currentSong} onSelectSong={handleSelectSong} filter={filter} />;
                   case 'search':
                       return <div className="px-4 text-center text-[var(--muted)] py-20">Tính năng tìm kiếm sẽ sớm ra mắt.</div>;
                   case 'library':
@@ -1012,7 +1095,7 @@
                             setPowerSave={setPowerSave}
                         />;
                   default:
-                      return <PlaylistView songs={songs} currentSong={currentSong} onSelectSong={handleSelectSong} filter={filter} />;
+                      return <PlaylistView isLoading={isLoading} songs={playlist} currentSong={currentSong} onSelectSong={handleSelectSong} filter={filter} />;
               }
           }
 
