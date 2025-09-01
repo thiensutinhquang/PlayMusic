@@ -2,7 +2,7 @@ import { list, put } from '@vercel/blob';
 import { parseStream } from 'music-metadata';
 import { Readable } from 'node:stream';
 
-export const config = { runtime: 'nodejs20.x' };
+export const config = { runtime: 'nodejs' };
 
 const AUDIO_RE = /\.(mp3|m4a|wav)$/i;
 const FALLBACK_ARTIST = 'minhsutinhquang';
