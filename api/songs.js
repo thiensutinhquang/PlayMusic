@@ -161,6 +161,7 @@ export default async function handler(req, res) {
         duration: Number.isFinite(duration) ? duration : null,
         artwork,
         stream_url: t.url,
+        path: t.pathname, // <-- Đã thêm dòng này
         // Trả lyrics text; nếu muốn gọn payload, bạn có thể bỏ field này và làm /api/lyrics riêng.
         lyrics: lyrics || null
       };
