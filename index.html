@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://play-music-wine.vercel.app" crossorigin>
 
     <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com/3.4.1"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- React Libraries (PROD) -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
@@ -21,7 +21,7 @@
     <style>
       /* Smooth transition */
       :root, [data-theme] {
-        transition: background-color .2s ease, color .2s ease, border-color .2s ease, box-shadow .2s ease;
+        transition: color .2s ease, background-color .2s ease;
       }
       /* DEFAULT THEME (matches 'tinhquang') */
       :root {
@@ -175,7 +175,7 @@
         const ExternalLinkIcon = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>;
         const TrashIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>;
         const ListMusicIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v6m-6-3h12M17.5 2.5 10 9l-5-4L0 10l5 4 5-4 7.5 6.5Z"/></svg>;
-        const Mic2Icon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 13-4.5 4.5"/><path d="m13 12 4.5-4.5"/><path d="M8.5 2.5 4 7l5 5"/><path d="m12 13 5 5"/><path d="m15.5 21.5 21 16l-5-5"/></svg>;
+        const Mic2Icon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 13-4.5 4.5"/><path d="m13 12 4.5-4.5"/><path d="M8.5 2.5 4 7l5 5"/><path d="m12 13 5 5"/><path d="M15.5 21.5 21 16l-5-5"/></svg>;
 
         // --- THEME ---
         const themes = {
@@ -331,7 +331,7 @@
                         </div>
                     </div>
                      <div 
-                         onClick={handleSeek}
+                         onPointerDown={handleSeek}
                          className="absolute bottom-0 left-0 right-0 h-1 bg-[var(--muted)]/20 z-0 group-hover:h-2 transition-all duration-200"
                      >
                          <div className="h-full bg-[var(--primary)] pointer-events-none" style={{ width: `${progressPercent}%` }}></div>
@@ -343,9 +343,27 @@
         const LyricsContent = React.memo(({ lyricsText, currentTime }) => {
             const lyricsContainerRef = useRef(null);
             const activeLineRef = useRef(null);
-            
             const parsedLyrics = useMemo(() => parseLRC(lyricsText), [lyricsText]);
+
+            const activeLineIndex = useMemo(() => {
+                if (!Array.isArray(parsedLyrics)) return -1;
+                for (let i = parsedLyrics.length - 1; i >= 0; i--) {
+                    if (parsedLyrics[i].time != null && currentTime >= parsedLyrics[i].time) return i;
+                }
+                return -1;
+            }, [parsedLyrics, currentTime]);
             
+            useEffect(() => {
+                if (activeLineIndex >= 0 && lyricsContainerRef.current && activeLineRef.current) {
+                    const container = lyricsContainerRef.current;
+                    const activeLine = activeLineRef.current;
+                    container.scrollTo({
+                        top: activeLine.offsetTop - container.clientHeight / 2 + activeLine.offsetHeight / 2,
+                        behavior: 'smooth',
+                    });
+                }
+            }, [activeLineIndex]);
+
             if (!parsedLyrics) {
                  return (
                     <div className="h-full flex flex-col items-center justify-center text-center p-8">
@@ -366,29 +384,6 @@
                     </div>
                 );
             }
-
-            let activeLineIndex = -1;
-            for(let i = parsedLyrics.length - 1; i >= 0; i--) {
-                if (parsedLyrics[i].time !== null && currentTime >= parsedLyrics[i].time) {
-                    activeLineIndex = i;
-                    break;
-                }
-            }
-
-            useEffect(() => {
-                if (activeLineRef.current && lyricsContainerRef.current) {
-                    const container = lyricsContainerRef.current;
-                    const activeLine = activeLineRef.current;
-                    const containerHeight = container.clientHeight;
-                    const lineTop = activeLine.offsetTop;
-                    const lineHeight = activeLine.offsetHeight;
-
-                    container.scrollTo({
-                        top: lineTop - (containerHeight / 2) + (lineHeight / 2),
-                        behavior: 'smooth'
-                    });
-                }
-            }, [activeLineIndex]);
             
             return (
                  <div ref={lyricsContainerRef} className="h-full flex flex-col items-center p-4 overflow-y-auto scroll-smooth">
@@ -427,6 +422,7 @@
                     <main className="flex-grow flex flex-col items-center justify-center text-center px-4 pt-4 pb-8">
                         <div className="w-full max-w-xs aspect-square rounded-2xl overflow-hidden shadow-2xl bg-[var(--border)] mb-8">
                             <img
+                                loading="eager"
                                 src={currentSong.artwork || 'https://placehold.co/400x400/1f2937/9ca3af?text=MSTQ'}
                                 alt={currentSong.title}
                                 className="w-full h-full object-cover"
@@ -440,7 +436,7 @@
                             <input
                                 type="range"
                                 min="0"
-                                max={progress.duration || 100}
+                                max={Math.max(1, progress.duration || 0)}
                                 value={progress.current}
                                 onChange={handleSeek}
                                 className="w-full h-2 bg-[var(--muted)]/20 rounded-lg appearance-none cursor-pointer range-lg accent-[var(--primary)]"
@@ -451,19 +447,20 @@
                             </div>
                         </div>
                         <div className="flex items-center justify-center gap-4">
-                            <button onClick={() => { hapticFeedback(); toggleShuffle(); }} className="p-3 text-[var(--muted)] hover:text-[var(--text)] transition-colors"><ShuffleIcon active={isShuffle} /></button>
-                            <button onClick={() => { hapticFeedback(); onPrev(); }} className="p-3 text-[var(--text)] hover:opacity-80 transition"><SkipBackIcon size={32} /></button>
-                            <button onClick={() => { hapticFeedback(); onPlayPause(); }} className="w-20 h-20 bg-[var(--primary)] rounded-full flex items-center justify-center text-[var(--primary-fg)] hover:opacity-90 transition shadow-lg shadow-[var(--primary)]/30">
+                            <button aria-label="Shuffle" onClick={() => { hapticFeedback(); toggleShuffle(); }} className="p-3 text-[var(--muted)] hover:text-[var(--text)] transition-colors"><ShuffleIcon active={isShuffle} /></button>
+                            <button aria-label="Previous" onClick={() => { hapticFeedback(); onPrev(); }} className="p-3 text-[var(--text)] hover:opacity-80 transition"><SkipBackIcon size={32} /></button>
+                            <button aria-label="Play/Pause" onClick={() => { hapticFeedback(); onPlayPause(); }} className="w-20 h-20 bg-[var(--primary)] rounded-full flex items-center justify-center text-[var(--primary-fg)] hover:opacity-90 transition shadow-lg shadow-[var(--primary)]/30">
                                 {isPlaying ? <PauseIcon size={40} /> : <PlayIcon size={40} />}
                             </button>
-                            <button onClick={() => { hapticFeedback(); onNext(); }} className="p-3 text-[var(--text)] hover:opacity-80 transition"><SkipForwardIcon size={32} /></button>
-                            <button onClick={() => { hapticFeedback(); toggleLoop(); }} className="p-3 text-[var(--muted)] hover:text-[var(--text)] transition-colors"><RepeatIcon active={isLoop} /></button>
+                            <button aria-label="Next" onClick={() => { hapticFeedback(); onNext(); }} className="p-3 text-[var(--text)] hover:opacity-80 transition"><SkipForwardIcon size={32} /></button>
+                            <button aria-label="Repeat" onClick={() => { hapticFeedback(); toggleLoop(); }} className="p-3 text-[var(--muted)] hover:text-[var(--text)] transition-colors"><RepeatIcon active={isLoop} /></button>
                         </div>
                         <div className="flex items-center justify-around mt-6">
-                            <button onClick={()=>setIsLyricsOpen(true)} className="p-2 text-[var(--muted)] hover:text-[var(--text)]"><Mic2Icon/></button>
+                            <button aria-label="Show Lyrics" onClick={()=>setIsLyricsOpen(true)} className="p-2 text-[var(--muted)] hover:text-[var(--text)]"><Mic2Icon/></button>
                              <div className="flex items-center gap-3 max-w-xs mx-auto">
                                 <Volume2Icon />
                                 <input
+                                    aria-label="Volume"
                                     type="range"
                                     min="0" max="1" step="0.01"
                                     value={volume}
@@ -471,7 +468,7 @@
                                     className="w-full h-1.5 bg-[var(--muted)]/20 rounded-lg appearance-none cursor-pointer range-sm accent-[var(--primary)]"
                                 />
                             </div>
-                            <button onClick={()=>setIsQueueOpen(true)} className="p-2 text-[var(--muted)] hover:text-[var(--text)]"><ListMusicIcon/></button>
+                            <button aria-label="Show Queue" onClick={()=>setIsQueueOpen(true)} className="p-2 text-[var(--muted)] hover:text-[var(--text)]"><ListMusicIcon/></button>
                         </div>
                     </footer>
                 </>
@@ -871,6 +868,7 @@
             }
 
             // 2) revalidate với timeout và retry nhẹ
+            let retry = 0;
             const fetchSongs = async () => {
                 const ctrl = new AbortController();
                 const t = setTimeout(()=>ctrl.abort(), 4000); // 4s là đủ để lần đầu
@@ -887,8 +885,10 @@
                         saveSongsCache(data); // lưu để lần sau mở là có ngay
                     }
                 } catch (e) {
-                    // nếu lỗi mạng, vẫn giữ cache; thử lại nền sau 8s
-                    setTimeout(fetchSongs, 8000);
+                    if (retry < 5) {
+                        retry++;
+                        setTimeout(fetchSongs, 8000);
+                    }
                 } finally {
                     if (isLoading) {
                         setIsLoading(false);
@@ -1035,7 +1035,7 @@
             if(audioRef.current.duration) {
               const target = e.currentTarget;
               const rect = target.getBoundingClientRect();
-              const x = e.clientX - rect.left;
+              const x = e.clientX ?? e.touches?.[0]?.clientX - rect.left;
               const seekTime = (x / rect.width) * audioRef.current.duration;
               if (isFinite(seekTime)) {
                   audioRef.current.currentTime = seekTime;
@@ -1045,8 +1045,9 @@
           
           const handleNowPlayingSeek = (e) => {
               if(audioRef.current.duration) {
-                audioRef.current.currentTime = e.target.value;
-                setProgress(p => ({ ...p, current: e.target.value }));
+                const val = parseFloat(e.target.value);
+                audioRef.current.currentTime = val;
+                setProgress(p => ({ ...p, current: val }));
               }
           }
 
