@@ -140,8 +140,12 @@
         const { useState, useEffect, useRef, useCallback, useMemo } = React;
 
         const SONGS_CACHE_KEY = 'mstq_songs_v1';
+        const FAVORITES_CACHE_KEY = 'mstq_favorites_v1';
         const saveSongsCache = (arr) => { try{ localStorage.setItem(SONGS_CACHE_KEY, JSON.stringify({t:Date.now(), d:arr})) }catch{} };
         const loadSongsCache = () => { try{ const j = JSON.parse(localStorage.getItem(SONGS_CACHE_KEY)||''); return j?.d||[] }catch{ return [] } };
+        const saveFavoritesCache = (arr) => { try { localStorage.setItem(FAVORITES_CACHE_KEY, JSON.stringify(arr)) } catch {} };
+        const loadFavoritesCache = () => { try { return JSON.parse(localStorage.getItem(FAVORITES_CACHE_KEY) || '[]') } catch { return [] } };
+
 
         function useIncrementalVisible(total, step=18) {
           const [visible, setVisible] = React.useState(step);
@@ -176,6 +180,7 @@
         const TrashIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>;
         const ListMusicIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v6m-6-3h12M17.5 2.5 10 9l-5-4L0 10l5 4 5-4 7.5 6.5Z"/></svg>;
         const Mic2Icon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 13-4.5 4.5"/><path d="m13 12 4.5-4.5"/><path d="M8.5 2.5 4 7l5 5"/><path d="m12 13 5 5"/><path d="M15.5 21.5 21 16l-5-5"/></svg>;
+        const HeartIcon = ({ active, size = 20 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>;
 
         // --- THEME ---
         const themes = {
@@ -261,11 +266,6 @@
                     </div>
                     <h1 className="text-lg font-bold text-[var(--text)]">Play Nhạc</h1>
                 </div>
-                 <div className="md:hidden relative">
-                    <button onClick={() => { hapticFeedback(); /* logic to open search */ }} className="w-10 h-10 flex items-center justify-center">
-                         <SearchIcon size={22} />
-                    </button>
-                </div>
             </header>
         ));
 
@@ -295,7 +295,7 @@
             );
         });
 
-        const MiniPlayer = React.memo(({ currentSong, isPlaying, onPlayPause, onNext, openNowPlaying, progress, handleSeek }) => {
+        const MiniPlayer = React.memo(({ currentSong, isPlaying, onPlayPause, onNext, openNowPlaying, progress, handleSeek, isFavorite, onToggleFavorite }) => {
             if (!currentSong) return null;
             
             const progressPercent = (progress.duration > 0) ? (progress.current / progress.duration) * 100 : 0;
@@ -315,14 +315,23 @@
                             <p className="font-semibold text-[15px] text-[var(--text)] truncate">{currentSong.title}</p>
                             <p className="text-sm text-[var(--muted)] truncate">{currentSong.artist || 'minhsutinhquang'}</p>
                         </div>
-                        <div className="flex items-center gap-2 pr-2">
+                        <div className="flex items-center gap-1 pr-1">
                              <button
+                                aria-label="Toggle Favorite"
+                                onClick={(e) => { e.stopPropagation(); hapticFeedback(); onToggleFavorite(currentSong.id); }}
+                                className={`w-11 h-11 flex items-center justify-center rounded-full transition-colors ${isFavorite ? 'text-red-500' : 'text-[var(--muted)] hover:text-[var(--text)]'}`}
+                            >
+                                <HeartIcon active={isFavorite} />
+                            </button>
+                             <button
+                                aria-label="Play/Pause"
                                 onClick={(e) => { e.stopPropagation(); hapticFeedback(); onPlayPause(); }}
                                 className="w-11 h-11 flex items-center justify-center text-[var(--text)] rounded-full hover:bg-[var(--border)] transition-colors"
                             >
                                 {isPlaying ? <PauseIcon size={20} /> : <PlayIcon size={20} />}
                             </button>
                              <button
+                                aria-label="Next"
                                 onClick={(e) => { e.stopPropagation(); hapticFeedback(); onNext(); }}
                                 className="w-11 h-11 flex items-center justify-center text-[var(--text)] rounded-full hover:bg-[var(--border)] transition-colors"
                             >
@@ -405,10 +414,15 @@
         const NowPlayingView = React.memo(({
             isOpen, closeNowPlaying, currentSong, isPlaying, onPlayPause, onNext, onPrev,
             progress, handleSeek, isLoop, toggleLoop, isShuffle, toggleShuffle, volume, setVolume,
-            playlist, onSelectSong,
+            playlist, onSelectSong, isFavorite, onToggleFavorite
         }) => {
-            const [isQueueOpen, setIsQueueOpen] = useState(false);
-            const [isLyricsOpen, setIsLyricsOpen] = useState(false);
+            const [activeContent, setActiveContent] = useState('main');
+
+            useEffect(() => {
+                if (isOpen) {
+                    setActiveContent('main');
+                }
+            }, [isOpen]);
             
             if (!isOpen || !currentSong) return null;
             
@@ -428,8 +442,19 @@
                                 className="w-full h-full object-cover"
                             />
                         </div>
-                        <h2 className="text-2xl lg:text-3xl font-bold text-[var(--text)]">{currentSong.title}</h2>
-                        <p className="text-[var(--muted)] mt-2 text-base lg:text-lg">{currentSong.artist || 'minhsutinhquang'}</p>
+                        <div className="flex items-center gap-4">
+                            <div className="text-left flex-grow">
+                                <h2 className="text-2xl lg:text-3xl font-bold text-[var(--text)]">{currentSong.title}</h2>
+                                <p className="text-[var(--muted)] mt-1 text-base lg:text-lg">{currentSong.artist || 'minhsutinhquang'}</p>
+                            </div>
+                            <button
+                                aria-label="Toggle Favorite"
+                                onClick={() => { hapticFeedback(); onToggleFavorite(currentSong.id); }}
+                                className={`p-3 rounded-full transition-colors ${isFavorite ? 'text-red-500' : 'text-[var(--muted)] hover:text-[var(--text)]'}`}
+                            >
+                                <HeartIcon active={isFavorite} size={28} />
+                            </button>
+                        </div>
                     </main>
                     <footer className="flex-shrink-0">
                         <div className="mb-4">
@@ -456,7 +481,7 @@
                             <button aria-label="Repeat" onClick={() => { hapticFeedback(); toggleLoop(); }} className="p-3 text-[var(--muted)] hover:text-[var(--text)] transition-colors"><RepeatIcon active={isLoop} /></button>
                         </div>
                         <div className="flex items-center justify-around mt-6">
-                            <button aria-label="Show Lyrics" onClick={()=>setIsLyricsOpen(true)} className="p-2 text-[var(--muted)] hover:text-[var(--text)]"><Mic2Icon/></button>
+                            <button aria-label="Show Lyrics" onClick={()=>setActiveContent('lyrics')} className="p-2 text-[var(--muted)] hover:text-[var(--text)]"><Mic2Icon/></button>
                              <div className="flex items-center gap-3 max-w-xs mx-auto">
                                 <Volume2Icon />
                                 <input
@@ -468,7 +493,7 @@
                                     className="w-full h-1.5 bg-[var(--muted)]/20 rounded-lg appearance-none cursor-pointer range-sm accent-[var(--primary)]"
                                 />
                             </div>
-                            <button aria-label="Show Queue" onClick={()=>setIsQueueOpen(true)} className="p-2 text-[var(--muted)] hover:text-[var(--text)]"><ListMusicIcon/></button>
+                            <button aria-label="Show Queue" onClick={()=>setActiveContent('queue')} className="p-2 text-[var(--muted)] hover:text-[var(--text)]"><ListMusicIcon/></button>
                         </div>
                     </footer>
                 </>
@@ -503,17 +528,17 @@
                 <div className="fixed inset-0 bg-[var(--bg)] z-50 flex flex-col p-4 animate-slide-up">
                      <div className="absolute top-0 left-0 right-0 h-full -z-10 transition-all duration-500" style={backgroundStyle} />
                     <header className="flex-shrink-0 flex items-center justify-between">
-                        <button onClick={isQueueOpen || isLyricsOpen ? () => {setIsQueueOpen(false); setIsLyricsOpen(false)} : closeNowPlaying} className="w-11 h-11 flex items-center justify-center rounded-full hover:bg-[var(--card)]/50">
+                        <button onClick={activeContent !== 'main' ? () => setActiveContent('main') : closeNowPlaying} className="w-11 h-11 flex items-center justify-center rounded-full hover:bg-[var(--card)]/50">
                             <ChevronDownIcon />
                         </button>
                         <div className="text-center">
-                             <p className="font-bold text-[var(--text)]">{ isQueueOpen ? "Tiếp theo" : isLyricsOpen ? "Lời bài hát" : currentSong.title }</p>
+                             <p className="font-bold text-[var(--text)]">{ activeContent === 'queue' ? "Tiếp theo" : activeContent === 'lyrics' ? "Lời bài hát" : currentSong.title }</p>
                         </div>
                         <div className="w-11 h-11"></div>
                     </header>
                     
                     <div className="flex-grow min-h-0">
-                        { isQueueOpen ? <QueueContent /> : isLyricsOpen ? <LyricsContent lyricsText={currentSong.lyrics} currentTime={progress.current} /> : <MainContent /> }
+                        { activeContent === 'queue' ? <QueueContent /> : activeContent === 'lyrics' ? <LyricsContent lyricsText={currentSong.lyrics} currentTime={progress.current} /> : <MainContent /> }
                     </div>
                 </div>
             );
@@ -548,7 +573,7 @@
 
           return (
             <div className="px-4">
-                <h2 className="text-2xl font-bold text-[var(--text)] mb-4">Danh sách phát</h2>
+                <h2 className="text-2xl font-bold text-[var(--text)] mb-4">{filter ? "Kết quả tìm kiếm" : "Danh sách phát"}</h2>
                 <div className="space-y-2">
                     {filteredSongs.slice(0, visibleCount).length > 0 ? (
                     filteredSongs.slice(0, visibleCount).map((song) => (
@@ -694,6 +719,65 @@
             );
         });
 
+        const SearchView = ({ songs, onSelectSong, currentSong }) => {
+            const [filter, setFilter] = useState('');
+            const searchInputRef = useRef(null);
+
+            useEffect(() => {
+                searchInputRef.current?.focus();
+            }, []);
+
+            const filteredSongs = useMemo(() => {
+                if (!filter) return [];
+                return songs.filter(song => 
+                    song.title.toLowerCase().includes(filter.toLowerCase()) ||
+                    (song.artist || 'minhsutinhquang').toLowerCase().includes(filter.toLowerCase())
+                );
+            }, [songs, filter]);
+
+            return (
+                 <div className="px-4">
+                    <div className="relative mb-6">
+                        <input 
+                            ref={searchInputRef}
+                            type="text" 
+                            placeholder="Nhập tên bài hát, nghệ sĩ..." 
+                            value={filter} 
+                            onChange={(e) => setFilter(e.target.value)}
+                            className="w-full bg-[var(--card)] border border-[var(--border)] rounded-full py-3 pl-12 pr-4 text-lg text-[var(--text)] placeholder-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
+                        />
+                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--muted)]">
+                            <SearchIcon size={24} />
+                        </div>
+                    </div>
+                    {filter && <PlaylistView isLoading={false} songs={filteredSongs} currentSong={currentSong} onSelectSong={onSelectSong} filter={filter} />}
+                 </div>
+            );
+        };
+
+        const LibraryView = ({ songs, onSelectSong, currentSong, favorites }) => {
+            const favoriteSongs = useMemo(() => {
+                return songs.filter(song => favorites.includes(song.id));
+            }, [songs, favorites]);
+
+             if (favoriteSongs.length === 0) {
+              return (
+                <div className="px-4 text-center py-20 text-[var(--muted)]">
+                    <h2 className="text-2xl font-bold text-[var(--text)] mb-4">Thư viện</h2>
+                    <p className="text-lg font-medium">Bạn chưa có bài hát yêu thích nào.</p>
+                    <p>Bấm vào hình trái tim ❤️ để thêm vào đây nhé!</p>
+                </div>
+              );
+          }
+
+            return (
+                <div className="px-4">
+                    <h2 className="text-2xl font-bold text-[var(--text)] mb-4">Bài hát Yêu thích</h2>
+                    <PlaylistView isLoading={false} songs={favoriteSongs} currentSong={currentSong} onSelectSong={onSelectSong} filter={""} />
+                </div>
+            );
+        };
+
 
         // --- Main App Component ---
         function App() {
@@ -708,13 +792,13 @@
           const [isLoop, setIsLoop] = useState(false);
           const [volume, setVolume] = useState(0.9);
           const [progress, setProgress] = useState({ current: 0, duration: 0 });
-          const [filter, setFilter] = useState('');
           const [theme, setTheme] = useState(localStorage.getItem('music-theme') || 'lucbao');
           const [activeView, setActiveView] = useState('home');
           const [isNowPlayingOpen, setIsNowPlayingOpen] = useState(false);
           const [timeLeft, setTimeLeft] = useState(null);
           const [stopAtEndOfTrack, setStopAtEndOfTrack] = useState(false);
           const [powerSave, setPowerSave] = useState(localStorage.getItem('power-save') === '1');
+          const [favorites, setFavorites] = useState(loadFavoritesCache);
 
 
           // Refs
@@ -747,6 +831,19 @@
             return () => document.removeEventListener('visibilitychange', onVis);
           }, []);
           
+          // --- Favorites ---
+          useEffect(() => {
+            saveFavoritesCache(favorites);
+          }, [favorites]);
+
+          const toggleFavorite = useCallback((songId) => {
+              setFavorites(prev => 
+                  prev.includes(songId)
+                      ? prev.filter(id => id !== songId)
+                      : [...prev, songId]
+              );
+          }, []);
+
           // --- Timer ---
           const smoothPause = useCallback(async (ms = 400) => {
             const a = audioRef.current;
@@ -1035,7 +1132,7 @@
             if(audioRef.current.duration) {
               const target = e.currentTarget;
               const rect = target.getBoundingClientRect();
-              const x = e.clientX ?? e.touches?.[0]?.clientX - rect.left;
+              const x = (e.clientX ?? e.touches?.[0]?.clientX) - rect.left;
               const seekTime = (x / rect.width) * audioRef.current.duration;
               if (isFinite(seekTime)) {
                   audioRef.current.currentTime = seekTime;
@@ -1079,11 +1176,11 @@
           const renderActiveView = () => {
               switch(activeView) {
                   case 'home':
-                      return <PlaylistView isLoading={isLoading} songs={playlist} currentSong={currentSong} onSelectSong={handleSelectSong} filter={filter} />;
+                      return <PlaylistView isLoading={isLoading} songs={playlist} currentSong={currentSong} onSelectSong={handleSelectSong} filter={""} />;
                   case 'search':
-                      return <div className="px-4 text-center text-[var(--muted)] py-20">Tính năng tìm kiếm sẽ sớm ra mắt.</div>;
+                      return <SearchView songs={songs} onSelectSong={handleSelectSong} currentSong={currentSong} />;
                   case 'library':
-                       return <div className="px-4 text-center text-[var(--muted)] py-20">Thư viện cá nhân sẽ sớm ra mắt.</div>;
+                       return <LibraryView songs={songs} onSelectSong={handleSelectSong} currentSong={currentSong} favorites={favorites} />;
                   case 'settings':
                         return <SettingsView 
                             theme={theme} setTheme={setTheme}
@@ -1096,7 +1193,7 @@
                             setPowerSave={setPowerSave}
                         />;
                   default:
-                      return <PlaylistView isLoading={isLoading} songs={playlist} currentSong={currentSong} onSelectSong={handleSelectSong} filter={filter} />;
+                      return <PlaylistView isLoading={isLoading} songs={playlist} currentSong={currentSong} onSelectSong={handleSelectSong} filter={""} />;
               }
           }
 
@@ -1117,6 +1214,8 @@
                 openNowPlaying={() => setIsNowPlayingOpen(true)}
                 progress={progress}
                 handleSeek={handleSeek}
+                isFavorite={favorites.includes(currentSong?.id)}
+                onToggleFavorite={toggleFavorite}
               />
               <BottomNavBar activeView={activeView} setActiveView={setActiveView} />
               <NowPlayingView
@@ -1137,6 +1236,8 @@
                 toggleShuffle={toggleShuffle}
                 volume={volume}
                 setVolume={setVolume}
+                isFavorite={favorites.includes(currentSong?.id)}
+                onToggleFavorite={toggleFavorite}
               />
             </div>
           );
