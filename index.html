@@ -89,8 +89,6 @@
         --gradient:linear-gradient(135deg, #a8ff78 0%, #f4ff81 100%);
         --border: color-mix(in srgb, var(--text) 10%, transparent); --nav-bg: rgba(16, 36, 36, 0.8);
       }
-
-      /* Theme Swatch Styles */
       .theme-swatch {
         display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .5rem;
         padding: .75rem; border-radius: 14px;
@@ -108,32 +106,30 @@
         outline: 3px solid var(--ring); outline-offset: 2px;
         transform: scale(1.05);
       }
-      
-      @keyframes slide-up {
-        from { transform: translateY(100%); }
-        to { transform: translateY(0); }
-      }
-      .animate-slide-up {
-        animation: slide-up 0.3s ease-out;
-      }
-
-      /* Power Save & Background modes */
+      @keyframes slide-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
+      .animate-slide-up { animation: slide-up 0.3s ease-out; }
       :root[data-bg] { --shadow: none; }
-      :root[data-powersave] {
-        --shadow: none;
-      }
-      :root[data-powersave] * { 
-         transition: none !important;
-         animation: none !important;
-      }
-      :root[data-powersave] .backdrop-blur-lg,
-      :root[data-powersave] .backdrop-blur-md { 
-        backdrop-filter: none; 
-        --nav-bg: var(--card);
-      }
+      :root[data-powersave] { --shadow: none; }
+      :root[data-powersave] * { transition: none !important; animation: none !important; }
+      :root[data-powersave] .backdrop-blur-lg, :root[data-powersave] .backdrop-blur-md { backdrop-filter: none; --nav-bg: var(--card); }
+    
+       .lyrics-line {
+            transition: all 0.3s ease-in-out;
+            opacity: 0.6;
+            padding: 0.5rem 0;
+            font-size: 1.25rem; /* 20px */
+            line-height: 1.75rem; /* 28px */
+        }
+        .lyrics-line.active {
+            opacity: 1;
+            color: var(--primary);
+            font-weight: 600;
+            transform: scale(1.05);
+        }
+    
     </style>
 </head>
-<body class="bg-[var(--bg)]">
+<body class="bg-[var(--bg)] text-[var(--text)] font-sans transition-colors duration-300">
     <div id="root"></div>
 
     <script type="text/babel" data-presets="react">
@@ -417,6 +413,43 @@
                 </div>
             );
         });
+        
+        const QueueContent = React.memo(({playlist, currentSong, onSelectSong}) => {
+            const queueContainerRef = useRef(null);
+            const activeSongRef = useRef(null);
+        
+            useEffect(() => {
+                if (activeSongRef.current && queueContainerRef.current) {
+                    queueContainerRef.current.scrollTo({
+                        top: activeSongRef.current.offsetTop - queueContainerRef.current.clientHeight / 3,
+                        behavior: 'auto'
+                    });
+                }
+            }, [currentSong.id]);
+
+            return (
+                <div ref={queueContainerRef} className="h-full flex-grow overflow-y-auto px-2 space-y-1">
+                    {playlist.map(song => (
+                        <div
+                            key={song.id}
+                            ref={song.id === currentSong.id ? activeSongRef : null}
+                            onClick={() => onSelectSong(song)}
+                            className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer ${song.id === currentSong.id ? 'bg-[var(--primary)]/20' : 'hover:bg-[var(--card)]'}`}
+                        >
+                             <div className={`w-8 text-center text-sm font-mono flex-shrink-0 ${song.id === currentSong.id ? 'text-[var(--primary)]' : 'text-[var(--muted)]'}`}>
+                                {parseInt(song.id, 10)}
+                            </div>
+                            <img src={song.artwork || 'https://placehold.co/64x64/1f2937/9ca3af?text=🎵'} className="w-10 h-10 rounded-md object-cover" />
+                            <div className="flex-grow min-w-0">
+                                <p className={`font-medium truncate ${song.id === currentSong.id ? 'text-[var(--primary)]' : 'text-[var(--text)]'}`}>{song.title}</p>
+                                <p className="text-sm text-[var(--muted)] truncate">{song.artist || 'minhsutinhquang'}</p>
+                            </div>
+                            <span className="text-sm text-[var(--muted)]">{formatTime(song.duration)}</span>
+                        </div>
+                    ))}
+                </div>
+            );
+        });
 
         const NowPlayingView = React.memo(({
             isOpen, closeNowPlaying, currentSong, isPlaying, onPlayPause, onNext, onPrev,
@@ -505,43 +538,6 @@
                     </footer>
                 </>
             );
-
-            const QueueContent = () => {
-                const queueContainerRef = useRef(null);
-                const activeSongRef = useRef(null);
-
-                useEffect(() => {
-                    if (activeSongRef.current && queueContainerRef.current) {
-                        queueContainerRef.current.scrollTo({
-                            top: activeSongRef.current.offsetTop - queueContainerRef.current.clientHeight / 3,
-                            behavior: 'auto'
-                        });
-                    }
-                }, [currentSong.id]);
-                
-                return (
-                    <div ref={queueContainerRef} className="h-full flex-grow overflow-y-auto px-2 space-y-1">
-                        {playlist.map(song => (
-                            <div
-                                key={song.id}
-                                ref={song.id === currentSong.id ? activeSongRef : null}
-                                onClick={() => onSelectSong(song)}
-                                className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer ${song.id === currentSong.id ? 'bg-[var(--primary)]/20' : 'hover:bg-[var(--card)]'}`}
-                            >
-                                 <div className={`w-8 text-center text-sm font-mono flex-shrink-0 ${song.id === currentSong.id ? 'text-[var(--primary)]' : 'text-[var(--muted)]'}`}>
-                                    {parseInt(song.id, 10)}
-                                </div>
-                                <img src={song.artwork || 'https://placehold.co/64x64/1f2937/9ca3af?text=🎵'} className="w-10 h-10 rounded-md object-cover" />
-                                <div className="flex-grow min-w-0">
-                                    <p className={`font-medium truncate ${song.id === currentSong.id ? 'text-[var(--primary)]' : 'text-[var(--text)]'}`}>{song.title}</p>
-                                    <p className="text-sm text-[var(--muted)] truncate">{song.artist || 'minhsutinhquang'}</p>
-                                </div>
-                                <span className="text-sm text-[var(--muted)]">{formatTime(song.duration)}</span>
-                            </div>
-                        ))}
-                    </div>
-                );
-            };
             
             return (
                 <div className="fixed inset-0 bg-[var(--bg)] z-50 flex flex-col p-4 animate-slide-up">
@@ -559,7 +555,7 @@
                     </header>
                     
                     <div className="flex-grow min-h-0">
-                        { activeContent === 'queue' ? <QueueContent /> : activeContent === 'lyrics' ? <LyricsContent lyricsText={currentSong.lyrics} currentTime={progress.current} /> : <MainContent /> }
+                        { activeContent === 'queue' ? <QueueContent playlist={playlist} currentSong={currentSong} onSelectSong={onSelectSong}/> : activeContent === 'lyrics' ? <LyricsContent lyricsText={currentSong.lyrics} currentTime={progress.current} /> : <MainContent /> }
                     </div>
                 </div>
             );
