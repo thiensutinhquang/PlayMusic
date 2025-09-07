@@ -23,13 +23,12 @@
       :root, [data-theme] {
         transition: color .2s ease, background-color .2s ease;
       }
-      /* DEFAULT THEME (matches 'tinhquang') */
+      /* DEFAULT THEME (matches 'dark') */
       :root {
-        --bg:#0a0a0d; --card:#141419; --text:#f5f7ff; --muted:#8b8ca3;
-        --primary:#7c9cff; --primary-fg:#0a0a0d; --ring:#7c9cff66; --shadow:0 10px 30px rgba(0,0,0,.35);
-        --border: color-mix(in srgb, var(--text) 10%, transparent);
-        --nav-bg: rgba(20, 20, 25, 0.8);
-        --gradient: linear-gradient(135deg, #7c9cff 0%, #a2b9ff 100%);
+        --bg: #111827; --card: #1f2937; --text: #f9fafb; --muted: #9ca3af;
+        --primary: #f59e0b; --primary-fg: #111827; --ring: #f59e0b66; --shadow:0 10px 30px rgba(0,0,0,.35);
+        --border: #374151; --nav-bg: rgba(31, 41, 55, 0.8);
+        --gradient: linear-gradient(135deg, #f59e0b 0%, #fBBF24 100%);
       }
        /* Dark Theme */
       [data-theme="dark"] {
@@ -45,91 +44,59 @@
         --border: #e5e7eb; --nav-bg: rgba(255, 255, 255, 0.8);
         --gradient: linear-gradient(135deg, #fbbf24 0%, #f97316 100%);
       }
-       /* Tinh Quang Theme */
+       /* --- REFRESHED THEMES --- */
       [data-theme="tinhquang"] {
-         --bg:#0a0a0d; --card:#141419; --text:#f5f7ff; --muted:#8b8ca3;
-        --primary:#7c9cff; --primary-fg:#0a0a0d; --ring:#7c9cff66; --shadow:0 10px 30px rgba(0,0,0,.35);
-        --border: #232331; --nav-bg: rgba(20, 20, 25, 0.8);
-        --gradient: linear-gradient(135deg, #7c9cff 0%, #a2b9ff 100%);
+         --bg: #1a2a45; --card: #2c3a58; --text: #f0f8ff; --muted: #a0aec0;
+        --primary: #63b3ed; --primary-fg: #1a2a45; --ring: #63b3ed66; --shadow:0 10px 30px rgba(0,0,0,.35);
+        --border: #4a5568; --nav-bg: rgba(44, 58, 88, 0.8);
+        --gradient: linear-gradient(135deg, #63b3ed 0%, #90cdf4 100%);
       }
-      /* --- 5 NEW THEMES --- */
-      /* 1) CỰC QUANG (Aurora Glow) */
       [data-theme="cucquang"] {
-        --bg:#0a0b10; --card:#121527; --text:#e8ecff; --muted:#98a5d6;
-        --primary:#7bffea; --primary-fg:#051416; --ring:#7bffea66; --shadow:0 18px 40px rgba(0, 255, 214, .20);
-        --gradient:linear-gradient(135deg,#8a5bff 0%, #7bffea 100%);
-        --border: color-mix(in srgb, var(--text) 10%, transparent); --nav-bg: rgba(18, 21, 39, 0.8);
+        --bg:#2c1a45; --card:#3d2c58; --text:#f5f3ff; --muted:#b794f4;
+        --primary:#a7f3d0; --primary-fg:#1a202c; --ring:#a7f3d066; --shadow:0 18px 40px rgba(167, 243, 208, .20);
+        --gradient:linear-gradient(135deg, #b794f4 0%, #a7f3d0 100%);
+        --border: color-mix(in srgb, var(--text) 10%, transparent); --nav-bg: rgba(61, 44, 88, 0.8);
       }
-      /* 2) BÌNH MINH (Sunrise) */
+      [data-theme="hukhong"] {
+        --bg:#f7fafc; --card:rgba(255, 255, 255, 0.7); --text:#1a202c; --muted:#718096;
+        --primary:#4299e1; --primary-fg:#ffffff; --ring:#4299e166; --shadow:0 20px 44px rgba(10, 14, 20, .1);
+        --gradient:linear-gradient(180deg,rgba(0,0,0,.04),rgba(0,0,0,0));
+        --border: #e2e8f0; --nav-bg: rgba(255, 255, 255, 0.7);
+      }
+      [data-theme="hukhong"] .card { backdrop-filter: blur(10px); }
+      /* --- EXISTING THEMES --- */
       [data-theme="binhminh"] {
         --bg:#0f0b07; --card:#1a1410; --text:#fff5eb; --muted:#e7c5a1;
         --primary:#ff9d4d; --primary-fg:#2a1505; --ring:#ff9d4d66; --shadow:0 16px 36px rgba(255, 157, 77, .18);
         --gradient:linear-gradient(135deg,#ffcf6b 0%, #ff7a45 100%);
         --border: color-mix(in srgb, var(--text) 10%, transparent); --nav-bg: rgba(26, 20, 16, 0.8);
       }
-      /* 3) HƯ KHÔNG (Void Glass) */
-      [data-theme="hukhong"] {
-        --bg:#070809; --card:#0c0e11cc; --text:#e9eef5; --muted:#9aa7b4;
-        --primary:#79a8ff; --primary-fg:#0a0d14; --ring:#79a8ff66; --shadow:0 20px 44px rgba(10, 14, 20, .6);
-        --gradient:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,0));
-        --border: color-mix(in srgb, var(--text) 10%, transparent); --nav-bg: rgba(12, 14, 17, 0.7);
-      }
-      [data-theme="hukhong"] .card { backdrop-filter: blur(10px); }
-      /* 4) SEN VÀNG (Lotus Gold) */
       [data-theme="senvang"] {
         --bg:#f6f3ea; --card:#ffffff; --text:#1a202c; --muted:#6b7280;
         --primary:#d4a017; --primary-fg:#111; --ring:#d4a01755; --shadow:0 16px 36px rgba(212,160,23,.18);
         --gradient:linear-gradient(135deg,#fff7d6 0%, #ffd66e 100%);
         --border: #e5e7eb; --nav-bg: rgba(255, 255, 255, 0.8);
       }
-      /* 5) LỤC BẢO (Emerald Sun) */
       [data-theme="lucbao"] {
         --bg:#081414; --card:#102424; --text:#e0f2f1; --muted:#80cbc4;
         --primary:#f4ff81; --primary-fg:#1a2327; --ring:#f4ff8166; --shadow:0 18px 40px rgba(168, 255, 120, .20);
         --gradient:linear-gradient(135deg, #a8ff78 0%, #f4ff81 100%);
         --border: color-mix(in srgb, var(--text) 10%, transparent); --nav-bg: rgba(16, 36, 36, 0.8);
       }
-      .theme-swatch {
-        display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .5rem;
-        padding: .75rem; border-radius: 14px;
-        background: var(--card); color: var(--text);
-        border: 1px solid var(--border);
-        box-shadow: var(--shadow);
-        cursor: pointer; transition: all 0.2s ease-out;
-      }
-      .theme-swatch .dot {
-        width: 40px; height: 40px; border-radius: 9999px;
-        background: linear-gradient(135deg, var(--c1), var(--c2));
-        box-shadow: 0 0 0 2px rgba(0,0,0,0.1) inset, 0 4px 10px rgba(0,0,0,0.2);
-      }
-      .theme-swatch[aria-current="true"] {
-        outline: 3px solid var(--ring); outline-offset: 2px;
-        transform: scale(1.05);
-      }
+      .theme-swatch { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .5rem; padding: .75rem; border-radius: 14px; background: var(--card); color: var(--text); border: 1px solid var(--border); box-shadow: var(--shadow); cursor: pointer; transition: all 0.2s ease-out; }
+      .theme-swatch .dot { width: 40px; height: 40px; border-radius: 9999px; background: linear-gradient(135deg, var(--c1), var(--c2)); box-shadow: 0 0 0 2px rgba(0,0,0,0.1) inset, 0 4px 10px rgba(0,0,0,0.2); }
+      .theme-swatch[aria-current="true"] { outline: 3px solid var(--ring); outline-offset: 2px; transform: scale(1.05); }
       @keyframes slide-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
       .animate-slide-up { animation: slide-up 0.3s ease-out; }
       :root[data-bg] { --shadow: none; }
       :root[data-powersave] { --shadow: none; }
       :root[data-powersave] * { transition: none !important; animation: none !important; }
       :root[data-powersave] .backdrop-blur-lg, :root[data-powersave] .backdrop-blur-md { backdrop-filter: none; --nav-bg: var(--card); }
-    
-       .lyrics-line {
-            transition: all 0.3s ease-in-out;
-            opacity: 0.6;
-            padding: 0.5rem 0;
-            font-size: 1.25rem; /* 20px */
-            line-height: 1.75rem; /* 28px */
-        }
-        .lyrics-line.active {
-            opacity: 1;
-            color: var(--primary);
-            font-weight: 600;
-            transform: scale(1.05);
-        }
-    
+       .lyrics-line { transition: all 0.3s ease-in-out; opacity: 0.6; padding: 0.5rem 0; font-size: 1.25rem; line-height: 1.75rem; }
+       .lyrics-line.active { opacity: 1; color: var(--primary); font-weight: 600; transform: scale(1.05); }
     </style>
 </head>
-<body class="bg-[var(--bg)] text-[var(--text)] font-sans transition-colors duration-300">
+<body class="bg-[var(--bg)] text-[var(--text)] font-sans">
     <div id="root"></div>
 
     <script type="text/babel" data-presets="react">
@@ -141,7 +108,6 @@
         const loadSongsCache = () => { try{ const j = JSON.parse(localStorage.getItem(SONGS_CACHE_KEY)||''); return j?.d||[] }catch{ return [] } };
         const saveFavoritesCache = (arr) => { try { localStorage.setItem(FAVORITES_CACHE_KEY, JSON.stringify(arr)) } catch {} };
         const loadFavoritesCache = () => { try { return JSON.parse(localStorage.getItem(FAVORITES_CACHE_KEY) || '[]') } catch { return [] } };
-
 
         function useIncrementalVisible(total, step=18) {
           const [visible, setVisible] = React.useState(step);
@@ -182,14 +148,13 @@
         const themes = {
           dark: { name: 'Tối', c1: '#0b0d12', c2: '#12151c' },
           light: { name: 'Sáng', c1: '#ffffff', c2: '#f6f7fb' },
-          tinhquang: { name: 'Tinh Quang', c1: '#0d1220', c2: '#6ea8ff' },
-          cucquang: { name: 'Cực Quang', c1: '#8a5bff', c2: '#7bffea' },
+          tinhquang: { name: 'Tinh Quang', c1: '#1a2a45', c2: '#63b3ed' },
+          cucquang: { name: 'Cực Quang', c1: '#b794f4', c2: '#a7f3d0' },
           binhminh: { name: 'Bình Minh', c1: '#ffcf6b', c2: '#ff7a45' },
-          hukhong: { name: 'Hư Không', c1: '#0c0e11', c2: '#1b2027' },
+          hukhong: { name: 'Hư Không', c1: '#e2e8f0', c2: '#ffffff' },
           senvang: { name: 'Sen Vàng', c1: '#fff7d6', c2: '#ffd66e' },
           lucbao: { name: 'Lục Bảo', c1: '#a8ff78', c2: '#f4ff81' },
         };
-
 
         // --- DATA ---
         const platformLinks = [
