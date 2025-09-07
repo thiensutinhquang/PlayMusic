@@ -295,7 +295,7 @@
             );
         });
 
-        const MiniPlayer = React.memo(({ currentSong, isPlaying, onPlayPause, onNext, openNowPlaying, progress, handleSeek, isFavorite, onToggleFavorite }) => {
+        const MiniPlayer = React.memo(({ currentSong, isPlaying, onPlayPause, onNext, onPrev, openNowPlaying, progress, handleSeek, isFavorite, onToggleFavorite }) => {
             if (!currentSong) return null;
             
             const progressPercent = (progress.duration > 0) ? (progress.current / progress.duration) * 100 : 0;
@@ -319,9 +319,16 @@
                              <button
                                 aria-label="Toggle Favorite"
                                 onClick={(e) => { e.stopPropagation(); hapticFeedback(); onToggleFavorite(currentSong.id); }}
-                                className={`w-11 h-11 flex items-center justify-center rounded-full transition-colors ${isFavorite ? 'text-red-500' : 'text-[var(--muted)] hover:text-[var(--text)]'}`}
+                                className={`w-10 h-10 flex items-center justify-center rounded-full transition-colors ${isFavorite ? 'text-red-500' : 'text-[var(--muted)] hover:text-[var(--text)]'}`}
                             >
                                 <HeartIcon active={isFavorite} />
+                            </button>
+                             <button
+                                aria-label="Previous"
+                                onClick={(e) => { e.stopPropagation(); hapticFeedback(); onPrev(); }}
+                                className="w-10 h-10 flex items-center justify-center text-[var(--text)] rounded-full hover:bg-[var(--border)] transition-colors"
+                            >
+                                <SkipBackIcon size={20}/>
                             </button>
                              <button
                                 aria-label="Play/Pause"
@@ -481,7 +488,7 @@
                             <button aria-label="Repeat" onClick={() => { hapticFeedback(); toggleLoop(); }} className="p-3 text-[var(--muted)] hover:text-[var(--text)] transition-colors"><RepeatIcon active={isLoop} /></button>
                         </div>
                         <div className="flex items-center justify-around mt-6">
-                            <button aria-label="Show Lyrics" onClick={()=>setActiveContent('lyrics')} className="p-2 text-[var(--muted)] hover:text-[var(--text)]"><Mic2Icon/></button>
+                            <div className="w-8"></div>
                              <div className="flex items-center gap-3 max-w-xs mx-auto">
                                 <Volume2Icon />
                                 <input
@@ -493,19 +500,31 @@
                                     className="w-full h-1.5 bg-[var(--muted)]/20 rounded-lg appearance-none cursor-pointer range-sm accent-[var(--primary)]"
                                 />
                             </div>
-                            <button aria-label="Show Queue" onClick={()=>setActiveContent('queue')} className="p-2 text-[var(--muted)] hover:text-[var(--text)]"><ListMusicIcon/></button>
+                             <div className="w-8"></div>
                         </div>
                     </footer>
                 </>
             );
 
-            const QueueContent = () => (
-                <div className="h-full flex flex-col">
-                    <h3 className="text-xl font-bold text-center mb-4 p-4">Danh sách phát</h3>
-                    <div className="flex-grow overflow-y-auto px-2 space-y-1">
+            const QueueContent = () => {
+                const queueContainerRef = useRef(null);
+                const activeSongRef = useRef(null);
+
+                useEffect(() => {
+                    if (activeSongRef.current && queueContainerRef.current) {
+                        queueContainerRef.current.scrollTo({
+                            top: activeSongRef.current.offsetTop - queueContainerRef.current.clientHeight / 3,
+                            behavior: 'auto'
+                        });
+                    }
+                }, [currentSong.id]);
+                
+                return (
+                    <div ref={queueContainerRef} className="h-full flex-grow overflow-y-auto px-2 space-y-1">
                         {playlist.map(song => (
                             <div
                                 key={song.id}
+                                ref={song.id === currentSong.id ? activeSongRef : null}
                                 onClick={() => onSelectSong(song)}
                                 className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer ${song.id === currentSong.id ? 'bg-[var(--primary)]/20' : 'hover:bg-[var(--card)]'}`}
                             >
@@ -521,18 +540,20 @@
                             </div>
                         ))}
                     </div>
-                </div>
-            );
+                );
+            };
             
             return (
                 <div className="fixed inset-0 bg-[var(--bg)] z-50 flex flex-col p-4 animate-slide-up">
                      <div className="absolute top-0 left-0 right-0 h-full -z-10 transition-all duration-500" style={backgroundStyle} />
-                    <header className="flex-shrink-0 flex items-center justify-between">
-                        <button onClick={activeContent !== 'main' ? () => setActiveContent('main') : closeNowPlaying} className="w-11 h-11 flex items-center justify-center rounded-full hover:bg-[var(--card)]/50">
+                    <header className="flex-shrink-0 flex items-center justify-between mb-4">
+                        <button onClick={closeNowPlaying} className="w-11 h-11 flex items-center justify-center rounded-full hover:bg-[var(--card)]/50">
                             <ChevronDownIcon />
                         </button>
-                        <div className="text-center">
-                             <p className="font-bold text-[var(--text)]">{ activeContent === 'queue' ? "Tiếp theo" : activeContent === 'lyrics' ? "Lời bài hát" : currentSong.title }</p>
+                        <div className="flex items-center gap-2 bg-[var(--card)] p-1 rounded-full">
+                            <button onClick={() => setActiveContent('main')} className={`px-4 py-1.5 text-sm font-semibold rounded-full transition-colors ${activeContent === 'main' ? 'bg-[var(--primary)] text-[var(--primary-fg)]' : 'text-[var(--muted)]'}`}>Player</button>
+                            <button onClick={() => setActiveContent('queue')} className={`px-4 py-1.5 text-sm font-semibold rounded-full transition-colors ${activeContent === 'queue' ? 'bg-[var(--primary)] text-[var(--primary-fg)]' : 'text-[var(--muted)]'}`}>Tiếp theo</button>
+                            <button onClick={() => setActiveContent('lyrics')} className={`px-4 py-1.5 text-sm font-semibold rounded-full transition-colors ${activeContent === 'lyrics' ? 'bg-[var(--primary)] text-[var(--primary-fg)]' : 'text-[var(--muted)]'}`}>Lời bài hát</button>
                         </div>
                         <div className="w-11 h-11"></div>
                     </header>
@@ -968,18 +989,26 @@
             let retry = 0;
             const fetchSongs = async () => {
                 const ctrl = new AbortController();
-                const t = setTimeout(()=>ctrl.abort(), 4000); // 4s là đủ để lần đầu
+                const t = setTimeout(()=>ctrl.abort(), 8000);
                 try {
                     const res = await fetch(API_ENDPOINT, { cache: 'no-store', signal: ctrl.signal });
                     clearTimeout(t);
                     if (!res.ok) throw new Error('Bad status');
-                    const data = await res.json();
-                    if (Array.isArray(data) && data.length) {
-                        setSongs(data);
-                        if (!isShuffle) { // Only update playlist if not shuffling
-                            setPlaylist(data);
-                        }
-                        saveSongsCache(data); // lưu để lần sau mở là có ngay
+                    const freshSongs = await res.json();
+                    if (Array.isArray(freshSongs) && freshSongs.length) {
+                       
+                        setSongs(freshSongs);
+                        saveSongsCache(freshSongs);
+                        
+                        setPlaylist(currentPlaylist => {
+                            const newPlaylist = isShuffle ? currentPlaylist.map(oldSong => freshSongs.find(freshSong => freshSong.id === oldSong.id) || oldSong) : freshSongs;
+                            setCurrentSong(current => {
+                                if (!current) return null;
+                                const updated = newPlaylist.find(s => s.id === current.id);
+                                return updated || current;
+                            });
+                            return newPlaylist;
+                        });
                     }
                 } catch (e) {
                     if (retry < 5) {
@@ -1106,6 +1135,7 @@
           }, [isPlaying]);
           
           const handleSelectSong = (song) => {
+            hapticFeedback();
             const songIndexInPlaylist = playlist.findIndex(s => s.id === song.id);
             setCurrentSong(song);
             setCurrentIndex(songIndexInPlaylist > -1 ? songIndexInPlaylist : 0);
@@ -1211,6 +1241,7 @@
                 isPlaying={isPlaying}
                 onPlayPause={handlePlayPause}
                 onNext={handleNext}
+                onPrev={handlePrev}
                 openNowPlaying={() => setIsNowPlayingOpen(true)}
                 progress={progress}
                 handleSeek={handleSeek}
