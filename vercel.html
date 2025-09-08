@@ -1,0 +1,1290 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="lucbao">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Play Nhạc MSTQ</title>
+    
+    <link rel="dns-prefetch" href="https://play-music-wine.vercel.app">
+    <link rel="preconnect" href="https://play-music-wine.vercel.app" crossorigin>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React Libraries (PROD) -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    
+    <!-- Babel for JSX Transpilation -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+      /* Smooth transition */
+      :root, [data-theme] {
+        transition: color .2s ease, background-color .2s ease;
+      }
+      /* DEFAULT THEME (matches 'dark') */
+      :root {
+        --bg: #111827; --card: #1f2937; --text: #f9fafb; --muted: #9ca3af;
+        --primary: #f59e0b; --primary-fg: #111827; --ring: #f59e0b66; --shadow:0 10px 30px rgba(0,0,0,.35);
+        --border: #374151; --nav-bg: rgba(31, 41, 55, 0.8);
+        --gradient: linear-gradient(135deg, #f59e0b 0%, #fBBF24 100%);
+      }
+       /* Dark Theme */
+      [data-theme="dark"] {
+        --bg: #111827; --card: #1f2937; --text: #f9fafb; --muted: #9ca3af;
+        --primary: #f59e0b; --primary-fg: #111827; --ring: #f59e0b66; --shadow: 0 10px 30px rgba(0,0,0,.35);
+        --border: #374151; --nav-bg: rgba(31, 41, 55, 0.8);
+        --gradient: linear-gradient(135deg, #f59e0b 0%, #fBBF24 100%);
+      }
+      /* Light Theme */
+      [data-theme="light"] {
+        --bg: #f3f4f6; --card: #ffffff; --text: #111827; --muted: #6b7280;
+        --primary: #d97706; --primary-fg: #ffffff; --ring: #d9770666; --shadow: 0 10px 25px rgba(0,0,0,.1);
+        --border: #e5e7eb; --nav-bg: rgba(255, 255, 255, 0.8);
+        --gradient: linear-gradient(135deg, #fbbf24 0%, #f97316 100%);
+      }
+       /* --- REFRESHED THEMES --- */
+      [data-theme="tinhquang"] {
+         --bg: #1a2a45; --card: #2c3a58; --text: #f0f8ff; --muted: #a0aec0;
+        --primary: #63b3ed; --primary-fg: #1a2a45; --ring: #63b3ed66; --shadow:0 10px 30px rgba(0,0,0,.35);
+        --border: #4a5568; --nav-bg: rgba(44, 58, 88, 0.8);
+        --gradient: linear-gradient(135deg, #63b3ed 0%, #90cdf4 100%);
+      }
+      [data-theme="cucquang"] {
+        --bg:#2c1a45; --card:#3d2c58; --text:#f5f3ff; --muted:#b794f4;
+        --primary:#a7f3d0; --primary-fg:#1a202c; --ring:#a7f3d066; --shadow:0 18px 40px rgba(167, 243, 208, .20);
+        --gradient:linear-gradient(135deg, #b794f4 0%, #a7f3d0 100%);
+        --border: color-mix(in srgb, var(--text) 10%, transparent); --nav-bg: rgba(61, 44, 88, 0.8);
+      }
+      [data-theme="hukhong"] {
+        --bg:#f7fafc; --card:rgba(255, 255, 255, 0.7); --text:#1a202c; --muted:#718096;
+        --primary:#4299e1; --primary-fg:#ffffff; --ring:#4299e166; --shadow:0 20px 44px rgba(10, 14, 20, .1);
+        --gradient:linear-gradient(180deg,rgba(0,0,0,.04),rgba(0,0,0,0));
+        --border: #e2e8f0; --nav-bg: rgba(255, 255, 255, 0.7);
+      }
+      [data-theme="hukhong"] .card { backdrop-filter: blur(10px); }
+      /* --- EXISTING THEMES --- */
+      [data-theme="binhminh"] {
+        --bg:#0f0b07; --card:#1a1410; --text:#fff5eb; --muted:#e7c5a1;
+        --primary:#ff9d4d; --primary-fg:#2a1505; --ring:#ff9d4d66; --shadow:0 16px 36px rgba(255, 157, 77, .18);
+        --gradient:linear-gradient(135deg,#ffcf6b 0%, #ff7a45 100%);
+        --border: color-mix(in srgb, var(--text) 10%, transparent); --nav-bg: rgba(26, 20, 16, 0.8);
+      }
+      [data-theme="senvang"] {
+        --bg:#f6f3ea; --card:#ffffff; --text:#1a202c; --muted:#6b7280;
+        --primary:#d4a017; --primary-fg:#111; --ring:#d4a01755; --shadow:0 16px 36px rgba(212,160,23,.18);
+        --gradient:linear-gradient(135deg,#fff7d6 0%, #ffd66e 100%);
+        --border: #e5e7eb; --nav-bg: rgba(255, 255, 255, 0.8);
+      }
+      [data-theme="lucbao"] {
+        --bg:#081414; --card:#102424; --text:#e0f2f1; --muted:#80cbc4;
+        --primary:#f4ff81; --primary-fg:#1a2327; --ring:#f4ff8166; --shadow:0 18px 40px rgba(168, 255, 120, .20);
+        --gradient:linear-gradient(135deg, #a8ff78 0%, #f4ff81 100%);
+        --border: color-mix(in srgb, var(--text) 10%, transparent); --nav-bg: rgba(16, 36, 36, 0.8);
+      }
+      .theme-swatch { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .5rem; padding: .75rem; border-radius: 14px; background: var(--card); color: var(--text); border: 1px solid var(--border); box-shadow: var(--shadow); cursor: pointer; transition: all 0.2s ease-out; }
+      .theme-swatch .dot { width: 40px; height: 40px; border-radius: 9999px; background: linear-gradient(135deg, var(--c1), var(--c2)); box-shadow: 0 0 0 2px rgba(0,0,0,0.1) inset, 0 4px 10px rgba(0,0,0,0.2); }
+      .theme-swatch[aria-current="true"] { outline: 3px solid var(--ring); outline-offset: 2px; transform: scale(1.05); }
+      @keyframes slide-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
+      .animate-slide-up { animation: slide-up 0.3s ease-out; }
+      :root[data-bg] { --shadow: none; }
+      :root[data-powersave] { --shadow: none; }
+      :root[data-powersave] * { transition: none !important; animation: none !important; }
+      :root[data-powersave] .backdrop-blur-lg, :root[data-powersave] .backdrop-blur-md { backdrop-filter: none; --nav-bg: var(--card); }
+       .lyrics-line { transition: all 0.3s ease-in-out; opacity: 0.6; padding: 0.5rem 0; font-size: 1.25rem; line-height: 1.75rem; }
+       .lyrics-line.active { opacity: 1; color: var(--primary); font-weight: 600; transform: scale(1.05); }
+    </style>
+</head>
+<body class="bg-[var(--bg)] text-[var(--text)] font-sans">
+    <div id="root"></div>
+
+    <script type="text/babel" data-presets="react">
+        const { useState, useEffect, useRef, useCallback, useMemo } = React;
+
+        const SONGS_CACHE_KEY = 'mstq_songs_v1';
+        const FAVORITES_CACHE_KEY = 'mstq_favorites_v1';
+        const saveSongsCache = (arr) => { try{ localStorage.setItem(SONGS_CACHE_KEY, JSON.stringify({t:Date.now(), d:arr})) }catch{} };
+        const loadSongsCache = () => { try{ const j = JSON.parse(localStorage.getItem(SONGS_CACHE_KEY)||''); return j?.d||[] }catch{ return [] } };
+        const saveFavoritesCache = (arr) => { try { localStorage.setItem(FAVORITES_CACHE_KEY, JSON.stringify(arr)) } catch {} };
+        const loadFavoritesCache = () => { try { return JSON.parse(localStorage.getItem(FAVORITES_CACHE_KEY) || '[]') } catch { return [] } };
+
+        function useIncrementalVisible(total, step=18) {
+          const [visible, setVisible] = React.useState(step);
+          React.useEffect(() => { setVisible(step); }, [total]);
+          React.useEffect(() => {
+            const onScroll = () => {
+              if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 200) {
+                setVisible(v => Math.min(total, v + step));
+              }
+            };
+            window.addEventListener('scroll', onScroll, { passive:true });
+            return () => window.removeEventListener('scroll', onScroll);
+          }, [total, step]);
+          return visible;
+        }
+
+        // --- ICONS (Inline SVG for single-file compilation) ---
+        const PlayIcon = ({ size = 24 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>;
+        const PauseIcon = ({ size = 24 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>;
+        const SkipBackIcon = ({ size = 24 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" y1="19" x2="5" y2="5"></line></svg>;
+        const SkipForwardIcon = ({ size = 24 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg>;
+        const RepeatIcon = ({ active }) => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={active ? 'var(--primary)' : 'currentColor'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 2l4 4-4 4"></path><path d="M3 11v-1a4 4 0 0 1 4-4h14"></path><path d="M7 22l-4-4 4-4"></path><path d="M21 13v1a4 4 0 0 1-4 4H3"></path></svg>;
+        const ShuffleIcon = ({ active }) => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={active ? 'var(--primary)' : 'currentColor'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="16 17 21 17 21 22"></polyline><line x1="4" y1="4" x2="15" y2="15"></line></svg>;
+        const Volume2Icon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>;
+        const MusicIcon = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>;
+        const SearchIcon = ({ active, size = 24 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>;
+        const HomeIcon = ({ active }) => <svg width="24" height="24" viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>;
+        const LibraryIcon = ({ active }) => <svg width="24" height="24" viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>;
+        const SettingsIcon = ({ active }) => <svg width="24" height="24" viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>;
+        const ChevronDownIcon = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>;
+        const ExternalLinkIcon = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>;
+        const TrashIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>;
+        const ListMusicIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v6m-6-3h12M17.5 2.5 10 9l-5-4L0 10l5 4 5-4 7.5 6.5Z"/></svg>;
+        const Mic2Icon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 13-4.5 4.5"/><path d="m13 12 4.5-4.5"/><path d="M8.5 2.5 4 7l5 5"/><path d="m12 13 5 5"/><path d="M15.5 21.5 21 16l-5-5"/></svg>;
+        const HeartIcon = ({ active, size = 20 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>;
+
+        // --- THEME ---
+        const themes = {
+          dark: { name: 'Tối', c1: '#0b0d12', c2: '#12151c' },
+          light: { name: 'Sáng', c1: '#ffffff', c2: '#f6f7fb' },
+          tinhquang: { name: 'Tinh Quang', c1: '#1a2a45', c2: '#63b3ed' },
+          cucquang: { name: 'Cực Quang', c1: '#b794f4', c2: '#a7f3d0' },
+          binhminh: { name: 'Bình Minh', c1: '#ffcf6b', c2: '#ff7a45' },
+          hukhong: { name: 'Hư Không', c1: '#e2e8f0', c2: '#ffffff' },
+          senvang: { name: 'Sen Vàng', c1: '#fff7d6', c2: '#ffd66e' },
+          lucbao: { name: 'Lục Bảo', c1: '#a8ff78', c2: '#f4ff81' },
+        };
+
+        // --- DATA ---
+        const platformLinks = [
+            { href: "https://sites.google.com/view/thiensutinhquang", text: "Website (Google Sites)" },
+            { href: "https://www.youtube.com/@MinhSuTinhQuang", text: "YouTube Channel" },
+            { href: "https://thiensutinhquang.github.io/Playlist-YouTube/", text: "Playlist YouTube" },
+            { href: "https://open.spotify.com/artist/your-artist-id", text: "Spotify" },
+            { href: "https://www.facebook.com/your-page", text: "Facebook Page" },
+            { href: "https://zalo.me/your-id", text: "Zalo" },
+        ];
+
+        // --- Helper Functions ---
+        const formatTime = (seconds) => {
+          if (isNaN(seconds) || seconds < 0) return '0:00';
+          const minutes = Math.floor(seconds / 60);
+          const secs = Math.floor(seconds % 60);
+          return `${minutes}:${secs.toString().padStart(2, '0')}`;
+        };
+
+        const hapticFeedback = () => {
+            if (window.navigator && window.navigator.vibrate) {
+                navigator.vibrate(10);
+            }
+        };
+        
+        const LRC_REGEX = /\[(\d{2}):(\d{2})[.:](\d{2,3})\](.*)/;
+        const parseLRC = (lrcText) => {
+            if (!lrcText) return null;
+            const lines = lrcText.split('\n');
+            const parsed = lines
+                .map(line => {
+                    const match = line.match(LRC_REGEX);
+                    if (match) {
+                        const [, minutes, seconds, ms, text] = match;
+                        const time = parseInt(minutes, 10) * 60 + parseInt(seconds, 10) + parseInt(ms, 10) / 1000;
+                        return { time, text: text.trim() };
+                    }
+                    if(line.trim().length > 0) return { time: null, text: line.trim() };
+                    return null;
+                })
+                .filter(Boolean);
+
+            return parsed.some(line => line.time !== null) ? parsed : lrcText;
+        };
+
+
+        const generateColorFromString = (str) => {
+            if (!str) return [190, 60, 40]; // Default color
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                hash = str.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            const h = hash % 360;
+            return [h, 60, 40]; // Saturation and Lightness are fixed for aesthetic consistency
+        };
+
+
+        // --- API Configuration ---
+        let API_ENDPOINT = location.hostname.endsWith('.vercel.app') ? '/api/songs' : 'https://play-music-wine.vercel.app/api/songs';
+        const params = new URLSearchParams(location.search);
+        if (params.get('api')) API_ENDPOINT = params.get('api');
+
+        // --- Components ---
+
+        const TopAppBar = React.memo(() => (
+            <header className="fixed top-0 inset-x-0 z-30 p-4 flex items-center justify-between bg-[var(--bg)]/80 backdrop-blur-lg border-b border-[var(--border)]">
+                <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-[var(--gradient)] flex items-center justify-center">
+                        <MusicIcon />
+                    </div>
+                    <h1 className="text-lg font-bold text-[var(--text)]">Play Nhạc</h1>
+                </div>
+            </header>
+        ));
+
+        const BottomNavBar = React.memo(({ activeView, setActiveView }) => {
+            const navItems = [
+                { id: 'home', label: 'Trang chủ', icon: <HomeIcon active={activeView === 'home'} /> },
+                { id: 'search', label: 'Tìm kiếm', icon: <SearchIcon active={activeView === 'search'} /> },
+                { id: 'library', label: 'Thư viện', icon: <LibraryIcon active={activeView === 'library'} /> },
+                { id: 'settings', label: 'Cài đặt', icon: <SettingsIcon active={activeView === 'settings'} /> },
+            ];
+
+            return (
+                <nav className="fixed bottom-0 inset-x-0 h-16 bg-[var(--nav-bg)] backdrop-blur-lg border-t border-[var(--border)] z-40">
+                    <div className="grid grid-cols-4 h-full">
+                        {navItems.map(item => (
+                            <button
+                                key={item.id}
+                                onClick={() => { hapticFeedback(); setActiveView(item.id); }}
+                                className={`flex flex-col items-center justify-center gap-1 text-xs transition-colors duration-200 ${activeView === item.id ? 'text-[var(--primary)]' : 'text-[var(--muted)] hover:text-[var(--text)]'}`}
+                            >
+                                {item.icon}
+                                <span className="font-medium">{item.label}</span>
+                            </button>
+                        ))}
+                    </div>
+                </nav>
+            );
+        });
+
+        const MiniPlayer = React.memo(({ currentSong, isPlaying, onPlayPause, onNext, onPrev, openNowPlaying, progress, handleSeek, isFavorite, onToggleFavorite }) => {
+            if (!currentSong) return null;
+            
+            const progressPercent = (progress.duration > 0) ? (progress.current / progress.duration) * 100 : 0;
+
+            return (
+                <div
+                    onClick={openNowPlaying}
+                    className="fixed bottom-[68px] left-2 right-2 rounded-2xl shadow-[var(--shadow)] bg-[var(--card)]/95 backdrop-blur-md border border-[var(--border)] p-2 z-40 cursor-pointer overflow-hidden group"
+                >
+                    <div className="flex items-center gap-3 relative z-10">
+                        <img
+                            src={currentSong.artwork || 'https://placehold.co/64x64/1f2937/9ca3af?text=🎵'}
+                            alt={currentSong.title}
+                            className="w-12 h-12 rounded-lg object-cover"
+                        />
+                        <div className="flex-grow min-w-0">
+                            <p className="font-semibold text-[15px] text-[var(--text)] truncate">{currentSong.title}</p>
+                            <p className="text-sm text-[var(--muted)] truncate">{currentSong.artist || 'minhsutinhquang'}</p>
+                        </div>
+                        <div className="flex items-center gap-1 pr-1">
+                             <button
+                                aria-label="Toggle Favorite"
+                                onClick={(e) => { e.stopPropagation(); hapticFeedback(); onToggleFavorite(currentSong.id); }}
+                                className={`w-10 h-10 flex items-center justify-center rounded-full transition-colors ${isFavorite ? 'text-red-500' : 'text-[var(--muted)] hover:text-[var(--text)]'}`}
+                            >
+                                <HeartIcon active={isFavorite} />
+                            </button>
+                             <button
+                                aria-label="Previous"
+                                onClick={(e) => { e.stopPropagation(); hapticFeedback(); onPrev(); }}
+                                className="w-10 h-10 flex items-center justify-center text-[var(--text)] rounded-full hover:bg-[var(--border)] transition-colors"
+                            >
+                                <SkipBackIcon size={20}/>
+                            </button>
+                             <button
+                                aria-label="Play/Pause"
+                                onClick={(e) => { e.stopPropagation(); hapticFeedback(); onPlayPause(); }}
+                                className="w-11 h-11 flex items-center justify-center text-[var(--text)] rounded-full hover:bg-[var(--border)] transition-colors"
+                            >
+                                {isPlaying ? <PauseIcon size={20} /> : <PlayIcon size={20} />}
+                            </button>
+                             <button
+                                aria-label="Next"
+                                onClick={(e) => { e.stopPropagation(); hapticFeedback(); onNext(); }}
+                                className="w-11 h-11 flex items-center justify-center text-[var(--text)] rounded-full hover:bg-[var(--border)] transition-colors"
+                            >
+                                <SkipForwardIcon size={20}/>
+                            </button>
+                        </div>
+                    </div>
+                     <div 
+                         onPointerDown={handleSeek}
+                         className="absolute bottom-0 left-0 right-0 h-1 bg-[var(--muted)]/20 z-0 group-hover:h-2 transition-all duration-200"
+                     >
+                         <div className="h-full bg-[var(--primary)] pointer-events-none" style={{ width: `${progressPercent}%` }}></div>
+                     </div>
+                </div>
+            );
+        });
+        
+        const LyricsContent = React.memo(({ lyricsText, currentTime }) => {
+            const lyricsContainerRef = useRef(null);
+            const activeLineRef = useRef(null);
+            const parsedLyrics = useMemo(() => parseLRC(lyricsText), [lyricsText]);
+
+            const activeLineIndex = useMemo(() => {
+                if (!Array.isArray(parsedLyrics)) return -1;
+                for (let i = parsedLyrics.length - 1; i >= 0; i--) {
+                    if (parsedLyrics[i].time != null && currentTime >= parsedLyrics[i].time) return i;
+                }
+                return -1;
+            }, [parsedLyrics, currentTime]);
+            
+            useEffect(() => {
+                if (activeLineIndex >= 0 && lyricsContainerRef.current && activeLineRef.current) {
+                    const container = lyricsContainerRef.current;
+                    const activeLine = activeLineRef.current;
+                    container.scrollTo({
+                        top: activeLine.offsetTop - container.clientHeight / 2 + activeLine.offsetHeight / 2,
+                        behavior: 'smooth',
+                    });
+                }
+            }, [activeLineIndex]);
+
+            if (!parsedLyrics) {
+                 return (
+                    <div className="h-full flex flex-col items-center justify-center text-center p-8">
+                        <h3 className="text-xl font-bold mb-4">Lời bài hát</h3>
+                        <p className="text-[var(--muted)]">Lời bài hát không có sẵn cho bài này.</p>
+                    </div>
+                );
+            }
+            
+            if (typeof parsedLyrics === 'string') {
+                 return (
+                    <div className="h-full flex flex-col items-center p-4">
+                        <div className="w-full flex-grow overflow-y-auto">
+                           <p className="text-2xl/relaxed whitespace-pre-wrap p-4 text-center font-semibold text-[var(--muted)]">
+                                {parsedLyrics}
+                            </p>
+                        </div>
+                    </div>
+                );
+            }
+            
+            return (
+                 <div ref={lyricsContainerRef} className="h-full flex flex-col items-center p-4 overflow-y-auto scroll-smooth">
+                    <div className="w-full py-[40vh]">
+                    {parsedLyrics.map((line, index) => (
+                        <p 
+                            key={index} 
+                            ref={index === activeLineIndex ? activeLineRef : null}
+                            className={`transition-all duration-300 ease-in-out text-center font-semibold p-2 ${index === activeLineIndex ? 'text-[var(--primary)] text-3xl' : 'text-[var(--muted)] text-2xl opacity-50'}`}
+                        >
+                            {line.text || '...'}
+                        </p>
+                    ))}
+                    </div>
+                </div>
+            );
+        });
+        
+        const QueueContent = React.memo(({playlist, currentSong, onSelectSong}) => {
+            const queueContainerRef = useRef(null);
+            const activeSongRef = useRef(null);
+        
+            useEffect(() => {
+                if (activeSongRef.current && queueContainerRef.current) {
+                    queueContainerRef.current.scrollTo({
+                        top: activeSongRef.current.offsetTop - queueContainerRef.current.clientHeight / 3,
+                        behavior: 'auto'
+                    });
+                }
+            }, [currentSong.id]);
+
+            return (
+                <div ref={queueContainerRef} className="h-full flex-grow overflow-y-auto px-2 space-y-1">
+                    {playlist.map(song => (
+                        <div
+                            key={song.id}
+                            ref={song.id === currentSong.id ? activeSongRef : null}
+                            onClick={() => onSelectSong(song)}
+                            className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer ${song.id === currentSong.id ? 'bg-[var(--primary)]/20' : 'hover:bg-[var(--card)]'}`}
+                        >
+                             <div className={`w-8 text-center text-sm font-mono flex-shrink-0 ${song.id === currentSong.id ? 'text-[var(--primary)]' : 'text-[var(--muted)]'}`}>
+                                {parseInt(song.id, 10)}
+                            </div>
+                            <img src={song.artwork || 'https://placehold.co/64x64/1f2937/9ca3af?text=🎵'} className="w-10 h-10 rounded-md object-cover" />
+                            <div className="flex-grow min-w-0">
+                                <p className={`font-medium truncate ${song.id === currentSong.id ? 'text-[var(--primary)]' : 'text-[var(--text)]'}`}>{song.title}</p>
+                                <p className="text-sm text-[var(--muted)] truncate">{song.artist || 'minhsutinhquang'}</p>
+                            </div>
+                            <span className="text-sm text-[var(--muted)]">{formatTime(song.duration)}</span>
+                        </div>
+                    ))}
+                </div>
+            );
+        });
+
+        const NowPlayingView = React.memo(({
+            isOpen, closeNowPlaying, currentSong, isPlaying, onPlayPause, onNext, onPrev,
+            progress, handleSeek, isLoop, toggleLoop, isShuffle, toggleShuffle, volume, setVolume,
+            playlist, onSelectSong, isFavorite, onToggleFavorite
+        }) => {
+            const [activeContent, setActiveContent] = useState('main');
+            const touchStartX = useRef(0);
+            const touchEndX = useRef(0);
+
+            useEffect(() => {
+                if (isOpen) {
+                    setActiveContent('main');
+                }
+            }, [isOpen]);
+            
+            if (!isOpen || !currentSong) return null;
+            
+            const handleTouchStart = (e) => {
+                touchStartX.current = e.targetTouches[0].clientX;
+            };
+
+            const handleTouchMove = (e) => {
+                touchEndX.current = e.targetTouches[0].clientX;
+            };
+
+            const handleTouchEnd = () => {
+                if (touchStartX.current - touchEndX.current > 75) {
+                    // Swiped left
+                    onNext();
+                }
+
+                if (touchStartX.current - touchEndX.current < -75) {
+                    // Swiped right
+                    onPrev();
+                }
+            };
+            
+            const [hue, sat, light] = generateColorFromString(currentSong.id);
+            const backgroundStyle = {
+              background: `linear-gradient(180deg, hsl(${hue}, ${sat}%, ${light-10}%) 0%, var(--bg) 70%)`,
+            };
+
+            const MainContent = () => (
+                <>
+                    <main 
+                        className="flex-grow flex flex-col items-center justify-center text-center px-4 pt-4 pb-8"
+                        onTouchStart={handleTouchStart}
+                        onTouchMove={handleTouchMove}
+                        onTouchEnd={handleTouchEnd}
+                    >
+                        <div className="w-full max-w-xs aspect-square rounded-2xl overflow-hidden shadow-2xl bg-[var(--border)] mb-8">
+                            <img
+                                loading="eager"
+                                src={currentSong.artwork || 'https://placehold.co/400x400/1f2937/9ca3af?text=MSTQ'}
+                                alt={currentSong.title}
+                                className="w-full h-full object-cover"
+                            />
+                        </div>
+                        <div className="flex items-center gap-4">
+                            <div className="text-left flex-grow">
+                                <h2 className="text-2xl lg:text-3xl font-bold text-[var(--text)]">{currentSong.title}</h2>
+                                <p className="text-[var(--muted)] mt-1 text-base lg:text-lg">{currentSong.artist || 'minhsutinhquang'}</p>
+                            </div>
+                            <button
+                                aria-label="Toggle Favorite"
+                                onClick={() => { hapticFeedback(); onToggleFavorite(currentSong.id); }}
+                                className={`p-3 rounded-full transition-colors ${isFavorite ? 'text-red-500' : 'text-[var(--muted)] hover:text-[var(--text)]'}`}
+                            >
+                                <HeartIcon active={isFavorite} size={28} />
+                            </button>
+                        </div>
+                    </main>
+                    <footer className="flex-shrink-0">
+                        <div className="mb-4">
+                            <input
+                                type="range"
+                                min="0"
+                                max={Math.max(1, progress.duration || 0)}
+                                value={progress.current}
+                                onChange={handleSeek}
+                                className="w-full h-2 bg-[var(--muted)]/20 rounded-lg appearance-none cursor-pointer range-lg accent-[var(--primary)]"
+                            />
+                            <div className="flex justify-between text-xs text-[var(--muted)] mt-2">
+                                <span>{formatTime(progress.current)}</span>
+                                <span>{formatTime(progress.duration)}</span>
+                            </div>
+                        </div>
+                        <div className="flex items-center justify-center gap-4">
+                            <button aria-label="Shuffle" onClick={() => { hapticFeedback(); toggleShuffle(); }} className="p-3 text-[var(--muted)] hover:text-[var(--text)] transition-colors"><ShuffleIcon active={isShuffle} /></button>
+                            <button aria-label="Previous" onClick={() => { hapticFeedback(); onPrev(); }} className="p-3 text-[var(--text)] hover:opacity-80 transition"><SkipBackIcon size={32} /></button>
+                            <button aria-label="Play/Pause" onClick={() => { hapticFeedback(); onPlayPause(); }} className="w-20 h-20 bg-[var(--primary)] rounded-full flex items-center justify-center text-[var(--primary-fg)] hover:opacity-90 transition shadow-lg shadow-[var(--primary)]/30">
+                                {isPlaying ? <PauseIcon size={40} /> : <PlayIcon size={40} />}
+                            </button>
+                            <button aria-label="Next" onClick={() => { hapticFeedback(); onNext(); }} className="p-3 text-[var(--text)] hover:opacity-80 transition"><SkipForwardIcon size={32} /></button>
+                            <button aria-label="Repeat" onClick={() => { hapticFeedback(); toggleLoop(); }} className="p-3 text-[var(--muted)] hover:text-[var(--text)] transition-colors"><RepeatIcon active={isLoop} /></button>
+                        </div>
+                        <div className="flex items-center justify-around mt-6">
+                            <div className="w-8"></div>
+                             <div className="flex items-center gap-3 max-w-xs mx-auto">
+                                <Volume2Icon />
+                                <input
+                                    aria-label="Volume"
+                                    type="range"
+                                    min="0" max="1" step="0.01"
+                                    value={volume}
+                                    onChange={(e) => setVolume(parseFloat(e.target.value))}
+                                    className="w-full h-1.5 bg-[var(--muted)]/20 rounded-lg appearance-none cursor-pointer range-sm accent-[var(--primary)]"
+                                />
+                            </div>
+                             <div className="w-8"></div>
+                        </div>
+                    </footer>
+                </>
+            );
+            
+            return (
+                <div className="fixed inset-0 bg-[var(--bg)] z-50 flex flex-col p-4 animate-slide-up">
+                     <div className="absolute top-0 left-0 right-0 h-full -z-10 transition-all duration-500" style={backgroundStyle} />
+                    <header className="flex-shrink-0 flex items-center justify-between mb-4">
+                        <button onClick={closeNowPlaying} className="w-11 h-11 flex items-center justify-center rounded-full hover:bg-[var(--card)]/50">
+                            <ChevronDownIcon />
+                        </button>
+                        <div className="flex items-center gap-2 bg-[var(--card)] p-1 rounded-full">
+                            <button onClick={() => setActiveContent('main')} className={`px-4 py-1.5 text-sm font-semibold rounded-full transition-colors ${activeContent === 'main' ? 'bg-[var(--primary)] text-[var(--primary-fg)]' : 'text-[var(--muted)]'}`}>Player</button>
+                            <button onClick={() => setActiveContent('queue')} className={`px-4 py-1.5 text-sm font-semibold rounded-full transition-colors ${activeContent === 'queue' ? 'bg-[var(--primary)] text-[var(--primary-fg)]' : 'text-[var(--muted)]'}`}>Tiếp theo</button>
+                            <button onClick={() => setActiveContent('lyrics')} className={`px-4 py-1.5 text-sm font-semibold rounded-full transition-colors ${activeContent === 'lyrics' ? 'bg-[var(--primary)] text-[var(--primary-fg)]' : 'text-[var(--muted)]'}`}>Lời bài hát</button>
+                        </div>
+                        <div className="w-11 h-11"></div>
+                    </header>
+                    
+                    <div className="flex-grow min-h-0">
+                        { activeContent === 'queue' ? <QueueContent playlist={playlist} currentSong={currentSong} onSelectSong={onSelectSong}/> : activeContent === 'lyrics' ? <LyricsContent lyricsText={currentSong.lyrics} currentTime={progress.current} /> : <MainContent /> }
+                    </div>
+                </div>
+            );
+        });
+
+        const PlaylistView = React.memo(({ songs, onSelectSong, currentSong, filter, isLoading }) => {
+          const filteredSongs = songs.filter(song => 
+            song.title.toLowerCase().includes(filter.toLowerCase()) ||
+            (song.artist || 'minhsutinhquang').toLowerCase().includes(filter.toLowerCase())
+          );
+          const visibleCount = useIncrementalVisible(filteredSongs.length);
+          
+          if (isLoading) {
+              return (
+                <div className="px-4 text-center py-20 text-[var(--muted)]">
+                    <p className="text-lg font-medium">Đang tải danh sách nhạc...</p>
+                    <div className="mt-6 space-y-4 animate-pulse">
+                        {[...Array(3)].map((_, i) => (
+                             <div key={i} className="flex items-center gap-4 p-3 rounded-lg">
+                                <div className="w-14 h-14 rounded-lg bg-[var(--card)]"></div>
+                                <div className="flex-grow min-w-0 space-y-2">
+                                   <div className="h-4 bg-[var(--card)] rounded w-3/4"></div>
+                                   <div className="h-3 bg-[var(--card)] rounded w-1/2"></div>
+                                </div>
+                                <div className="h-3 bg-[var(--card)] rounded w-10"></div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+              );
+          }
+
+          return (
+            <div className="px-4">
+                <h2 className="text-2xl font-bold text-[var(--text)] mb-4">{filter ? "Kết quả tìm kiếm" : "Danh sách phát"}</h2>
+                <div className="space-y-2">
+                    {filteredSongs.slice(0, visibleCount).length > 0 ? (
+                    filteredSongs.slice(0, visibleCount).map((song) => (
+                        <div
+                        key={song.id}
+                        onClick={() => onSelectSong(song)}
+                        className={`flex items-center gap-3 p-3 rounded-2xl cursor-pointer transition-colors duration-200 ${currentSong?.id === song.id ? 'bg-[var(--primary)]/20' : 'hover:bg-[var(--card)]/50'}`}
+                        >
+                        <div className={`w-8 text-center text-sm font-mono flex-shrink-0 ${currentSong?.id === song.id ? 'text-[var(--primary)]' : 'text-[var(--muted)]'}`}>
+                            {parseInt(song.id, 10)}
+                        </div>
+                        <div className="w-14 h-14 rounded-lg overflow-hidden bg-[var(--border)] flex-shrink-0">
+                            <img loading="lazy" decoding="async" fetchpriority="low" src={song.artwork || 'https://placehold.co/64x64/1f2937/9ca3af?text=🎵'} alt={song.title} className="w-full h-full object-cover"/>
+                        </div>
+                        <div className="flex-grow min-w-0">
+                            <p className={`font-semibold truncate text-[15px] ${currentSong?.id === song.id ? 'text-[var(--primary)]' : 'text-[var(--text)]'}`}>
+                            {song.title}
+                            </p>
+                            <p className="text-sm text-[var(--muted)] truncate">{song.artist || 'minhsutinhquang'}</p>
+                        </div>
+                        <div className="text-sm text-[var(--muted)] flex-shrink-0">
+                            {formatTime(song.duration)}
+                        </div>
+                        </div>
+                    ))
+                    ) : (
+                    <p className="text-[var(--muted)] text-center py-10">
+                        {filter ? 'Không tìm thấy bài hát nào khớp.' : 'Không có bài hát nào trong danh sách.'}
+                    </p>
+                    )}
+                </div>
+            </div>
+          );
+        });
+
+        const SettingsView = React.memo(({ theme, setTheme, handleClearCache, startTimer, timeLeft, stopAtEndOfTrack, setStopAtEndOfTrack, powerSave, setPowerSave }) => {
+            return (
+                <div className="px-4 space-y-8">
+                    <div>
+                        <h2 className="text-2xl font-bold text-[var(--text)] mb-4">Cài đặt</h2>
+                    </div>
+                    
+                    {/* Giao diện */}
+                    <div className="space-y-4">
+                        <h3 className="text-lg font-semibold text-[var(--text)]">Giao diện</h3>
+                        <div className="bg-[var(--card)] rounded-2xl p-4">
+                            <div className="grid grid-cols-3 gap-3">
+                                {Object.entries(themes).map(([key, value]) => (
+                                     <button
+                                        key={key}
+                                        onClick={() => setTheme(key)}
+                                        data-theme={key}
+                                        aria-current={theme === key}
+                                        className="theme-swatch"
+                                     >
+                                       <span className="dot" style={{'--c1': value.c1, '--c2': value.c2}}></span>
+                                       <span className="text-sm font-medium">{value.name}</span>
+                                     </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                     {/* Tiết kiệm pin */}
+                    <div className="space-y-4">
+                        <h3 className="text-lg font-semibold text-[var(--text)]">Tiết kiệm pin</h3>
+                        <div className="bg-[var(--card)] rounded-2xl p-4 flex items-center justify-between">
+                            <div>
+                                <p className="font-medium">Tắt hiệu ứng nặng</p>
+                                <p className="text-sm text-[var(--muted)]">Giảm hiệu ứng blur, shadow, animation</p>
+                            </div>
+                            <input 
+                                type="checkbox" 
+                                checked={powerSave} 
+                                onChange={e=>setPowerSave(e.target.checked)} 
+                                className="h-6 w-6 rounded-md text-[var(--primary)] bg-[var(--border)] border-[var(--border)] focus:ring-2 focus:ring-[var(--primary)]" 
+                            />
+                        </div>
+                    </div>
+
+                    {/* Hẹn giờ */}
+                    <div className="space-y-4">
+                        <h3 className="text-lg font-semibold text-[var(--text)]">Hẹn giờ tắt nhạc</h3>
+                        <div className="bg-[var(--card)] rounded-2xl p-4">
+                            {timeLeft !== null ? (
+                                <div className="text-center py-2">
+                                    <p className="text-[var(--muted)]">Sẽ dừng sau</p>
+                                    <p className="text-3xl font-bold text-[var(--primary)] font-mono">{formatTime(timeLeft)}</p>
+                                </div>
+                            ) : stopAtEndOfTrack ? (
+                                 <div className="text-center py-2">
+                                     <p className="text-lg font-medium text-[var(--primary)]">Sẽ dừng sau khi hết bài này</p>
+                                 </div>
+                            ) : (
+                                 <div className="text-center py-2">
+                                     <p className="text-[var(--muted)]">Hẹn giờ đang tắt</p>
+                                 </div>
+                            )}
+                            <div className="grid grid-cols-3 gap-2 mt-4">
+                                {[15, 30, 60].map(min => (
+                                     <button key={min} onClick={() => startTimer(min)} className="p-3 bg-[var(--border)] rounded-lg hover:bg-[var(--muted)]/20 transition-colors font-medium">{min} phút</button>
+                                ))}
+                            </div>
+                             <div className="flex items-center justify-between mt-4 p-3 bg-[var(--border)] rounded-lg">
+                                <label htmlFor="stop-at-end" className="font-medium">Tắt khi hết bài</label>
+                                <input
+                                    type="checkbox"
+                                    id="stop-at-end"
+                                    checked={stopAtEndOfTrack}
+                                    onChange={(e) => setStopAtEndOfTrack(e.target.checked)}
+                                    className="h-5 w-5 rounded text-[var(--primary)] bg-[var(--card)] border-[var(--border)] focus:ring-[var(--primary)]"
+                                />
+                             </div>
+                             <button onClick={() => startTimer(null)} className="w-full mt-2 p-3 rounded-lg hover:bg-[var(--border)] transition-colors">Tắt hẹn giờ</button>
+                        </div>
+                    </div>
+
+                    {/* Các nền tảng */}
+                    <div className="space-y-4">
+                        <h3 className="text-lg font-semibold text-[var(--text)]">Các nền tảng khác</h3>
+                        <div className="bg-[var(--card)] rounded-2xl p-2 space-y-1">
+                            {platformLinks.map(link => (
+                                 <a href={link.href} key={link.href} target="_blank" rel="noopener" className="flex items-center justify-between p-4 rounded-lg hover:bg-[var(--border)] transition-colors">
+                                    <span className="font-medium">{link.text}</span>
+                                    <ExternalLinkIcon />
+                                 </a>
+                            ))}
+                        </div>
+                    </div>
+
+                     {/* Dữ liệu */}
+                    <div className="space-y-4">
+                        <h3 className="text-lg font-semibold text-[var(--text)]">Dữ liệu ứng dụng</h3>
+                         <div className="bg-[var(--card)] rounded-2xl p-4">
+                            <button onClick={handleClearCache} className="w-full flex items-center gap-3 p-4 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors">
+                                <TrashIcon />
+                                <span className="font-medium">Xóa Cache & Tải lại</span>
+                            </button>
+                            <p className="text-xs text-[var(--muted)] mt-2 text-center">Hành động này sẽ xóa dữ liệu đã lưu (như theme) và tải lại ứng dụng.</p>
+                         </div>
+                    </div>
+                </div>
+            );
+        });
+
+        const SearchView = ({ songs, onSelectSong, currentSong }) => {
+            const [filter, setFilter] = useState('');
+            const searchInputRef = useRef(null);
+
+            useEffect(() => {
+                searchInputRef.current?.focus();
+            }, []);
+
+            const filteredSongs = useMemo(() => {
+                if (!filter) return [];
+                return songs.filter(song => 
+                    song.title.toLowerCase().includes(filter.toLowerCase()) ||
+                    (song.artist || 'minhsutinhquang').toLowerCase().includes(filter.toLowerCase())
+                );
+            }, [songs, filter]);
+
+            return (
+                 <div className="px-4">
+                    <div className="relative mb-6">
+                        <input 
+                            ref={searchInputRef}
+                            type="text" 
+                            placeholder="Nhập tên bài hát, nghệ sĩ..." 
+                            value={filter} 
+                            onChange={(e) => setFilter(e.target.value)}
+                            className="w-full bg-[var(--card)] border border-[var(--border)] rounded-full py-3 pl-12 pr-4 text-lg text-[var(--text)] placeholder-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
+                        />
+                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--muted)]">
+                            <SearchIcon size={24} />
+                        </div>
+                    </div>
+                    {filter && <PlaylistView isLoading={false} songs={filteredSongs} currentSong={currentSong} onSelectSong={onSelectSong} filter={filter} />}
+                 </div>
+            );
+        };
+
+        const LibraryView = ({ songs, onSelectSong, currentSong, favorites }) => {
+            const favoriteSongs = useMemo(() => {
+                return songs.filter(song => favorites.includes(song.id));
+            }, [songs, favorites]);
+
+             if (favoriteSongs.length === 0) {
+              return (
+                <div className="px-4 text-center py-20 text-[var(--muted)]">
+                    <h2 className="text-2xl font-bold text-[var(--text)] mb-4">Thư viện</h2>
+                    <p className="text-lg font-medium">Bạn chưa có bài hát yêu thích nào.</p>
+                    <p>Bấm vào hình trái tim ❤️ để thêm vào đây nhé!</p>
+                </div>
+              );
+          }
+
+            return (
+                <div className="px-4">
+                    <h2 className="text-2xl font-bold text-[var(--text)] mb-4">Bài hát Yêu thích</h2>
+                    <PlaylistView isLoading={false} songs={favoriteSongs} currentSong={currentSong} onSelectSong={onSelectSong} filter={""} />
+                </div>
+            );
+        };
+
+
+        // --- Main App Component ---
+        function App() {
+          // State
+          const [songs, setSongs] = useState([]);
+          const [isLoading, setIsLoading] = useState(true);
+          const [currentSong, setCurrentSong] = useState(null);
+          const [isPlaying, setIsPlaying] = useState(false);
+          const [playlist, setPlaylist] = useState([]);
+          const [currentIndex, setCurrentIndex] = useState(0);
+          const [isShuffle, setIsShuffle] = useState(false);
+          const [isLoop, setIsLoop] = useState(false);
+          const [volume, setVolume] = useState(0.9);
+          const [progress, setProgress] = useState({ current: 0, duration: 0 });
+          const [theme, setTheme] = useState(localStorage.getItem('music-theme') || 'lucbao');
+          const [activeView, setActiveView] = useState('home');
+          const [isNowPlayingOpen, setIsNowPlayingOpen] = useState(false);
+          const [timeLeft, setTimeLeft] = useState(null);
+          const [stopAtEndOfTrack, setStopAtEndOfTrack] = useState(false);
+          const [powerSave, setPowerSave] = useState(localStorage.getItem('power-save') === '1');
+          const [favorites, setFavorites] = useState(loadFavoritesCache);
+
+
+          // Refs
+          const audioRef = useRef(null);
+          if (!audioRef.current) {
+            const a = new Audio();
+            a.preload = 'metadata';      // không tải full khi chưa cần
+            a.playsInline = true;        // iOS phát trong nền/lockscreen
+            a.crossOrigin = 'anonymous'; // cho MediaSession ảnh/metadata
+            audioRef.current = a;
+          }
+          const timerRef = useRef({ timeout: null, interval: null });
+
+          // --- Theme & Power-save Effects ---
+          useEffect(() => {
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('music-theme', theme);
+          }, [theme]);
+          
+          useEffect(() => {
+            document.documentElement.toggleAttribute('data-powersave', powerSave);
+            localStorage.setItem('power-save', powerSave ? '1' : '0');
+          }, [powerSave]);
+          
+          useEffect(() => {
+            const onVis = () => {
+              document.documentElement.toggleAttribute('data-bg', document.hidden);
+            };
+            document.addEventListener('visibilitychange', onVis);
+            return () => document.removeEventListener('visibilitychange', onVis);
+          }, []);
+          
+          // --- Favorites ---
+          useEffect(() => {
+            saveFavoritesCache(favorites);
+          }, [favorites]);
+
+          const toggleFavorite = useCallback((songId) => {
+              setFavorites(prev => 
+                  prev.includes(songId)
+                      ? prev.filter(id => id !== songId)
+                      : [...prev, songId]
+              );
+          }, []);
+
+          // --- Timer ---
+          const smoothPause = useCallback(async (ms = 400) => {
+            const a = audioRef.current;
+            if (!a) return;
+            const startVolume = a.volume;
+            const steps = 10;
+            const stepDuration = ms / steps;
+          
+            for (let i = 1; i <= steps; i++) {
+              a.volume = startVolume * (1 - i / steps);
+              await new Promise(r => setTimeout(r, stepDuration));
+            }
+            a.pause();
+            a.volume = startVolume; // Restore for next play
+            setIsPlaying(false);
+          }, []);
+          
+          const startTimer = useCallback((durationInMinutes) => {
+            hapticFeedback();
+            clearTimeout(timerRef.current.timeout);
+            clearInterval(timerRef.current.interval);
+            setStopAtEndOfTrack(false);
+
+            if (durationInMinutes === null || durationInMinutes <= 0) {
+                setTimeLeft(null);
+                return;
+            }
+
+            const durationInSeconds = durationInMinutes * 60;
+            setTimeLeft(durationInSeconds);
+
+            timerRef.current.interval = setInterval(() => {
+                setTimeLeft(prevTime => {
+                    if (prevTime !== null && prevTime <= 1) {
+                        clearInterval(timerRef.current.interval);
+                        return 0;
+                    }
+                    return prevTime !== null ? prevTime - 1 : null;
+                });
+            }, 1000);
+
+            timerRef.current.timeout = setTimeout(() => {
+                smoothPause();
+                setTimeLeft(null);
+                clearInterval(timerRef.current.interval);
+            }, durationInSeconds * 1000);
+          }, [smoothPause]);
+          
+          const handleSetStopAtEndOfTrack = (value) => {
+              hapticFeedback();
+              setStopAtEndOfTrack(value);
+              if (value) {
+                  clearTimeout(timerRef.current.timeout);
+                  clearInterval(timerRef.current.interval);
+                  setTimeLeft(null);
+              }
+          }
+
+          useEffect(() => {
+            return () => {
+                clearTimeout(timerRef.current.timeout);
+                clearInterval(timerRef.current.interval);
+            };
+          }, []);
+          
+          const handleClearCache = useCallback(async () => {
+              hapticFeedback();
+              try {
+                if ('caches' in window) {
+                  const keys = await caches.keys();
+                  await Promise.all(keys.map(k => caches.delete(k)));
+                }
+                localStorage.clear();
+                location.reload();
+              } catch (err) {
+                console.error("Cache clearing failed:", err);
+                location.reload();
+              }
+          }, []);
+
+          // --- Playback Handlers & Effects ---
+          const handleNext = useCallback(() => {
+            if (stopAtEndOfTrack) {
+                smoothPause();
+                setStopAtEndOfTrack(false);
+                return;
+            }
+            if (!playlist.length) return;
+            if (isLoop) {
+              audioRef.current.currentTime = 0;
+              audioRef.current.play();
+              return;
+            }
+            const nextIndex = (currentIndex + 1) % playlist.length;
+            setCurrentIndex(nextIndex);
+            setCurrentSong(playlist[nextIndex]);
+            setIsPlaying(true);
+          }, [currentIndex, playlist, isLoop, stopAtEndOfTrack, smoothPause]);
+          
+          const handlePrev = useCallback(() => {
+            if (!playlist.length) return;
+            if (audioRef.current.currentTime > 3) {
+              audioRef.current.currentTime = 0;
+              return;
+            }
+            const prevIndex = (currentIndex - 1 + playlist.length) % playlist.length;
+            setCurrentIndex(prevIndex);
+            setCurrentSong(playlist[prevIndex]);
+            setIsPlaying(true);
+          }, [currentIndex, playlist]);
+
+          useEffect(() => {
+            // 1) show cache ngay lập tức
+            const cached = loadSongsCache();
+            if (cached.length) { 
+                setSongs(cached); 
+                setPlaylist(cached); 
+                setIsLoading(false);
+            }
+
+            // 2) revalidate với timeout và retry nhẹ
+            let retry = 0;
+            const fetchSongs = async () => {
+                const ctrl = new AbortController();
+                const t = setTimeout(()=>ctrl.abort(), 8000);
+                try {
+                    const res = await fetch(API_ENDPOINT, { cache: 'no-store', signal: ctrl.signal });
+                    clearTimeout(t);
+                    if (!res.ok) throw new Error('Bad status');
+                    const freshSongs = await res.json();
+                    if (Array.isArray(freshSongs) && freshSongs.length) {
+                       
+                        setSongs(freshSongs);
+                        saveSongsCache(freshSongs);
+                        
+                        setPlaylist(currentPlaylist => {
+                            const newPlaylist = isShuffle ? currentPlaylist.map(oldSong => freshSongs.find(freshSong => freshSong.id === oldSong.id) || oldSong) : freshSongs;
+                            setCurrentSong(current => {
+                                if (!current) return null;
+                                const updated = newPlaylist.find(s => s.id === current.id);
+                                return updated || current;
+                            });
+                            return newPlaylist;
+                        });
+                    }
+                } catch (e) {
+                    if (retry < 5) {
+                        retry++;
+                        setTimeout(fetchSongs, 8000);
+                    }
+                } finally {
+                    if (isLoading) {
+                        setIsLoading(false);
+                    }
+                }
+            };
+            fetchSongs();
+          }, [isShuffle]);
+
+          useEffect(() => {
+            const audio = audioRef.current;
+            let rafId = null;
+            let lastTs = 0;
+            const TICK = 250; 
+
+            const loop = (ts) => {
+                const tick = document.hidden ? 1000 : TICK;
+                if (!audio.paused && audio.duration) {
+                    if (ts - lastTs >= tick) {
+                        lastTs = ts;
+                        setProgress({ current: audio.currentTime, duration: audio.duration });
+                        if ('mediaSession' in navigator) {
+                             try {
+                                navigator.mediaSession.setPositionState?.({
+                                    duration: audio.duration || 0,
+                                    playbackRate: 1,
+                                    position: audio.currentTime || 0
+                                });
+                            } catch {}
+                        }
+                    }
+                }
+                rafId = requestAnimationFrame(loop);
+            };
+            const start = () => { cancelAnimationFrame(rafId); rafId = requestAnimationFrame(loop); };
+            const stop  = () => { cancelAnimationFrame(rafId); };
+            const handleEnded = () => handleNext();
+            const handleCanPlay = () => setProgress(p => ({ ...p, duration: audio.duration }));
+
+            audio.addEventListener('play', start);
+            audio.addEventListener('pause', stop);
+            audio.addEventListener('ended', handleEnded);
+            audio.addEventListener('canplay', handleCanPlay);
+            start();
+            return () => {
+                stop();
+                audio.removeEventListener('play', start);
+                audio.removeEventListener('pause', stop);
+                audio.removeEventListener('ended', handleEnded);
+                audio.removeEventListener('canplay', handleCanPlay);
+            };
+          }, [handleNext]);
+          
+          useEffect(() => { 
+            if(audioRef.current) { audioRef.current.volume = volume; }
+          }, [volume]);
+
+          useEffect(() => {
+            if (currentSong) {
+              document.title = `${isPlaying ? '▶' : '⏸'} ${currentSong.title} - MSTQ Music`;
+              if (audioRef.current.src !== currentSong.stream_url) {
+                audioRef.current.src = currentSong.stream_url;
+              }
+              if (isPlaying) {
+                audioRef.current.play().catch(e => console.error("Error playing audio:", e));
+              } else {
+                 audioRef.current.pause();
+              }
+            } else {
+              document.title = 'Play Nhạc MSTQ';
+            }
+          }, [currentSong, isPlaying]);
+          
+          useEffect(() => {
+            if (!currentSong) {
+                if ('mediaSession' in navigator) {
+                    navigator.mediaSession.metadata = null;
+                    navigator.mediaSession.playbackState = "none";
+                }
+                return;
+            }
+            if ('mediaSession' in navigator) {
+                navigator.mediaSession.metadata = new MediaMetadata({
+                    title: currentSong.title,
+                    artist: currentSong.artist || 'minhsutinhquang',
+                    album: 'Play Nhạc MSTQ',
+                    artwork: [
+                        { src: currentSong.artwork || 'https://placehold.co/96x96/081414/e0f2f1?text=🎵', sizes: '96x96', type: 'image/png' },
+                        { src: currentSong.artwork || 'https://placehold.co/128x128/081414/e0f2f1?text=🎵', sizes: '128x128', type: 'image/png' },
+                        { src: currentSong.artwork || 'https://placehold.co/192x192/081414/e0f2f1?text=🎵', sizes: '192x192', type: 'image/png' },
+                        { src: currentSong.artwork || 'https://placehold.co/256x256/081414/e0f2f1?text=🎵', sizes: '256x256', type: 'image/png' },
+                        { src: currentSong.artwork || 'https://placehold.co/512x512/081414/e0f2f1?text=🎵', sizes: '512x512', type: 'image/png' },
+                    ]
+                });
+                
+                navigator.mediaSession.playbackState = isPlaying ? "playing" : "paused";
+
+                const actionHandlers = [
+                  ['play', () => { setIsPlaying(true); audioRef.current.play(); }],
+                  ['pause', () => { smoothPause(); setIsPlaying(false); }],
+                  ['previoustrack', handlePrev],
+                  ['nexttrack', handleNext],
+                ];
+
+                for (const [action, handler] of actionHandlers) {
+                  try {
+                    navigator.mediaSession.setActionHandler(action, handler);
+                  } catch (error) {
+                    console.log(`The media session action "${action}" is not supported.`);
+                  }
+                }
+            }
+          }, [currentSong, isPlaying, handleNext, handlePrev, smoothPause]);
+          
+          useEffect(() => {
+            const a = audioRef.current;
+            if (!a) return;
+            if (progress.duration && progress.current > progress.duration - 5) {
+                const next = playlist[(currentIndex + 1) % playlist.length];
+                if (next && a.dataset.warmed !== next.id) {
+                    fetch(next.stream_url, { method: 'HEAD', cache: 'no-store' }).catch(()=>{});
+                    a.dataset.warmed = next.id;
+                }
+            }
+          }, [progress.current, progress.duration, currentIndex, playlist]);
+          
+           useEffect(() => {
+            const ch = new BroadcastChannel('mstq_music');
+            ch.onmessage = (msg) => {
+                if (msg.data.type === 'play' && isPlaying) {
+                     const now = performance.now();
+                     if (!msg.data.time || now - msg.data.time > 100) {
+                         audioRef.current.pause();
+                         setIsPlaying(false);
+                     }
+                }
+            };
+            return () => ch.close();
+          }, [isPlaying]);
+          
+          const handleSelectSong = (song) => {
+            hapticFeedback();
+            const songIndexInPlaylist = playlist.findIndex(s => s.id === song.id);
+            setCurrentSong(song);
+            setCurrentIndex(songIndexInPlaylist > -1 ? songIndexInPlaylist : 0);
+            setIsPlaying(true);
+          };
+
+          const handlePlayPause = () => {
+            if (!currentSong && songs.length > 0) {
+              setCurrentSong(playlist[0]);
+              setCurrentIndex(0);
+            }
+
+            if (isPlaying) {
+                smoothPause();
+            } else {
+                setIsPlaying(true);
+                const ch = new BroadcastChannel('mstq_music');
+                ch.postMessage({ type: 'play', time: performance.now() });
+                ch.close();
+            }
+          };
+
+          const handleSeek = (e) => {
+            if(audioRef.current.duration) {
+              const target = e.currentTarget;
+              const rect = target.getBoundingClientRect();
+              const x = (e.clientX ?? e.touches?.[0]?.clientX) - rect.left;
+              const seekTime = (x / rect.width) * audioRef.current.duration;
+              if (isFinite(seekTime)) {
+                  audioRef.current.currentTime = seekTime;
+              }
+            }
+          };
+          
+          const handleNowPlayingSeek = (e) => {
+              if(audioRef.current.duration) {
+                const val = parseFloat(e.target.value);
+                audioRef.current.currentTime = val;
+                setProgress(p => ({ ...p, current: val }));
+              }
+          }
+
+
+          const toggleShuffle = () => {
+            setIsShuffle(prev => {
+              const newShuffleState = !prev;
+              if (newShuffleState) {
+                const newPlaylist = [...songs];
+                const current = currentSong || songs[0];
+                const rest = newPlaylist.filter(s => s.id !== current?.id);
+                for (let i = rest.length - 1; i > 0; i--) {
+                  const j = Math.floor(Math.random() * (i + 1));
+                  [rest[i], rest[j]] = [rest[j], rest[i]];
+                }
+                setPlaylist(current ? [current, ...rest] : rest);
+                setCurrentIndex(0);
+              } else {
+                setPlaylist(songs);
+                const newIndex = songs.findIndex(s => s.id === currentSong?.id);
+                setCurrentIndex(newIndex > -1 ? newIndex : 0);
+              }
+              return newShuffleState;
+            });
+          };
+
+          const toggleLoop = () => setIsLoop(!isLoop);
+
+          const renderActiveView = () => {
+              switch(activeView) {
+                  case 'home':
+                      return <PlaylistView isLoading={isLoading} songs={playlist} currentSong={currentSong} onSelectSong={handleSelectSong} filter={""} />;
+                  case 'search':
+                      return <SearchView songs={songs} onSelectSong={handleSelectSong} currentSong={currentSong} />;
+                  case 'library':
+                       return <LibraryView songs={songs} onSelectSong={handleSelectSong} currentSong={currentSong} favorites={favorites} />;
+                  case 'settings':
+                        return <SettingsView 
+                            theme={theme} setTheme={setTheme}
+                            handleClearCache={handleClearCache}
+                            startTimer={startTimer}
+                            timeLeft={timeLeft}
+                            stopAtEndOfTrack={stopAtEndOfTrack}
+                            setStopAtEndOfTrack={handleSetStopAtEndOfTrack}
+                            powerSave={powerSave}
+                            setPowerSave={setPowerSave}
+                        />;
+                  default:
+                      return <PlaylistView isLoading={isLoading} songs={playlist} currentSong={currentSong} onSelectSong={handleSelectSong} filter={""} />;
+              }
+          }
+
+          // Calculate padding to avoid content being hidden by nav/player
+          const mainPaddingBottom = currentSong ? '160px' : '80px'; 
+
+          return (
+            <div className="bg-[var(--bg)] text-[var(--text)] min-h-screen font-sans transition-colors duration-300">
+              <TopAppBar />
+              <main className="pt-20" style={{ paddingBottom: mainPaddingBottom }}>
+                {renderActiveView()}
+              </main>
+              <MiniPlayer 
+                currentSong={currentSong}
+                isPlaying={isPlaying}
+                onPlayPause={handlePlayPause}
+                onNext={handleNext}
+                onPrev={handlePrev}
+                openNowPlaying={() => setIsNowPlayingOpen(true)}
+                progress={progress}
+                handleSeek={handleSeek}
+                isFavorite={favorites.includes(currentSong?.id)}
+                onToggleFavorite={toggleFavorite}
+              />
+              <BottomNavBar activeView={activeView} setActiveView={setActiveView} />
+              <NowPlayingView
+                isOpen={isNowPlayingOpen}
+                closeNowPlaying={() => setIsNowPlayingOpen(false)}
+                currentSong={currentSong}
+                playlist={playlist}
+                onSelectSong={handleSelectSong}
+                isPlaying={isPlaying}
+                onPlayPause={handlePlayPause}
+                onNext={handleNext}
+                onPrev={handlePrev}
+                progress={progress}
+                handleSeek={handleNowPlayingSeek}
+                isLoop={isLoop}
+                toggleLoop={toggleLoop}
+                isShuffle={isShuffle}
+                toggleShuffle={toggleShuffle}
+                volume={volume}
+                setVolume={setVolume}
+                isFavorite={favorites.includes(currentSong?.id)}
+                onToggleFavorite={toggleFavorite}
+              />
+            </div>
+          );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
