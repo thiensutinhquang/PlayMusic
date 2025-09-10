@@ -1,494 +1,643 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="vi" data-theme="lucbao">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>Play Nhạc MSTQ - Ver 1.5.0</title>
-    
-    <style>
-        /* CSS Tối giản - Không có thư viện bên ngoài */
-        :root {
-            --primary-color: #f59e0b;
-            --primary-hover: #d97706;
-            --bg-light: #fdfcfb;
-            --card-bg-light: #ffffff;
-            --text-light: #1f2937;
-            --text-muted-light: #64748b;
-            --border-light: #e5e7eb;
-            --bg-dark: #1a1c23;
-            --card-bg-dark: #232732;
-            --text-dark: #f1f5f9;
-            --text-muted-dark: #cbd5e1;
-            --border-dark: #3b4252;
-        }
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>MSTQ Music + Admin (Firebase API_BASE, One-File)</title>
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            margin: 0;
-            background-color: var(--bg-light);
-            color: var(--text-light);
-            line-height: 1.5;
-        }
-        
-        body.dark-mode {
-            background-color: var(--bg-dark);
-            color: var(--text-dark);
-        }
+  <!-- CSP thân thiện GitHub Pages + Babel -->
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self' https: data: blob: 'unsafe-inline' 'unsafe-eval';
+                 script-src  'self' https: 'unsafe-inline' 'unsafe-eval';
+                 img-src     'self' https: data: blob:;
+                 media-src   'self' https: data: blob:;
+                 connect-src 'self' https://archive.org https://*.archive.org https://firestore.googleapis.com https://*.googleapis.com https://*.gstatic.com https: ;
+                 worker-src  'self' blob: data:;
+                 style-src   'self' https: 'unsafe-inline';
+                 frame-ancestors 'self';">
 
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 1rem;
-        }
+  <link rel="dns-prefetch" href="https://archive.org">
+  <link rel="preconnect" href="https://archive.org" crossorigin>
 
-        .card {
-            background-color: var(--card-bg-light);
-            border: 1px solid var(--border-light);
-            border-radius: 8px;
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-        
-        body.dark-mode .card {
-            background-color: var(--card-bg-dark);
-            border-color: var(--border-dark);
-        }
+  <!-- UI libs -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-        .header {
-            padding: 1rem;
-            border-bottom: 1px solid var(--border-light);
-            text-align: center;
-        }
-        
-        body.dark-mode .header {
-            border-color: var(--border-dark);
-        }
+  <!-- Firebase compat (đơn giản dùng trong HTML thuần) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
 
-        .main-title {
-            color: var(--primary-color);
-            font-size: 2rem;
-            font-weight: bold;
-            margin: 0;
-        }
-        
-        #search-input {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid var(--border-light);
-            border-radius: 6px;
-            margin-bottom: 1rem;
-            font-size: 1rem;
-        }
-        
-        body.dark-mode #search-input {
-            background-color: var(--bg-dark);
-            border-color: var(--border-dark);
-            color: var(--text-dark);
-        }
-
-        .song-list-item {
-            display: flex;
-            align-items: center;
-            padding: 0.75rem 0.5rem;
-            border-bottom: 1px solid var(--border-light);
-            cursor: pointer;
-            transition: background-color 0.2s ease;
-        }
-        
-        body.dark-mode .song-list-item {
-            border-color: var(--border-dark);
-        }
-
-        .song-list-item:hover {
-            background-color: #f9fafb;
-        }
-        
-        body.dark-mode .song-list-item:hover {
-            background-color: #2a2f3a;
-        }
-        
-        .song-list-item.active-song {
-            background-color: #fef3c7;
-        }
-        
-        body.dark-mode .song-list-item.active-song {
-            background-color: #3e3825;
-        }
-
-        .song-list-item .song-info {
-            flex-grow: 1;
-            padding-left: 1rem;
-        }
-        
-        .song-list-item .title {
-            font-weight: 600;
-        }
-        
-        .song-list-item .artist {
-            font-size: 0.875rem;
-            color: var(--text-muted-light);
-        }
-        
-        body.dark-mode .song-list-item .artist {
-             color: var(--text-muted-dark);
-        }
-
-        #player-bar {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background-color: rgba(255, 255, 255, 0.9);
-            border-top: 1px solid var(--border-light);
-            padding: 1rem;
-            backdrop-filter: blur(5px);
-            z-index: 1000;
-        }
-        
-        body.dark-mode #player-bar {
-            background-color: rgba(26, 28, 35, 0.9);
-            border-color: var(--border-dark);
-        }
-
-        .player-controls-main {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .player-buttons {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-        
-        .player-buttons button {
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            cursor: pointer;
-            color: var(--text-light);
-        }
-        
-        body.dark-mode .player-buttons button {
-            color: var(--text-dark);
-        }
-
-        #popup-play-pause-btn {
-            background-color: var(--primary-color);
-            color: white;
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-        }
-        
-        .progress-section {
-            width: 100%;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        
-        .progress-container {
-            flex-grow: 1;
-            height: 6px;
-            background-color: var(--border-light);
-            border-radius: 3px;
-            cursor: pointer;
-        }
-        
-        .progress-bar {
-            height: 100%;
-            background-color: var(--primary-color);
-            border-radius: 3px;
-        }
-        
-        .hidden {
-            display: none !important;
-        }
-    </style>
+  <style>
+    :root,[data-theme]{transition:color .2s, background-color .2s}
+    :root{
+      --bg:#111827;--card:#1f2937;--text:#f9fafb;--muted:#9ca3af;--primary:#f59e0b;--primary-fg:#111827;
+      --ring:#f59e0b66;--shadow:0 10px 30px rgba(0,0,0,.35);--border:#374151;--nav-bg:rgba(31,41,55,.8);
+      --gradient:linear-gradient(135deg,#f59e0b 0%,#fbbf24 100%);
+    }
+    [data-theme="light"]{
+      --bg:#f3f4f6;--card:#fff;--text:#111827;--muted:#6b7280;--primary:#d97706;--primary-fg:#fff;
+      --ring:#d9770666;--shadow:0 10px 25px rgba(0,0,0,.1);--border:#e5e7eb;--nav-bg:rgba(255,255,255,.8);
+      --gradient:linear-gradient(135deg,#fbbf24 0%,#f97316 100%);
+    }
+    [data-theme="lucbao"]{
+      --bg:#081414;--card:#102424;--text:#e0f2f1;--muted:#80cbc4;--primary:#f4ff81;--primary-fg:#1a2327;
+      --ring:#f4ff8166;--shadow:0 18px 40px rgba(168,255,120,.2);--border:rgba(255,255,255,.08);
+      --nav-bg:rgba(16,36,36,.8);--gradient:linear-gradient(135deg,#a8ff78 0%,#f4ff81 100%);
+    }
+    .theme-swatch{display:flex;flex-direction:column;align-items:center;gap:.5rem;padding:.75rem;border-radius:14px;background:var(--card);color:var(--text);border:1px solid var(--border);box-shadow:var(--shadow);cursor:pointer;transition:all .2s}
+    .theme-swatch .dot{width:40px;height:40px;border-radius:9999px;background:linear-gradient(135deg,var(--c1),var(--c2))}
+    .theme-swatch[aria-current="true"]{outline:3px solid var(--ring);outline-offset:2px;transform:scale(1.05)}
+    @keyframes slide-up{from{transform:translateY(100%)}to{transform:translateY(0)}}
+    .animate-slide-up{animation:slide-up .3s ease-out}
+    :root[data-powersave]{--shadow:none}
+    :root[data-powersave] *{transition:none!important;animation:none!important}
+    .kbd{display:inline-block;border:1px solid var(--border);border-bottom-width:2px;border-radius:.5rem;padding:.2rem .45rem;background:var(--card);font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.8rem}
+  </style>
 </head>
-<body>
-    <header class="header">
-        <h1 class="main-title">PLAY NHẠC MSTQ</h1>
-    </header>
+<body class="bg-[var(--bg)] text-[var(--text)] font-sans">
+  <div id="root"></div>
 
-    <main class="container">
-        <div class="card">
-            <h2 style="margin-top:0;">Thư viện nhạc</h2>
-            <p style="color: var(--text-muted-light);">Chức năng tìm kiếm đã bị vô hiệu hóa để đảm bảo tương thích.</p>
-            <div id="song-list-body">
-                <!-- Các bài hát sẽ được chèn vào đây bằng JavaScript -->
-            </div>
-            <div id="initial-loading-overlay">
-                <p>Đang tải thư viện nhạc...</p>
-            </div>
+  <script type="text/babel" data-presets="react">
+/* =========================================================
+   MSTQ PLAYER + ADMIN (Firebase → Firestore để lấy/ghi API_BASE)
+   - ErrorBoundary chống “màn hình đen”
+   - Admin gọn: chọn bài bằng select rồi mở form sửa
+   - Firestore doc: puppeteer-control/admin-config
+       { apiBase: "https://your-backend", bearerToken: "..." }
+   - Nút “Lưu Cục bộ” (LocalStorage) + “Lưu lên Firestore”
+   - Không nhúng IA secret vào client; dùng backend API_BASE
+   ========================================================= */
+
+const {useState,useEffect,useMemo,useRef,useCallback} = React;
+const SKEY={
+  songs:"mstq_songs_v1", fav:"mstq_favorites_v1",
+  theme:"music-theme", overrides:"mstq_admin_overrides_v1",
+  custom:"mstq_admin_custom_songs_v1", apiBase:"mstq_api_base_v1",
+  apiToken:"mstq_api_token_v1"
+};
+const save=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}};
+const load=(k,def)=>{try{const x=JSON.parse(localStorage.getItem(k)||"");return x??def}catch{return def}};
+const haptic=()=>navigator?.vibrate?.(8);
+const ft = s => (!Number.isFinite(s)||s<0)?"0:00":`${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`;
+
+/* ---------- Firebase Init ---------- */
+const firebaseConfig = {
+  apiKey: "AIzaSyD1VGc1stVvkpFqTMaSh2X7KqzBiH1-dDY",
+  authDomain: "ai-companel.firebaseapp.com",
+  projectId: "ai-companel",
+  storageBucket: "ai-companel.firebasestorage.app",
+  messagingSenderId: "869875628579",
+  appId: "1:869875628579:web:9c5fcf2c4372748c17cf96",
+  measurementId: "G-YY7E4DLFHL"
+};
+let firestore = null;
+try{
+  const app = firebase.initializeApp(firebaseConfig);
+  firestore = firebase.firestore();
+}catch(e){
+  console.warn("Firebase init fail (tiếp tục chạy offline admin):", e);
+}
+
+/* ---------- ErrorBoundary ---------- */
+class ErrorBoundary extends React.Component{
+  constructor(p){super(p);this.state={err:null}}
+  static getDerivedStateFromError(error){return {err:error}}
+  componentDidCatch(e,info){console.error("[UI ERROR]",e,info)}
+  render(){
+    if(this.state.err){
+      return (
+        <div className="min-h-screen p-6">
+          <div className="max-w-2xl mx-auto bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 shadow-[var(--shadow)]">
+            <h2 className="text-2xl font-bold mb-2">Có lỗi UI 😥</h2>
+            <p className="text-[var(--muted)] mb-4">Bạn vẫn có thể <button onClick={()=>location.reload()} className="underline">tải lại trang</button>.</p>
+            <pre className="text-xs whitespace-pre-wrap bg-black/20 p-3 rounded-lg overflow-auto max-h-64">{String(this.state.err)}</pre>
+          </div>
         </div>
-    </main>
-    
-    <div id="player-bar">
-        <div class="player-controls-main">
-            <div class="player-buttons">
-                <button type="button" id="popup-prev-btn" title="Bài trước">⏮</button>
-                <button type="button" id="popup-play-pause-btn" title="Phát/Dừng">
-                    <span id="play-icon">▶</span>
-                    <span id="pause-icon" class="hidden">⏸</span>
-                </button>
-                <button type="button" id="popup-next-btn" title="Bài kế tiếp">⏭</button>
-            </div>
-            <div class="progress-section">
-                <span id="popup-current-time">0:00</span>
-                <div class="progress-container" id="popup-progress-container">
-                    <div class="progress-bar" id="popup-progress-bar" style="width: 0%"></div>
-                </div>
-                <span id="popup-duration">0:00</span>
-            </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+/* ---------- Icons / Bars ---------- */
+const Play=({s=24})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>;
+const Pause=({s=24})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>;
+const Back=({s=24})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></svg>;
+const Next=({s=24})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>;
+
+const Tabs=({active,setActive})=>{
+  const items=[['home','Trang chủ'],['search','Tìm kiếm'],['library','Thư viện'],['settings','Cài đặt']];
+  return (
+    <nav className="fixed bottom-0 inset-x-0 h-16 bg-[var(--nav-bg)] backdrop-blur-lg border-t border-[var(--border)] z-40">
+      <div className="grid grid-cols-4 h-full">
+        {items.map(([id,label])=>(
+          <button key={id} onClick={()=>setActive(id)}
+            className={`flex flex-col items-center justify-center gap-1 text-xs ${active===id?'text-[var(--primary)]':'text-[var(--muted)] hover:text-[var(--text)]'}`}>
+            <span className="text-lg">{id==='home'?'🏠':id==='search'?'🔎':id==='library'?'📚':'⚙️'}</span>
+            <span className="font-medium">{label}</span>
+          </button>
+        ))}
+      </div>
+    </nav>
+  );
+};
+
+/* ---------- Mini Player ---------- */
+const Mini=({song,playing,onPlay,onNext,onPrev,progress,seek,isFav,toggleFav})=>{
+  if(!song) return null;
+  const pct = progress.duration>0 ? (progress.current/progress.duration)*100 : 0;
+  return (
+    <div className="fixed bottom-[68px] left-2 right-2 rounded-2xl shadow-[var(--shadow)] bg-[var(--card)]/95 backdrop-blur-md border border-[var(--border)] p-2 z-40 overflow-hidden">
+      <div className="flex items-center gap-3">
+        <img src={song.artwork||'https://placehold.co/64x64/1f2937/9ca3af?text=🎵'} className="w-12 h-12 rounded-lg object-cover" alt=""/>
+        <div className="flex-grow min-w-0">
+          <p className="font-semibold text-[15px] truncate">{song.title}</p>
+          <p className="text-sm text-[var(--muted)] truncate">{song.artist||'minhsutinhquang'}</p>
         </div>
+        <button onClick={()=>toggleFav(song.id)} className={`w-10 h-10 grid place-items-center rounded-full ${isFav?'text-red-500':'text-[var(--muted)] hover:text-[var(--text)]'}`}>❤️</button>
+        <button onClick={onPrev} className="w-10 h-10 grid place-items-center rounded-full hover:bg-[var(--border)]"><Back s={20}/></button>
+        <button onClick={onPlay} className="w-11 h-11 grid place-items-center rounded-full hover:bg-[var(--border)]">{playing?<Pause s={20}/>:<Play s={20}/>}</button>
+        <button onClick={onNext} className="w-11 h-11 grid place-items-center rounded-full hover:bg-[var(--border)]"><Next s={20}/></button>
+      </div>
+      <div onPointerDown={seek} className="mt-2 h-1 bg-[var(--muted)]/20 cursor-pointer">
+        <div className="h-full bg-[var(--primary)]" style={{width:`${pct}%`}}></div>
+      </div>
     </div>
-    
-    <audio id="audio-player" style="display: none;" crossorigin="anonymous"></audio>
+  );
+};
 
-    <script>
-        // Toàn bộ logic JavaScript được nhúng vào đây để tránh lỗi CSP
-        document.addEventListener('DOMContentLoaded', async () => {
-            const CONFIG = {
-                APP_VERSION: '1.5.0',
-                API_KEY: "08c897eb7784e03007e0769d01f2ca1c6a2001b4",
-                USER_HANDLE: "minhsutinhquang",
-                PAGE_SIZE: 100, // Tải nhiều hơn một chút ban đầu
-            };
+/* ---------- Rows & Views ---------- */
+const Row=({song,active,onClick})=>(
+  <div onClick={onClick}
+       className={`flex items-center gap-3 p-3 rounded-2xl cursor-pointer ${active?'bg-[var(--primary)]/20':'hover:bg-[var(--card)]/50'}`}>
+    <img loading="lazy" src={song.artwork||'https://placehold.co/64x64/1f2937/9ca3af?text=🎵'} className="w-14 h-14 rounded-lg object-cover" alt=""/>
+    <div className="flex-grow min-w-0">
+      <p className={`font-semibold truncate text-[15px] ${active?'text-[var(--primary)]':'text-[var(--text)]'}`}>{song.title}</p>
+      <p className="text-sm text-[var(--muted)] truncate">{song.artist||'minhsutinhquang'}</p>
+    </div>
+    <div className="text-sm text-[var(--muted)]">{ft(song.duration||0)}</div>
+  </div>
+);
+const HomeView=({songs,onPick,activeId,isLoading})=>{
+  if(isLoading) return <p className="px-4 py-20 text-center text-[var(--muted)]">Đang tải danh sách...</p>;
+  return (
+    <div className="px-4">
+      <h2 className="text-2xl font-bold mb-4">Danh sách phát</h2>
+      <div className="space-y-2">
+        {songs.length? songs.map(s=><Row key={s.id} song={s} active={s.id===activeId} onClick={()=>onPick(s)}/>)
+                    : <p className="text-[var(--muted)] text-center py-10">Không có bài hát nào.</p>}
+      </div>
+    </div>
+  );
+};
+const SearchView=({songs,onPick,activeId})=>{
+  const [q,setQ]=useState("");
+  const list = useMemo(()=> !q?[]:songs.filter(s=>(s.title||"").toLowerCase().includes(q.toLowerCase())||(s.artist||"").toLowerCase().includes(q.toLowerCase())),[q,songs]);
+  return (
+    <div className="px-4">
+      <div className="relative mb-6">
+        <input className="w-full bg-[var(--card)] border border-[var(--border)] rounded-full py-3 px-4 pl-12 text-lg"
+               placeholder="Nhập tên bài hát, nghệ sĩ..." value={q} onChange={e=>setQ(e.target.value)}/>
+        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--muted)]">🔎</div>
+      </div>
+      {q && <div className="space-y-2">{list.map(s=><Row key={s.id} song={s} active={s.id===activeId} onClick={()=>onPick(s)}/>)}</div>}
+    </div>
+  );
+};
+const LibraryView=({songs,onPick,activeId,favs})=>{
+  const favList = useMemo(()=>songs.filter(s=>favs.includes(s.id)),[songs,favs]);
+  return (
+    <div className="px-4">
+      <h2 className="text-2xl font-bold mb-4">Bài hát yêu thích</h2>
+      <div className="space-y-2">
+        {favList.length? favList.map(s=><Row key={s.id} song={s} active={s.id===activeId} onClick={()=>onPick(s)}/>)
+                      : <p className="text-[var(--muted)] text-center py-10">Chưa có bài yêu thích.</p>}
+      </div>
+    </div>
+  );
+};
 
-            const dom = {
-                songListBody: document.getElementById('song-list-body'),
-                initialLoadingOverlay: document.getElementById('initial-loading-overlay'),
-                playPauseBtn: document.getElementById('popup-play-pause-btn'),
-                playIcon: document.getElementById('play-icon'),
-                pauseIcon: document.getElementById('pause-icon'),
-                nextBtn: document.getElementById('popup-next-btn'),
-                prevBtn: document.getElementById('popup-prev-btn'),
-                progressBar: document.getElementById('popup-progress-bar'),
-                progressContainer: document.getElementById('popup-progress-container'),
-                currentTime: document.getElementById('popup-current-time'),
-                duration: document.getElementById('popup-duration'),
-                audioPlayer: document.getElementById('audio-player'),
-            };
-            
-            let state = {
-                allSongs: [],
-                audiusHosts: [],
-                currentAudiusHost: null,
-                currentSongIndex: -1,
-                isPlaying: false,
-            };
+/* ---------- Admin helpers ---------- */
+const themes={light:{name:'Sáng',c1:'#ffffff',c2:'#f6f7fb'}, lucbao:{name:'Lục Bảo',c1:'#a8ff78',c2:'#f4ff81'}};
+const AdminBanner=({apiBase})=>{
+  return apiBase
+    ? <div className="p-3 rounded-lg bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">🔒 Admin đã kết nối backend: <code>{apiBase}</code></div>
+    : <div className="p-3 rounded-lg bg-yellow-500/15 text-yellow-300 border border-yellow-500/30">⚠️ Chưa cấu hình backend. Thao tác admin chỉ lưu cục bộ.</div>;
+};
 
-            // Hàm tiện ích
-            const formatTime = (seconds) => {
-                const minutes = Math.floor(seconds / 60);
-                const secs = Math.floor(seconds % 60);
-                return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
-            };
+/* ---------- Settings (Admin compact + Firestore) ---------- */
+const SettingsView=({
+  theme,setTheme,onClearCache,overrides,setOverrides,custom,setCustom,
+  songs,onPick,exportData,importData,
+  doDeleteIA,doUploadIA,doUpdateMetaIA,
+  apiBase,setApiBase,apiToken,setApiToken,
+  refreshApiFromFirestore, saveApiToFirestore
+})=>{
+  // chọn 1 bài để sửa
+  const [filter,setFilter]=useState("");
+  const filteredOptions = useMemo(()=>songs
+    .filter(s=>!overrides[s.id]?.hidden)
+    .filter(s=>!filter || (s.title||"").toLowerCase().includes(filter.toLowerCase()) || (s.artist||"").toLowerCase().includes(filter.toLowerCase()))
+    .map(s=>({id:s.id,label:`${s.title} — ${(s.artist||'')}`})),[songs,overrides,filter]);
+  const [selectedId,setSelectedId]=useState(filteredOptions[0]?.id||"");
+  useEffect(()=>{ if(!selectedId && filteredOptions.length) setSelectedId(filteredOptions[0].id); },[filteredOptions.length]);
+  const selectedSong = useMemo(()=>songs.find(s=>s.id===selectedId)||null,[songs,selectedId]);
 
-            // Logic API
-            async function fetchWithRetry(url, options, retries = 3, delay = 1000) {
-                for (let i = 0; i < retries; i++) {
-                    try {
-                        const response = await fetch(url, options);
-                        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                        return await response.json();
-                    } catch (error) {
-                        console.warn(`Attempt ${i + 1} failed for ${url}. Retrying in ${delay}ms...`);
-                        if (i === retries - 1) throw error;
-                        await new Promise(res => setTimeout(res, delay));
-                        delay *= 2;
-                    }
-                }
-            }
+  // thêm bài mới cục bộ / upload IA
+  const [adding,setAdding]=useState({title:"",artist:"",stream_url:"",artwork:"",duration:"",lyrics:""});
+  const [fileUp,setFileUp]=useState(null);
+  const [target,setTarget]=useState({identifier:"",filename:""});
+  const onAddLocal=()=>{
+    if(!adding.title.trim()||!adding.stream_url.trim()){alert("Cần Tiêu đề + URL phát");return;}
+    const song={
+      id:"custom-"+Date.now(), title:adding.title.trim(), artist:adding.artist.trim()||"TinhQuang",
+      stream_url:adding.stream_url.trim(), artwork:adding.artwork.trim()||"", duration:parseFloat(adding.duration)||0,
+      lyrics:adding.lyrics||"", item_identifier:"custom"
+    };
+    const next=[song,...custom]; setCustom(next); save(SKEY.custom,next);
+    setAdding({title:"",artist:"",stream_url:"",artwork:"",duration:"",lyrics:""}); alert("Đã thêm (cục bộ).");
+  };
+  const doUpload=async()=>{
+    if(!fileUp){alert("Chọn tệp trước");return;}
+    if(!apiBase){alert("Chưa có API_BASE");return;}
+    const form=new FormData(); form.append("file",fileUp); form.append("identifier",target.identifier||""); form.append("filename",target.filename||fileUp.name);
+    try{ await doUploadIA(form); alert("Đã upload lên IA"); }catch(e){ alert("Lỗi upload: "+e.message); }
+  };
 
-            async function initializeApi() {
-                try {
-                    const response = await fetch('https://api.audius.co');
-                    const hosts = await response.json();
-                    state.audiusHosts = hosts.data.filter(host => host);
-                    if (state.audiusHosts.length === 0) throw new Error("No Audius hosts found");
-                    state.currentAudiusHost = state.audiusHosts[Math.floor(Math.random() * state.audiusHosts.length)];
-                    console.log(`Using Audius host: ${state.currentAudiusHost}`);
-                    return true;
-                } catch (error) {
-                    console.error("Failed to initialize Audius API:", error);
-                    dom.initialLoadingOverlay.innerHTML = "<p>Lỗi: Không thể kết nối đến máy chủ nhạc. Vui lòng thử lại sau.</p>";
-                    return false;
-                }
-            }
+  // override helpers
+  const onSaveOverride=(id,patch)=>{ const next={...overrides,[id]:{...(overrides[id]||{}),...patch}}; if(Object.keys(next[id]).length===0) delete next[id]; setOverrides(next); save(SKEY.overrides,next); };
+  const onResetOverride=id=>{ const next={...overrides}; delete next[id]; setOverrides(next); save(SKEY.overrides,next); };
+  const onToggleHide=id=> onSaveOverride(id,{hidden:!(overrides[id]?.hidden)});
 
-            async function getUserId() {
-                if (!state.currentAudiusHost) return null;
-                const url = `${state.currentAudiusHost}/v1/users/handle/${CONFIG.USER_HANDLE}?app_name=MSTQ-PLAYER`;
-                try {
-                    const data = await fetchWithRetry(url);
-                    return data?.data?.id || null;
-                } catch (error) {
-                    console.error("Failed to get user ID:", error);
-                    return null;
-                }
-            }
+  // editor card
+  const Editor=({s})=>{
+    const ov=overrides[s.id]||{};
+    const [local,setLocal]=useState({title:ov.title??s.title,artist:ov.artist??s.artist,artwork:ov.artwork??s.artwork,lyrics:ov.lyrics??s.lyrics});
+    useEffect(()=>{ setLocal({title:ov.title??s.title,artist:ov.artist??s.artist,artwork:ov.artwork??s.artwork,lyrics:ov.lyrics??s.lyrics}); },[s.id]);
+    const remoteUpdate=async()=>{ if(!apiBase){alert("Chưa có API_BASE");return;} try{ await doUpdateMetaIA(s,local); alert("Đã đẩy metadata lên IA"); }catch(e){ alert("Lỗi cập nhật: "+e.message); } };
+    const remoteDelete=async()=>{ if(!confirm("Xoá file trên Internet Archive?")) return; if(!apiBase){ alert("Chưa có API_BASE"); return; } try{ await doDeleteIA(s); alert("Đã xoá trên IA"); }catch(e){ alert("Lỗi xoá: "+e.message); } };
+    const isCustom=s.item_identifier==="custom";
+    return (
+      <div className="p-4 rounded-xl border border-[var(--border)] bg-[var(--card)]/60">
+        <div className="flex items-start gap-3">
+          <img src={local.artwork||'https://placehold.co/64x64/1f2937/9ca3af?text=🎵'} className="w-16 h-16 rounded-lg object-cover" alt=""/>
+          <div className="flex-grow grid grid-cols-1 md:grid-cols-3 gap-2">
+            <label className="text-sm">Tiêu đề<input className="mt-1 px-3 py-2 rounded-lg w-full bg-[var(--bg)]/40 border border-[var(--border)]" value={local.title} onChange={e=>setLocal(v=>({...v,title:e.target.value}))}/></label>
+            <label className="text-sm">Nghệ sĩ<input className="mt-1 px-3 py-2 rounded-lg w-full bg-[var(--bg)]/40 border border-[var(--border)]" value={local.artist||""} onChange={e=>setLocal(v=>({...v,artist:e.target.value}))}/></label>
+            <label className="text-sm">Ảnh bìa URL<input className="mt-1 px-3 py-2 rounded-lg w-full bg-[var(--bg)]/40 border border-[var(--border)]" placeholder="https://" value={local.artwork||""} onChange={e=>setLocal(v=>({...v,artwork:e.target.value}))}/></label>
+          </div>
+        </div>
+        <details className="mt-2">
+          <summary className="cursor-pointer text-[var(--muted)]">Lời bài hát</summary>
+          <textarea rows="4" className="w-full mt-2 px-3 py-2 rounded-lg bg-[var(--bg)]/40 border border-[var(--border)]" value={local.lyrics||""} onChange={e=>setLocal(v=>({...v,lyrics:e.target.value}))}></textarea>
+        </details>
+        <div className="flex flex-wrap items-center gap-2 mt-3">
+          <button onClick={()=>{onSaveOverride(s.id,local);alert("Đã lưu cục bộ");}} className="px-3 py-2 rounded-lg bg-[var(--primary)] text-[var(--primary-fg)]">Lưu cục bộ</button>
+          <button onClick={()=>onResetOverride(s.id)} className="px-3 py-2 rounded-lg bg-[var(--border)]">Xoá chỉnh sửa</button>
+          <button onClick={()=>onToggleHide(s.id)} className={`px-3 py-2 rounded-lg ${overrides[s.id]?.hidden?'bg-red-500/20 text-red-300':'bg-[var(--border)]'}`}>{overrides[s.id]?.hidden?'Đang ẨN (bấm để hiện)':'Ẩn khỏi danh sách'}</button>
+          {!isCustom && (<>
+            <button onClick={remoteUpdate} className="px-3 py-2 rounded-lg bg-blue-500/20 border border-blue-400/30 text-blue-200">Đẩy metadata lên IA</button>
+            <button onClick={remoteDelete} className="px-3 py-2 rounded-lg text-red-400 hover:bg-red-500/10">Xoá file trên IA</button>
+          </>)}
+          <span className="ml-auto text-xs text-[var(--muted)]">ID: {s.id}</span>
+        </div>
+      </div>
+    );
+  };
 
-            async function fetchSongs(userId) {
-                if (!userId || !state.currentAudiusHost) return [];
-                const url = `${state.currentAudiusHost}/v1/users/${userId}/tracks?app_name=MSTQ-PLAYER&limit=${CONFIG.PAGE_SIZE}`;
-                try {
-                    const data = await fetchWithRetry(url);
-                    return data?.data || [];
-                } catch (error) {
-                    console.error("Failed to fetch songs:", error);
-                    return [];
-                }
-            }
+  // quick list (thu gọn)
+  const [quick,setQuick]=useState("");
+  const quickList = useMemo(()=>songs.filter(s=>!overrides[s.id]?.hidden).filter(s=>!quick || (s.title||"").toLowerCase().includes(quick.toLowerCase()) || (s.artist||"").toLowerCase().includes(quick.toLowerCase())),[songs,overrides,quick]);
 
-            // Logic giao diện
-            function renderSongList() {
-                dom.songListBody.innerHTML = '';
-                if (state.allSongs.length === 0) {
-                    dom.songListBody.innerHTML = '<p>Không tìm thấy bài hát nào.</p>';
-                    return;
-                }
-                state.allSongs.forEach((song, index) => {
-                    const item = document.createElement('div');
-                    item.className = 'song-list-item';
-                    item.dataset.index = index;
-                    item.innerHTML = `
-                        <div class="song-index">${index + 1}</div>
-                        <div class="song-info">
-                            <div class="title">${song.title}</div>
-                            <div class="artist">${song.user.name}</div>
-                        </div>
-                        <div class="duration">${formatTime(song.duration)}</div>
-                    `;
-                    item.addEventListener('click', () => {
-                        playSong(index);
-                    });
-                    dom.songListBody.appendChild(item);
-                });
-            }
-            
-            function updateActiveSongUI(newIndex, oldIndex) {
-                 if (oldIndex !== -1) {
-                    const oldEl = dom.songListBody.querySelector(`[data-index='${oldIndex}']`);
-                    if (oldEl) oldEl.classList.remove('active-song');
-                }
-                if (newIndex !== -1) {
-                    const newEl = dom.songListBody.querySelector(`[data-index='${newIndex}']`);
-                    if (newEl) newEl.classList.add('active-song');
-                }
-            }
+  return (
+    <div className="px-4 space-y-8">
+      <h2 className="text-2xl font-bold">Cài đặt</h2>
+      <AdminBanner apiBase={apiBase}/>
 
-            // Logic trình phát
-            function playSong(index) {
-                if (index < 0 || index >= state.allSongs.length) return;
-                
-                updateActiveSongUI(index, state.currentSongIndex);
-                state.currentSongIndex = index;
-                
-                const song = state.allSongs[index];
-                const streamUrl = `${state.currentAudiusHost}/v1/tracks/${song.id}/stream?app_name=MSTQ-PLAYER`;
-                
-                dom.audioPlayer.src = streamUrl;
-                dom.audioPlayer.play().then(() => {
-                    state.isPlaying = true;
-                    updatePlayPauseButton();
-                }).catch(error => {
-                    console.error("Playback failed:", error);
-                    state.isPlaying = false;
-                    updatePlayPauseButton();
-                });
-            }
-            
-            function togglePlayPause() {
-                if (state.currentSongIndex === -1) {
-                     if (state.allSongs.length > 0) playSong(0);
-                     return;
-                }
-                if (state.isPlaying) {
-                    dom.audioPlayer.pause();
-                } else {
-                    dom.audioPlayer.play();
-                }
-                state.isPlaying = !state.isPlaying;
-                updatePlayPauseButton();
-            }
-            
-            function updatePlayPauseButton() {
-                if (state.isPlaying) {
-                    dom.playIcon.classList.add('hidden');
-                    dom.pauseIcon.classList.remove('hidden');
-                } else {
-                    dom.playIcon.classList.remove('hidden');
-                    dom.pauseIcon.classList.add('hidden');
-                }
-            }
-            
-            function playNext() {
-                let nextIndex = state.currentSongIndex + 1;
-                if (nextIndex >= state.allSongs.length) {
-                    nextIndex = 0; // Vòng lặp
-                }
-                playSong(nextIndex);
-            }
+      {/* Kết nối API_BASE */}
+      <section className="space-y-3">
+        <h3 className="text-lg font-semibold">Kết nối API</h3>
+        <div className="bg-[var(--card)] rounded-2xl p-4 space-y-3">
+          <div className="grid md:grid-cols-2 gap-2">
+            <input className="px-3 py-2 rounded-lg bg-[var(--bg)]/40 border border-[var(--border)]" placeholder="API_BASE (https://...)" value={apiBase||""} onChange={e=>setApiBase(e.target.value)}/>
+            <input className="px-3 py-2 rounded-lg bg-[var(--bg)]/40 border border-[var(--border)]" placeholder="Bearer token (tuỳ chọn)" value={apiToken||""} onChange={e=>setApiToken(e.target.value)}/>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {/* Đổi tên nút theo yêu cầu */}
+            <button onClick={()=>{save(SKEY.apiBase,apiBase||""); save(SKEY.apiToken,apiToken||""); alert("Đã lưu vào bộ nhớ cục bộ.");}} className="px-4 py-2 rounded-lg bg-[var(--border)]">Lưu Cục bộ</button>
+            <button onClick={saveApiToFirestore} className="px-4 py-2 rounded-lg bg-emerald-500/20 border border-emerald-400/30 text-emerald-200">Lưu lên Firestore</button>
+            <button onClick={refreshApiFromFirestore} className="px-4 py-2 rounded-lg bg-blue-500/20 border border-blue-400/30 text-blue-200">Tải lại từ Firestore</button>
+          </div>
+          <p className="text-xs text-[var(--muted)]">Firestore doc: <span className="kbd">puppeteer-control/admin-config</span> chứa <span className="kbd">apiBase</span> và (tuỳ chọn) <span className="kbd">bearerToken</span>.</p>
+        </div>
+      </section>
 
-            function playPrev() {
-                let prevIndex = state.currentSongIndex - 1;
-                if (prevIndex < 0) {
-                    prevIndex = state.allSongs.length - 1; // Vòng lặp
-                }
-                playSong(prevIndex);
-            }
-            
-            function updateProgressBar() {
-                if (!dom.audioPlayer.duration) return;
-                const percentage = (dom.audioPlayer.currentTime / dom.audioPlayer.duration) * 100;
-                dom.progressBar.style.width = `${percentage}%`;
-                dom.currentTime.textContent = formatTime(dom.audioPlayer.currentTime);
-            }
-            
-            function seek(e) {
-                const width = dom.progressContainer.clientWidth;
-                const clickX = e.offsetX;
-                const duration = dom.audioPlayer.duration;
-                if(duration) {
-                    dom.audioPlayer.currentTime = (clickX / width) * duration;
-                }
-            }
+      {/* giao diện */}
+      <section className="space-y-3">
+        <h3 className="text-lg font-semibold">Giao diện</h3>
+        <div className="bg-[var(--card)] rounded-2xl p-4 grid grid-cols-2 gap-3">
+          {Object.entries(themes).map(([k,v])=>(
+            <button key={k} onClick={()=>{setTheme(k);localStorage.setItem(SKEY.theme,k)}}
+                    aria-current={(localStorage.getItem(SKEY.theme)||'lucbao')===k}
+                    className="theme-swatch"><span className="dot" style={{'--c1':v.c1,'--c2':v.c2}}></span><span>{v.name}</span></button>
+          ))}
+        </div>
+      </section>
 
-            // Khởi tạo
-            async function main() {
-                const apiReady = await initializeApi();
-                if (!apiReady) return;
+      {/* hệ thống */}
+      <section className="space-y-3">
+        <h3 className="text-lg font-semibold">Hệ thống</h3>
+        <div className="flex flex-wrap gap-2">
+          <button onClick={onClearCache} className="px-4 py-2 rounded-lg text-red-400 hover:bg-red-500/10">Xoá toàn bộ cache & reload</button>
+          <button onClick={exportData} className="px-4 py-2 rounded-lg bg-[var(--border)]">Xuất cấu hình (JSON)</button>
+          <label className="px-4 py-2 rounded-lg bg-[var(--border)] cursor-pointer">Nhập JSON<input type="file" accept="application/json" hidden onChange={importData}/></label>
+        </div>
+      </section>
 
-                const userId = await getUserId();
-                if (!userId) {
-                    dom.initialLoadingOverlay.innerHTML = "<p>Lỗi: Không tìm thấy người dùng.</p>";
-                    return;
-                }
+      {/* thêm bài */}
+      <section className="space-y-3">
+        <h3 className="text-lg font-semibold">Thêm bài mới</h3>
+        <div className="bg-[var(--card)] rounded-2xl p-4 space-y-3">
+          <div className="grid md:grid-cols-2 gap-2">
+            <input className="px-3 py-2 rounded-lg bg-[var(--bg)]/40 border border-[var(--border)]" placeholder="Tiêu đề *" value={adding.title} onChange={e=>setAdding(v=>({...v,title:e.target.value}))}/>
+            <input className="px-3 py-2 rounded-lg bg-[var(--bg)]/40 border border-[var(--border)]" placeholder="Nghệ sĩ" value={adding.artist} onChange={e=>setAdding(v=>({...v,artist:e.target.value}))}/>
+            <input className="px-3 py-2 rounded-lg bg-[var(--bg)]/40 border border-[var(--border)] md:col-span-2" placeholder="URL phát (mp3/ogg) *" value={adding.stream_url} onChange={e=>setAdding(v=>({...v,stream_url:e.target.value}))}/>
+            <input className="px-3 py-2 rounded-lg bg-[var(--bg)]/40 border border-[var(--border)]" placeholder="Ảnh bìa URL" value={adding.artwork} onChange={e=>setAdding(v=>({...v,artwork:e.target.value}))}/>
+            <input className="px-3 py-2 rounded-lg bg-[var(--bg)]/40 border border-[var(--border)]" placeholder="Thời lượng (giây)" value={adding.duration} onChange={e=>setAdding(v=>({...v,duration:e.target.value}))}/>
+          </div>
+          <textarea className="w-full px-3 py-2 rounded-lg bg-[var(--bg)]/40 border border-[var(--border)]" rows="3" placeholder="Lời bài hát (text/LRC)" value={adding.lyrics} onChange={e=>setAdding(v=>({...v,lyrics:e.target.value}))}></textarea>
+          <div className="flex flex-wrap items-center gap-2">
+            <button onClick={onAddLocal} className="px-4 py-2 rounded-lg bg-[var(--primary)] text-[var(--primary-fg)]">Thêm (cục bộ)</button>
+            <span className="text-[var(--muted)]">— hoặc Upload lên IA (qua backend) —</span>
+            <input type="file" accept="audio/*" onChange={e=>setFileUp(e.target.files?.[0]||null)} className="px-2 py-2 rounded-lg bg-[var(--bg)]/40 border border-[var(--border)]"/>
+            <input placeholder="Identifier IA (tùy chọn)" className="px-3 py-2 rounded-lg bg-[var(--bg)]/40 border border-[var(--border)]" value={target.identifier} onChange={e=>setTarget(v=>({...v,identifier:e.target.value}))}/>
+            <input placeholder="Tên file (tùy chọn)" className="px-3 py-2 rounded-lg bg-[var(--bg)]/40 border border-[var(--border)]" value={target.filename} onChange={e=>setTarget(v=>({...v,filename:e.target.value}))}/>
+            <button onClick={doUpload} className="px-4 py-2 rounded-lg bg-blue-500/20 border border-blue-400/30 text-blue-200">Upload IA</button>
+          </div>
+          {!apiBase && <p className="text-xs text-yellow-300">Để upload thật lên Internet Archive, cần thiết lập <span className="kbd">API_BASE</span> (qua Firestore hoặc nhập tay).</p>}
+        </div>
+      </section>
 
-                state.allSongs = await fetchSongs(userId);
-                dom.initialLoadingOverlay.classList.add('hidden');
-                renderSongList();
-                
-                // Gắn sự kiện
-                dom.playPauseBtn.addEventListener('click', togglePlayPause);
-                dom.nextBtn.addEventListener('click', playNext);
-                dom.prevBtn.addEventListener('click', playPrev);
-                dom.audioPlayer.addEventListener('timeupdate', updateProgressBar);
-                dom.audioPlayer.addEventListener('loadedmetadata', () => {
-                    dom.duration.textContent = formatTime(dom.audioPlayer.duration);
-                });
-                dom.audioPlayer.addEventListener('ended', playNext);
-                dom.progressContainer.addEventListener('click', seek);
-            }
+      {/* sửa danh sách hiện có (compact) */}
+      <section className="space-y-3">
+        <h3 className="text-lg font-semibold">Sửa danh sách hiện có</h3>
+        <div className="bg-[var(--card)] rounded-2xl p-4 space-y-2">
+          <div className="flex flex-col md:flex-row gap-2">
+            <input placeholder="Lọc nhanh theo tên/nghệ sĩ..." className="px-3 py-2 rounded-lg bg-[var(--bg)]/40 border border-[var(--border)] md:w-1/2" value={filter} onChange={e=>setFilter(e.target.value)}/>
+            <select className="px-3 py-2 rounded-lg bg-[var(--bg)]/40 border border-[var(--border)] flex-1" value={selectedId} onChange={e=>setSelectedId(e.target.value)}>
+              {filteredOptions.map(o=><option key={o.id} value={o.id}>{o.label}</option>)}
+            </select>
+            <button onClick={()=>{const s=songs.find(x=>x.id===selectedId); if(s) onPick(s);}} className="px-3 py-2 rounded-lg bg-[var(--border)]">Nghe bài này</button>
+          </div>
+          <p className="text-xs text-[var(--muted)]">Chọn 1 bài trong danh sách xổ xuống để mở form chỉnh sửa chi tiết bên dưới.</p>
+        </div>
+        {selectedSong ? <Editor s={selectedSong}/> : <p className="text-[var(--muted)]">Chưa có bài để sửa.</p>}
+      </section>
 
-            main();
-        });
-    </script>
+      {/* xem nhanh danh sách (thu gọn) */}
+      <section>
+        <details className="rounded-2xl border border-[var(--border)]">
+          <summary className="cursor-pointer px-4 py-3 font-semibold">Xem nhanh danh sách</summary>
+          <div className="p-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <input placeholder="Tìm nhanh..." className="px-3 py-2 rounded-lg bg-[var(--bg)]/40 border border-[var(--border)] flex-1" value={quick} onChange={e=>setQuick(e.target.value)}/>
+              <span className="text-xs text-[var(--muted)]">Bấm “Sửa” để chọn bài ở khu vực trên.</span>
+            </div>
+            <div className="space-y-2 max-h-[50vh] overflow-y-auto pr-1">
+              {quickList.map(s=>(
+                <div key={s.id} className="flex items-center gap-3 p-2 rounded-xl hover:bg-[var(--card)]/50">
+                  <img src={s.artwork||'https://placehold.co/40x40/1f2937/9ca3af?text=🎵'} className="w-10 h-10 rounded-lg object-cover" alt=""/>
+                  <div className="flex-grow min-w-0">
+                    <p className="font-medium truncate">{s.title}</p>
+                    <p className="text-xs text-[var(--muted)] truncate">{s.artist||'minhsutinhquang'}</p>
+                  </div>
+                  <button onClick={()=>setSelectedId(s.id)} className="px-3 py-1.5 rounded-lg bg-[var(--border)]">Sửa</button>
+                </div>
+              ))}
+              {!quickList.length && <p className="text-[var(--muted)] text-center">Không có bài phù hợp.</p>}
+            </div>
+          </div>
+        </details>
+      </section>
+    </div>
+  );
+};
+
+/* ---------- App ---------- */
+function App(){
+  // states
+  const [theme,setTheme]=useState(localStorage.getItem(SKEY.theme)||'lucbao');
+  const [songs,setSongs]=useState(load(SKEY.songs,{t:0,d:[]}).d||[]);
+  const [overrides,setOverrides]=useState(load(SKEY.overrides,{}));
+  const [custom,setCustom]=useState(load(SKEY.custom,[]));
+  const [isLoading,setIsLoading]=useState(true);
+  const [current,setCurrent]=useState(null);
+  const [playing,setPlaying]=useState(false);
+  const [index,setIndex]=useState(0);
+  const [loop,setLoop]=useState(false);
+  const [volume,setVolume]=useState(0.9);
+  const [progress,setProgress]=useState({current:0,duration:0});
+  const [tab,setTab]=useState('home');
+  const [favs,setFavs]=useState(load(SKEY.fav,[]));
+
+  // API from Firestore / local
+  const [apiBase,setApiBaseState]=useState(load(SKEY.apiBase,""));
+  const [apiToken,setApiTokenState]=useState(load(SKEY.apiToken,""));
+  const setApiBase=(v)=>{setApiBaseState(v);};
+  const setApiToken=(v)=>{setApiTokenState(v);};
+
+  // audio
+  const audioRef=useRef(null);
+  if(!audioRef.current){const a=new Audio();a.preload='metadata';a.playsInline=true;a.crossOrigin='anonymous';audioRef.current=a;}
+
+  // theme
+  useEffect(()=>{document.documentElement.setAttribute('data-theme',theme)},[theme]);
+
+  // Handlers
+  const pickSong=s=>{ const list=mergedListRef.current; const i=list.findIndex(x=>x.id===s.id); if(i>-1){setIndex(i); setPlaying(true); haptic();} };
+  const playPause=()=>{ if(!current && mergedListRef.current.length){ setIndex(0); } if(playing){audioRef.current.pause(); setPlaying(false);} else {audioRef.current.play().catch(()=>{}); setPlaying(true);} };
+  const next=useCallback(()=>{ const list=mergedListRef.current; if(!list.length) return; if(loop){audioRef.current.currentTime=0; audioRef.current.play().catch(()=>{}); return;} setIndex(i=>(i+1)%list.length); },[loop]);
+  const prev=useCallback(()=>{ const list=mergedListRef.current; if(!list.length) return; if(audioRef.current.currentTime>3){audioRef.current.currentTime=0; return;} setIndex(i=>(i-1+list.length)%list.length); },[]);
+  const seek=e=>{const a=audioRef.current; if(!a.duration) return; const r=e.currentTarget.getBoundingClientRect(); const x=(e.clientX??e.touches?.[0]?.clientX)-r.left; const t=(x/r.width)*a.duration; if(Number.isFinite(t)) a.currentTime=t;};
+  const toggleFav=id=>setFavs(f=>{const n=f.includes(id)?f.filter(x=>x!==id):[...f,id]; save(SKEY.fav,n); return n;});
+
+  // merged list (custom + IA, áp overrides)
+  const mergedList=useMemo(()=>{
+    const base=songs.map(s=>overrides[s.id]?.hidden?null:{...s,...(overrides[s.id]||{})}).filter(Boolean);
+    return [...custom, ...base];
+  },[songs,overrides,custom]);
+  const mergedListRef=useRef(mergedList);
+  useEffect(()=>{mergedListRef.current=mergedList;},[mergedList]);
+
+  // chọn bài theo index
+  useEffect(()=>{ if(mergedList.length){ setCurrent(mergedList[index%mergedList.length]); } else { setCurrent(null); setPlaying(false);} },[index,mergedList]);
+
+  // audio life-cycle
+  useEffect(()=>{
+    const a=audioRef.current;
+    const onErr=()=>{console.warn("audio error",current?.title); next();};
+    a.addEventListener('error',onErr);
+    let raf=0,last=0; const TICK=250;
+    const loopTick=(ts)=>{const tick=document.hidden?1000:TICK; if(!a.paused&&a.duration){if(ts-last>=tick){last=ts; setProgress({current:a.currentTime,duration:a.duration});}} raf=requestAnimationFrame(loopTick);};
+    const start=()=>{cancelAnimationFrame(raf); raf=requestAnimationFrame(loopTick);};
+    const stop=()=>cancelAnimationFrame(raf);
+    const ended=()=>next();
+    const canplay=()=>setProgress(p=>({...p,duration:a.duration}));
+    a.addEventListener('play',start); a.addEventListener('pause',stop); a.addEventListener('ended',ended); a.addEventListener('canplay',canplay);
+    start();
+    return ()=>{stop(); a.removeEventListener('error',onErr); a.removeEventListener('play',start); a.removeEventListener('pause',stop); a.removeEventListener('ended',ended); a.removeEventListener('canplay',canplay);};
+  },[next,current?.title]);
+
+  useEffect(()=>{audioRef.current.volume=volume;},[volume]);
+  useEffect(()=>{const a=audioRef.current; if(current){ if(a.src!==current.stream_url) a.src=current.stream_url; if(playing) a.play().catch(()=>{}); else a.pause(); document.title=`${playing?'▶':'⏸'} ${current.title} - MSTQ`; } else { document.title='MSTQ Music'; }},[current,playing]);
+
+  // Fetch IA list
+  useEffect(()=>{
+    const parseDur=t=>{
+      if(typeof t==='number') return t;
+      const s=String(t||""); if(/^\d+:\d{2}$/.test(s)){const[m,ss]=s.split(':').map(Number);return m*60+ss;}
+      const n=parseFloat(s); return Number.isFinite(n)?n:0;
+    };
+    const build=async(docs)=>{
+      const out=[];
+      for(const it of docs){
+        try{
+          const meta=await fetch(`https://archive.org/metadata/${it.identifier}`,{cache:'no-store'}).then(r=>r.json());
+          const files=(meta.files||[]).filter(f=>/(MP3|MPEG|OGG)/i.test(f.format||""));
+          for(const f of files){
+            out.push({
+              id:`${it.identifier}/${f.name}`,
+              title:(f.title||it.title||f.name||'').replace(/\.mp3$/i,'').replace(/_/g,' ').trim()||'Untitled',
+              artist:it.creator||'TinhQuang',
+              stream_url:`https://archive.org/download/${it.identifier}/${encodeURIComponent(f.name)}`,
+              artwork:`https://archive.org/download/${it.identifier}/__ia_thumb.jpg`,
+              duration:parseDur(f.length), lyrics:it.description||null, item_identifier:it.identifier
+            });
+          }
+        }catch(e){console.warn("skip",it?.identifier,e)}
+      }
+      return out;
+    };
+    const run=async()=>{
+      setIsLoading(true);
+      const cached=load(SKEY.songs,{t:0,d:[]}).d||[];
+      if(cached.length){setSongs(cached);setIsLoading(false);}
+      try{
+        const q=encodeURIComponent('(uploader:(tinhquang) OR uploader:(thiensutinhquang)) AND mediatype:(audio)');
+        const url=`https://archive.org/advancedsearch.php?q=${q}&fl[]=identifier&fl[]=title&fl[]=creator&fl[]=description&sort[]=publicdate+desc&rows=200&page=1&output=json`;
+        const res=await fetch(url,{cache:'no-store'}).then(r=>r.json());
+        const docs=res?.response?.docs||[];
+        const list=await build(docs);
+        save(SKEY.songs,{t:Date.now(),d:list}); setSongs(list);
+      }catch(e){console.error("IA fetch fail",e)}
+      finally{setIsLoading(false)}
+    };
+    run();
+  },[]);
+
+  // Firestore: load API_BASE + token khi vào Settings lần đầu
+  const fetchedFromFsRef=useRef(false);
+  const refreshApiFromFirestore=async()=>{
+    if(!firestore){alert("Firestore chưa sẵn sàng (vẫn dùng cấu hình cục bộ).");return;}
+    try{
+      const docRef=firestore.collection("puppeteer-control").doc("admin-config");
+      const snap=await docRef.get();
+      if(snap.exists){
+        const data=snap.data()||{};
+        if(data.apiBase){ setApiBaseState(data.apiBase); save(SKEY.apiBase,data.apiBase); }
+        if(data.bearerToken){ setApiTokenState(data.bearerToken); save(SKEY.apiToken,data.bearerToken); }
+        alert("Đã nạp API_BASE từ Firestore.");
+      }else{
+        alert("Không tìm thấy puppeteer-control/admin-config.");
+      }
+    }catch(e){
+      console.error("Firestore load error:",e);
+      alert("Lỗi tải từ Firestore (xem console).");
+    }
+  };
+  // NEW: Lưu lên Firestore (theo yêu cầu)
+  const saveApiToFirestore=async()=>{
+    if(!firestore){alert("Firestore chưa sẵn sàng.");return;}
+    try{
+      const docRef=firestore.collection("puppeteer-control").doc("admin-config");
+      await docRef.set({ apiBase: apiBase||"", bearerToken: apiToken||"" }, { merge:true });
+      alert("Đã lưu API_BASE/token lên Firestore.");
+    }catch(e){
+      console.error("Firestore save error:",e);
+      alert("Lỗi lưu lên Firestore (xem console).");
+    }
+  };
+
+  useEffect(()=>{
+    if(tab==='settings' && !fetchedFromFsRef.current){
+      fetchedFromFsRef.current=true;
+      refreshApiFromFirestore();
+    }
+  },[tab]);
+
+  // API helpers theo apiBase hiện tại
+  const api = async(path,opts={})=>{
+    if(!apiBase) throw new Error("No API_BASE configured");
+    const headers={'Authorization': apiToken?`Bearer ${apiToken}`:undefined, ...(opts.headers||{})};
+    const res=await fetch(`${apiBase}${path}`,{...opts,headers});
+    if(!res.ok) throw new Error(await res.text().catch(()=>res.statusText));
+    const ct=res.headers.get("content-type")||"";
+    return ct.includes("application/json")?res.json():res.text();
+  };
+  const iaDelete=async(song)=>{ const [identifier,filename]=[song.item_identifier,decodeURIComponent(song.id.split('/').slice(1).join('/'))]; return api('/ia/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({identifier,filename})}); };
+  const iaUpload=async(formData)=>{ const headers={'Authorization': apiToken?`Bearer ${apiToken}`:undefined}; const res=await fetch(`${apiBase}/ia/upload`,{method:'POST',body:formData,headers}); if(!res.ok) throw new Error(await res.text()); return res.json(); };
+  const iaUpdate=async(song,patch)=>{ const [identifier,filename]=[song.item_identifier,decodeURIComponent(song.id.split('/').slice(1).join('/'))]; return api('/ia/update-metadata',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({identifier,filename,patch})}); };
+
+  // system utils
+  const clearAll=async()=>{try{if('caches' in window){const ks=await caches.keys(); await Promise.all(ks.map(k=>caches.delete(k)));} localStorage.clear();}finally{location.reload();}};
+  const exportData=()=>{const blob=new Blob([JSON.stringify({overrides,custom},null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='mstq-admin-data.json';a.click();URL.revokeObjectURL(url);};
+  const importData=e=>{const f=e.target.files?.[0]; if(!f) return; const r=new FileReader(); r.onload=()=>{try{const j=JSON.parse(r.result); if(j.overrides){setOverrides(j.overrides); save(SKEY.overrides,j.overrides);} if(j.custom){setCustom(j.custom); save(SKEY.custom,j.custom);} alert('Đã nhập dữ liệu.'); }catch{ alert('File không hợp lệ'); }}; r.readAsText(f); };
+
+  // UI paddings
+  const pad = current ? "160px" : "80px";
+
+  return (
+    <div className="min-h-screen">
+      <header className="fixed top-0 inset-x-0 z-30 p-4 flex items-center justify-between bg-[var(--bg)]/80 backdrop-blur-lg border-b border-[var(--border)]">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-[var(--gradient)] grid place-items-center">🎵</div>
+          <h1 className="text-lg font-bold">MSTQ Music</h1>
+        </div>
+        <div className="text-xs text-[var(--muted)]">{apiBase ? "Backend ✓" : "Local only"}</div>
+      </header>
+
+      <main className="pt-20" style={{paddingBottom:pad}}>
+        {tab==='home'    && <HomeView   songs={mergedList} onPick={pickSong} activeId={current?.id} isLoading={isLoading}/>}
+        {tab==='search'  && <SearchView songs={mergedList} onPick={pickSong} activeId={current?.id}/>}
+        {tab==='library' && <LibraryView songs={mergedList} onPick={pickSong} activeId={current?.id} favs={favs}/>}
+        {tab==='settings'&& <SettingsView
+          theme={theme} setTheme={setTheme}
+          onClearCache={clearAll}
+          overrides={overrides} setOverrides={setOverrides}
+          custom={custom} setCustom={setCustom}
+          songs={mergedList} onPick={pickSong}
+          exportData={exportData} importData={importData}
+          doDeleteIA={iaDelete} doUploadIA={iaUpload} doUpdateMetaIA={iaUpdate}
+          apiBase={apiBase} setApiBase={setApiBase}
+          apiToken={apiToken} setApiToken={setApiToken}
+          refreshApiFromFirestore={refreshApiFromFirestore}
+          saveApiToFirestore={saveApiToFirestore}
+        />}
+      </main>
+
+      <Mini song={current} playing={playing} onPlay={playPause} onNext={next} onPrev={prev}
+            progress={progress} seek={seek} isFav={favs.includes(current?.id)} toggleFav={toggleFav}/>
+      <Tabs active={tab} setActive={setTab}/>
+    </div>
+  );
+}
+
+/* ---------- Render with ErrorBoundary ---------- */
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<ErrorBoundary><App/></ErrorBoundary>);
+  </script>
 </body>
 </html>
+
