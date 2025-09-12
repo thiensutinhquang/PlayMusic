@@ -61,7 +61,7 @@
   <!-- Error overlay -->
   <div id="err" class="error-overlay">
     <div class="error-card">
-      <div class="flex items-center justify-between">
+      <div className="flex items-center justify-between">
         <h3 class="text-lg font-bold">Đã bắt lỗi runtime</h3>
         <button onclick="document.getElementById('err').style.display='none'" class="btn">Đóng</button>
       </div>
@@ -85,7 +85,7 @@
   </script>
 
   <script type="text/babel" data-presets="env,react">
-    const {useState,useEffect,useRef,useMemo,useCallback,useLayoutEffect} = React;
+    const {useState,useEffect,useRef,useMemo,useCallback} = React;
 
     /* ====== Constants & Caches ====== */
     const SONGS_CACHE_KEY = 'mstq_songs_v2';
@@ -93,6 +93,11 @@
     const ADMIN_LOCAL_KEY = 'mstq_admin_cfg'; // {apiBase, token}
     const THEME_KEY = 'music-theme';
     const POWER_KEY = 'power-save';
+
+    const SHUFFLE_KEY = 'mstq_shuffle';
+    const REPEAT_KEY  = 'mstq_repeat';      // 'all' | 'one' | 'off'
+    const SPEED_KEY   = 'mstq_speed';
+    const MUTED_KEY   = 'mstq_muted';
 
     // Hiển thị tối đa ban đầu + nút tải thêm (100/bước)
     const INITIAL_VISIBLE = 100;
@@ -125,7 +130,7 @@
     const Back = ({size=22}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><path d="M11 19 2 12l9-7v14zm1-7 9 7V5l-9 7z"/></svg>;
     const Next = ({size=22}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><path d="m13 5 9 7-9 7V5zM2 19V5h2v14H2z"/></svg>;
     const Heart = ({on, size=20}) => <svg width={size} height={size} viewBox="0 0 24 24" fill={on?'currentColor':'none'} stroke="currentColor" strokeWidth="1.8"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"/></svg>;
-    const Gear = ({size=22}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0  0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.85 0 1.53.66 1.6 1.5"/></svg>;
+    const Gear = ({size=22}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0  1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.85 0 1.53.66 1.6 1.5"/></svg>;
     const HomeI = ({size=22}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg>;
     const SearchI = ({size=22}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>;
     const LibraryI = ({size=22}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M4 19.5V3.5a1.5 1.5 0 0 1 3 0v16a1.5 1.5 0 1 1-3 0Z"/><path d="M10 16.5V3.5a1.5 1.5 0 1 1 3 0v13a1.5 1.5 0 1 1-3 0Z"/><path d="M16 13.5V3.5a1.5 1.5 0 1 1 3 0v10a1.5 1.5 0 1 1-3 0Z"/></svg>;
@@ -133,6 +138,24 @@
     const Download = ({size=20}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>;
     const ChevronDown = ({size=18}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><path d="M7 10l5 5 5-5z"/></svg>;
     const LinkIcon = ({size=18}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M10 13a5 5 0 0 0 7.07 0l1.59-1.59a5 5 0 0 0-7.07-7.07L10 5"/><path d="M14 11a5 5 0 0 0-7.07 0L5.34 12.6a5 5 0 0 0 7.07 7.07L14 19"/></svg>;
+    const ShuffleI = ({size=22, on}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={on?'text-[var(--primary)]':''}><path d="M16 3h5v5"/><path d="M4 20l7-7 4-4 6-6"/><path d="M16 21h5v-5"/><path d="M4 4l5 5"/></svg>;
+    const RepeatI = ({size=22, mode='all'}) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+        <path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/>
+        <path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>
+        {mode==='one' && <text x="11.5" y="13.5" fontSize="7" textAnchor="middle" fill="currentColor">1</text>}
+        {mode==='off' && <line x1="2" y1="2" x2="22" y2="22" stroke="currentColor" strokeWidth="2"/>}
+      </svg>
+    );
+    const SpeedI = ({size=22}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M21 12a9 9 0 1 1-9-9"/><path d="M21 3l-9 9"/><path d="M7 12h.01M12 7h.01M17 12h.01M12 17h.01"/></svg>;
+    const VolumeI = ({size=22, muted=false}) => muted
+      ? <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M9 9v6H5l-4 4V5l4 4h4z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+      : <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M11 5l-6 6H2v2h3l6 6z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 5a9 9 0 0 1 0 14.14"/></svg>;
+    const ShareI = ({size=20}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.59 13.51l6.83 3.98"/><path d="M15.41 6.51L8.59 10.5"/></svg>;
+    const QueueI = ({size=22}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M3 6h18"/><path d="M3 12h12"/><path d="M3 18h8"/></svg>;
+    const LyricsI = ({size=22}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M21 15V3l-8 4v12"/><circle cx="7" cy="15" r="4"/></svg>;
+    const Back10 = ({size=22}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6a6 6 0 0 1-6-6H4a8 8 0 1 0 8-8z"/><text x="12" y="19" fontSize="8" textAnchor="middle" fill="currentColor">10</text></svg>;
+    const Fwd10 = ({size=22}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><path d="M12 5V1l5 5-5 5V7c-3.31 0-6 2.69-6 6s2.69 6 6 6a6 6 0 0 0 6-6h2a8 8 0 1 1-8-8z"/><text x="12" y="19" fontSize="8" textAnchor="middle" fill="currentColor">10</text></svg>;
 
     /* ====== Themes list ====== */
     const THEMES = {
@@ -171,12 +194,12 @@
 
     /* ====== TopBar with Dropdown Links ====== */
     const LINKS = [
-      {label:'Trang chủ', icon:<HomeI/>, href:'https://thiensutinhquang.github.io/home/'},
-      {label:'YOUTUBE', icon:<LinkIcon/>, href:'https://www.youtube.com/@ThiensuTinhQuang'},
-      {label:'TIKTOK', icon:<LinkIcon/>, href:'https://www.tiktok.com/@minhsutinhquang'},
-      {label:'FACEBOOK Group', icon:<LinkIcon/>, href:'https://www.facebook.com/groups/minhsutinhquang'},
-      {label:'TELEGRAM', icon:<LinkIcon/>, href:'https://t.me/Giaoly_phap_don_ngo'},
-      {label:'ZALO', icon:<LinkIcon/>, href:'https://zalo.me/g/dukrae245'},
+      {label:'Trang chủ', href:'https://thiensutinhquang.github.io/home/', icon:<HomeI/>},
+      {label:'YOUTUBE', href:'https://www.youtube.com/@ThiensuTinhQuang', icon:<LinkIcon/>},
+      {label:'TIKTOK', href:'https://www.tiktok.com/@minhsutinhquang', icon:<LinkIcon/>},
+      {label:'FACEBOOK Group', href:'https://www.facebook.com/groups/minhsutinhquang', icon:<LinkIcon/>},
+      {label:'TELEGRAM', href:'https://t.me/Giaoly_phap_don_ngo', icon:<LinkIcon/>},
+      {label:'ZALO', href:'https://zalo.me/g/dukrae245', icon:<LinkIcon/>},
     ];
 
     const TopBar = ({title='MSTQ Music'}) => {
@@ -279,7 +302,7 @@
                     </div>
                   </button>
                   <div className="text-sm text-[var(--muted)] flex-shrink-0">{formatTime(s.duration||0)}</div>
-                  <a href={s.stream_url} download target="_blank" rel="noopener noreferrer" className="btn btn-ghost" title="Tải về" onClick={(e)=>e.stopPropagation()}><Download/></a>
+                  <a href={s.stream_url} download target="_blank" rel="noopener noreferrer" className="btn btn-ghost" title="Tải về" onClick={(e)=>{e.stopPropagation(); haptic();}}><Download/></a>
                 </div>)) : <div className="text-[var(--muted)] text-center py-10">Chưa có bài hát nào.</div>}
               </div>
 
@@ -328,459 +351,217 @@
       );
     };
 
-    /* ============================== SETTINGS VIEW ============================== */
-    const SettingsView = ({ theme, setTheme, power, setPower, onRefreshAll, onReloadPlaylist, startTimer, stopAtEnd, setStopAtEnd, timeLeft }) => {
-      return (
-        <div className="px-4 space-y-8">
-          <section>
-            <h3 className="text-lg font-bold mb-3">Giao diện</h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-3">
-              {Object.entries(THEMES).map(([k,v])=>(
-                <button key={k} className="theme-swatch" data-theme={k} aria-current={document.documentElement.getAttribute('data-theme')===k}
-                  onClick={()=>{document.documentElement.setAttribute('data-theme',k); localStorage.setItem(THEME_KEY,k);}}>
-                  <span className="dot" style={{'--c1':v.c1,'--c2':v.c2}}></span>
-                  <span className="text-xs font-medium">{v.name}</span>
-                </button>
-              ))}
-            </div>
-          </section>
-          <section>
-            <h3 className="text-lg font-bold mb-3">Hẹn giờ / Ngủ & Thể dục</h3>
-            <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
-              {[15,30,45,60,90,120].map(min=>( <button key={min} className="btn" onClick={()=>startTimer(min)}>{min} phút</button> ))}
-            </div>
-            <div className="flex items-center justify-between mt-3 p-3 border border-[var(--border)] rounded-xl">
-              <label className="font-medium">Dừng khi hết bài hiện tại</label>
-              <input type="checkbox" checked={stopAtEnd} onChange={e=>setStopAtEnd(e.target.checked)} />
-            </div>
-            <div className="text-sm text-[var(--muted)] mt-2">{ timeLeft!=null ? `Sẽ dừng sau ${formatTime(timeLeft)}` : 'Không đặt hẹn giờ' }</div>
-          </section>
-          <section>
-            <h3 className="text-lg font-bold mb-3">Tối ưu & Làm mới</h3>
-            <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
-              <button className="btn" onClick={()=>setPower(v=>!v)}>{power?'Tắt tiết kiệm pin':'Bật tiết kiệm pin'}</button>
-              <button className="btn" onClick={onReloadPlaylist}>Tải lại danh sách</button>
-              <button className="btn-primary" onClick={onRefreshAll}>Làm mới (cache+metadata+fav)</button>
-            </div>
-            <p className="small mt-2">“Làm mới” sẽ xóa cache danh sách, ảnh bìa tạm, metadata tạm, favorites và làm sạch Cache Storage – giúp app chạy mượt.</p>
-          </section>
-        </div>
-      );
-    };
+    /* ====== NOW PLAYING — PRO+ Mobile-first ====== */
+    const NowPlaying = ({
+      open, close, song, playing, onPlayPause, onPrev, onNext,
+      volume, setVolume, progress, setProgress,
+      currentIndex, playlist, pickSong, favorites, toggleFav,
+      shuffle, setShuffle, repeatMode, setRepeatMode,
+      playbackRate, setPlaybackRate, muted, setMuted,
+      seekRel, notify
+    })=>{
+      const [showLyrics, setShowLyrics] = useState(false);
+      const [showQueue, setShowQueue] = useState(false);
 
-    /* ============================== ADMIN VIEW ============================== */
-    const AdminView = ({songs, refetch, updateLocalSong, removeLocalSong})=>{
-      const [logged,setLogged]=useState(false);
-      const [user,setUser]=useState(''); const [pass,setPass]=useState('');
-      const [apiBase,setApiBase]=useState(load(ADMIN_LOCAL_KEY,{})?.apiBase||'');
-      const [token,setToken]=useState(load(ADMIN_LOCAL_KEY,{})?.token||'');
-      const [fireStatus,setFireStatus]=useState('');
-      const [apiReady,setApiReady]=useState(false);
-      const [apiDiag,setApiDiag]=useState('');
-      const [isSubmitting, setIsSubmitting] = useState(false);
-
-      const [pickId,setPickId]=useState('');
-      const pickSong = useMemo(()=> songs.find(s=>s.id===pickId)||null, [pickId, songs]);
-      const [originalSongs, setOriginalSongs] = useState(null);
-
-      const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
-      const [newIdentifierNameInput, setNewIdentifierNameInput] = useState('');
-      const [identifierToRename, setIdentifierToRename] = useState('');
-
-      const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-      const [deleteConfirmationInput, setDeleteConfirmationInput] = useState('');
-      const [identifierToDelete, setIdentifierToDelete] = useState('');
-
-      const [isDeleteSongModalOpen, setIsDeleteSongModalOpen] = useState(false);
-      const [songToDelete, setSongToDelete] = useState(null);
-
-      const [uploadIdentifier, setUploadIdentifier] = useState('CREATE_NEW');
-      const [newIdentifierName, setNewIdentifierName] = useState('');
-      const [isCreatingNewIdentifier, setIsCreatingNewIdentifier] = useState(true);
-      const uniqueIdentifiers = useMemo(() => [...new Set(songs.map(s => s.item_identifier))], [songs]);
-
-      useEffect(() => { if (!originalSongs && songs.length > 0) setOriginalSongs(JSON.parse(JSON.stringify(songs))); }, [songs, originalSongs]);
-
-      // Firebase config
-      const firebaseConfig = {
-        apiKey: "AIzaSyD1VGc1stVvkpFqTMaSh2X7KqzBiH1-dDY",
-        authDomain: "ai-companel.firebaseapp.com",
-        projectId: "ai-companel",
-        storageBucket: "ai-companel.firebasestorage.app",
-        messagingSenderId: "869875628579",
-        appId: "1:869875628579:web:9c5fcf2c4372748c17cf96",
-        measurementId: "G-YY7E4DLFHL"
-      };
-      const appRef = useRef(null); const dbRef = useRef(null);
-      useEffect(()=>{ try{ if (!appRef.current){ appRef.current = firebase.initializeApp(firebaseConfig); } if (!dbRef.current){ dbRef.current = firebase.firestore(); } }catch(e){ console.warn('Firebase init:', e); } },[]);
-
-      const doLogin = (e)=>{ e.preventDefault(); if (user==='admin' && pass==='admin123'){ setLogged(true); } else { alert('Sai tài khoản hoặc mật khẩu'); } };
-
-      const saveLocal = ()=>{ save(ADMIN_LOCAL_KEY,{apiBase,token}); setFireStatus('Đã lưu cục bộ.'); };
-
-      const loadFromFirestore = async () => {
-        if (!dbRef.current) { alert('Firestore chưa sẵn sàng'); return; }
-        try {
-          setFireStatus('Đang tải từ Firestore...');
-          const docRef = dbRef.current.collection('puppeteer-control').doc('admin-config');
-          const doc = await docRef.get();
-          if (doc.exists) {
-            const data = doc.data();
-            const apiBaseVal = data.api_base ?? data.API_BASE ?? data.apiBase ?? '';
-            const tokenVal = data.token ?? data.bearerToken ?? '';
-            setApiBase(apiBaseVal); setToken(tokenVal);
-            save(ADMIN_LOCAL_KEY, { apiBase: apiBaseVal, token: tokenVal });
-            setFireStatus('Đã tải và lưu cấu hình từ Firestore thành công.');
-          } else { setFireStatus('Không tìm thấy tài liệu cấu hình trên Firestore.'); }
-        } catch (err) { console.error(err); setFireStatus('Lỗi khi tải từ Firestore: ' + err.message); }
-      };
-
-      const writeToFirestore = async ()=> {
-        if (!dbRef.current){ alert('Firestore chưa sẵn sàng'); return; }
-        try{
-          const docRef = dbRef.current.collection('puppeteer-control').doc('admin-config');
-          await docRef.set({ api_base: apiBase||'', token: token||'', updatedAt: Date.now() }, {merge:true});
-          setFireStatus('Đã ghi API_Server lên Firestore.');
-        }catch(err){ console.error(err); setFireStatus('Lỗi ghi Firestore: '+ err.message); }
-      };
-
-      const normApiBase = useMemo(()=> (apiBase||'').trim().replace(/\/$/, ''), [apiBase]);
-      useEffect(()=>{ try{ const u = new URL(normApiBase); setApiReady(u.protocol === 'https:'); if (location.protocol === 'https:' && u.protocol !== 'https:') { setApiDiag('⚠️ API_BASE phải dùng HTTPS vì trang này đang chạy HTTPS.'); } else { setApiDiag(''); } }catch{ setApiReady(false); } },[normApiBase]);
-      const apiFetch = async (path, { method='GET', headers={}, body, timeoutMs=45000, isForm=false }={})=>{
-        if (!normApiBase) throw new Error('Chưa cấu hình API_BASE');
-        const url = normApiBase + path;
-        const ctrl = new AbortController();
-        const to = setTimeout(()=> ctrl.abort('TIMEOUT'), timeoutMs);
-        try {
-          const finalHeaders = { 'Authorization': token? `Bearer ${token}`: undefined, ...(isForm? {} : {'Content-Type':'application/json'}), ...headers };
-          Object.keys(finalHeaders).forEach(k=> finalHeaders[k]===undefined && delete finalHeaders[k]);
-          const res = await fetch(url, { method, headers: finalHeaders, body, mode:'cors', credentials:'omit', signal: ctrl.signal });
-          if (!res.ok){ const txt = await res.text().catch(()=> ''); throw new Error(txt || `HTTP ${res.status}`); }
-          return res;
-        } catch(err){
-          if (err?.name === 'AbortError') throw new Error('TIMEOUT: Máy chủ không phản hồi đủ nhanh.');
-          const s = String(err?.message || err);
-          if (s.includes('Failed to fetch') || s.includes('NetworkError')) throw new Error('FAILED_TO_FETCH: Trình duyệt không thể kết nối tới API (CORS/HTTPS/SSL/Domain sai hoặc server ngừng).');
-          throw err;
-        } finally { clearTimeout(to); }
-      };
-
-      const probeApi = async ()=> {
-        try{
-          if (!normApiBase) { setApiDiag('Chưa cấu hình API_BASE'); return; }
-          const u = new URL(normApiBase);
-          if (location.protocol==='https:' && u.protocol!=='https:'){ setApiDiag('❌ Mixed Content: API_BASE đang là HTTP. Hãy đổi sang HTTPS.'); return; }
-          const ok1 = await apiFetch('/api/health', { method:'GET', timeoutMs:8000 }).then(()=>true).catch(()=>false);
-          let ok2 = false;
-          try{
-            const res = await fetch(normApiBase + '/api/upload', { method:'OPTIONS', headers:{ 'Access-Control-Request-Method':'POST', 'Access-Control-Request-Headers':'authorization,content-type' }, mode:'cors' });
-            ok2 = (res.status===200 || res.status===204);
-          }catch{ ok2 = false; }
-          setApiDiag(`${ok1? '✅ /health OK' : '⚠️ /health chưa sẵn sàng'} • ${ok2? '✅ CORS OK /upload' : '❌ CORS chưa cho /upload'}`);
-        }catch(e){ setApiDiag('Lỗi kiểm tra API: '+ e.message); }
-      };
-
-      const [editTitle,setEditTitle]=useState(''); const [editArtist,setEditArtist]=useState(''); const [editArtwork,setEditArtwork]=useState(''); const [editLyrics,setEditLyrics]=useState('');
-      useEffect(()=>{ if (pickSong){ setEditTitle(pickSong.title||''); setEditArtist(pickSong.artist||''); setEditArtwork(pickSong.artwork||''); setEditLyrics(pickSong.lyrics||''); } else { setEditTitle(''); setEditArtist(''); setEditArtwork(''); setEditLyrics(''); } },[pickSong]);
-      const onSaveMetaLocal = ()=>{ if (!pickSong) return; updateLocalSong(pickSong.id, { title: editTitle, artist: editArtist, artwork: editArtwork, lyrics: editLyrics }); alert('Đã cập nhật trong danh sách cục bộ.'); };
-      const onResetEdit = () => {
-        if (!pickSong || !originalSongs) return;
-        const originalSong = originalSongs.find(s => s.id === pickSong.id);
-        if (originalSong) {
-          updateLocalSong(pickSong.id, originalSong);
-          setEditTitle(originalSong.title || ''); setEditArtist(originalSong.artist || ''); setEditArtwork(originalSong.artwork || ''); setEditLyrics(originalSong.lyrics || '');
-          alert('Đã hoàn tác các thay đổi cục bộ cho bài hát này.');
-        } else { alert('Không tìm thấy dữ liệu gốc để hoàn tác.'); }
-      };
-      const onSaveMetaRemote = async ()=>{ if (!apiReady){ alert('Chưa cấu hình API_BASE (cần HTTPS).'); return; } if (!pickSong){ alert('Chưa chọn bài'); return; } try{ await apiFetch('/api/items/' + encodeURIComponent(pickSong.item_identifier) + '/metadata', { method:'POST', body: JSON.stringify({ patch: { title: editTitle, artist: editArtist, notes: editLyrics } }) }); alert('Đã yêu cầu backend cập nhật metadata.'); }catch(e){ alert('Lỗi API: '+ e.message); } };
-      const openDeleteSongModal = () => { if (!pickSong) return; setSongToDelete(pickSong); setIsDeleteSongModalOpen(true); };
-      const handleConfirmDeleteSong = async () => {
-        if (!songToDelete) return; setIsSubmitting(true);
-        removeLocalSong(songToDelete.id); setPickId('');
-        if (apiReady) { try { setFireStatus(`Đang yêu cầu xoá ${songToDelete.id}...`); await apiFetch('/api/items/'+encodeURIComponent(songToDelete.item_identifier)+'/files/'+encodeURIComponent(songToDelete.id.split('/').pop()), { method:'DELETE'}); setFireStatus(`Đã gửi yêu cầu xoá ${songToDelete.id}.`); } catch(e) { alert('Lỗi API xoá bài hát: ' + e.message); setFireStatus('Lỗi API xoá: ' + e.message); } }
-        setIsSubmitting(false); setIsDeleteSongModalOpen(false); setSongToDelete(null);
-      };
-
-      const fileRef = useRef(null); const artworkFileRef = useRef(null);
-      const [newTitle,setNewTitle]=useState(''); const [newArtist,setNewArtist]=useState('Minhsutinhquang'); const [newArtwork,setNewArtwork]=useState('');
-      const [newLyrics, setNewLyrics] = useState(''); const [artworkFile, setArtworkFile] = useState(null);
-      const handleFileChange = (e) => { const f = e.target.files?.[0]; if (f) setNewTitle(f.name.replace(/\.mp3$/i, '')); };
-      const handleArtworkFileChange = (e) => { const f = e.target.files?.[0]; if (f) { setArtworkFile(f); setNewArtwork(''); if (artworkFileRef.current) artworkFileRef.current.value = null; } };
-      const handleIdentifierSelect = (e) => { const value = e.target.value; setUploadIdentifier(value); setIsCreatingNewIdentifier(value === 'CREATE_NEW'); };
-
-      const openRenameModal = () => { if (isCreatingNewIdentifier || !uploadIdentifier || uploadIdentifier === 'CREATE_NEW') { alert("Vui lòng chọn một Identifier có sẵn để đổi tên."); return; } setIdentifierToRename(uploadIdentifier); setNewIdentifierNameInput(uploadIdentifier); setIsRenameModalOpen(true); };
-      const handleConfirmRename = async () => {
-        if (!newIdentifierNameInput || newIdentifierNameInput.trim() === '' || newIdentifierNameInput.trim() === identifierToRename) { alert("Hủy bỏ hoặc tên mới không hợp lệ."); return; }
-        setIsSubmitting(true); setFireStatus(`Đang đổi tên ${identifierToRename}...`);
-        try { await apiFetch('/api/identifiers/'+encodeURIComponent(identifierToRename)+'/rename', { method:'POST', body: JSON.stringify({ newIdentifier: newIdentifierNameInput.trim() }) }); setFireStatus(`Đổi tên thành công!`); alert('Đổi tên thành công! Vui lòng tải lại danh sách để xem thay đổi.'); refetch(); }
-        catch (e) { alert('Lỗi đổi tên Identifier: ' + e.message); setFireStatus('Lỗi đổi tên: ' + e.message); }
-        finally { setIsSubmitting(false); setIsRenameModalOpen(false); }
-      };
-
-      const openDeleteModal = () => { if (isCreatingNewIdentifier || !uploadIdentifier || uploadIdentifier === 'CREATE_NEW') { alert("Vui lòng chọn một Identifier có sẵn để xoá."); return; } setIdentifierToDelete(uploadIdentifier); setIsDeleteModalOpen(true); };
-      const handleConfirmDelete = async () => {
-        if (deleteConfirmationInput !== identifierToDelete) { alert("Xác nhận không khớp. Hành động xoá đã được huỷ."); return; }
-        setIsSubmitting(true); setFireStatus(`Đang xoá ${identifierToDelete}...`);
-        try { await apiFetch('/api/identifiers/'+encodeURIComponent(identifierToDelete), { method:'DELETE' }); setFireStatus(`Đã xoá thành công Identifier ${identifierToDelete}!`); alert('Đã xoá thành công! Vui lòng tải lại danh sách.'); refetch(); }
-        catch (e) { alert('Lỗi xoá Identifier: ' + e.message); setFireStatus('Lỗi xoá: ' + e.message); }
-        finally { setIsSubmitting(false); setIsDeleteModalOpen(false); setDeleteConfirmationInput(''); }
-      };
-
-      const handleCreateIdentifier = async () => {
-        if(isSubmitting) return; const newName = newIdentifierName.trim(); if(!newName) { alert('Vui lòng nhập tên cho Identifier mới.'); return; }
-        setIsSubmitting(true); setFireStatus(`Đang tạo Identifier "${newName}"...`);
-        try { await apiFetch('/api/identifiers', { method:'POST', body: new URLSearchParams({ identifier: newName }) }); setFireStatus(`Tạo thành công Identifier "${newName}"!`); alert(`Tạo thành công Identifier "${newName}"!`); setNewIdentifierName(''); await refetch(); setUploadIdentifier(newName); setIsCreatingNewIdentifier(false); }
-        catch(e) { alert('Lỗi tạo Identifier: ' + e.message); setFireStatus('Lỗi tạo Identifier: ' + e.message); }
-        finally { setIsSubmitting(false); }
-      };
-
-      const handleUpload = async () => {
-        if (isSubmitting) return; if (!apiReady) { alert('Chưa cấu hình API_BASE (cần HTTPS).'); return; }
-        const f = fileRef.current?.files?.[0]; if (!f) { alert('Chọn file MP3'); return; }
-        if (isCreatingNewIdentifier) { alert('Nhấn "Tạo Mới" để tạo Identifier trước khi upload.'); return; }
-        const identifier = uploadIdentifier; if (!identifier || identifier === 'CREATE_NEW') { alert('Vui lòng chọn một Identifier.'); return; }
-
-        setIsSubmitting(true); setFireStatus('Đang tải lên...');
-        const fd = new FormData();
-        fd.append('file', f);
-        fd.append('title', newTitle || f.name.replace(/\.mp3$/i, ''));
-        fd.append('artist', newArtist || 'TinhQuang');
-        if (artworkFile) { fd.append('artwork_file', artworkFile); } else { fd.append('artwork', newArtwork || ''); }
-        fd.append('lyrics', newLyrics || '');
-        fd.append('identifier', identifier);
-
-        try { await apiFetch('/api/upload', { method:'POST', body: fd, isForm:true, timeoutMs: 120000 }); alert('Đã gửi upload. Nhấn "Tải lại danh sách" bên Settings sau ít phút.'); setNewTitle(''); setNewArtist('Minhsutinhquang'); setNewArtwork(''); setNewLyrics(''); setArtworkFile(null); if (fileRef.current) fileRef.current.value = ''; if (artworkFileRef.current) artworkFileRef.current.value = ''; setFireStatus('Upload thành công!'); refetch(); }
-        catch (e) { alert('Lỗi upload: ' + e.message); setFireStatus('Lỗi upload: ' + e.message); }
-        finally { setIsSubmitting(false); }
-      };
-
-      if (!logged){
-        return (
-          <div className="px-4">
-            <h2 className="text-xl font-bold my-3">Admin</h2>
-            <form onSubmit={doLogin} className="max-w-md space-y-3">
-              <input className="input" placeholder="Tài khoản" value={user} onChange={e=>setUser(e.target.value)} />
-              <input className="input" placeholder="Mật khẩu" type="password" value={pass} onChange={e=>setPass(e.target.value)} />
-              <button className="btn-primary w-full">Đăng nhập</button>
-              <p className="small">Chỉ bạn biết mật khẩu mới vào được. Không điền sẵn bất cứ secret nào.</p>
-            </form>
-          </div>
-        );
-      }
-
-      return (
-        <div className="px-4 space-y-8">
-          <section>
-            <h3 className="text-lg font-bold mb-2">Cấu hình API Server</h3>
-            <div className="grid md:grid-cols-2 gap-3">
-              <input className="input" placeholder="API_BASE (vd: https://api.mstdomain.com)" value={apiBase} onChange={e=>setApiBase(e.target.value)} />
-              <input className="input" placeholder="Token (Bearer)" value={token} onChange={e=>setToken(e.target.value)} />
-            </div>
-            <div className="flex flex-wrap gap-2 mt-3 items-center">
-              <button className="btn" onClick={saveLocal}>Lưu cục bộ</button>
-              <button className="btn-primary" onClick={writeToFirestore}>Ghi API_Server</button>
-              <button className="btn" onClick={loadFromFirestore}>Tải từ Firestore</button>
-              <button className="btn" onClick={probeApi}>Kiểm tra kết nối</button>
-              <span className="badge">{apiReady? 'HTTPS hợp lệ' : 'Chưa hợp lệ/không phải HTTPS'}</span>
-            </div>
-            <div className="small mt-2">{fireStatus}</div>
-            {apiDiag && <div className="small mt-1 text-yellow-400">{apiDiag}</div>}
-          </section>
-
-          <section className={`${apiReady?'opacity-100':'opacity-70'} transition`}>
-            <h3 className="text-lg font-bold mb-2">Upload bài mới (qua backend)</h3>
-
-            <fieldset className="space-y-2 border border-[var(--border)] p-3 rounded-xl mb-4" disabled={isSubmitting}>
-              <legend className="px-2 font-semibold">1. Chọn hoặc Tạo Identifier</legend>
-              <div className="flex items-center gap-2">
-                <select className="select flex-grow" value={uploadIdentifier} onChange={handleIdentifierSelect}>
-                  <option value="CREATE_NEW">--- Tạo Identifier Mới ---</option>
-                  {uniqueIdentifiers.map(id => <option key={id} value={id}>{id}</option>)}
-                </select>
-                {!isCreatingNewIdentifier && (
-                  <div className="flex gap-2">
-                    <button className="btn" onClick={openRenameModal}>Đổi tên</button>
-                    <button className="btn" onClick={openDeleteModal}>Xoá</button>
-                  </div>
-                )}
-              </div>
-              {isCreatingNewIdentifier && (
-                <div className="flex items-center gap-2">
-                  <input className="input flex-grow" placeholder="Nhập tên Identifier mới (vd: ten-album-2025)" value={newIdentifierName} onChange={e => setNewIdentifierName(e.target.value)} />
-                  <button className="btn-primary" onClick={handleCreateIdentifier} disabled={!newIdentifierName.trim()}>{isSubmitting ? 'Đang tạo...' : 'Tạo Mới'}</button>
-                </div>
-              )}
-              <p className="small pl-1">Gợi ý: Có thể tạo trước tại <a href="https://archive.org/create" target="_blank" className="underline">archive.org/create</a></p>
-            </fieldset>
-
-            <fieldset disabled={isSubmitting || isCreatingNewIdentifier || !apiReady}>
-              <legend className="px-2 font-semibold">2. Điền thông tin & Tải tệp lên</legend>
-              <div className="space-y-3 border border-[var(--border)] p-3 rounded-xl">
-                <input className="input" type="file" accept=".mp3,audio/mpeg" ref={fileRef} onChange={handleFileChange} />
-                <input className="input" placeholder="Tiêu đề" value={newTitle} onChange={e=>setNewTitle(e.target.value)} />
-                <input className="input" placeholder="Artist" value={newArtist} onChange={e=>setNewArtist(e.target.value)} />
-                <div className="space-y-1">
-                  <label className="small px-1">Ảnh bìa (URL hoặc Tệp)</label>
-                  <div className="flex items-center gap-2">
-                    <input className="input flex-grow" placeholder="Dán URL ảnh bìa..." value={newArtwork} onChange={e => { setNewArtwork(e.target.value); setArtworkFile(null); if (artworkFileRef.current) artworkFileRef.current.value = null;}} />
-                    <label className={`btn ${artworkFile ? 'btn-primary' : ''}`}>Chọn Tệp
-                      <input type="file" accept="image/*" hidden onChange={handleArtworkFileChange} ref={artworkFileRef}/>
-                    </label>
-                  </div>
-                  {artworkFile && <div className="small text-[var(--primary)] pl-1">Đã chọn: {artworkFile.name}</div>}
-                </div>
-                <textarea className="textarea" placeholder="Lời bài hát (text/LRC)" value={newLyrics} onChange={e => setNewLyrics(e.target.value)}></textarea>
-              </div>
-            </fieldset>
-            <div className="flex gap-2 mt-3 items-center">
-              <button className="btn-primary" onClick={handleUpload} disabled={!apiReady || isSubmitting || isCreatingNewIdentifier}>{isSubmitting ? 'Đang tải lên...' : 'Bắt đầu Upload'}</button>
-              {isSubmitting && <div className="small text-[var(--primary)]">Vui lòng không đóng trang...</div>}
-            </div>
-            {!apiReady && <div className="small mt-2 text-red-300">Hãy dùng API_BASE HTTPS và "Ghi API_Server" trước để bật upload.</div>}
-          </section>
-
-          <section>
-            <h3 className="text-lg font-bold mb-2">Chọn bài để sửa</h3>
-            <div className="grid md:grid-cols-2 gap-3">
-              <select className="select" value={pickId} onChange={e=>setPickId(e.target.value)}>
-                <option value="">-- Chọn bài --</option>
-                {songs.map(s=> <option key={s.id} value={s.id}>{s.title?.slice(0,80) || s.id}</option>)}
-              </select>
-              <div className="small self-center">{pickSong? `ID: ${pickSong.id}`:'Chưa chọn'}</div>
-            </div>
-
-            {pickSong && (
-              <div className="mt-4 space-y-3">
-                <div className="grid md:grid-cols-2 gap-3">
-                  <input className="input" value={editTitle} onChange={e=>setEditTitle(e.target.value)} placeholder="Tiêu đề"/>
-                  <input className="input" value={editArtist} onChange={e=>setEditArtist(e.target.value)} placeholder="Artist"/>
-                  <input className="input" value={editArtwork} onChange={e=>setEditArtwork(e.target.value)} placeholder="Artwork URL"/>
-                </div>
-                <details>
-                  <summary className="cursor-pointer font-semibold py-2">Lời bài hát</summary>
-                  <textarea className="textarea" value={editLyrics} onChange={e=>setEditLyrics(e.target.value)} placeholder="Lyrics (.lrc hoặc text)"></textarea>
-                </details>
-                <div className="flex flex-wrap gap-2">
-                  <button className="btn" onClick={onSaveMetaLocal}>Lưu trong danh sách</button>
-                  <button className="btn" onClick={onResetEdit}>Xoá chỉnh sửa</button>
-                  <button className="btn-primary" onClick={onSaveMetaRemote} disabled={!apiReady}>Cập nhật metadata</button>
-                  <button className="btn" onClick={openDeleteSongModal}>Xóa bài</button>
-                </div>
-              </div>
-            )}
-          </section>
-
-          {isRenameModalOpen && (
-            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-              <div className="bg-[var(--card)] rounded-2xl p-6 w-full max-w-md space-y-4">
-                <h4 className="text-lg font-bold">Đổi tên Identifier</h4>
-                <p className="small">Đang đổi: <strong className="text-[var(--text)]">{identifierToRename}</strong></p>
-                <div>
-                  <label htmlFor="new-id-name" className="font-medium mb-1 block">Tên mới</label>
-                  <input id="new-id-name" className="input" value={newIdentifierNameInput} onChange={e => setNewIdentifierNameInput(e.target.value)} />
-                </div>
-                <div className="flex justify-end gap-3">
-                  <button className="btn" onClick={() => setIsRenameModalOpen(false)} disabled={isSubmitting}>Hủy</button>
-                  <button className="btn-primary" onClick={handleConfirmRename} disabled={isSubmitting}>{isSubmitting ? 'Đang xử lý...' : 'Xác nhận'}</button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {isDeleteModalOpen && (
-            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-              <div className="bg-[var(--card)] rounded-2xl p-6 w-full max-w-md space-y-4">
-                <h4 className="text-lg font-bold text-red-400">Xác nhận Xoá Identifier</h4>
-                <p className="small">Nhập <strong className="text-red-400">{identifierToDelete}</strong> để xác nhận:</p>
-                <input className="input" value={deleteConfirmationInput} onChange={e => setDeleteConfirmationInput(e.target.value)} />
-                <div className="flex justify-end gap-3">
-                  <button className="btn" onClick={() => { setIsDeleteModalOpen(false); setDeleteConfirmationInput(''); }} disabled={isSubmitting}>Hủy</button>
-                  <button className="btn bg-red-600 text-white" onClick={handleConfirmDelete} disabled={isSubmitting}>{isSubmitting ? 'Đang xoá...' : 'Tôi hiểu, Xoá'}</button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {isDeleteSongModalOpen && songToDelete && (
-            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-              <div className="bg-[var(--card)] rounded-2xl p-6 w-full max-w-md space-y-4">
-                <h4 className="text-lg font-bold text-red-400">Xác nhận Xoá Bài Hát</h4>
-                <p className="small">Bạn có chắc muốn xoá: <strong className="text-[var(--text)]">{songToDelete.title}</strong>?</p>
-                <div className="flex justify-end gap-3">
-                  <button className="btn" onClick={() => setIsDeleteSongModalOpen(false)} disabled={isSubmitting}>Hủy</button>
-                  <button className="btn bg-red-600 text-white" onClick={handleConfirmDeleteSong} disabled={isSubmitting}>{isSubmitting ? 'Đang xoá...' : 'Xác nhận'}</button>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      );
-    };
-
-    /* ====== Mini Player ====== */
-    const MiniPlayer = ({song, playing, onPlayPause, onPrev, onNext, progress, onSeek, favorite, toggleFav, openNow})=>{
-      if (!song) return null; const pct = progress.duration>0 ? (progress.current/progress.duration)*100 : 0;
-      return (
-        <div className="fixed bottom-[68px] left-2 right-2 rounded-2xl bg-[var(--card)]/95 border border-[var(--border)] backdrop-blur-md p-2 z-40 shadow-[var(--shadow)]">
-          <div className="flex items-center gap-3" onClick={openNow}>
-            <img src={song.artwork || 'https://placehold.co/64x64/102424/e0f2f1?text=🎵'} className="w-12 h-12 rounded-lg object-cover" alt="" />
-            <div className="flex-grow min-w-0">
-              <p className="truncate font-semibold">{song.title}</p>
-              <p className="text-xs text-[var(--muted)] truncate">{song.artist || 'minhsutinhquang'}</p>
-            </div>
-            <button className={`w-10 h-10 rounded-full ${favorite?'text-red-500':'text-[var(--muted)] hover:text-[var(--text)]'}`} onClick={(e)=>{e.stopPropagation(); toggleFav(song.id);}} aria-label="Yêu thích"><Heart on={favorite}/></button>
-            <button className="w-10 h-10" onClick={(e)=>{e.stopPropagation(); onPrev();}} aria-label="Bài trước"><Back/></button>
-            <button className="w-10 h-10" onClick={(e)=>{e.stopPropagation(); onPlayPause();}} aria-label="Phát/Tạm dừng">{playing?<Pause/>:<Play/>}</button>
-            <button className="w-10 h-10" onClick={(e)=>{e.stopPropagation(); onNext();}} aria-label="Bài kế tiếp"><Next/></button>
-          </div>
-          <div className="mt-2 h-1 bg-[var(--muted)]/20 rounded" onPointerDown={onSeek}>
-            <div className="h-1 bg-[var(--primary)] rounded" style={{width:`${pct}%`}}></div>
-          </div>
-        </div>
-      );
-    };
-
-    /* ====== Now Playing ====== */
-    const NowPlaying = ({open, close, song, playing, onPlayPause, onPrev, onNext, volume, setVolume, progress, setProgress})=>{
       if (!open || !song) return null;
+
+      const cycleSpeed = ()=>{ haptic(); const opts=[0.75,1,1.25,1.5,2]; const i = opts.indexOf(playbackRate); const next = opts[(i+1)%opts.length]; setPlaybackRate(next); notify(`${next}× tốc độ`); };
+      const cycleRepeat = ()=>{ haptic(); const order=['all','one','off']; const i = order.indexOf(repeatMode); const next = order[(i+1)%order.length]; setRepeatMode(next); notify(`Chế độ lặp: ${ next==='all'?'Tất cả': next==='one'?'Một bài':'Tắt' }`); };
+      const toggleShuffle = ()=>{ haptic(); setShuffle(s=>{ const v=!s; notify(`Trộn bài: ${v?'Bật':'Tắt'}`); return v;}); };
+      const toggleMute = ()=>{ haptic(); setMuted(m=>!m); };
+
+      const shareCurrent = async ()=>{
+        haptic();
+        try{
+          if (navigator.share){
+            await navigator.share({ title: song.title, text: `${song.title} – ${song.artist||''}`, url: song.stream_url });
+          }else{
+            await navigator.clipboard?.writeText(song.stream_url);
+            notify('Đã sao chép link phát');
+          }
+        }catch{}
+      };
+
       return (
-        <div className="fixed inset-0 z-50 bg-[var(--bg)]/98 p-4">
-          <div className="flex items-center justify-between mb-3">
-            <button className="btn" onClick={close}>Đóng</button>
+        <div className="fixed inset-0 z-50 bg-[var(--bg)]/98 overflow-y-auto">
+          {/* Header */}
+          <div className="sticky top-0 z-10 bg-[var(--nav-bg)] backdrop-blur-md border-b border-[var(--border)] px-4 py-3 flex items-center justify-between">
+            <button className="btn" onClick={()=>{haptic(); close();}} aria-label="Đóng">Đóng</button>
             <div className="text-sm text-[var(--muted)]">{song.item_identifier}</div>
             <div className="w-16"></div>
           </div>
-          <div className="max-w-xl mx-auto">
-            <div className="aspect-square w-full rounded-2xl overflow-hidden border border-[var(--border)]">
-              <img src={song.artwork || 'https://placehold.co/600x600/102424/e0f2f1?text=MSTQ'} className="w-full h-full object-cover" alt="" />
+
+          <div className="max-w-xl mx-auto p-4">
+            {/* Artwork */}
+            <div className="aspect-square w-full rounded-2xl overflow-hidden border border-[var(--border)] shadow-xl">
+              <img src={song.artwork || 'https://placehold.co/800x800/102424/e0f2f1?text=MSTQ'} className="w-full h-full object-cover" alt="" />
             </div>
-            <div className="mt-4">
-              <h2 className="text-2xl font-bold">{song.title}</h2>
-              <p className="text-[var(--muted)]">{song.artist || 'minhsutinhquang'}</p>
+
+            {/* Title + Artist + actions */}
+            <div className="mt-4 flex items-start gap-3">
+              <div className="flex-1 min-w-0">
+                <h2 className="text-2xl font-bold leading-tight truncate">{song.title}</h2>
+                <p className="text-[var(--muted)] truncate">{song.artist || 'minhsutinhquang'}</p>
+              </div>
+              <button className={`btn ${favorites.includes(song.id)?'text-red-500':''}`} title="Yêu thích" onClick={()=>{haptic(); toggleFav(song.id);}} aria-label="Yêu thích"><Heart on={favorites.includes(song.id)} /></button>
+              <a className="btn" href={song.stream_url} download target="_blank" rel="noopener noreferrer" title="Tải về" onClick={()=>haptic()} aria-label="Tải về"><Download/></a>
+              <button className="btn" title="Chia sẻ" onClick={shareCurrent} aria-label="Chia sẻ"><ShareI/></button>
             </div>
+
+            {/* Progress */}
             <div className="mt-4">
-              <input type="range" min="0" max={Math.max(1,progress.duration||0)} value={progress.current} className="w-full" onChange={(e)=>setProgress(p=>({...p, current: Number(e.target.value)}))}/>
+              <input
+                type="range"
+                min="0"
+                max={Math.max(1,progress.duration||0)}
+                value={progress.current}
+                className="w-full"
+                onChange={(e)=>setProgress(p=>({...p, current: Number(e.target.value)}))}
+              />
               <div className="flex justify-between text-xs text-[var(--muted)] mt-1">
                 <span>{formatTime(progress.current)}</span>
                 <span>{formatTime(progress.duration)}</span>
               </div>
+
+              <div className="mt-2 grid grid-cols-5 gap-2">
+                <button className="btn" onClick={()=>{haptic(); seekRel(-10);}} aria-label="Lùi 10 giây"><Back10/></button>
+                <button className="btn" onClick={()=>{haptic(); onPrev();}} aria-label="Bài trước"><Back/></button>
+                <button className="btn-primary h-12 rounded-full" onClick={()=>{haptic(); onPlayPause();}} aria-label="Phát/Tạm dừng">
+                  {playing?<Pause size={26}/> : <Play size={26}/>}
+                </button>
+                <button className="btn" onClick={()=>{haptic(); onNext();}} aria-label="Bài kế tiếp"><Next/></button>
+                <button className="btn" onClick={()=>{haptic(); seekRel(10);}} aria-label="Tiến 10 giây"><Fwd10/></button>
+              </div>
             </div>
-            <div className="mt-4 flex items-center justify-center gap-3">
-              <button className="btn" onClick={onPrev}><Back/></button>
-              <button className="btn-primary w-20 h-12 rounded-full" onClick={onPlayPause}>{playing?<Pause size={28}/> : <Play size={28}/>}</button>
-              <button className="btn" onClick={onNext}><Next/></button>
+
+            {/* Controls row 2 */}
+            <div className="mt-4 grid grid-cols-4 sm:grid-cols-6 gap-2">
+              <button className={`btn ${shuffle?'ring-2 ring-[var(--ring)]':''}`} onClick={toggleShuffle} aria-label="Trộn bài"><ShuffleI on={shuffle}/></button>
+              <button className="btn" onClick={cycleRepeat} aria-label="Chế độ lặp"><RepeatI mode={repeatMode}/></button>
+              <button className="btn" onClick={cycleSpeed} aria-label="Tốc độ"><div className="flex items-center gap-2"><SpeedI/><span className="text-sm">{playbackRate}×</span></div></button>
+              <button className={`btn ${muted?'ring-2 ring-[var(--ring)]':''}`} onClick={toggleMute} aria-label="Tắt tiếng/Mở tiếng"><VolumeI muted={muted}/></button>
+              <button className={`btn ${showLyrics?'ring-2 ring-[var(--ring)]':''}`} onClick={()=>{haptic(); setShowLyrics(v=>!v);}} aria-label="Lời bài hát"><LyricsI/></button>
+              <button className={`btn ${showQueue?'ring-2 ring-[var(--ring)]':''}`} onClick={()=>{haptic(); setShowQueue(v=>!v);}} aria-label="Danh sách phát"><QueueI/></button>
             </div>
+
+            {/* Volume */}
             <div className="mt-4 flex items-center gap-3">
               <span className="text-sm text-[var(--muted)]">Âm lượng</span>
-              <input type="range" min="0" max="1" step="0.01" value={volume} onChange={(e)=>setVolume(parseFloat(e.target.value))} className="w-full"/>
+              <input type="range" min="0" max="1" step="0.01" value={volume} onChange={(e)=>{haptic(); setVolume(parseFloat(e.target.value));}} className="w-full"/>
             </div>
-            {song.lyrics && (
-              <details className="mt-6">
-                <summary className="cursor-pointer font-semibold">Lời bài hát</summary>
-                <pre className="whitespace-pre-wrap mt-2 p-3 rounded-xl border border-[var(--border)] bg-[var(--card)]/50 text-sm">{song.lyrics}</pre>
-              </details>
+
+            {/* Lyrics collapsible */}
+            {showLyrics && (
+              <div className="mt-4 border border-[var(--border)] rounded-2xl p-3 bg-[var(--card)]/50 max-h-64 overflow-auto">
+                {song.lyrics ? (
+                  <pre className="whitespace-pre-wrap text-sm leading-6" style={{textAlign:'justify'}}>{song.lyrics}</pre>
+                ) : (
+                  <div className="text-sm text-[var(--muted)]">Chưa có lời bài hát.</div>
+                )}
+              </div>
+            )}
+
+            {/* Queue collapsible */}
+            {showQueue && (
+              <div className="mt-4 border border-[var(--border)] rounded-2xl">
+                <div className="px-3 py-2 border-b border-[var(--border)] text-sm text-[var(--muted)]">Danh sách đang phát ({playlist.length})</div>
+                <div className="max-h-72 overflow-auto divide-y divide-[var(--border)]">
+                  {playlist.map((s,idx)=>(
+                    <button key={s.id} onClick={()=>{haptic(); pickSong(s);}} className={`w-full px-3 py-2 text-left flex items-center gap-3 ${idx===currentIndex?'bg-[var(--card)]/60':''}`}>
+                      <div className="w-6 text-center text-xs opacity-60">{idx+1}</div>
+                      <img src={s.artwork || 'https://placehold.co/48x48'} className="w-8 h-8 rounded-md object-cover"/>
+                      <div className="flex-1 min-w-0">
+                        <div className="truncate font-medium">{s.title}</div>
+                        <div className="truncate text-xs text-[var(--muted)]">{s.artist || 'minhsutinhquang'}</div>
+                      </div>
+                      <div className="text-xs text-[var(--muted)]">{formatTime(s.duration||0)}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
             )}
           </div>
+        </div>
+      );
+    };
+    
+    {/* ====== FIX: Add missing SettingsView and AdminView component definitions ====== */}
+    const SettingsView = ({
+      theme, setTheme, power, setPower,
+      onRefreshAll, onReloadPlaylist,
+      startTimer, stopAtEnd, setStopAtEnd, timeLeft
+    }) => {
+      const timerOptions = [15, 30, 45, 60, 90, 120];
+
+      return (
+        <div className="p-4 space-y-6">
+          <h2 className="text-xl font-bold">Cài đặt</h2>
+
+          {/* Giao diện */}
+          <div className="p-4 border border-[var(--border)] rounded-2xl bg-[var(--card)]/50">
+            <h3 className="font-bold mb-3">Giao diện</h3>
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
+              {Object.entries(THEMES).map(([key, { name, c1, c2 }]) => (
+                <button key={key} onClick={() => setTheme(key)} aria-current={theme === key} className="theme-swatch" style={{'--c1': c1, '--c2': c2}}>
+                  <div className="dot"></div>
+                  <span className="text-xs font-medium">{name}</span>
+                </button>
+              ))}
+            </div>
+            <div className="mt-4 flex items-center justify-between p-3 rounded-lg bg-[var(--card)]/50">
+              <label htmlFor="power-save" className="font-medium">Chế độ tiết kiệm điện</label>
+              <input type="checkbox" id="power-save" checked={power} onChange={e => setPower(e.target.checked)} />
+            </div>
+            <p className="text-xs text-[var(--muted)] mt-2">Giảm hiệu ứng và chuyển động để tiết kiệm pin trên di động.</p>
+          </div>
+
+          {/* Hẹn giờ */}
+          <div className="p-4 border border-[var(--border)] rounded-2xl bg-[var(--card)]/50">
+            <h3 className="font-bold mb-3">Hẹn giờ tắt nhạc</h3>
+            {timeLeft !== null ? (
+              <div className="text-center p-4 rounded-lg bg-[var(--border)]">
+                <div className="text-3xl font-mono">{formatTime(timeLeft)}</div>
+                <button onClick={() => startTimer(null)} className="btn mt-2">Hủy hẹn giờ</button>
+              </div>
+            ) : (
+              <div>
+                <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                  {timerOptions.map(min => (
+                    <button key={min} onClick={() => startTimer(min)} className="btn">{min} phút</button>
+                  ))}
+                </div>
+                <div className="mt-3 flex items-center justify-between p-3 rounded-lg bg-[var(--card)]/50">
+                  <label htmlFor="stop-at-end" className="font-medium">Dừng khi hết bài</label>
+                  <input type="checkbox" id="stop-at-end" checked={stopAtEnd} onChange={e => setStopAtEnd(e.target.checked)} />
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Dữ liệu */}
+          <div className="p-4 border border-[var(--border)] rounded-2xl bg-[var(--card)]/50">
+            <h3 className="font-bold mb-3">Dữ liệu & Đồng bộ</h3>
+            <div className="space-y-3">
+              <button onClick={onReloadPlaylist} className="btn w-full">Làm mới danh sách nhạc</button>
+              <button onClick={onRefreshAll}
+                className="btn w-full !bg-red-800/20 !border-red-500/50 hover:!bg-red-800/40">
+                Xóa & Làm mới tất cả
+              </button>
+            </div>
+             <p className="text-xs text-[var(--muted)] mt-2">Nếu gặp lỗi hoặc danh sách không cập nhật, hãy thử các tùy chọn này.</p>
+          </div>
+        </div>
+      );
+    };
+
+    const AdminView = ({ songs, refetch, updateLocalSong, removeLocalSong }) => {
+      // Placeholder
+      return (
+        <div className="p-4">
+           <h2 className="text-xl font-bold my-3">Quản trị</h2>
+           <div className="p-4 border border-[var(--border)] rounded-2xl bg-[var(--card)]/50">
+              <p className="text-[var(--muted)]">Chức năng quản trị đang được phát triển.</p>
+           </div>
         </div>
       );
     };
@@ -809,6 +590,17 @@
       const [favorites,setFavorites]=useState(load(FAVORITES_CACHE_KEY,[]));
       const [nowOpen,setNowOpen]=useState(false);
 
+      // Pro playback states
+      const [shuffle,setShuffle] = useState(localStorage.getItem(SHUFFLE_KEY)==='1');
+      const [repeatMode,setRepeatMode] = useState(localStorage.getItem(REPEAT_KEY) || 'all'); // all | one | off
+      const [playbackRate,setPlaybackRate] = useState(parseFloat(localStorage.getItem(SPEED_KEY)||'1')||1);
+      const [muted,setMuted] = useState(localStorage.getItem(MUTED_KEY)==='1');
+
+      useEffect(()=>{ localStorage.setItem(SHUFFLE_KEY, shuffle?'1':'0'); },[shuffle]);
+      useEffect(()=>{ localStorage.setItem(REPEAT_KEY, repeatMode); },[repeatMode]);
+      useEffect(()=>{ localStorage.setItem(SPEED_KEY, String(playbackRate)); },[playbackRate]);
+      useEffect(()=>{ localStorage.setItem(MUTED_KEY, muted?'1':'0'); },[muted]);
+
       // Timer
       const timerRef = useRef({timeout:null, interval:null});
       const [timeLeft,setTimeLeft]=useState(null);
@@ -816,7 +608,10 @@
 
       // Audio
       const audioRef = useRef(new Audio());
-      useEffect(()=>{ const a = audioRef.current; a.preload='metadata'; a.playsInline=true; a.crossOrigin='anonymous'; a.volume=volume; },[]);
+      useEffect(()=>{ const a = audioRef.current; a.preload='metadata'; a.playsInline=true; a.crossOrigin='anonymous'; a.volume=volume; a.muted=muted; a.playbackRate=playbackRate; },[]);
+      useEffect(()=>{ audioRef.current.volume = volume; },[volume]);
+      useEffect(()=>{ audioRef.current.muted = muted; },[muted]);
+      useEffect(()=>{ audioRef.current.playbackRate = playbackRate; },[playbackRate]);
 
       // THEME & POWER
       useEffect(()=>{ document.documentElement.setAttribute('data-theme', theme); localStorage.setItem(THEME_KEY, theme); },[theme]);
@@ -932,40 +727,68 @@
 
       useEffect(() => { refetch(); }, [reloadKey]);
 
-      // Playback handlers
+      // Playback helpers
+      const historyRef = useRef([]);
+
+      const seekRel = (sec)=> {
+        const a = audioRef.current;
+        if (!isFinite(a.duration)) return;
+        a.currentTime = Math.max(0, Math.min((a.duration||0), (a.currentTime||0) + sec));
+        setProgress({current:a.currentTime, duration:a.duration||0});
+      };
+
       const nextTrack = useCallback(()=>{
-        if (stopAtEnd){ smoothPause(); setStopAtEnd(false); notify('Đã dừng sau khi hết bài'); return; }
         if (!playlist.length) return;
-        const ni = (currentIndex+1) % playlist.length;
+        if (stopAtEnd){ smoothPause(); setStopAtEnd(false); notify('Đã dừng sau khi hết bài'); return; }
+        // nếu tắt lặp và không shuffle và đang ở cuối -> dừng
+        if (repeatMode==='off' && !shuffle && currentIndex===playlist.length-1){
+          smoothPause(); notify('Hết danh sách'); return;
+        }
+        let ni = 0;
+        if (shuffle && playlist.length>1){
+          do { ni = Math.floor(Math.random()*playlist.length); } while (ni===currentIndex);
+        } else {
+          ni = (currentIndex+1) % playlist.length;
+        }
+        historyRef.current.push(currentIndex);
         setCurrentIndex(ni);
-      },[stopAtEnd, smoothPause, playlist, currentIndex, notify]);
+      },[playlist, currentIndex, stopAtEnd, smoothPause, notify, shuffle, repeatMode]);
 
       const prevTrack = useCallback(()=>{
-        if (!playlist.length) return;
         const a = audioRef.current;
         if (a.currentTime>3){ a.currentTime=0; return; }
+        if (historyRef.current.length){
+          const pi = historyRef.current.pop();
+          setCurrentIndex(pi);
+          return;
+        }
+        if (!playlist.length) return;
         const pi = (currentIndex-1+playlist.length)%playlist.length;
         setCurrentIndex(pi);
       },[playlist, currentIndex]);
 
-      // Audio events: dùng 'timeupdate' để tiết kiệm pin (thay vì RAF)
+      // Audio events
       useEffect(()=>{
         const a = audioRef.current;
-        const onEnded = ()=> nextTrack();
+        const onEnded = ()=>{
+          if (repeatMode==='one'){ a.currentTime=0; a.play(); return; }
+          nextTrack();
+        };
         const onCanPlay = ()=> setProgress(p=>({...p, duration:a.duration||0}));
         const onTime = ()=> { if (!isNaN(a.duration)) setProgress({current:a.currentTime||0, duration:a.duration||0}); };
         a.addEventListener('ended', onEnded);
         a.addEventListener('canplay', onCanPlay);
         a.addEventListener('timeupdate', onTime);
         return ()=>{ a.removeEventListener('ended', onEnded); a.removeEventListener('canplay', onCanPlay); a.removeEventListener('timeupdate', onTime); };
-      },[nextTrack]);
+      },[nextTrack, repeatMode]);
 
-      useEffect(()=>{ audioRef.current.volume = volume; },[volume]);
-
+      // Load/Play current
       useEffect(()=>{
         const a = audioRef.current;
         if (current){
           if (a.src !== current.stream_url) a.src = current.stream_url;
+          a.playbackRate = playbackRate;
+          a.muted = muted;
           if (playing){ a.play().catch(e=>console.warn(e)); } else { a.pause(); }
           document.title = `${playing?'▶':'⏸'} ${current.title} – MSTQ Music`;
           if ('mediaSession' in navigator){
@@ -978,18 +801,21 @@
               navigator.mediaSession.setActionHandler('pause', ()=>{ smoothPause(); });
               navigator.mediaSession.setActionHandler('previoustrack', prevTrack);
               navigator.mediaSession.setActionHandler('nexttrack', nextTrack);
+              navigator.mediaSession.setActionHandler('seekbackward', (d)=> seekRel(-(d.seekOffset||10)));
+              navigator.mediaSession.setActionHandler('seekforward', (d)=> seekRel( (d.seekOffset||10)));
             }catch{}
           }
         }else{ document.title = 'MSTQ Music'; }
-      },[current, playing, nextTrack, prevTrack, smoothPause]);
+      },[current, playing, nextTrack, prevTrack, smoothPause, playbackRate, muted]);
 
       const pickSong = (s)=>{ haptic(); const i = playlist.findIndex(x=>x.id===s.id); setCurrentIndex(i>=0?i:0); setPlaying(true); notify(`▶ ${s.title}`); };
 
       const playPause = ()=>{
         haptic();
+        const a = audioRef.current;
         if (!current && playlist.length){ setCurrentIndex(0); setPlaying(true); notify('▶ Bắt đầu phát'); return; }
         if (playing){ smoothPause(); notify('⏸ Tạm dừng'); }
-        else { setPlaying(true); notify('▶ Tiếp tục'); }
+        else { setPlaying(true); a.play().catch(()=>{}); notify('▶ Tiếp tục'); }
       };
 
       const barSeek = (e)=>{
@@ -1026,9 +852,6 @@
         save(SONGS_CACHE_KEY, playlist.filter(s=>s.id!==id));
       };
 
-      // Reset visible when playlist changed
-      useEffect(()=>{ setVisibleHome(INITIAL_VISIBLE); },[playlist.length]);
-
       // Online/offline notifications
       useEffect(()=>{
         const onOn = ()=>notify('Đã kết nối mạng');
@@ -1062,7 +885,7 @@
                 theme={theme} setTheme={setTheme}
                 power={power} setPower={setPower}
                 onRefreshAll={doRefreshAll} onReloadPlaylist={reloadPlaylist}
-                startTimer={startTimer} stopAtEnd={stopAtEnd} setStopAtEnd={setStopAtEndWrap}
+                startTimer={startTimer} stopAtEnd={stopAtEnd} setStopAtEnd={v=>{haptic(); setStopAtEnd(v);}}
                 timeLeft={timeLeft}
               />
             )}
@@ -1077,21 +900,45 @@
             {!!errorMsg && <div className="px-4 py-10 text-center text-red-300">{errorMsg}</div>}
           </main>
 
-          <MiniPlayer
-            song={current} playing={playing}
-            onPlayPause={playPause} onPrev={prevTrack} onNext={nextTrack}
-            progress={progress}
-            onSeek={barSeek}
-            favorite={favorites.includes(current?.id)} toggleFav={toggleFav}
-            openNow={()=>setNowOpen(true)}
-          />
+          {/* Mini Player */}
+          {current && (
+            <div className="fixed bottom-[68px] left-2 right-2 rounded-2xl bg-[var(--card)]/95 border border-[var(--border)] backdrop-blur-md p-2 z-40 shadow-[var(--shadow)]">
+              <div className="flex items-center gap-3" onClick={()=>{haptic(); setNowOpen(true);}}>
+                <img src={current.artwork || 'https://placehold.co/64x64/102424/e0f2f1?text=🎵'} className="w-12 h-12 rounded-lg object-cover" alt="" />
+                <div className="flex-grow min-w-0">
+                  <p className="truncate font-semibold">{current.title}</p>
+                  <p className="text-xs text-[var(--muted)] truncate">{current.artist || 'minhsutinhquang'}</p>
+                </div>
+                <button className={`w-10 h-10 rounded-full ${favorites.includes(current.id)?'text-red-500':'text-[var(--muted)] hover:text-[var(--text)]'}`} onClick={(e)=>{e.stopPropagation(); haptic(); toggleFav(current.id);}} aria-label="Yêu thích"><Heart on={favorites.includes(current.id)}/></button>
+                <button className="w-10 h-10" onClick={(e)=>{e.stopPropagation(); haptic(); prevTrack();}} aria-label="Bài trước"><Back/></button>
+                <button className="w-10 h-10" onClick={(e)=>{e.stopPropagation(); haptic(); playPause();}} aria-label="Phát/Tạm dừng">{playing?<Pause/>:<Play/>}</button>
+                <button className="w-10 h-10" onClick={(e)=>{e.stopPropagation(); haptic(); nextTrack();}} aria-label="Bài kế tiếp"><Next/></button>
+              </div>
+              <div className="mt-2 h-1 bg-[var(--muted)]/20 rounded" onPointerDown={barSeek}>
+                <div className="h-1 bg-[var(--primary)] rounded" style={{width:`${progress.duration>0 ? (progress.current/progress.duration)*100 : 0}%`}}></div>
+              </div>
+            </div>
+          )}
 
           <BottomNav active={active} setActive={setActive}/>
+
+          {/* NOW PLAYING Overlay */}
           <NowPlaying
             open={nowOpen} close={()=>setNowOpen(false)}
             song={current} playing={playing} onPlayPause={playPause} onPrev={prevTrack} onNext={nextTrack}
             volume={volume} setVolume={setVolume}
-            progress={progress} setProgress={(p)=>{ setProgress(p); const a = audioRef.current; a.currentTime=p.current; }}
+            progress={progress}
+            setProgress={(p)=>{ setProgress(p); const a = audioRef.current; a.currentTime=p.current; }}
+            currentIndex={currentIndex}
+            playlist={playlist}
+            pickSong={pickSong}
+            favorites={favorites} toggleFav={toggleFav}
+            shuffle={shuffle} setShuffle={setShuffle}
+            repeatMode={repeatMode} setRepeatMode={setRepeatMode}
+            playbackRate={playbackRate} setPlaybackRate={setPlaybackRate}
+            muted={muted} setMuted={setMuted}
+            seekRel={seekRel}
+            notify={notify}
           />
         </div>
       );
@@ -1102,3 +949,4 @@
   </script>
 </body>
 </html>
+
