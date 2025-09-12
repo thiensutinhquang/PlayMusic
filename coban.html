@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#f59e0b" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <title>Play Nhạc MSTQ – Pro 2.0</title>
+  <title>Play Nhạc MSTQ – Pro 2.1</title>
 
   <style>
     :root{
@@ -13,6 +13,13 @@
       --bg:#f8fafc;--card:#ffffff;--text:#0f172a;--muted:#64748b;--border:#e5e7eb;
       --bg-dark:#0b1220;--card-dark:#131a2a;--text-dark:#e5edf7;--muted-dark:#b8c2cf;--border-dark:#273246;
       --radius:14px;
+    }
+    *{box-sizing:border-box}
+    .hidden{display:none!important}
+
+    body{
+      margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+      background:var(--bg);color:var(--text)
     }
     @media (prefers-color-scheme: dark){
       body{background:var(--bg-dark);color:var(--text-dark)}
@@ -23,19 +30,50 @@
       #search{background:#0e172a;border-color:var(--border-dark);color:var(--text-dark)}
       .row:hover{background:#111a2a}
       .active{background:#1a2335}
+      .menu{background:var(--card-dark);border-color:var(--border-dark)}
+      .menu a{border-color:var(--border-dark)}
     }
-    *{box-sizing:border-box}
-    body{
-      margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-      background:var(--bg);color:var(--text)
+
+    .wrap{max-width:980px;margin:0 auto;padding:16px 12px calc(120px + env(safe-area-inset-bottom))}
+    header{border-bottom:1px solid var(--border)}
+    .inner{max-width:980px;margin:0 auto;padding:12px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+    h1{margin:0;font-size:24px;color:var(--primary);letter-spacing:.4px}
+    .subtle{color:var(--muted);font-size:13px}
+
+    .nav{position:relative}
+    .navbtn{
+      -webkit-tap-highlight-color:transparent;appearance:none;border:1px solid var(--border);
+      background:var(--card);color:inherit;border-radius:12px;padding:8px 12px;cursor:pointer;
+      display:flex;align-items:center;gap:8px;box-shadow:0 2px 6px rgba(0,0,0,.04)
     }
-    .wrap{max-width:980px;margin:0 auto;padding:16px 12px 120px}
-    header{padding:16px;border-bottom:1px solid var(--border);text-align:center}
-    h1{margin:0;font-size:28px;color:var(--primary);letter-spacing:.5px}
+    .menu{
+      position:absolute;right:0;top:calc(100% + 8px);z-index:10000;
+      background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;min-width:280px;
+      box-shadow:0 12px 30px rgba(0,0,0,.12)
+    }
+    .menu a{
+      display:flex;align-items:center;gap:10px;padding:12px 14px;text-decoration:none;color:inherit;
+      border-bottom:1px solid var(--border)
+    }
+    .menu a:last-child{border-bottom:none}
+    .menu small{color:var(--muted)}
+    .homepill{
+      display:inline-flex;align-items:center;gap:6px;background:#fff7ed;border:1px solid #fed7aa;
+      color:#9a3412;padding:6px 10px;border-radius:999px
+    }
+
     .card{
       background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
       padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.04);margin-top:16px
     }
+    #search{
+      width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:12px;margin:8px 0 4px;font-size:15px
+    }
+    .badge{font-size:10px;padding:2px 8px;border-radius:999px;background:#f1f5f9;color:#0f172a;margin-left:6px}
+    @media (prefers-color-scheme: dark){.badge{background:#1e293b;color:#e5edf7}}
+    .pill{display:flex;align-items:center;gap:8px}
+
+    /* Song list */
     .row{
       display:flex;align-items:center;gap:12px;padding:10px;border-bottom:1px solid var(--border);
       cursor:pointer;user-select:none;border-radius:10px
@@ -49,16 +87,20 @@
     .title{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .artist{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .dur{font-variant-numeric:tabular-nums;color:var(--muted);min-width:48px;text-align:right}
-    .subtle{color:var(--muted)}
-    #search{
-      width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:12px;margin:8px 0 4px;font-size:15px
+
+    /* Load more row */
+    .more{
+      display:flex;align-items:center;justify-content:center;gap:10px;padding:14px;border-radius:12px;margin-top:6px;
+      border:1px dashed var(--border);cursor:pointer;background:#fffefe
     }
+    @media (prefers-color-scheme: dark){ .more{background:#0f172a;border-color:#22314a} }
+    .more:active{transform:scale(.99)}
 
     /* Player bar */
     #player{
       position:fixed;left:0;right:0;bottom:0;z-index:9999;
       background:rgba(255,255,255,.94);backdrop-filter:blur(8px);
-      border-top:1px solid var(--border);padding:10px 12px
+      border-top:1px solid var(--border);padding:10px 12px calc(10px + env(safe-area-inset-bottom))
     }
     .pgrid{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center}
     .pinfo{display:flex;align-items:center;gap:10px;min-width:0}
@@ -78,8 +120,7 @@
       box-shadow:0 6px 14px rgba(245,158,11,.35)
     }
     .btn.tiny{font-size:16px;padding:6px}
-    .badge{font-size:10px;padding:2px 8px;border-radius:999px;background:#f1f5f9;color:#0f172a;margin-left:4px}
-    @media (prefers-color-scheme: dark){.badge{background:#1e293b;color:#e5edf7}}
+
     .progress{
       grid-column:1 / -1;display:flex;align-items:center;gap:8px;margin-top:6px
     }
@@ -89,32 +130,64 @@
     .time{font-variant-numeric:tabular-nums;font-size:12px;color:var(--muted)}
     .active{background:#fff6e5}
 
-    /* Toast */
+    /* Toast & network */
     .toast{
       position:fixed;left:50%;transform:translateX(-50%);bottom:86px;z-index:10000;
       background:rgba(15,23,42,.92);color:#fff;padding:10px 14px;border-radius:12px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s, transform .2s
     }
     .toast.show{opacity:1;transform:translate(-50%,-6px)}
     .net{position:fixed;right:10px;bottom:86px;background:#0f172a;color:#fff;border:1px solid #334155;border-radius:12px;padding:8px 10px;font-size:12px;opacity:.9}
-    .pill{display:inline-flex;align-items:center;gap:6px;background:#f1f5f9;border:1px solid var(--border);border-radius:999px;padding:6px 10px}
-    @media (prefers-color-scheme: dark){.pill{background:#0f172a;border-color:#22314a}}
   </style>
 </head>
 <body>
   <header>
-    <h1>PLAY NHẠC MSTQ – Pro 2.0</h1>
-    <div class="subtle" id="subtitle">Nhanh • Gọn nhẹ • Chạy nền bền bỉ (tắt màn hình vẫn nghe)</div>
+    <div class="inner">
+      <div>
+        <h1>PLAY NHẠC MSTQ – Pro 2.1</h1>
+        <div class="subtle" id="subtitle">Nhanh • Gọn nhẹ • Chạy nền bền bỉ (tắt màn hình vẫn nghe)</div>
+      </div>
+
+      <nav class="nav">
+        <button id="navbtn" class="navbtn" aria-haspopup="true" aria-expanded="false" aria-controls="navmenu" title="Liên kết nhanh">
+          ☰ Liên kết <span aria-hidden="true">▾</span>
+        </button>
+        <div id="navmenu" class="menu hidden" role="menu" aria-labelledby="navbtn">
+          <a role="menuitem" href="https://thiensutinhquang.github.io/home/" target="_blank" rel="noopener">
+            🏠 <b>Trang chủ</b> <small>thiensutinhquang.github.io/home</small>
+          </a>
+          <a role="menuitem" href="https://www.youtube.com/@ThiensuTinhQuang" target="_blank" rel="noopener">
+            ▶️ <b>YOUTUBE</b> <small>@ThiensuTinhQuang</small>
+          </a>
+          <a role="menuitem" href="https://www.tiktok.com/@minhsutinhquang" target="_blank" rel="noopener">
+            🎵 <b>TIKTOK</b> <small>@minhsutinhquang</small>
+          </a>
+          <a role="menuitem" href="https://www.facebook.com/groups/minhsutinhquang" target="_blank" rel="noopener">
+            👥 <b>FACEBOOK Group</b> <small>/groups/minhsutinhquang</small>
+          </a>
+          <a role="menuitem" href="https://t.me/Giaoly_phap_don_ngo" target="_blank" rel="noopener">
+            ✈️ <b>TELEGRAM</b> <small>@Giaoly_phap_don_ngo</small>
+          </a>
+          <a role="menuitem" href="https://zalo.me/g/dukrae245" target="_blank" rel="noopener">
+            💬 <b>ZALO</b> <small>zalo.me/g/dukrae245</small>
+          </a>
+        </div>
+      </nav>
+    </div>
   </header>
 
   <main class="wrap">
     <div class="card" id="lib">
       <div class="pill">
-        <span>🔎</span>
+        <span class="homepill" onclick="window.open('https://thiensutinhquang.github.io/home/','_blank','noopener')">🏠 Trang chủ</span>
         <input id="search" type="search" placeholder="Tìm bài hát / nghệ sĩ..." autocomplete="off" />
         <span id="count" class="badge">0 bài</span>
       </div>
+
       <div id="list" style="margin-top:8px"></div>
       <div id="loading" class="subtle" style="padding:14px 8px">Đang tải thư viện nhạc…</div>
+      <div id="more" class="more hidden" title="Xem thêm bài hát">
+        ⬇️ <b>Tải thêm bài</b> <span class="subtle">(xem tiếp)</span>
+      </div>
     </div>
   </main>
 
@@ -160,11 +233,12 @@
 
     const CONFIG = {
       APP_NAME: "MSTQ-PLAYER",
-      APP_VERSION: "2.0",
+      APP_VERSION: "2.1",
       USER_HANDLE: "minhsutinhquang",
-      PAGE_SIZE: 100,
+      PAGE_SIZE: 100,         // tải 100 bài/lần
+      LOAD_MORE_SIZE: 100,    // mỗi lần bấm "tải thêm"
       SAVE_INTERVAL_MS: 1200,
-      SEEK_STEP: 10, // giây
+      SEEK_STEP: 10,          // giây
       MEDIA_SESSION: true
     };
 
@@ -172,26 +246,30 @@
     const $ = id=>document.getElementById(id);
     const dom = {
       list: $("list"), loading: $("loading"), search: $("search"), count: $("count"),
+      more: $("more"),
       audio: $("audio"),
       ptitle: $("ptitle"), partist: $("partist"), pcover: $("pcover"),
       cur: $("cur"), dur: $("dur"),
       bar: $("bar"), fill: $("fill"), knob: $("knob"),
       btnPlay: $("btn-play"), btnNext: $("btn-next"), btnPrev: $("btn-prev"),
       btnShuffle: $("btn-shuffle"), btnRepeat: $("btn-repeat"),
-      toast: $("toast"), net: $("net"), subtitle: $("subtitle")
+      toast: $("toast"), net: $("net"), subtitle: $("subtitle"),
+      navbtn: $("navbtn"), navmenu: $("navmenu")
     };
 
     /** ---------- STATE ---------- */
     const state = {
       hosts: [], hostIndex: 0,
-      tracks: [], view: [], // view = list sau khi search
+      tracks: [], view: [],
       index: -1,
       playing: false,
       shuffle: JSON.parse(localStorage.getItem("mstq.shuffle")||"false"),
       repeat: localStorage.getItem("mstq.repeat")||"off", // off | one | all
       lastSave: 0,
       dragging: false,
-      resumedFromStorage: false
+      resumedFromStorage: false,
+      nextOffset: 0,
+      hasMore: false
     };
 
     /** ---------- UTIL ---------- */
@@ -229,7 +307,6 @@
         state.shuffle = !!s.shuffle;
         state.repeat = s.repeat||"off";
         state.resumedFromStorage = true;
-        // set UI flags
         dom.btnShuffle.setAttribute("aria-pressed", String(state.shuffle));
         dom.btnRepeat.setAttribute("aria-pressed", state.repeat!=="off");
         dom.btnRepeat.textContent = state.repeat==="one" ? "🔂" : "🔁";
@@ -249,15 +326,12 @@
     };
 
     const getHosts = async ()=>{
-      // Lấy discovery hosts chính thức từ Audius
-      // https://api.audius.co -> { data: [hosts...] }
       const data = await fetchJSON("https://api.audius.co");
       const arr = (data && data.data)||[];
       state.hosts = arr.filter(Boolean);
       state.hostIndex = Math.floor(Math.random()*Math.max(1, state.hosts.length));
       return state.hosts.length>0;
     };
-
     const host = ()=>state.hosts[state.hostIndex]||"";
     const rotateHost = ()=>{
       state.hostIndex = (state.hostIndex+1) % Math.max(1, state.hosts.length);
@@ -271,19 +345,19 @@
       return j && j.data && j.data.id;
     };
 
-    const tracksByUser = async (uid, limit=CONFIG.PAGE_SIZE)=>{
-      const url = `${host()}/v1/users/${uid}/tracks?limit=${limit}&app_name=${appTag}`;
+    const tracksByUser = async (uid, limit, offset=0)=>{
+      const url = `${host()}/v1/users/${uid}/tracks?limit=${limit}&offset=${offset}&app_name=${appTag}`;
       const j = await fetchJSON(url);
       return (j && j.data) || [];
     };
 
     const streamURL = (trackId)=> `${host()}/v1/tracks/${trackId}/stream?app_name=${appTag}`;
 
-    /** ---------- RENDER LIST ---------- */
+    /** ---------- RENDER ---------- */
     const artworkFrom = (t)=>{
-      // Audius artwork: t.artwork && t.artwork['100x100'|'480x480'|'1000x1000']
       const a = t.artwork||{};
-      return a["100x100"]||a["480x480"]||a["1000x1000"]|| (t.user && t.user.profile_picture && (t.user.profile_picture["100x100"]||t.user.profile_picture["480x480"])) || "";
+      return a["100x100"]||a["480x480"]||a["1000x1000"]||
+             (t.user && t.user.profile_picture && (t.user.profile_picture["100x100"]||t.user.profile_picture["480x480"])) || "";
     };
 
     const renderList = ()=>{
@@ -302,25 +376,30 @@
           </div>
           <div class="dur">${fmt(t.duration||0)}</div>
         `;
-        row.addEventListener("click", (e)=>{
-          e.preventDefault(); playIndex(i, true);
-        }, {passive:true});
+        row.addEventListener("click", (e)=>{ e.preventDefault(); playIndex(i, true); }, {passive:true});
         dom.list.appendChild(row);
       });
       dom.count.textContent = `${state.view.length} bài`;
+
+      // toggle "load more"
+      if(state.hasMore){ dom.more.classList.remove("hidden"); }
+      else { dom.more.classList.add("hidden"); }
     };
 
-    /** ---------- SEARCH FILTER ---------- */
-    dom.search.addEventListener("input", ()=>{
+    const applyFilter = ()=>{
       const q = dom.search.value.trim().toLowerCase();
-      if(!q){ state.view = state.tracks.slice(); renderList(); return; }
-      state.view = state.tracks.filter(t=>{
-        const title = (t.title||"").toLowerCase();
-        const artist = ((t.user && t.user.name)||"").toLowerCase();
-        return title.includes(q) || artist.includes(q);
-      });
+      if(!q){ state.view = state.tracks.slice(); }
+      else {
+        state.view = state.tracks.filter(t=>{
+          const title = (t.title||"").toLowerCase();
+          const artist = ((t.user && t.user.name)||"").toLowerCase();
+          return title.includes(q) || artist.includes(q);
+        });
+      }
       renderList();
-    }, {passive:true});
+    };
+
+    dom.search.addEventListener("input", applyFilter, {passive:true});
 
     /** ---------- PLAYER ---------- */
     const setMeta = (t)=>{
@@ -353,7 +432,6 @@
     };
 
     const playStreamWithFallback = async (track, keepTime=false)=>{
-      // thử phát, nếu lỗi -> chuyển host khác
       const startAt = keepTime ? dom.audio.currentTime||0 : 0;
       for(let i=0;i<Math.max(1,state.hosts.length);i++){
         try{
@@ -386,14 +464,11 @@
       }
     };
 
-    const setPlayIcon = ()=>{
-      dom.btnPlay.textContent = state.playing ? "⏸" : "▶";
-    };
+    const setPlayIcon = ()=>{ dom.btnPlay.textContent = state.playing ? "⏸" : "▶"; };
 
     const togglePlay = async ()=>{
       vibrate();
       if(state.index===-1){
-        // nếu chưa chọn bài -> phát bài đầu
         if(state.view.length>0) return playIndex(0,true);
         return;
       }
@@ -401,15 +476,13 @@
         if(state.playing){ await dom.audio.pause(); state.playing=false; }
         else { await dom.audio.play(); state.playing=true; }
         setPlayIcon();
-      }catch(e){
-        // Autoplay policy
+      }catch{
         showToast("Nhấn ▶ để bắt đầu phát");
       }
     };
 
     const nextIndex = ()=>{
       if(state.shuffle){
-        // chọn ngẫu nhiên khác bài hiện tại
         if(state.view.length<=1) return state.index;
         let j = Math.floor(Math.random()*state.view.length);
         if(j===state.index) j = (j+1)%state.view.length;
@@ -467,7 +540,6 @@
     };
 
     dom.audio.addEventListener("timeupdate", ()=>{
-      // giảm tải khi nền: rely on native event; không vẽ thêm
       const t = now();
       if(t - state.lastSave > CONFIG.SAVE_INTERVAL_MS){
         state.lastSave = t; saveSession();
@@ -477,7 +549,6 @@
 
     dom.audio.addEventListener("loadedmetadata", ()=>{
       updateProgressUI();
-      // resume position nếu có
       if(state.resumedFromStorage && resumePayload && typeof resumePayload.time==="number" && resumePayload.index===state.index){
         try{ dom.audio.currentTime = Math.min(resumePayload.time, (dom.audio.duration||0)-0.5); }catch{}
       }
@@ -491,12 +562,14 @@
       playNext();
     });
 
+    dom.audio.addEventListener("stalled", ()=>{ // auto-recover khi mạng chập chờn
+      const t = state.view[state.index]; if(!t) return;
+      rotateHost(); playStreamWithFallback(t, true);
+    });
+
     dom.audio.addEventListener("error", ()=>{
-      // thử đổi host nhanh
-      const t = state.view[state.index];
-      if(!t) return;
-      rotateHost();
-      playStreamWithFallback(t, true);
+      const t = state.view[state.index]; if(!t) return;
+      rotateHost(); playStreamWithFallback(t, true);
     });
 
     // Drag seek
@@ -527,24 +600,17 @@
     window.addEventListener("pointerup", endDrag);
     dom.bar.addEventListener("touchstart", startDrag, {passive:true});
     dom.bar.addEventListener("touchmove", moveDrag, {passive:true});
-    window.addEventListener("touchend", endDrag, {passive:true});
+    window.addEventListener("touchend", endDrag);
 
-    /** ---------- MEDIA SESSION (nút điều khiển trên màn hình khoá) ---------- */
+    /** ---------- MEDIA SESSION (màn hình khoá, popup media) ---------- */
     const wireMediaSession = ()=>{
       if(!("mediaSession" in navigator)) return;
       try{
         navigator.mediaSession.setActionHandler("play", async ()=>{ try{ await dom.audio.play(); state.playing=true; setPlayIcon(); }catch{} });
         navigator.mediaSession.setActionHandler("pause", async ()=>{ try{ await dom.audio.pause(); state.playing=false; setPlayIcon(); }catch{} });
-        navigator.mediaSession.setActionHandler("seekbackward", details=>{
-          dom.audio.currentTime = Math.max(0, dom.audio.currentTime - (details.seekOffset||CONFIG.SEEK_STEP));
-        });
-        navigator.mediaSession.setActionHandler("seekforward", details=>{
-          dom.audio.currentTime = Math.min(dom.audio.duration||0, dom.audio.currentTime + (details.seekOffset||CONFIG.SEEK_STEP));
-        });
-        navigator.mediaSession.setActionHandler("seekto", details=>{
-          if(details.fastSeek && "fastSeek" in dom.audio){ dom.audio.fastSeek(details.seekTime); }
-          else dom.audio.currentTime = details.seekTime;
-        });
+        navigator.mediaSession.setActionHandler("seekbackward", d=>{ dom.audio.currentTime = Math.max(0, dom.audio.currentTime - (d.seekOffset||CONFIG.SEEK_STEP)); });
+        navigator.mediaSession.setActionHandler("seekforward", d=>{ dom.audio.currentTime = Math.min(dom.audio.duration||0, dom.audio.currentTime + (d.seekOffset||CONFIG.SEEK_STEP)); });
+        navigator.mediaSession.setActionHandler("seekto", d=>{ if(d.fastSeek && "fastSeek" in dom.audio){ dom.audio.fastSeek(d.seekTime); } else dom.audio.currentTime = d.seekTime; });
         navigator.mediaSession.setActionHandler("previoustrack", ()=> playPrev());
         navigator.mediaSession.setActionHandler("nexttrack", ()=> playNext());
       }catch{}
@@ -552,8 +618,6 @@
 
     /** ---------- POWER SAVING / NỀN ---------- */
     document.addEventListener("visibilitychange", ()=>{
-      // khi nền: không làm gì thêm để tiết kiệm pin; audio vẫn chạy
-      // Khi quay lại: cập nhật UI 1 lần
       if(!document.hidden) updateProgressUI();
     }, {passive:true});
 
@@ -563,21 +627,51 @@
     window.addEventListener("pagehide", saveSession, {passive:true});
     window.addEventListener("beforeunload", saveSession, {passive:true});
 
+    /** ---------- LOAD MORE ---------- */
+    const loadMore = async ()=>{
+      if(!state.hasMore) return;
+      try{
+        dom.more.textContent = "⏳ Đang tải thêm…";
+        const moreTracks = await tracksByUser(GLOBAL.uid, CONFIG.LOAD_MORE_SIZE, state.nextOffset);
+        if(moreTracks.length>0){
+          state.tracks.push(...moreTracks);
+          state.nextOffset += moreTracks.length;
+          state.hasMore = moreTracks.length === CONFIG.LOAD_MORE_SIZE;
+          applyFilter();
+          showToast(`Đã nạp thêm ${moreTracks.length} bài`);
+        }else{
+          state.hasMore = false;
+          dom.more.classList.add("hidden");
+          showToast("Hết bài để tải");
+        }
+      }catch(e){
+        showToast("Lỗi tải thêm, thử lại");
+      }finally{
+        dom.more.textContent = "⬇️ Tải thêm bài (xem tiếp)";
+      }
+    };
+    dom.more.addEventListener("click", ()=>{ vibrate(10); loadMore(); });
+
     /** ---------- INIT ---------- */
     let resumePayload = restoreSession();
+    const GLOBAL = { uid:null };
 
     const boot = async ()=>{
       try{
         if(!await getHosts()) throw new Error("Không lấy được máy chủ Audius");
         const uid = await userIdByHandle(CONFIG.USER_HANDLE);
         if(!uid) throw new Error("Không tìm thấy người dùng");
-        const tracks = await tracksByUser(uid, CONFIG.PAGE_SIZE);
+        GLOBAL.uid = uid;
+        const tracks = await tracksByUser(uid, CONFIG.PAGE_SIZE, 0);
         state.tracks = tracks;
         state.view = tracks.slice();
+        state.nextOffset = tracks.length;
+        state.hasMore = tracks.length === CONFIG.PAGE_SIZE;
+
         dom.loading.style.display="none";
         renderList();
+
         if(state.index>=0 && state.index<state.view.length){
-          // set meta sẵn, không auto play để tránh autoplay policy
           const t = state.view[state.index];
           setMeta(t); updateActiveRow();
           dom.cur.textContent = fmt(resumePayload?.time||0);
@@ -602,6 +696,23 @@
       else if(e.code==="ArrowLeft"){ dom.audio.currentTime -= CONFIG.SEEK_STEP; }
       else if(e.code==="ArrowUp"){ playPrev(); }
       else if(e.code==="ArrowDown"){ playNext(); }
+    });
+
+    // Nav dropdown handlers
+    const closeMenu = ()=>{ dom.navmenu.classList.add("hidden"); dom.navbtn.setAttribute("aria-expanded","false"); };
+    const openMenu  = ()=>{ dom.navmenu.classList.remove("hidden"); dom.navbtn.setAttribute("aria-expanded","true"); };
+    dom.navbtn.addEventListener("click",(e)=>{
+      e.stopPropagation();
+      if(dom.navmenu.classList.contains("hidden")) openMenu(); else closeMenu();
+    });
+    document.addEventListener("click",(e)=>{
+      if(!dom.navmenu.classList.contains("hidden")){
+        if(!dom.navmenu.contains(e.target) && e.target!==dom.navbtn) closeMenu();
+      }
+    });
+    // close menu when any link clicked
+    Array.from(dom.navmenu.querySelectorAll("a")).forEach(a=>{
+      a.addEventListener("click", closeMenu, {passive:true});
     });
 
     // Start
