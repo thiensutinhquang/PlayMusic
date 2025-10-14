@@ -2,7 +2,7 @@
   "id": "mstq-music",
   "name": "MSTQ Music",
   "short_name": "MSTQ Music",
-  "description": "Trình phát nhạc PWA phát nền liên tục, tối ưu cho di động và phát không ngắt khi tắt màn hình.",
+  "description": "Ứng dụng nghe nhạc PWA MSTQ Music – phát nền liên tục, ổn định khi tắt màn hình và hoạt động mượt trên di động.",
   "start_url": "/PlayMusic/index.html",
   "scope": "/PlayMusic/",
   "display": "standalone",
@@ -25,7 +25,13 @@
       "purpose": "any"
     },
     {
-      "src": "/PlayMusic/images/icons/maskable-512x512.png",
+      "src": "/PlayMusic/images/icons/icon-maskable-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/PlayMusic/images/icons/icon-maskable-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
@@ -37,14 +43,37 @@
     {
       "name": "Phát nhạc",
       "short_name": "Nghe nhạc",
-      "description": "Mở trình phát nhạc nhanh",
-      "url": "/PlayMusic/index.html#play"
+      "description": "Mở nhanh trình phát nhạc",
+      "url": "/PlayMusic/index.html#play",
+      "icons": [
+        {
+          "src": "/PlayMusic/images/icons/icon-192x192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     },
     {
       "name": "Danh sách phát",
       "short_name": "Playlist",
       "description": "Xem danh sách bài hát",
-      "url": "/PlayMusic/index.html#playlist"
+      "url": "/PlayMusic/index.html#playlist",
+      "icons": [
+        {
+          "src": "/PlayMusic/images/icons/icon-192x192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     }
-  ]
+  ],
+  "share_target": {
+    "action": "/PlayMusic/index.html#share",
+    "method": "GET",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  }
 }
