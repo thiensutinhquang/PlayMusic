@@ -1,13 +1,16 @@
 {
-  "name": "play-music",
+  "name": "mstq-music-pwa",
   "version": "1.0.0",
   "private": true,
-  "type": "module",
-  "dependencies": {
-    "@vercel/blob": "latest",
-    "music-metadata": "^7.14.0"
+  "description": "MSTQ Music – PWA phát nhạc nền liên tục (index.html + sw.js + manifest.webmanifest).",
+  "scripts": {
+    "start": "serve -s -l 5173 .",
+    "preview": "serve -s -l 5173 .",
+    "dev": "serve -s -l 5173 .",
+    "clean": "rimraf node_modules"
   },
-  "engines": {
-    "node": "20.x"
+  "devDependencies": {
+    "serve": "^14.2.3",
+    "rimraf": "^6.0.1"
   }
 }
