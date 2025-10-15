@@ -11,9 +11,8 @@
   <!-- iOS PWA -->
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <link rel="apple-touch-icon" sizes="180x180" href="./images/icon-192.png" />
-  <link rel="apple-touch-icon" sizes="192x192" href="./images/icon-192.png" />
-  <link rel="apple-touch-icon" sizes="512x512" href="./images/icon-512.png" />
+  <link rel="apple-touch-icon" sizes="192x192" href="/PlayMusic/images/icons/icon-192x192.png" />
+  <link rel="apple-touch-icon" sizes="512x512" href="/PlayMusic/images/icons/icon-512x512.png" />
 
   <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -22,33 +21,26 @@
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
 
-  <!-- Firebase compat (để dành tương thích) -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-
   <!-- Babel (JSX inline) -->
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
   <style>
     :root,[data-theme]{transition:color .2s ease,background-color .2s ease}
     :root{--bg:#111827;--card:#1f2937;--text:#f9fafb;--muted:#9ca3af;--primary:#f59e0b;--primary-fg:#111827;--ring:#f59e0b66;--border:#374151;--nav-bg:rgba(31,41,55,.8);--shadow:0 10px 30px rgba(0,0,0,.35);--gradient:linear-gradient(135deg,#f59e0b 0%,#fbbf24 100%)}
-    [data-theme=light]{--bg:#f3f4f6;--card:#fff;--text:#111827;--muted:#6b7280;--primary:#d97706;--primary-fg:#fff;--ring:#d9770666;--border:#e5e7eb;--nav-bg:rgba(255,255,255,.85);--shadow:0 10px 25px rgba(0,0,0,.08);--gradient:linear-gradient(135deg,#fbbf24 0%,#f97316 100%)}
-    [data-theme=lucbao]{--bg:#081414;--card:#102424;--text:#e0f2f1;--muted:#80cbc4;--primary:#f4ff81;--primary-fg:#0c1113;--ring:#f4ff8166;--border:color-mix(in srgb,var(--text) 10%, transparent);--nav-bg:rgba(16,36,36,.8);--gradient:linear-gradient(135deg,#a8ff78 0%,#f4ff81 100%)}
-    [data-theme=tinhquang]{--bg:#1a2a45;--card:#2c3a58;--text:#f0f8ff;--muted:#a0aec0;--primary:#63b3ed;--primary-fg:#102035;--ring:#63b3ed66;--border:#4a5568;--nav-bg:rgba(44,58,88,.75);--gradient:linear-gradient(135deg,#63b3ed 0%,#90cdf4 100%)}
+    [data-theme=light]{--bg:#f3f4f6;--card:#fff;--text:#111827;--muted:#6b7280;--primary:#d97706;--primary-fg:#fff;--ring:#d9770666;--border:#e5e7eb;--nav-bg:rgba(255,255,255,.85)}
+    [data-theme=lucbao]{--bg:#081414;--card:#102424;--text:#e0f2f1;--muted:#80cbc4;--primary:#f4ff81;--primary-fg:#0c1113;--ring:#f4ff8166;--border:color-mix(in srgb,var(--text) 10%, transparent);--nav-bg:rgba(16,36,36,.8)}
     .btn{display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--border);background:var(--card);color:var(--text);padding:.6rem .8rem;border-radius:12px}
     .btn:disabled{opacity:.5;cursor:not-allowed}
     .badge{font-size:.7rem;border:1px solid var(--border);padding:.15rem .45rem;border-radius:999px;color:var(--muted)}
-    /* Error overlay tối giản */
     .err{position:fixed;inset:0;background:rgba(0,0,0,.6);color:#fff;z-index:9999;display:none;align-items:center;justify-content:center;padding:20px;text-align:left}
     .err-card{background:#111827;border:1px solid #374151;border-radius:14px;max-width:900px;width:100%;padding:18px}
-    /* Safe area for notches */
     .safe-bottom{padding-bottom:calc(env(safe-area-inset-bottom) + 10px)}
   </style>
 </head>
 <body class="bg-[var(--bg)] text-[var(--text)]">
   <div id="root"></div>
 
-  <!-- Audio chính (persistent) + Preload (an toàn iOS) -->
+  <!-- Luồng phát chính + luồng preload muted -->
   <audio id="mstq-player" preload="metadata" playsinline webkit-playsinline crossOrigin="anonymous"></audio>
   <audio id="mstq-preload" preload="auto" playsinline webkit-playsinline muted crossOrigin="anonymous"></audio>
 
@@ -64,14 +56,14 @@
   </div>
 
   <script>
-    // Global error catcher
+    // Bắt lỗi toàn cục
     (function(){
-      const show=(m)=>{const el=document.getElementById('err');const log=document.getElementById('errlog');if(log)log.textContent=String(m);if(el)el.style.display='flex';console.error('[GLOBAL ERROR]',m)};
+      const show=(m)=>{const el=document.getElementById('err');const log=document.getElementById('errlog');if(log)log.textContent=String(m||'Unknown');if(el)el.style.display='flex';console.error('[GLOBAL ERROR]',m)};
       window.addEventListener('error',e=>show(e.error||e.message||e));
       window.addEventListener('unhandledrejection',e=>show(e.reason||e));
     })();
 
-    // Đăng ký Service Worker sớm & ổn định
+    // Đăng ký SW
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js').catch(()=>{});
@@ -82,24 +74,31 @@
   <script type="text/babel" data-presets="env,react">
     const {useState,useEffect,useRef,useMemo,useCallback} = React;
 
-    /* ===== Keys & helpers ===== */
-    const SONGS_CACHE_KEY='mstq_songs_v2', RESUME_KEY='mstq_resume_v4';
+    /* ===== Helpers & keys ===== */
+    const SONGS_CACHE_KEY='mstq_songs_v2', RESUME_KEY='mstq_resume_v5';
     const THEME_KEY='music-theme', SPEED_KEY='mstq_speed', MUTED_KEY='mstq_muted';
     const SHUFFLE_KEY='mstq_shuffle', REPEAT_KEY='mstq_repeat';
     const INITIAL_VISIBLE=100, VISIBLE_STEP=100;
 
-    const FALLBACK_SONGS=[{id:"testmp3testfile/mpthreetest.mp3",title:"Bài hát mẫu (Tạm thời)",artist:"Public Domain",stream_url:"https://archive.org/download/testmp3testfile/mpthreetest.mp3",artwork:"./images/icon-192.png",duration:5,lyrics:"Bài mẫu.",item_identifier:"testmp3testfile"}];
+    const FALLBACK_SONGS=[{
+      id:"testmp3testfile/mpthreetest.mp3",
+      title:"Bài hát mẫu (Tạm thời)",
+      artist:"Public Domain",
+      stream_url:"https://archive.org/download/testmp3testfile/mpthreetest.mp3",
+      artwork:"/PlayMusic/images/icons/icon-192x192.png",
+      duration:5,lyrics:"Bài mẫu.",item_identifier:"testmp3testfile"
+    }];
 
     const save=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}};
     const load=(k,d)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch{return d}};
     const formatTime=s=>{if(!isFinite(s)||s<0)return'0:00';const m=Math.floor(s/60),sec=Math.floor(s%60);return`${m}:${String(sec).padStart(2,'0')}`};
     const isiOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 
-    /* ===== Nhỏ gọn UI ===== */
+    /* ===== UI ===== */
     const TopBar=({onTheme,installable})=>(
       <header className="fixed top-0 inset-x-0 z-30 px-4 py-3 flex items-center justify-between bg-[var(--nav-bg)] backdrop-blur-lg border-b border-[var(--border)]">
         <div className="flex items-center gap-2">
-          <img src="./images/icon-192.png" width="28" height="28" className="rounded-lg" alt="MSTQ"/>
+          <img src="/PlayMusic/images/icons/icon-192x192.png" width="28" height="28" className="rounded-lg" alt="MSTQ"/>
           <h1 className="font-bold">MSTQ Music</h1>
           <span className="badge hidden sm:inline">PWA</span>
         </div>
@@ -137,7 +136,7 @@
 
     /* ======================= MAIN APP ======================= */
     function App(){
-      // PWA install prompt
+      // Install prompt
       const [installable,setInstallable]=useState(false);
       useEffect(()=>{
         let deferred=null;
@@ -164,6 +163,7 @@
       const [shuffle,setShuffle]=useState(load(SHUFFLE_KEY,false));
       const [repeat,setRepeat]=useState(load(REPEAT_KEY,'all')); // off | one | all
 
+      // audio elements
       const audioRef=useRef(null);
       const preloadRef=useRef(null);
       useEffect(()=>{ audioRef.current=document.getElementById('mstq-player'); preloadRef.current=document.getElementById('mstq-preload'); },[]);
@@ -203,7 +203,16 @@
               const meta=await fetch(`https://archive.org/metadata/${d.identifier}`,{cache:'no-store'}).then(r=>r.json());
               (meta.files||[]).forEach(f=>{
                 if(String(f.format||'').toUpperCase().includes('MP3')){
-                  all.push({id:`${d.identifier}/${f.name}`,title:(f.title||d.title||f.name||'').replace(/\.mp3$/i,'').replace(/_/g,' ').trim(),artist:d.creator||'TinhQuang',stream_url:`https://archive.org/download/${d.identifier}/${encodeURIComponent(f.name)}`,artwork:`https://archive.org/download/${d.identifier}/__ia_thumb.jpg`,duration:parseFloat(f.length||0)||0,lyrics:d.description||'',item_identifier:d.identifier});
+                  all.push({
+                    id:`${d.identifier}/${f.name}`,
+                    title:(f.title||d.title||f.name||'').replace(/\.mp3$/i,'').replace(/_/g,' ').trim(),
+                    artist:d.creator||'TinhQuang',
+                    stream_url:`https://archive.org/download/${d.identifier}/${encodeURIComponent(f.name)}`,
+                    artwork:`https://archive.org/download/${d.identifier}/__ia_thumb.jpg`,
+                    duration:parseFloat(f.length||0)||0,
+                    lyrics:d.description||'',
+                    item_identifier:d.identifier
+                  });
                 }
               });
             }catch{}
@@ -216,15 +225,21 @@
 
       const current=playlist[currentIndex]||null;
 
-      // Preload next (tắt trên iOS khi nền)
+      // Preload next (tắt khi nền trên iOS; pause preload khi tab ẩn để không “đánh thức” audio)
       const queuePreload=useCallback((idx)=>{
         const n=(idx+1)%playlist.length;
         const next=playlist[n]; const pre=preloadRef.current;
         if(!next||!pre) return;
+        if (document.visibilityState!=='visible') { pre.removeAttribute('src'); pre.load(); return; }
         if (isiOS && document.visibilityState!=='visible') return;
         if(pre.src!==next.stream_url){ pre.src=next.stream_url; pre.load(); }
       },[playlist]);
       useEffect(()=>{ if(playlist.length) queuePreload(currentIndex); },[playlist.length,currentIndex,queuePreload]);
+      useEffect(()=>{
+        const handler=()=>{ queuePreload(currentIndex); };
+        document.addEventListener('visibilitychange',handler);
+        return()=>document.removeEventListener('visibilitychange',handler);
+      },[queuePreload,currentIndex]);
 
       // Media Session
       const updateMediaSession=useCallback((a)=>{
@@ -232,7 +247,7 @@
           if(!('mediaSession'in navigator)||!current) return;
           navigator.mediaSession.metadata=new MediaMetadata({
             title:current.title, artist:current.artist||'minhsutinhquang', album:'MSTQ Music',
-            artwork:[{src:current.artwork||'./images/icon-192.png',sizes:'512x512',type:'image/png'}]
+            artwork:[{src:current.artwork||'/PlayMusic/images/icons/icon-192x192.png',sizes:'512x512',type:'image/png'}]
           });
           navigator.mediaSession.setActionHandler('play',()=>{ setPlaying(true); a.play().catch(()=>{}); });
           navigator.mediaSession.setActionHandler('pause',()=>{ setPlaying(false); a.pause(); });
@@ -246,24 +261,12 @@
         }catch{}
       },[current,playing]);
 
-      // Recovery Engine / Anti-Stall
+      // Recovery/Watchdog (throttle, tránh spam gây “bíp”)
       const targetPlayingRef=useRef(false);
       const lastProgRef=useRef({t:0,pos:0});
       const stallScoreRef=useRef(0);
       const lastManualPauseRef=useRef(0);
-
-      // Android keep-alive bằng silent WebAudio (iOS không dùng)
-      const audioCtxRef=useRef(null);
-      const startKeepAlive=useCallback(()=>{
-        if (isiOS) return;
-        try{
-          if(audioCtxRef.current) return;
-          const ctx=new (window.AudioContext||window.webkitAudioContext)();
-          const o=ctx.createOscillator(); const g=ctx.createGain();
-          g.gain.value=0; o.connect(g).connect(ctx.destination); o.start();
-          audioCtxRef.current={ctx,o,g};
-        }catch{}
-      },[]);
+      const lastRecoverRef=useRef(0);
 
       // Wake lock khi visible
       useEffect(()=>{
@@ -290,12 +293,12 @@
         return()=>{a.removeEventListener('timeupdate',onTime);a.removeEventListener('ended',onEnded);['stalled','suspend','waiting','error','abort'].forEach(e=>a.removeEventListener(e,()=>{}));a.removeEventListener('pause',onPause);};
       },[]);
 
-      // watchdog
+      // watchdog (5s), có throttle để không “bíp”
       useEffect(()=>{
         const tick=setInterval(async()=>{
           const a=audioRef.current; if(!a||!current) return;
 
-          // Lưu resume bền
+          // Lưu resume
           save(RESUME_KEY,{index:currentIndex,id:current.id,currentTime:a.currentTime||0,volume:a.volume,rate:a.playbackRate,muted:a.muted,playing:targetPlayingRef.current});
 
           if(!targetPlayingRef.current) return;
@@ -304,14 +307,21 @@
           const stagnate = (Date.now()-(lastProgRef.current.t||0) > (document.visibilityState==='visible'?20000:12000));
           const poorReady = a.readyState<2;
 
-          if(a.paused){
+          // tránh spam recover quá dày
+          const now=Date.now();
+          const canRecover = now - (lastRecoverRef.current||0) > 2500;
+
+          if(a.paused && canRecover){
+            lastRecoverRef.current=now;
             try{ await a.play(); updateMediaSession(a); return; }catch{}
           }
 
-          if(stagnate || poorReady){
+          if((stagnate || poorReady) && canRecover){
+            lastRecoverRef.current=now;
             stallScoreRef.current++;
             try{
-              await a.play();
+              // thử nhẹ
+              if(a.paused) await a.play();
               if(a.paused || poorReady){ a.load(); await a.play().catch(()=>{}); }
               const limit=(document.visibilityState==='visible'?3:2);
               if(stallScoreRef.current>=limit){ stallScoreRef.current=0; nextTrack(); }
@@ -360,12 +370,11 @@
 
       const pickSong=(s)=>{
         const i=playlist.findIndex(x=>x.id===s.id);
-        if(i>=0){ setCurrentIndex(i); setPlaying(true); targetPlayingRef.current=true; queuePreload(i); startKeepAlive(); }
+        if(i>=0){ setCurrentIndex(i); setPlaying(true); targetPlayingRef.current=true; queuePreload(i); }
       };
 
       const playPause=()=>{
         const a=audioRef.current; if(!a) return;
-        startKeepAlive();
         if(!current && playlist.length){ setCurrentIndex(0); setPlaying(true); targetPlayingRef.current=true; a.play().catch(()=>{}); return; }
         if(playing){ setPlaying(false); targetPlayingRef.current=false; a.pause(); }
         else{ setPlaying(true); targetPlayingRef.current=true; a.play().catch(()=>{}); }
@@ -422,7 +431,6 @@
               }}>Lặp: {repeat==='off'?'Tắt':repeat==='all'?'Danh sách':'1 bài'}</button>
             </div>
 
-            {/* Controls mở rộng */}
             <div className="px-4 grid grid-cols-2 sm:grid-cols-3 gap-2 my-2">
               <label className="flex items-center gap-2">
                 <span className="text-sm w-16">Âm lượng</span>
@@ -450,7 +458,7 @@
           {current && (
             <div className="fixed bottom-2 left-2 right-2 rounded-2xl bg-[var(--card)]/95 border border-[var(--border)] backdrop-blur-md p-2 z-40 shadow-[var(--shadow)] safe-bottom">
               <div className="flex items-center gap-3">
-                <img src={current.artwork||'./images/icon-192.png'} alt="" width="44" height="44" className="rounded-lg object-cover"/>
+                <img src={current.artwork||'/PlayMusic/images/icons/icon-192x192.png'} alt="" width="44" height="44" className="rounded-lg object-cover"/>
                 <div className="flex-grow min-w-0">
                   <p className="truncate font-semibold">{current.title}</p>
                   <p className="text-xs text-[var(--muted)] truncate">{current.artist||'minhsutinhquang'}</p>
