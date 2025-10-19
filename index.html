@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#f59e0b" />
+  <meta name="theme-color" content="#0f1b2d" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>MSTQ Music – Nghe nhạc liên tục</title>
@@ -13,45 +13,48 @@
   <link rel="apple-touch-icon" sizes="192x192" href="/PlayMusic/images/icons/icon-192x192.png" />
   <link rel="apple-touch-icon" sizes="512x512" href="/PlayMusic/images/icons/icon-512x512.png" />
 
-  <!-- Tailwind -->
+  <!-- Tailwind CDN (demo). Bản phát hành khuyên dùng CLI/PostCSS. -->
   <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- React 18 -->
+  <!-- React 18 UMD -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
 
-  <!-- Babel (JSX inline) -->
+  <!-- Babel để chạy JSX inline trong bản phát triển -->
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
   <style>
     :root,[data-theme]{transition:color .2s ease,background-color .2s ease}
     :root{
       --bg:#0b132b;--card:#0f1b2d;--text:#eaf2ff;--muted:#93a3b8;
-      --primary:#f59e0b;--primary-fg:#0b132b;
-      --ring:#f59e0b66;--border:#203047;--nav-bg:rgba(16,24,40,.88);
-      --shadow:0 12px 36px rgba(0,0,0,.28);--gradient:linear-gradient(135deg,#60a5fa 0%,#f59e0b 100%)
+      --primary:#f59e0b;--primary-fg:#0b132b;--ring:#f59e0b66;
+      --border:#203047;--nav-bg:rgba(16,24,40,.88);--shadow:0 12px 36px rgba(0,0,0,.28);
+      --gradient:linear-gradient(135deg,#60a5fa 0%,#f59e0b 100%)
     }
-    [data-theme=light]{--bg:#f6f7fb;--card:#ffffff;--text:#0f172a;--muted:#64748b;--primary:#0ea5e9;--primary-fg:#ffffff;--ring:#0ea5e955;--border:#e5e7eb;--nav-bg:rgba(255,255,255,.92);--gradient:linear-gradient(135deg,#93c5fd 0%,#67e8f9 100%)}
-    [data-theme=lucbao]{--bg:#081414;--card:#102424;--text:#e0f2f1;--muted:#80cbc4;--primary:#f4ff81;--primary-fg:#0c1113;--ring:#f4ff8166;--border:color-mix(in srgb,var(--text) 10%, transparent);--nav-bg:rgba(16,36,36,.86);--gradient:linear-gradient(135deg,#a8ff78 0%,#f4ff81 100%)}
-    [data-theme=dark]{--bg:#0d0f14;--card:#131720;--text:#e5e7eb;--muted:#a3a9b6;--primary:#f59e0b;--primary-fg:#0b132b;--ring:#f59e0b66;--border:#232836;--nav-bg:rgba(19,23,32,.9)}
-    .btn{display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--border);background:var(--card);color:var(--text);padding:.7rem .95rem;border-radius:14px}
+    [data-theme=light]{--bg:#f6f7fb;--card:#ffffff;--text:#0f172a;--muted:#64748b;--primary:#0ea5e9;--primary-fg:#ffffff;--ring:#0ea5e955;--border:#e5e7eb;--nav-bg:rgba(255,255,255,.92)}
+    [data-theme=lucbao]{--bg:#081414;--card:#102424;--text:#e0f2f1;--muted:#80cbc4;--primary:#f4ff81;--primary-fg:#0c1113;--ring:#f4ff8166;--border:color-mix(in srgb,var(--text) 10%, transparent);--nav-bg:rgba(16,36,36,.86)}
+    .btn{display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--border);background:var(--card);color:var(--text);padding:.6rem .9rem;border-radius:14px}
     .btn:disabled{opacity:.5;cursor:not-allowed}
     .btn-primary{background:var(--primary);color:var(--primary-fg);border-color:transparent}
-    .chip{font-size:.7rem;border:1px solid var(--border);padding:.15rem .45rem;border-radius:999px;color:var(--muted)}
+    .chip{font-size:.72rem;border:1px solid var(--border);padding:.15rem .45rem;border-radius:999px;color:var(--muted)}
     .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:40;backdrop-filter:blur(8px);background:var(--nav-bg);border-top:1px solid var(--border)}
-    .tabbtn{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:.6rem 0;font-size:.78rem;color:var(--muted)}
+    .tabbtn{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:.55rem 0;font-size:.74rem;color:var(--muted)}
     .tabbtn[aria-current=true]{color:var(--text)}
-    .safe-bottom{padding-bottom:calc(env(safe-area-inset-bottom) + 12px)}
+    .safe-bottom{padding-bottom:calc(env(safe-area-inset-bottom) + 10px)}
     .sheet{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top-left-radius:18px;border-top-right-radius:18px;border:1px solid var(--border);box-shadow:var(--shadow);z-index:60;padding:10px}
     .err{position:fixed;inset:0;background:rgba(0,0,0,.6);color:#fff;z-index:9999;display:none;align-items:center;justify-content:center;padding:20px;text-align:left}
     .err-card{background:#111827;border:1px solid #374151;border-radius:14px;max-width:900px;width:100%;padding:18px}
     input[type="range"]{accent-color:#f59e0b}
+    .dropdown{position:relative}
+    .dropdown-menu{position:absolute;right:0;top:100%;margin-top:.4rem;background:var(--card);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);min-width:200px;z-index:50;padding:.4rem}
+    .dropdown-item{display:flex;align-items:center;gap:.5rem;padding:.6rem .7rem;border-radius:10px}
+    .dropdown-item:hover{background-color:rgba(255,255,255,.06)}
   </style>
 </head>
 <body class="bg-[var(--bg)] text-[var(--text)]">
   <div id="root"></div>
 
-  <!-- 2 audio: main + preload (muted) -->
+  <!-- audio -->
   <audio id="mstq-player" preload="metadata" playsinline webkit-playsinline crossOrigin="anonymous"></audio>
   <audio id="mstq-preload" preload="auto" playsinline webkit-playsinline muted crossOrigin="anonymous"></audio>
 
@@ -78,17 +81,17 @@
   </script>
 
   <script type="text/babel" data-presets="env,react">
-    const {useState,useEffect,useRef,useMemo,useCallback} = React;
+    const {useState,useEffect,useRef,useCallback} = React;
 
     /* ===== Keys & utils ===== */
-    const SONGS_CACHE_KEY='mstq_songs_v6';
-    const RESUME_KEY='mstq_resume_v9';
+    const SONGS_CACHE_KEY='mstq_songs_v10';
+    const RESUME_KEY='mstq_resume_v13';
     const THEME_KEY='music-theme', SPEED_KEY='mstq_speed', MUTED_KEY='mstq_muted';
     const SHUFFLE_KEY='mstq_shuffle', REPEAT_KEY='mstq_repeat';
     const POWER_KEY='mstq_power_save', TIMER_KEY='mstq_sleep_timer', STOP_END_KEY='mstq_stop_at_end';
     const SRC_PREF_KEY='mstq_sources_pref', FAVORITES_KEY='mstq_favorites_v1';
     const COMPRESSOR_KEY='mstq_compressor_on';
-    const INITIAL_VISIBLE=110, VISIBLE_STEP=150;
+    const INITIAL_VISIBLE=120, VISIBLE_STEP=160;
 
     const isiOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
     const save=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}};
@@ -96,45 +99,40 @@
     const clamp=(x,min,max)=>Math.min(Math.max(x,min),max);
     const formatTime=s=>{if(!isFinite(s)||s<0)return'0:00';const m=Math.floor(s/60),sec=Math.floor(s%60);return`${m}:${String(sec).padStart(2,'0')}`};
 
-    const LINKS={home:'/',youtube:'https://youtube.com/',tiktok:'https://www.tiktok.com/',facebook:'https://www.facebook.com/groups/',telegram:'https://t.me/',zalo:'https://zalo.me/'};
-
-    const I = (d=22,p="M5 12h14") => <svg width={d} height={d} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><path d={p} strokeLinecap="round" strokeLinejoin="round"/></svg>;
-    const ICONS={
-      home:(d)=>I(d,"M3 10.5 12 3l9 7.5v8.5a1.5 1.5 0 0 1-1.5 1.5H4.5A1.5 1.5 0 0 1 3 19V10.5Z"),
-      search:(d)=>I(d,"M21 21l-4.3-4.3M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z"),
-      lib:(d)=>I(d,"M4 19h16M6 17V5a2 2 0 0 1 2-2h0M12 17V3h0M18 17V7a2 2 0 0 0-2-2h0"),
-      settings:(d)=>I(d,"M12 15.5A3.5 3.5 0 1 0 12 8.5a3.5 3.5 0 0 0 0 7Z M19.4 15l1.1 1.9-1.7 3-2.2-.4-.9 1.9h-3.4l-.9-1.9-2.2.4-1.7-3 1.1-1.9-1.1-1.9 1.7-3 2.2.4.9-1.9h3.4l.9 1.9 2.2-.4 1.7 3-1.1 1.9Z"),
-      admin:(d)=>I(d,"M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm0 2c-4 0-7 2-7 4v3h14v-3c0-2-3-4-7-4Z"),
-      play:(d)=>I(d,"M8 5v14l11-7z"), pause:(d)=>I(d,"M6 5h4v14H6zM14 5h4v14h-4z"),
-      next:(d)=>I(d,"m13 5 9 7-9 7V5zM2 19V5h2v14H2z"), back:(d)=>I(d,"M11 19 2 12l9-7v14zm1-7 9 7V5l-9 7z"),
-      more:(d)=>I(d,"M6 12h.01M12 12h.01M18 12h.01"), share:(d)=>I(d,"M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M16 6l-4-4-4 4M12 2v12")
+    const Icon = ({d=22,p="M5 12h14"}) => <svg width={d} height={d} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><path d={p} strokeLinecap="round" strokeLinejoin="round"/></svg>;
+    const I={
+      home:(d)=><Icon d={d} p="M3 10.5 12 3l9 7.5v8.5a1.5 1.5 0 0 1-1.5 1.5H4.5A1.5 1.5 0 0 1 3 19V10.5Z"/>,
+      search:(d)=><Icon d={d} p="M21 21l-4.3-4.3M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z"/>,
+      lib:(d)=><Icon d={d} p="M4 19h16M6 17V5a2 2 0 0 1 2-2h0M12 17V3h0M18 17V7a2 2 0 0 0-2-2h0"/>,
+      queue:(d)=><Icon d={d} p="M4 6h16M4 12h10M4 18h7"/>,
+      settings:(d)=><Icon d={d} p="M12 15.5A3.5 3.5 0 1 0 12 8.5a3.5 3.5 0 0 0 0 7Z M19.4 15l1.1 1.9-1.7 3-2.2-.4-.9 1.9h-3.4l-.9-1.9-2.2.4-1.7-3 1.1-1.9Z"/>,
+      play:(d)=><Icon d={d} p="M8 5v14l11-7z"/>, pause:(d)=><Icon d={d} p="M6 5h4v14H6zM14 5h4v14h-4z"/>,
+      next:(d)=><Icon d={d} p="m13 5 9 7-9 7V5zM2 19V5h2v14H2z"/>, back:(d)=><Icon d={d} p="M11 19 2 12l9-7v14zm1-7 9 7V5l-9 7z"/>,
+      more:(d)=><Icon d={d} p="M6 12h.01M12 12h.01M18 12h.01"/>,
+      repeat:(d)=><Icon d={d} p="M17 1v4H7a5 5 0 0 0 0 10h1M7 23v-4h10a5 5 0 0 0 0-10h-1"/>,
+      shuffle:(d)=><Icon d={d} p="M4 4l7 7-7 7M15 4h5M20 4l-6 6M15 20h5M20 20l-6-6"/>
     };
 
-    /* =============== APP =============== */
     function App(){
       /* Tabs & theme */
       const [tab,setTab]=useState('home');
       const [theme,setTheme]=useState(localStorage.getItem(THEME_KEY)||'lucbao');
-      const [linksOpen,setLinksOpen]=useState(false);
       useEffect(()=>{document.documentElement.setAttribute('data-theme',theme);localStorage.setItem(THEME_KEY,theme);},[theme]);
-      useEffect(()=>{
-        const onClick=(e)=>{ if(!document.getElementById('btn-links')?.contains(e.target)) setLinksOpen(false); };
-        window.addEventListener('click',onClick); return()=>window.removeEventListener('click',onClick);
-      },[]);
 
-      /* PWA install */
+      /* Start Gate */
+      const [needsStart,setNeedsStart]=useState(true);
+
+      /* Install & Links */
       const installEvtRef=useRef(null);
-      const [canInstall,setCanInstall]=useState(false);
+      const [linksOpen,setLinksOpen]=useState(false);
       useEffect(()=>{
-        const onPrompt=(e)=>{ e.preventDefault(); installEvtRef.current=e; setCanInstall(true); };
+        const onPrompt=(e)=>{ e.preventDefault(); installEvtRef.current=e; };
         window.addEventListener('beforeinstallprompt',onPrompt);
-        window.addEventListener('appinstalled',()=>setCanInstall(false));
         return()=>window.removeEventListener('beforeinstallprompt',onPrompt);
       },[]);
-      const askInstall=async()=>{ try{ await installEvtRef.current?.prompt(); }catch{} };
+      const askInstall=async()=>{ try{ await installEvtRef.current?.prompt(); await audioCtxRef.current?.resume?.(); }catch{} };
 
       /* Data & playback */
-      const [songs,setSongs]=useState([]);
       const [playlist,setPlaylist]=useState([]);
       const [loading,setLoading]=useState(true);
       const [visible,setVisible]=useState(INITIAL_VISIBLE);
@@ -146,100 +144,90 @@
       const [playing,setPlaying]=useState(false);
       const [progress,setProgress]=useState({current:0,duration:0});
       const [shuffle,setShuffle]=useState(load(SHUFFLE_KEY,false));
-      const [repeat,setRepeat]=useState(load(REPEAT_KEY,'all')); // off|one|all
+      const [repeat,setRepeat]=useState(load(REPEAT_KEY,'all'));
       const [stopAtEnd,setStopAtEnd]=useState(load(STOP_END_KEY,false));
       useEffect(()=>save(SHUFFLE_KEY,shuffle),[shuffle]);
       useEffect(()=>save(REPEAT_KEY,repeat),[repeat]);
       useEffect(()=>save(STOP_END_KEY,stopAtEnd),[stopAtEnd]);
 
-      /* Up Next queue */
-      const [upNext,setUpNext]=useState([]); // array of track ids
+      const [upNext,setUpNext]=useState([]);
       const enqueueNext=(s)=>{ setUpNext(q=> q.includes(s.id)? q : [...q,s.id]); };
-      const dequeueNext=()=>{ let out=null; setUpNext(q=>{ if(!q.length) return q; out=q[0]; return q.slice(1); }); return out; };
+      const moveUp=(id)=>setUpNext(q=>{ const i=q.indexOf(id); if(i<=0) return q; const a=q.slice(); [a[i-1],a[i]]=[a[i],a[i-1]]; return a; });
+      const moveDown=(id)=>setUpNext(q=>{ const i=q.indexOf(id); if(i<0||i===q.length-1) return q; const a=q.slice(); [a[i+1],a[i]]=[a[i],a[i+1]]; return a; });
+      const removeFromQueue=(id)=>setUpNext(q=>q.filter(x=>x!==id));
+      const clearQueue=()=>setUpNext([]);
 
-      /* Audio refs & WebAudio compressor */
-      const audioRef=useRef(null);
-      const preloadRef=useRef(null);
+      /* Audio & compressor */
+      const audioRef=useRef(null), preloadRef=useRef(null);
       useEffect(()=>{ audioRef.current=document.getElementById('mstq-player'); preloadRef.current=document.getElementById('mstq-preload'); },[]);
-      const interactedRef=useRef(false);
-      useEffect(()=>{ const m=()=>{interactedRef.current=true;document.removeEventListener('click',m);document.removeEventListener('keydown',m)};document.addEventListener('click',m,{once:true});document.addEventListener('keydown',m,{once:true});},[]);
-
-      const [volume,setVolume]=useState(load(RESUME_KEY,{volume:.95}).volume??.95);
+      const [volume,setVolume]=useState(load(RESUME_KEY,{volume:.9}).volume??.9);
       const [playbackRate,setPlaybackRate]=useState(parseFloat(localStorage.getItem(SPEED_KEY)||'1')||1);
       const [muted,setMuted]=useState(localStorage.getItem(MUTED_KEY)==='1');
       const [compressorOn,setCompressorOn]=useState(load(COMPRESSOR_KEY,true));
 
-      const audioCtxRef=useRef(null);
-      const compNodeRef=useRef(null);
-      useEffect(()=>{
-        const a=audioRef.current; if(!a) return;
-        if(!audioCtxRef.current){
-          try{
+      const audioCtxRef=useRef(null), compNodeRef=useRef(null), srcNodeRef=useRef(null);
+      const ensureAudioContext=async()=>{
+        try{
+          if(!audioCtxRef.current){
             const ctx=new (window.AudioContext||window.webkitAudioContext)();
+            const a=audioRef.current;
             const src=ctx.createMediaElementSource(a);
             const comp=ctx.createDynamicsCompressor();
-            comp.threshold.setValueAtTime(-18, ctx.currentTime);
-            comp.knee.setValueAtTime(24, ctx.currentTime);
-            comp.ratio.setValueAtTime(6, ctx.currentTime);
-            comp.attack.setValueAtTime(0.008, ctx.currentTime);
-            comp.release.setValueAtTime(0.25, ctx.currentTime);
-            src.connect(comp).connect(ctx.destination);
-            audioCtxRef.current=ctx; compNodeRef.current=comp;
-          }catch{}
-        }
-      },[]);
-      useEffect(()=>{ save(COMPRESSOR_KEY,compressorOn); if(compNodeRef.current){ compNodeRef.current.disconnect(); if(compressorOn){ const ctx=audioCtxRef.current; const a=audioRef.current; try{ const src=ctx.createMediaElementSource(a); src.connect(compNodeRef.current).connect(ctx.destination); }catch{} } } },[compressorOn]);
+            comp.threshold.value=-18; comp.knee.value=24; comp.ratio.value=6; comp.attack.value=0.008; comp.release.value=0.25;
+            src.connect(compressorOn?comp:ctx.destination);
+            if(compressorOn) comp.connect(ctx.destination);
+            audioCtxRef.current=ctx; compNodeRef.current=comp; srcNodeRef.current=src;
+          }
+          await audioCtxRef.current.resume();
+        }catch{}
+      };
+      useEffect(()=>{ try{
+        if(srcNodeRef.current && audioCtxRef.current){
+          srcNodeRef.current.disconnect();
+          const dst=audioCtxRef.current.destination;
+          if(compressorOn){ compNodeRef.current.disconnect(); srcNodeRef.current.connect(compNodeRef.current).connect(dst); }
+          else { srcNodeRef.current.connect(dst); }
+        }}catch{} },[compressorOn]);
 
       useEffect(()=>{const a=audioRef.current;if(a){a.volume=volume}},[volume]);
       useEffect(()=>{const a=audioRef.current;if(a){a.playbackRate=playbackRate}localStorage.setItem(SPEED_KEY,String(playbackRate))},[playbackRate]);
       useEffect(()=>{const a=audioRef.current;if(a){a.muted=muted}localStorage.setItem(MUTED_KEY,muted?'1':'0')},[muted]);
 
-      /* Power save & sleep timer */
+      /* Power save & timer */
       const [powerSave,setPowerSave]=useState(load(POWER_KEY,false));
       useEffect(()=>save(POWER_KEY,powerSave),[powerSave]);
-
       const [timerLeft,setTimerLeft]=useState(load(TIMER_KEY,null));
       const timerRef=useRef(null);
       const startSleepTimer=(ms)=>{
         clearInterval(timerRef.current);
-        const end=Date.now()+ms;
-        setTimerLeft(ms); save(TIMER_KEY,ms);
-        timerRef.current=setInterval(()=>{
-          const left=end-Date.now();
-          if(left<=0){ clearInterval(timerRef.current); setTimerLeft(null); save(TIMER_KEY,null); pauseAll(); }
-          else setTimerLeft(left);
-        },1000);
+        const end=Date.now()+ms; setTimerLeft(ms); save(TIMER_KEY,ms);
+        timerRef.current=setInterval(()=>{ const left=end-Date.now(); if(left<=0){ clearInterval(timerRef.current); setTimerLeft(null); save(TIMER_KEY,null); pauseAll(); } else setTimerLeft(left); },1000);
       };
       const cancelSleepTimer=()=>{clearInterval(timerRef.current); setTimerLeft(null); save(TIMER_KEY,null);};
       useEffect(()=>{ const v=load(TIMER_KEY,null); if(v&&v>0) startSleepTimer(v); return()=>clearInterval(timerRef.current); },[]);
 
-      /* Sources */
+      /* Data sources */
       const FALLBACK_SONGS=[{id:"testmp3testfile/mpthreetest.mp3",title:"Bài hát mẫu (Tạm thời)",artist:"Public Domain",stream_url:"https://archive.org/download/testmp3testfile/mpthreetest.mp3",artwork:"/PlayMusic/images/icons/icon-192x192.png",duration:5,lyrics:"Bài mẫu.",item_identifier:"testmp3testfile"}];
 
-      const parseCustomM3UorText=(txt)=>{
+      const parseCustom=(txt)=>{
         const lines=txt.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
-        const out=[]; let lastTitle="";
+        const out=[]; let last="";
         for(const ln of lines){
-          if(ln.startsWith('#EXTINF:')){ const t=ln.split(',').slice(1).join(',').trim(); if(t) lastTitle=t; }
+          if(ln.startsWith('#EXTINF:')){ last=ln.split(',').slice(1).join(',').trim(); }
           else if(/^https?:\/\//i.test(ln)){
-            out.push({id:ln,title:lastTitle||ln.split('/').pop(),artist:'Custom',stream_url:ln,artwork:'/PlayMusic/images/icons/icon-192x192.png',duration:0,lyrics:'',item_identifier:'custom'});
-            lastTitle="";
+            out.push({id:ln,title:last||ln.split('/').pop(),artist:'Custom',stream_url:ln,artwork:'/PlayMusic/images/icons/icon-192x192.png',duration:0,lyrics:'',item_identifier:'custom'});
+            last="";
           }
         }
         if(!out.length){
-          for(const ln of lines){
-            if(/^https?:\/\//i.test(ln)){
-              out.push({id:ln,title:ln.split('/').pop(),artist:'Custom',stream_url:ln,artwork:'/PlayMusic/images/icons/icon-192x192.png',duration:0,lyrics:'',item_identifier:'custom'});
-            }
-          }
+          for(const ln of lines) if(/^https?:\/\//i.test(ln))
+            out.push({id:ln,title:ln.split('/').pop(),artist:'Custom',stream_url:ln,artwork:'/PlayMusic/images/icons/icon-192x192.png',duration:0,lyrics:'',item_identifier:'custom'});
         }
         return out;
       };
 
       const refetch=useCallback(async()=>{
         setLoading(true);
-        const cached=load(SONGS_CACHE_KEY,null);
-        if(cached?.length){setSongs(cached);setPlaylist(cached);setLoading(false)}
         try{
           let all=[];
           if(sourcePref.archive!==false){
@@ -268,12 +256,13 @@
             }
           }
           if(sourcePref.custom && sourcePref.customText?.trim()){
-            all=[...all, ...parseCustomM3UorText(sourcePref.customText)];
+            all=[...all, ...parseCustom(sourcePref.customText)];
           }
           if(!all.length){ all=FALLBACK_SONGS; }
-          save(SONGS_CACHE_KEY,all); setSongs(all); setPlaylist(all);
+          save(SONGS_CACHE_KEY,all); setPlaylist(all);
         }catch{
-          if(!cached?.length){ setSongs(FALLBACK_SONGS); setPlaylist(FALLBACK_SONGS); }
+          const cached=load(SONGS_CACHE_KEY,null);
+          setPlaylist(cached?.length?cached:FALLBACK_SONGS);
         }
         setLoading(false);
       },[sourcePref]);
@@ -301,8 +290,8 @@
             title:current.title, artist:current.artist||'minhsutinhquang', album:'MSTQ Music',
             artwork:[{src:current.artwork||'/PlayMusic/images/icons/icon-192x192.png',sizes:'512x512',type:'image/png'}]
           });
-          navigator.mediaSession.setActionHandler('play',()=>{ setPlaying(true); a.play().catch(()=>{}); });
-          navigator.mediaSession.setActionHandler('pause',()=>{ setPlaying(false); a.pause(); });
+          navigator.mediaSession.setActionHandler('play',()=>playPause());
+          navigator.mediaSession.setActionHandler('pause',()=>playPause());
           navigator.mediaSession.setActionHandler('previoustrack',()=>prevTrack());
           navigator.mediaSession.setActionHandler('nexttrack',()=>nextTrack());
           navigator.mediaSession.setActionHandler('seekto',d=>{ if(d.seekTime!=null) a.currentTime=d.seekTime; });
@@ -355,12 +344,14 @@
 
           if(a.paused && canRecover){
             lastRecoverRef.current=now;
-            try{ await a.play(); return; }catch{}
+            try{ await ensureAudioContext(); a.muted=false; if(a.volume<0.6) a.volume=0.8; await a.play(); return; }catch{}
           }
           if((stagnate || poorReady) && canRecover){
             lastRecoverRef.current=now;
             stallScoreRef.current++;
             try{
+              await ensureAudioContext();
+              a.muted=false; if(a.volume<0.6) a.volume=0.8;
               if(a.paused) await a.play();
               if(a.paused || poorReady){ a.load(); await a.play().catch(()=>{}); }
               const limit=(document.visibilityState==='visible'?(powerSave?4:3):(powerSave?3:2));
@@ -374,14 +365,10 @@
         return()=>clearInterval(tick);
       },[currentIndex,current,powerSave]);
 
-      /* Controls & queue */
+      /* Controls */
       const computeNextIndex = useCallback((dir)=> {
         if(!playlist.length) return 0;
-        if(shuffle){
-          let r=Math.floor(Math.random()*playlist.length);
-          if (r===currentIndex) r=(r+1)%playlist.length;
-          return r;
-        }
+        if(shuffle){ let r=Math.floor(Math.random()*playlist.length); if (r===currentIndex) r=(r+1)%playlist.length; return r; }
         if(dir>0) return (currentIndex+1)%playlist.length;
         if(dir<0) return (currentIndex-1+playlist.length)%playlist.length;
         return currentIndex;
@@ -389,10 +376,8 @@
 
       const nextTrack=useCallback(()=>{
         if(!playlist.length) return;
-        // ưu tiên Up Next
-        let nextId=null;
-        if(upNext.length){ nextId=upNext[0]; setUpNext(q=>q.slice(1)); }
-        if(nextId){
+        if(upNext.length){
+          const nextId=upNext[0]; setUpNext(q=>q.slice(1));
           const i=playlist.findIndex(x=>x.id===nextId);
           if(i>=0){ setCurrentIndex(i); setPlaying(true); targetPlayingRef.current=true; queuePreload(i); return; }
         }
@@ -413,20 +398,24 @@
         nextTrack();
       },[repeat,stopAtEnd,currentIndex,playlist.length,nextTrack,upNext.length]);
 
-      const pickSong=(s)=>{
+      const pickSong=async(s)=>{
         const i=playlist.findIndex(x=>x.id===s.id);
-        if(i>=0){ setCurrentIndex(i); setPlaying(true); targetPlayingRef.current=true; queuePreload(i); }
+        if(i>=0){ setCurrentIndex(i); setPlaying(true); targetPlayingRef.current=true; queuePreload(i);
+          await ensureAudioContext(); const a=audioRef.current; a.muted=false; if(a.volume<0.6) a.volume=0.85; a.play().catch(()=>{alert('Trình duyệt chặn âm thanh. Hãy bật chuông/thoát Silent mode và thử lại.');});
+        }
       };
 
-      const playPause=()=>{
+      const playPause=async()=>{
         const a=audioRef.current; if(!a) return;
-        if(!current && playlist.length){ setCurrentIndex(0); setPlaying(true); targetPlayingRef.current=true; a.play().catch(()=>{}); return; }
+        await ensureAudioContext();
+        a.muted=false; if(a.volume<0.6) a.volume=0.85;
+        if(!current && playlist.length){ setCurrentIndex(0); setPlaying(true); targetPlayingRef.current=true; setNeedsStart(false); a.play().catch(()=>alert('Âm thanh bị chặn. Hãy bật chuông/thoát Silent.')); return; }
         if(playing){ setPlaying(false); targetPlayingRef.current=false; a.pause(); }
-        else{ setPlaying(true); targetPlayingRef.current=true; a.play().catch(()=>{}); }
+        else{ setPlaying(true); targetPlayingRef.current=true; setNeedsStart(false); a.play().catch(()=>alert('Âm thanh bị chặn. Hãy bật chuông/thoát Silent.')); }
       };
       const pauseAll=()=>{const a=audioRef.current; if(a){ setPlaying(false); targetPlayingRef.current=false; a.pause(); }};
 
-      /* Resume on load */
+      /* Resume khi có danh sách */
       useEffect(()=>{
         const a=audioRef.current; if(!a) return;
         const r=load(RESUME_KEY,null);
@@ -435,8 +424,8 @@
           setCurrentIndex(idx);
           setTimeout(()=>{ const s=playlist[idx]; if(!s) return;
             if(a.src!==s.stream_url){ a.src=s.stream_url; a.load(); }
-            a.currentTime=Number(r.currentTime||0); a.volume=r.volume??volume; a.playbackRate=r.rate??playbackRate; a.muted=!!r.muted;
-            if(r.playing){ setPlaying(true); targetPlayingRef.current=true; a.play().catch(()=>{}); }
+            a.currentTime=Number(r.currentTime||0); a.volume=r.volume??volume; a.playbackRate=r.rate??playbackRate; a.muted=false;
+            if(r.playing){ setPlaying(true); targetPlayingRef.current=true; }
           },0);
         }
       // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -453,25 +442,25 @@
         });
       };
 
-      /* ===== UI ===== */
+      /* ---- UI ---- */
       const TopBar=({title})=>(
         <header className="fixed top-0 inset-x-0 z-30 px-4 py-3 flex items-center justify-between bg-[var(--nav-bg)] backdrop-blur-lg border-b border-[var(--border)]">
           <div className="flex items-center gap-2">
-            <img src="/PlayMusic/images/icons/icon-192x192.png" width="28" height="28" className="rounded-lg" alt="MSTQ"/>
-            <h1 className="font-bold">{title}</h1>
+            <img src="/PlayMusic/images/icons/icon-192x192.png" width="24" height="24" className="rounded-md" alt="logo"/>
+            <h1 className="font-semibold">{title}</h1>
           </div>
           <div className="flex items-center gap-2">
-            {canInstall && <button className="btn" onClick={askInstall}>Cài đặt ứng dụng</button>}
-            <div className="relative">
-              <button id="btn-links" className="btn" onClick={()=>setLinksOpen(v=>!v)}>Liên kết ▾</button>
+            <button className="btn" onClick={askInstall}>Cài đặt ứng dụng</button>
+            <div className="dropdown">
+              <button className="btn" onClick={()=>setLinksOpen(o=>!o)}>Liên kết ▾</button>
               {linksOpen && (
-                <div className="absolute right-0 mt-2 w-56 rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-xl p-1 z-50">
-                  <button className="w-full text-left px-3 py-2 rounded-xl hover:bg-white/5" onClick={()=>window.open(LINKS.home,'_blank')}>🏠 Trang chủ</button>
-                  <button className="w-full text-left px-3 py-2 rounded-xl hover:bg-white/5" onClick={()=>window.open(LINKS.youtube,'_blank')}>🔗 YOUTUBE</button>
-                  <button className="w-full text-left px-3 py-2 rounded-xl hover:bg-white/5" onClick={()=>window.open(LINKS.tiktok,'_blank')}>🔗 TIKTOK</button>
-                  <button className="w-full text-left px-3 py-2 rounded-xl hover:bg-white/5" onClick={()=>window.open(LINKS.facebook,'_blank')}>🔗 FACEBOOK Group</button>
-                  <button className="w-full text-left px-3 py-2 rounded-xl hover:bg-white/5" onClick={()=>window.open(LINKS.telegram,'_blank')}>🔗 TELEGRAM</button>
-                  <button className="w-full text-left px-3 py-2 rounded-xl hover:bg-white/5" onClick={()=>window.open(LINKS.zalo,'_blank')}>🔗 ZALO</button>
+                <div className="dropdown-menu" onMouseLeave={()=>setLinksOpen(false)}>
+                  <a className="dropdown-item" href="/" target="_self">🏠 Trang chủ</a>
+                  <a className="dropdown-item" href="https://youtube.com" target="_blank" rel="noopener">🔗 YOUTUBE</a>
+                  <a className="dropdown-item" href="https://tiktok.com" target="_blank" rel="noopener">🔗 TIKTOK</a>
+                  <a className="dropdown-item" href="https://facebook.com/groups" target="_blank" rel="noopener">🔗 FACEBOOK Group</a>
+                  <a className="dropdown-item" href="https://t.me" target="_blank" rel="noopener">🔗 TELEGRAM</a>
+                  <a className="dropdown-item" href="https://zalo.me" target="_blank" rel="noopener">🔗 ZALO</a>
                 </div>
               )}
             </div>
@@ -480,30 +469,18 @@
         </header>
       );
 
-      const TabBar=()=>(
-        <nav className="tabbar safe-bottom">
-          <div className="flex">
-            <button className="tabbtn" aria-current={tab==='home'} onClick={()=>setTab('home')}>{ICONS.home(22)}<span>Trang chủ</span></button>
-            <button className="tabbtn" aria-current={tab==='search'} onClick={()=>setTab('search')}>{ICONS.search(22)}<span>Tìm kiếm</span></button>
-            <button className="tabbtn" aria-current={tab==='library'} onClick={()=>setTab('library')}>{ICONS.lib(22)}<span>Thư viện</span></button>
-            <button className="tabbtn" aria-current={tab==='settings'} onClick={()=>setTab('settings')}>{ICONS.settings(22)}<span>Cài đặt</span></button>
-            <button className="tabbtn" aria-current={tab==='admin'} onClick={()=>setTab('admin')}>{ICONS.admin(22)}<span>Admin</span></button>
-          </div>
-        </nav>
-      );
-
-      const [sheetFor,setSheetFor]=useState(null); // track object to show sheet
+      const [sheetFor,setSheetFor]=useState(null);
       const closeSheet=()=>setSheetFor(null);
 
-      const HomeTab = () => {
-        const filtered = filter.trim()
+      const HomeTab=()=>{
+        const list = filter.trim()
           ? playlist.filter(s => (s.title||'').toLowerCase().includes(filter.toLowerCase()) || (s.artist||'').toLowerCase().includes(filter.toLowerCase()))
           : playlist;
         return (
           <div className="px-4 py-3">
             <div className="flex items-center justify-between mb-2">
               <h2 className="text-xl font-semibold">Danh sách phát</h2>
-              <span className="chip">{filtered.length} bài</span>
+              <span className="chip">{list.length} bài</span>
             </div>
             <div className="mb-3 flex gap-2">
               <input className="flex-1 bg-[var(--card)] border border-[var(--border)] rounded-xl p-2" placeholder="Lọc nhanh theo tiêu đề / nghệ sĩ" value={filter} onChange={e=>setFilter(e.target.value)}/>
@@ -514,22 +491,21 @@
             ):(
               <>
                 <div className="space-y-2">
-                  {filtered.slice(0,visible).map((s)=>(
+                  {list.slice(0,visible).map((s)=>(
                     <div key={s.id} className={`flex items-center gap-3 p-3 rounded-2xl border border-[var(--border)] ${current?.id===s.id?'ring-2 ring-[var(--ring)] bg-[var(--card)]/50':''}`}>
                       <img src={s.artwork||'/PlayMusic/images/icons/icon-192x192.png'} alt="" className="w-12 h-12 rounded-lg object-cover"/>
                       <button className="flex-grow text-left" onClick={()=>pickSong(s)}>
                         <div className="font-semibold truncate">{s.title||'Untitled'}</div>
                         <div className="text-xs text-[var(--muted)] truncate">{s.artist||'minhsutinhquang'}</div>
                       </button>
-                      <button className="btn" title="Tuỳ chọn" onClick={()=>setSheetFor(s)}>{ICONS.more(18)}</button>
+                      <button className="btn" title="Tuỳ chọn" onClick={()=>setSheetFor(s)}>{I.more(18)}</button>
                       <div className="text-xs text-[var(--muted)]">{formatTime(s.duration||0)}</div>
                     </div>
                   ))}
                 </div>
-                {filtered.length>visible && <button onClick={()=>setVisible(v=>Math.min(filtered.length,v+VISIBLE_STEP))} className="btn w-full mt-3">Tải thêm</button>}
+                {list.length>visible && <button onClick={()=>setVisible(v=>Math.min(list.length,v+VISIBLE_STEP))} className="btn w-full mt-3">Tải thêm</button>}
               </>
             )}
-
             {sheetFor && (
               <div className="sheet">
                 <div className="flex items-center justify-between px-2">
@@ -537,10 +513,10 @@
                   <button className="btn" onClick={closeSheet}>Đóng</button>
                 </div>
                 <div className="mt-2 grid grid-cols-2 gap-2 px-2 pb-2">
-                  <button className="btn btn-primary" onClick={()=>{enqueueNext(sheetFor); closeSheet();}}>Phát tiếp theo</button>
+                  <button className="btn btn-primary" onClick={()=>{setUpNext(q=>[...q,sheetFor.id]); closeSheet(); setTab('queue');}}>Phát tiếp theo</button>
                   <button className="btn" onClick={()=>{toggleFav(sheetFor); closeSheet();}}>{isFav(sheetFor)?'Bỏ yêu thích':'Yêu thích'}</button>
                   <button className="btn" onClick={()=>{pickSong(sheetFor); closeSheet();}}>Phát ngay</button>
-                  <button className="btn" onClick={()=>{navigator.share?.({title:sheetFor.title,text:'Nghe cùng MSTQ Music',url:sheetFor.stream_url}).catch(()=>{}); closeSheet();}}>{ICONS.share(18)} Chia sẻ</button>
+                  <button className="btn" onClick={()=>{cacheTrack(sheetFor); closeSheet();}}>Tải ngoại tuyến</button>
                 </div>
               </div>
             )}
@@ -548,16 +524,14 @@
         );
       };
 
-      const SearchTab = () => {
-        const [kw,setKw]=useState('');
-        const [busy,setBusy]=useState(false);
-        const doSearch=async()=>{
+      const SearchTab=()=>{
+        const [kw,setKw]=useState(''); const [busy,setBusy]=useState(false);
+        const runQuery=async(q,sort='downloads+desc')=>{
           setBusy(true);
           try{
-            const url=`https://archive.org/advancedsearch.php?q=${encodeURIComponent(kw+' AND mediatype:(audio)')}&fl[]=identifier,title,creator,description&sort[]=downloads+desc&rows=100&page=1&output=json`;
+            const url=`https://archive.org/advancedsearch.php?q=${encodeURIComponent(q)}&fl[]=identifier,title,creator,description&sort[]=${encodeURIComponent(sort)}&rows=120&page=1&output=json`;
             const r=await fetch(url,{cache:'no-store'}); const j=await r.json();
-            const docs=j?.response?.docs||[];
-            const out=[];
+            const docs=j?.response?.docs||[]; const out=[];
             for(const d of docs){
               try{
                 const meta=await fetch(`https://archive.org/metadata/${d.identifier}`,{cache:'no-store'}).then(r=>r.json());
@@ -569,54 +543,96 @@
               }catch{}
             }
             if(out.length){ setPlaylist(out); setVisible(INITIAL_VISIBLE); setTab('home'); setFilter(''); }
-          }catch{}
-          setBusy(false);
+          }catch{} setBusy(false);
         };
+        const quick=[{label:'Mới nhất',q:'mediatype:(audio)',sort:'publicdate+desc'},{label:'Phổ biến',q:'mediatype:(audio)',sort:'downloads+desc'},{label:'Pháp thoại',q:'"Minh Su Tinh Quang" mediatype:(audio)',sort:'downloads+desc'}];
         return (
           <div className="px-4 py-3">
             <div className="flex gap-2">
               <input className="flex-1 bg-[var(--card)] border border-[var(--border)] rounded-xl p-2" placeholder="Tìm trên Archive.org..." value={kw} onChange={e=>setKw(e.target.value)}/>
-              <button className="btn btn-primary" onClick={doSearch} disabled={!kw||busy}>{busy?'Đang tìm…':'Tìm'}</button>
+              <button className="btn btn-primary" onClick={()=>runQuery(`${kw} AND mediatype:(audio)`)} disabled={!kw||busy}>{busy?'Đang tìm…':'Tìm'}</button>
             </div>
-            <p className="text-xs text-[var(--muted)] mt-2">Gợi ý: “Minh Su Tinh Quang”, “Pháp thoại”…</p>
+            <div className="flex gap-2 mt-3 flex-wrap">
+              {quick.map(x=>(<button key={x.label} className="btn" onClick={()=>runQuery(x.q,x.sort)}>{x.label}</button>))}
+            </div>
           </div>
         );
       };
 
-      const LibraryTab = () => (
-        <div className="px-4 py-3">
-          <div className="mb-2 flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Yêu thích</h2>
-            <span className="chip">{favs.length} bài</span>
+      const LibraryTab=()=>{
+        const [custom,setCustom]=useState(sourcePref.customText||'');
+        return (
+          <div className="px-4 py-3 space-y-6">
+            <div>
+              <div className="mb-2 flex items-center justify-between">
+                <h2 className="text-lg font-semibold">Yêu thích</h2>
+                <span className="chip">{favs.length} bài</span>
+              </div>
+              {favs.length===0 ? <p className="text-[var(--muted)] text-sm">Chưa có bài nào trong “Yêu thích”.</p>:
+                <div className="space-y-2">
+                  {favs.map(s=>(
+                    <div key={s.id} className="flex items-center gap-3 p-3 rounded-2xl border border-[var(--border)]">
+                      <img src={s.artwork||'/PlayMusic/images/icons/icon-192x192.png'} alt="" className="w-12 h-12 rounded-lg object-cover"/>
+                      <button className="flex-grow text-left" onClick={()=>pickSong(s)}>
+                        <div className="font-semibold truncate">{s.title}</div>
+                        <div className="text-xs text-[var(--muted)] truncate">{s.artist||'minhsutinhquang'}</div>
+                      </button>
+                      <button className="btn" onClick={()=>toggleFav(s)} title="Bỏ yêu thích">−</button>
+                    </div>
+                  ))}
+                </div>
+              }
+            </div>
+
+            <div className="p-3 rounded-2xl border border-[var(--border)]">
+              <h3 className="font-semibold mb-2">Nguồn tuỳ chỉnh (M3U/URL)</h3>
+              <label className="flex items-center gap-2 mb-2"><input type="checkbox" checked={!!sourcePref.custom} onChange={e=>setSourcePref(p=>({...p,custom:e.target.checked}))}/> Bật</label>
+              <textarea className="w-full bg-[var(--card)] border border-[var(--border)] rounded-xl p-2 min-h-[120px]" placeholder="https://.../song1.mp3&#10;https://.../song2.mp3" value={custom} onChange={e=>setCustom(e.target.value)}></textarea>
+              <div className="mt-2 flex gap-2">
+                <button className="btn btn-primary" onClick={()=>{setSourcePref(p=>({...p,customText:custom,custom:true})); refetch();}}>Tải vào danh sách</button>
+                <button className="btn" onClick={()=>{setCustom(''); setSourcePref(p=>({...p,customText:''}));}}>Xoá nội dung</button>
+              </div>
+            </div>
           </div>
-          {favs.length===0 ? <p className="text-[var(--muted)] text-sm">Chưa có bài nào trong “Yêu thích”.</p>:
+        );
+      };
+
+      const QueueTab=()=>{ const items=upNext.map(id=>playlist.find(s=>s.id===id)).filter(Boolean);
+        return (<div className="px-4 py-3">
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-lg font-semibold">Hàng đợi “Phát tiếp theo”</h2>
+            <div className="flex gap-2"><span className="chip">{items.length} mục</span>{items.length>0 && <button className="btn" onClick={clearQueue}>Xoá hết</button>}</div>
+          </div>
+          {items.length===0 ? <p className="text-[var(--muted)] text-sm">Chưa có mục nào. Bấm ⋯ trên bài hát để thêm.</p>:
             <div className="space-y-2">
-              {favs.map(s=>(
+              {items.map(s=>(
                 <div key={s.id} className="flex items-center gap-3 p-3 rounded-2xl border border-[var(--border)]">
-                  <img src={s.artwork||'/PlayMusic/images/icons/icon-192x192.png'} alt="" className="w-12 h-12 rounded-lg object-cover"/>
-                  <button className="flex-grow text-left" onClick={()=>pickSong(s)}>
+                  <img src={s.artwork||'/PlayMusic/images/icons/icon-192x192.png'} alt="" className="w-10 h-10 rounded-lg object-cover"/>
+                  <div className="flex-grow min-w-0">
                     <div className="font-semibold truncate">{s.title}</div>
                     <div className="text-xs text-[var(--muted)] truncate">{s.artist||'minhsutinhquang'}</div>
-                  </button>
-                  <button className="btn" onClick={()=>toggleFav(s)} title="Bỏ yêu thích">−</button>
-                  <button className="btn" onClick={()=>enqueueNext(s)} title="Phát tiếp theo">⋯</button>
+                  </div>
+                  <div className="flex gap-2">
+                    <button className="btn" onClick={()=>moveUp(s.id)}>↑</button>
+                    <button className="btn" onClick={()=>moveDown(s.id)}>↓</button>
+                    <button className="btn" onClick={()=>removeFromQueue(s.id)}>✕</button>
+                  </div>
                 </div>
               ))}
-            </div>
-          }
-        </div>
-      );
+            </div>}
+        </div>);
+      };
 
-      const SettingsTab = () => (
+      const SettingsTab=()=>(
         <div className="px-4 py-3 space-y-6">
           <div className="p-3 rounded-2xl border border-[var(--border)]">
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-semibold text-lg">Giao diện</h3>
               <span className="chip">{theme}</span>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-3 gap-3">
               {[
-                ['Tối','dark'],['Sáng','light'],['Lục Bảo','lucbao'],['Dark+','dark']
+                ['Tối','dark'],['Sáng','light'],['Lục Bảo','lucbao']
               ].map(([label,code])=>(
                 <button key={code} onClick={()=>setTheme(code)} className={`w-full text-left p-4 rounded-2xl border border-[var(--border)] ${theme===code?'ring-2 ring-[var(--ring)]':''}`}>
                   <div className="font-semibold">{label}</div>
@@ -635,7 +651,7 @@
                 {[0.75,1,1.25,1.5].map(v=>(
                   <button key={v} className={`btn ${playbackRate===v?'btn-primary':''}`} onClick={()=>setPlaybackRate(v)}>{v}x</button>
                 ))}
-                <label className="flex items-center gap-2 ml-2">
+                <label className="flex items-center gap-2 ml-1">
                   <input type="checkbox" checked={muted} onChange={e=>setMuted(e.target.checked)}/> Tắt tiếng
                 </label>
               </div>
@@ -645,91 +661,57 @@
           <div className="p-3 rounded-2xl border border-[var(--border)]">
             <h3 className="font-semibold mb-2">Ổn định âm lượng</h3>
             <label className="flex items-center gap-2">
-              <input type="checkbox" checked={!!compressorOn} onChange={e=>setCompressorOn(e.target.checked)}/> Bật Dynamics Compressor (khuyên dùng)
+              <input type="checkbox" checked={!!compressorOn} onChange={e=>setCompressorOn(e.target.checked)}/> Bật Dynamics Compressor
             </label>
           </div>
 
           <div className="p-3 rounded-2xl border border-[var(--border)]">
             <h3 className="font-semibold mb-2">Tiết kiệm điện</h3>
-            <p className="text-sm text-[var(--muted)] mb-2">Tắt preload khi nền, nới chu kỳ watchdog.</p>
             <label className="flex items-center gap-2">
-              <input type="checkbox" checked={!!powerSave} onChange={e=>setPowerSave(e.target.checked)}/> Bật tiết kiệm pin
+              <input type="checkbox" checked={!!powerSave} onChange={e=>setPowerSave(e.target.checked)}/> Bật tiết kiệm pin (tắt preload khi nền)
             </label>
           </div>
 
           <div className="p-3 rounded-2xl border border-[var(--border)]">
             <h3 className="font-semibold mb-3">Hẹn giờ tắt nhạc</h3>
-            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-              {[15,30,45,60,90,120].map(m=>(
-                <button key={m} className="btn" onClick={()=>startSleepTimer(m*60*1000)}>{m} phút</button>
-              ))}
+            <div className="grid grid-cols-3 gap-2">
+              {[15,30,45,60,90,120].map(m=>(<button key={m} className="btn" onClick={()=>startSleepTimer(m*60*1000)}>{m} phút</button>))}
             </div>
             <div className="flex items-center gap-3 mt-3">
               <span className="chip">{timerLeft?`Còn: ${formatTime(Math.ceil(timerLeft/1000))}`:'Không đặt'}</span>
               {timerLeft && <button className="btn" onClick={cancelSleepTimer}>Huỷ hẹn giờ</button>}
+              <label className="flex items-center gap-2 ml-auto">
+                <input type="checkbox" checked={!!stopAtEnd} onChange={e=>setStopAtEnd(e.target.checked)} /> Dừng khi hết bài
+              </label>
             </div>
-            <label className="flex items-center gap-2 mt-3">
-              <input type="checkbox" checked={!!stopAtEnd} onChange={e=>setStopAtEnd(e.target.checked)} /> Dừng khi hết bài
-            </label>
-          </div>
-
-          <div className="p-3 rounded-2xl border border-[var(--border)]">
-            <h3 className="font-semibold mb-2">Nguồn dữ liệu</h3>
-            <label className="flex items-center gap-2 mb-2">
-              <input type="checkbox" checked={sourcePref.archive!==false} onChange={e=>setSourcePref(p=>({...p,archive:e.target.checked}))}/>
-              <span>Archive.org</span>
-            </label>
-            <label className="flex items-center gap-2 mb-2">
-              <input type="checkbox" checked={!!sourcePref.custom} onChange={e=>setSourcePref(p=>({...p,custom:e.target.checked}))}/>
-              <span>Nguồn tuỳ chỉnh (mỗi dòng 1 URL hoặc M3U)</span>
-            </label>
-            <textarea className="w-full bg-[var(--card)] border border-[var(--border)] rounded-xl p-2 min-h-[120px]" placeholder="https://.../song1.mp3&#10;https://.../song2.mp3&#10;#EXTINF:-1,Tựa đề&#10;https://.../song3.mp3" value={sourcePref.customText||''} onChange={e=>setSourcePref(p=>({...p,customText:e.target.value}))}></textarea>
           </div>
 
           <div className="p-3 rounded-2xl border border-[var(--border)]">
             <h3 className="font-semibold mb-2">Dữ liệu & Đồng bộ</h3>
             <div className="flex flex-col gap-2">
               <button className="btn" onClick={()=>refetch()}>Làm mới danh sách nhạc</button>
-              <button className="btn" style={{background:'#2a1313',borderColor:'#6b1d1d',color:'#fff'}} onClick={async()=>{
-                try{ if('caches' in window){ const keys=await caches.keys(); for(const k of keys){ await caches.delete(k); } } }catch{}
-                try{ localStorage.clear(); }catch{}
-                location.reload();
-              }}>Xóa & Làm mới tất cả</button>
-              <p className="text-xs text-[var(--muted)]">Nếu gặp lỗi hoặc danh sách không cập nhật, hãy thử các tuỳ chọn này.</p>
+              <button
+                className="btn"
+                onClick={async()=>{
+                  try{ if('caches' in window){ const keys=await caches.keys(); for(const k of keys){ await caches.delete(k); } } }catch{}
+                  try{ localStorage.clear(); }catch{}
+                  location.reload();
+                }}
+                style={{background:'#2a1313',borderColor:'#6b1d1d',color:'#fff'}}
+              >
+                Xóa & Làm mới tất cả
+              </button>
             </div>
           </div>
         </div>
       );
 
-      const AdminTab = () => (
-        <div className="px-4 py-3 space-y-3">
-          <h3 className="font-semibold text-lg">Bảng điều khiển</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <div className="p-3 rounded-2xl border border-[var(--border)]">
-              <div className="text-sm">Bài hiện tại: <span className="chip">{current?.title||'—'}</span></div>
-              <div className="text-sm mt-1">Vị trí: <span className="chip">{formatTime(progress.current)} / {formatTime(progress.duration)}</span></div>
-              <div className="text-sm mt-1">Trạng thái: <span className="chip">{playing?'playing':'paused'}</span></div>
-              <div className="mt-2 flex gap-2">
-                <button className="btn" onClick={()=>audioRef.current?.play?.()}>Force Play</button>
-                <button className="btn" onClick={()=>audioRef.current?.load?.()}>Force Load</button>
-              </div>
-            </div>
-            <div className="p-3 rounded-2xl border border-[var(--border)]">
-              <div className="text-sm">Playlist: <span className="chip">{playlist.length}</span></div>
-              <div className="text-sm mt-1">Up Next: <span className="chip">{upNext.length}</span></div>
-              <div className="text-sm mt-1">Shuffle: <span className="chip">{String(shuffle)}</span></div>
-              <div className="text-sm mt-1">Repeat: <span className="chip">{repeat}</span></div>
-            </div>
-          </div>
-        </div>
-      );
-
-      /* Now Playing với double-tap seek */
+      /* Now Playing */
       const [showNowPlaying,setShowNowPlaying]=useState(false);
-      const NowPlaying = () => {
+      const NowPlaying=()=>{
         if(!current) return null;
         const a=audioRef.current;
-        const onSeek=(e)=>{ if(!a||!isFinite(a.duration)) return; const v=parseFloat(e.target.value); a.currentTime=clamp(v,0,a.duration); };
+        const onSeek=(e)=>{ if(!a||!isFinite(a.duration)) return; a.currentTime=clamp(parseFloat(e.target.value),0,a.duration); };
         const dblLeft=()=>{ if(a) a.currentTime=Math.max(0,(a.currentTime||0)-10); };
         const dblRight=()=>{ if(a) a.currentTime=Math.min(a.duration||0,(a.currentTime||0)+10); };
         return (
@@ -739,7 +721,6 @@
               <div className="font-semibold">Đang phát</div>
               <div className="w-14"></div>
             </div>
-
             <div className="px-6 py-6">
               <div className="mx-auto w-64 h-64 rounded-3xl shadow-xl overflow-hidden relative select-none" style={{background:'var(--gradient)'}}>
                 <div className="absolute inset-0" onDoubleClick={dblLeft}></div>
@@ -754,8 +735,7 @@
               <div className="mt-5 px-1">
                 <input type="range" min="0" max={progress.duration||0} step="0.1" value={progress.current||0} onChange={onSeek} style={{width:'100%'}}/>
                 <div className="mt-1 text-[12px] text-[var(--muted)] flex justify-between">
-                  <span>{formatTime(progress.current)}</span>
-                  <span>{formatTime(progress.duration)}</span>
+                  <span>{formatTime(progress.current)}</span><span>{formatTime(progress.duration)}</span>
                 </div>
               </div>
 
@@ -765,9 +745,9 @@
                   <input type="range" min="0" max="1" step="0.01" value={volume} onChange={e=>setVolume(parseFloat(e.target.value))}/>
                 </div>
                 <div className="flex items-center justify-center gap-3">
-                  <button className="btn" onClick={prevTrack}>{ICONS.back(24)}</button>
-                  <button className="btn btn-primary" onClick={playPause}>{playing?ICONS.pause(24):ICONS.play(24)}</button>
-                  <button className="btn" onClick={nextTrack}>{ICONS.next(24)}</button>
+                  <button className="btn" onClick={prevTrack}>{I.back(24)}</button>
+                  <button className="btn btn-primary" onClick={playPause}>{playing?I.pause(24):I.play(24)}</button>
+                  <button className="btn" onClick={nextTrack}>{I.next(24)}</button>
                 </div>
                 <div className="text-center">
                   <div className="text-xs text-[var(--muted)] mb-1">Tốc độ {playbackRate}x</div>
@@ -780,54 +760,84 @@
               </div>
 
               <div className="mt-4 flex flex-wrap gap-2 justify-center">
-                <span className="chip">Up Next: {upNext.length}</span>
+                <button className={`btn ${shuffle?'btn-primary':''}`} onClick={()=>setShuffle(s=>!s)}>{I.shuffle(18)} Trộn</button>
+                <button className="btn" onClick={()=>setRepeat(r=>r==='off'?'all':r==='all'?'one':'off')}>{I.repeat(18)} Lặp: {repeat==='off'?'Tắt':repeat==='all'?'DS':'1'}</button>
                 <button className="btn" onClick={()=>setMuted(m=>!m)}>{muted?'Bật tiếng':'Tắt tiếng'}</button>
-                <button className="btn" onClick={()=>{
-                  setRepeat(r=>r==='off'?'all':r==='all'?'one':'off');
-                }}>Lặp: {repeat==='off'?'Tắt':repeat==='all'?'DS':'1'}</button>
-                <button className="btn" onClick={()=>navigator.share?.({title:current.title,text:'Nghe cùng MSTQ Music',url:current.stream_url}).catch(()=>{})}>{ICONS.share(18)} Chia sẻ</button>
-                {[15,30,45].map(m=>(<button key={m} className="btn" onClick={()=>startSleepTimer(m*60*1000)}>Hẹn {m}’</button>))}
               </div>
             </div>
           </div>
         );
       };
 
-      /* Render */
-      const padTop=64, padBottom=(current? 190:110);
-      useEffect(()=>{ const a=audioRef.current; if(!a) return; if(current){ if(a.src!==current.stream_url){ a.src=current.stream_url; a.load(); } a.playbackRate=playbackRate; a.muted=muted; a.volume=volume; document.title=`${playing?'▶':'⏸'} ${current.title} – MSTQ`; if(playing && interactedRef.current){ a.play().catch(()=>{}); } } else { document.title='MSTQ Music'; } },[currentIndex,playing,playbackRate,muted,volume,current]);
+      /* ---- Render ---- */
+      const padTop = 64;
+      const padBottom = (current? 188:104);
+      useEffect(()=>{ const a=audioRef.current; if(!a) return; if(current){ if(a.src!==current.stream_url){ a.src=current.stream_url; a.load(); } a.playbackRate=playbackRate; a.muted=false; a.volume=Math.max(a.volume,0.7); document.title=`${playing?'▶':'⏸'} ${current.title} – MSTQ`; if(playing && !needsStart){ a.play().catch(()=>{}); } } else { document.title='MSTQ Music'; } },[currentIndex,playing,playbackRate,current,needsStart]);
 
-      const TabTitle = tab==='home'?'Trang chủ':tab==='search'?'Tìm kiếm':tab==='library'?'Thư viện':tab==='settings'?'Cài đặt':'Admin';
+      const TabBar=()=>(
+        <nav className="tabbar safe-bottom">
+          <div className="flex">
+            <button className="tabbtn" aria-current={tab==='home'} onClick={()=>setTab('home')}>{I.home(20)}<span>Trang chủ</span></button>
+            <button className="tabbtn" aria-current={tab==='search'} onClick={()=>setTab('search')}>{I.search(20)}<span>Tìm kiếm</span></button>
+            <button className="tabbtn" aria-current={tab==='library'} onClick={()=>setTab('library')}>{I.lib(20)}<span>Thư viện</span></button>
+            <button className="tabbtn" aria-current={tab==='queue'} onClick={()=>setTab('queue')}>{I.queue(20)}<span>Hàng đợi</span></button>
+            <button className="tabbtn" aria-current={tab==='settings'} onClick={()=>setTab('settings')}>{I.settings(20)}<span>Cài đặt</span></button>
+          </div>
+        </nav>
+      );
+
+      const MiniPlayer = () => current && !needsStart && (
+        <div className="fixed left-2 right-2 rounded-2xl bg-[var(--card)]/95 border border-[var(--border)] backdrop-blur-md p-2 z-50 shadow-[var(--shadow)]" style={{bottom:'64px'}}>
+          <div className="flex items-center gap-3">
+            <img src={current.artwork||'/PlayMusic/images/icons/icon-192x192.png'} alt="" width="44" height="44" className="rounded-lg object-cover"/>
+            <button className="flex-grow min-w-0 text-left" onClick={()=>setShowNowPlaying(true)}>
+              <p className="truncate font-semibold">{current.title}</p>
+              <p className="text-xs text-[var(--muted)] truncate">{current.artist||'minhsutinhquang'}</p>
+            </button>
+            <button className="w-10 h-10" onClick={prevTrack} aria-label="Previous">{I.back(22)}</button>
+            <button className="w-10 h-10" onClick={playPause} aria-label="Play/Pause">{playing?I.pause(22):I.play(22)}</button>
+            <button className="w-10 h-10" onClick={nextTrack} aria-label="Next">{I.next(22)}</button>
+          </div>
+          <div className="mt-2 h-1 bg-[var(--muted)]/20 rounded">
+            <div className="h-1 bg-[var(--primary)] rounded" style={{width:`${progress.duration>0?(progress.current/progress.duration)*100:0}%`}}></div>
+          </div>
+        </div>
+      );
+
+      const StartGate = () => needsStart && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--bg)]/95 backdrop-blur">
+          <div className="p-5 rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-xl text-center max-w-sm">
+            <img src="/PlayMusic/images/icons/icon-192x192.png" width="64" height="64" className="mx-auto mb-3 rounded-xl" alt=""/>
+            <h2 className="font-bold text-lg mb-2">MSTQ Music</h2>
+            <p className="text-sm text-[var(--muted)] mb-3">Chạm “Bắt đầu nghe” để mở quyền âm thanh. Nếu vẫn im lặng, hãy tắt <b>Silent/Vibrate</b> trên iPhone hoặc tăng âm lượng.</p>
+            <div className="flex gap-2 justify-center">
+              <button className="btn" onClick={askInstall}>Cài đặt ứng dụng</button>
+              <button className="btn btn-primary" onClick={async()=>{
+                await ensureAudioContext();
+                setNeedsStart(false);
+                const a=audioRef.current;
+                a.muted=false; if(a.volume<0.7) a.volume=0.85;
+                if(playlist.length){ setCurrentIndex(0); setPlaying(true); targetPlayingRef.current=true; try{ await a.play(); }catch{} }
+              }}>Bắt đầu nghe</button>
+            </div>
+          </div>
+        </div>
+      );
+
+      const title = tab==='home'?'Trang chủ':tab==='search'?'Tìm kiếm':tab==='library'?'Thư viện':tab==='queue'?'Hàng đợi':'Cài đặt';
 
       return (
-        <div className="min-h-screen" style={{paddingTop:padTop, paddingBottom:padBottom}}>
-          <TopBar title={TabTitle}/>
+        <div className="min-h-screen" style={{paddingTop:padTop, paddingBottom:padBottom}} onClick={()=>setLinksOpen(false)}>
+          <TopBar title={title}/>
+          <StartGate/>
           {tab==='home' && <HomeTab/>}
           {tab==='search' && <SearchTab/>}
           {tab==='library' && <LibraryTab/>}
+          {tab==='queue' && <QueueTab/>}
           {tab==='settings' && <SettingsTab/>}
-          {tab==='admin' && <AdminTab/>}
           <TabBar/>
-
-          {/* Mini Player */}
-          {current && (
-            <div className="fixed left-2 right-2 rounded-2xl bg-[var(--card)]/95 border border-[var(--border)] backdrop-blur-md p-2 z-50 shadow-[var(--shadow)]" style={{bottom:'64px'}}>
-              <div className="flex items-center gap-3">
-                <img src={current.artwork||'/PlayMusic/images/icons/icon-192x192.png'} alt="" width="44" height="44" className="rounded-lg object-cover"/>
-                <button className="flex-grow min-w-0 text-left" onClick={()=>setShowNowPlaying(true)}>
-                  <p className="truncate font-semibold">{current.title}</p>
-                  <p className="text-xs text-[var(--muted)] truncate">{current.artist||'minhsutinhquang'}</p>
-                </button>
-                <button className="w-10 h-10" onClick={prevTrack} aria-label="Previous">{ICONS.back(22)}</button>
-                <button className="w-10 h-10" onClick={playPause} aria-label="Play/Pause">{playing?ICONS.pause(22):ICONS.play(22)}</button>
-                <button className="w-10 h-10" onClick={nextTrack} aria-label="Next">{ICONS.next(22)}</button>
-              </div>
-              <div className="mt-2 h-1 bg-[var(--muted)]/20 rounded">
-                <div className="h-1 bg-[var(--primary)] rounded" style={{width:`${progress.duration>0?(progress.current/progress.duration)*100:0}%`}}></div>
-              </div>
-            </div>
-          )}
-          {showNowPlaying && <NowPlaying/>}
+          <MiniPlayer/>
+          {showNowPlaying && !needsStart && <NowPlaying/>}
         </div>
       );
     }
