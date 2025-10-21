@@ -14,7 +14,7 @@
   <link rel="apple-touch-icon" sizes="192x192" href="/PlayMusic/images/icons/icon-192x192.png" />
   <link rel="apple-touch-icon" sizes="512x512" href="/PlayMusic/images/icons/icon-512x512.png" />
 
-  <!-- Tailwind CDN (dev). Bản phát hành nên dùng CLI/PostCSS -->
+  <!-- Tailwind CDN (dev). Bản build nên dùng CLI/PostCSS -->
   <script src="https://cdn.tailwindcss.com"></script>
 
   <!-- React 18 UMD -->
@@ -87,8 +87,8 @@
     const {useState,useEffect,useRef,useCallback} = React;
 
     /* ===== Keys & utils ===== */
-    const SONGS_CACHE_KEY='mstq_songs_v12';
-    const RESUME_KEY='mstq_resume_v15';
+    const SONGS_CACHE_KEY='mstq_songs_v13';
+    const RESUME_KEY='mstq_resume_v16';
     const THEME_KEY='music-theme', SPEED_KEY='mstq_speed', MUTED_KEY='mstq_muted';
     const SHUFFLE_KEY='mstq_shuffle', REPEAT_KEY='mstq_repeat';
     const POWER_KEY='mstq_power_save', TIMER_KEY='mstq_sleep_timer', STOP_END_KEY='mstq_stop_at_end';
@@ -164,7 +164,7 @@
       const removeFromQueue=(id)=>{ haptic(); setUpNext(q=>q.filter(x=>x!==id)); };
       const clearQueue=()=>{ haptic(); setUpNext([]); };
 
-      /* Audio & compressor */
+      /* Audio & WebAudio graph (Gain -> Compressor -> Destination) */
       const audioRef=useRef(null), preloadRef=useRef(null);
       useEffect(()=>{ audioRef.current=document.getElementById('mstq-player'); preloadRef.current=document.getElementById('mstq-preload'); },[]);
       const [volume,setVolume]=useState(load(RESUME_KEY,{volume:.9}).volume??.9);
@@ -172,29 +172,42 @@
       const [muted,setMuted]=useState(localStorage.getItem(MUTED_KEY)==='1');
       const [compressorOn,setCompressorOn]=useState(load(COMPRESSOR_KEY,true));
 
-      const audioCtxRef=useRef(null), compNodeRef=useRef(null), srcNodeRef=useRef(null);
+      const audioCtxRef=useRef(null), gainRef=useRef(null), compNodeRef=useRef(null), srcNodeRef=useRef(null);
       const ensureAudioContext=async()=>{
         try{
           if(!audioCtxRef.current){
             const ctx=new (window.AudioContext||window.webkitAudioContext)();
             const a=audioRef.current;
             const src=ctx.createMediaElementSource(a);
+            const gain=ctx.createGain(); gain.gain.value=1;
             const comp=ctx.createDynamicsCompressor();
             comp.threshold.value=-18; comp.knee.value=24; comp.ratio.value=6; comp.attack.value=0.008; comp.release.value=0.25;
-            src.connect(compressorOn?comp:ctx.destination);
-            if(compressorOn) comp.connect(ctx.destination);
-            audioCtxRef.current=ctx; compNodeRef.current=comp; srcNodeRef.current=src;
+            // src -> gain -> (compressor?) -> dest
+            src.connect(gain);
+            if(compressorOn){ gain.connect(comp).connect(ctx.destination); } else { gain.connect(ctx.destination); }
+            audioCtxRef.current=ctx; gainRef.current=gain; compNodeRef.current=comp; srcNodeRef.current=src;
           }
           await audioCtxRef.current.resume();
         }catch{}
       };
       useEffect(()=>{ try{
-        if(srcNodeRef.current && audioCtxRef.current){
-          srcNodeRef.current.disconnect();
+        if(audioCtxRef.current && gainRef.current){
+          gainRef.current.disconnect();
           const dst=audioCtxRef.current.destination;
-          if(compressorOn){ compNodeRef.current.disconnect(); srcNodeRef.current.connect(compNodeRef.current).connect(dst); }
-          else { srcNodeRef.current.connect(dst); }
+          if(compressorOn){ gainRef.current.connect(compNodeRef.current).connect(dst); }
+          else { gainRef.current.connect(dst); }
         }}catch{} },[compressorOn]);
+
+      const fadeTo=async(target=1,ms=800)=>{
+        try{
+          if(!audioCtxRef.current || !gainRef.current) return;
+          const g=gainRef.current;
+          const now=audioCtxRef.current.currentTime;
+          g.gain.cancelScheduledValues(now);
+          g.gain.setValueAtTime(g.gain.value, now);
+          g.gain.linearRampToValueAtTime(target, now + ms/1000);
+        }catch{}
+      };
 
       useEffect(()=>{const a=audioRef.current;if(a){a.volume=volume}},[volume]);
       useEffect(()=>{const a=audioRef.current;if(a){a.playbackRate=playbackRate}localStorage.setItem(SPEED_KEY,String(playbackRate))},[playbackRate]);
@@ -376,7 +389,7 @@
         return()=>clearInterval(tick);
       },[currentIndex,current,powerSave]);
 
-      /* Controls */
+      /* Controls + Crossfade */
       const computeNextIndex = useCallback((dir)=> {
         if(!playlist.length) return 0;
         if(shuffle){ let r=Math.floor(Math.random()*playlist.length); if (r===currentIndex && playlist.length>1) r=(r+1)%playlist.length; return r; }
@@ -385,24 +398,36 @@
         return currentIndex;
       },[playlist.length,shuffle,currentIndex]);
 
+      const playIndex=useCallback(async(i,{fadeIn=true}={})=>{
+        const a=audioRef.current; if(!a) return;
+        await ensureAudioContext();
+        a.loop=false; a.muted=false; if(a.volume<0.6) a.volume=0.85;
+        setCurrentIndex(i); setPlaying(true); targetPlayingRef.current=true;
+        const s=playlist[i]; if(!s) return;
+        if(a.src!==s.stream_url){ a.src=s.stream_url; a.load(); }
+        if(fadeIn) { try{ await fadeTo(0,10); await a.play(); await fadeTo(1,800);}catch{ a.play().catch(()=>{});} }
+        else { a.play().catch(()=>{}); }
+        queuePreload(i);
+      },[playlist,queuePreload]);
+
       const nextTrack=useCallback(()=>{
         if(!playlist.length) return;
         if(upNext.length){
           const nextId=upNext[0]; setUpNext(q=>q.slice(1));
           const i=playlist.findIndex(x=>x.id===nextId);
-          if(i>=0){ setCurrentIndex(i); setPlaying(true); targetPlayingRef.current=true; queuePreload(i); return; }
+          if(i>=0){ playIndex(i); return; }
         }
         let i=computeNextIndex(+1);
         if(playlist.length>1 && i===currentIndex && !shuffle){ i=(i+1)%playlist.length; }
-        setCurrentIndex(i); setPlaying(true); targetPlayingRef.current=true; queuePreload(i);
-      },[playlist.length,computeNextIndex,queuePreload,upNext,currentIndex,shuffle]);
+        playIndex(i);
+      },[playlist.length,computeNextIndex,upNext,currentIndex,shuffle,playIndex]);
 
       const prevTrack=useCallback(()=>{
         if(!playlist.length) return;
         const a=audioRef.current; if(a?.currentTime>3){ a.currentTime=0; return; }
         const i=computeNextIndex(-1);
-        setCurrentIndex(i); setPlaying(true); targetPlayingRef.current=true; queuePreload(i);
-      },[playlist.length,computeNextIndex,queuePreload]);
+        playIndex(i);
+      },[playlist.length,computeNextIndex,playIndex]);
 
       const handleEnd=useCallback(()=>{
         const a=audioRef.current; if(a) a.loop=false;
@@ -411,23 +436,16 @@
         nextTrack();
       },[repeat,stopAtEnd,currentIndex,playlist.length,nextTrack,upNext.length]);
 
-      const pickSong=async(s)=>{
-        haptic();
-        const i=playlist.findIndex(x=>x.id===s.id);
-        if(i>=0){ 
-          setCurrentIndex(i); setPlaying(true); targetPlayingRef.current=true; queuePreload(i);
-          await ensureAudioContext(); const a=audioRef.current; a.loop=false; a.muted=false; if(a.volume<0.6) a.volume=0.85; a.play().catch(()=>{alert('Trình duyệt chặn âm thanh. Hãy bật chuông/thoát Silent mode và thử lại.');});
-        }
-      };
+      const pickSong=async(s)=>{ haptic(); const i=playlist.findIndex(x=>x.id===s.id); if(i>=0) playIndex(i); };
 
       const playPause=async()=>{
         haptic();
         const a=audioRef.current; if(!a) return;
         await ensureAudioContext();
         a.loop=false; a.muted=false; if(a.volume<0.6) a.volume=0.85;
-        if(!current && playlist.length){ setCurrentIndex(0); setPlaying(true); targetPlayingRef.current=true; setNeedsStart(false); a.play().catch(()=>alert('Âm thanh bị chặn. Hãy bật chuông/thoát Silent.')); return; }
-        if(playing){ setPlaying(false); targetPlayingRef.current=false; a.pause(); }
-        else{ setPlaying(true); targetPlayingRef.current=true; setNeedsStart(false); a.play().catch(()=>alert('Âm thanh bị chặn. Hãy bật chuông/thoát Silent.')); }
+        if(!current && playlist.length){ playIndex(0,{fadeIn:false}); setNeedsStart(false); return; }
+        if(playing){ setPlaying(false); targetPlayingRef.current=false; try{await fadeTo(0.2,120)}catch{} a.pause(); }
+        else{ setPlaying(true); targetPlayingRef.current=true; setNeedsStart(false); try{ await fadeTo(1,200); }catch{} a.play().catch(()=>{}); }
       };
       const pauseAll=()=>{const a=audioRef.current; if(a){ setPlaying(false); targetPlayingRef.current=false; a.pause(); }};
 
@@ -835,13 +853,12 @@
               const a=audioRef.current;
               a.loop=false; a.muted=false; if(a.volume<0.8) a.volume=0.85;
               if(!playlist.length){ return; }
-              setNeedsStart(false); setCurrentIndex(0); setPlaying(true); targetPlayingRef.current=true;
-              await a.play().catch(()=>{}); // iOS có thể chặn, nhưng sau lần chạm đầu sẽ phát
+              setNeedsStart(false); playIndex(0,{fadeIn:false});
             }catch{}
           },5000);
         }
         return()=>clearTimeout(autoStartRef.current);
-      },[needsStart,playlist.length]);
+      },[needsStart,playlist.length,playIndex]);
 
       const TabBar=()=>(
         <nav className="tabbar safe-bottom">
@@ -881,7 +898,7 @@
             <p className="text-sm text-[var(--muted)] mb-3">Chạm “Bắt đầu nghe” để mở quyền âm thanh. Hộp thoại sẽ tự đóng sau 5 giây và thử phát tự động.</p>
             <div className="flex gap-2 justify-center">
               <button className="btn" onClick={askInstall}>Cài đặt ứng dụng</button>
-              <button className="btn btn-primary" onClick={async()=>{haptic(); await ensureAudioContext(); setNeedsStart(false); const a=audioRef.current; a.loop=false; a.muted=false; if(a.volume<0.8) a.volume=0.85; if(playlist.length){ setCurrentIndex(0); setPlaying(true); targetPlayingRef.current=true; try{ await a.play(); }catch{} }}}>Bắt đầu nghe</button>
+              <button className="btn btn-primary" onClick={async()=>{haptic(); await ensureAudioContext(); setNeedsStart(false); if(playlist.length){ playIndex(0,{fadeIn:false}); }}}>Bắt đầu nghe</button>
             </div>
             <div class="text-[12px] text-[var(--muted)] mt-2">Sẽ tự động bắt đầu sau 5 giây…</div>
           </div>
