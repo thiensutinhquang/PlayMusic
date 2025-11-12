@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="lucbao">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f1b2d" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="application-name" content="MSTQ Music" />
+  <title>MSTQ Music – Nghe nhạc liên tục</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="./manifest.webmanifest" type="application/manifest+json" />
+  <!-- ĐÃ LOẠI BỎ PWA icon links (dùng đường dẫn tương đối dễ lỗi) -->
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- React 18 UMD -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+
+  <!-- ĐÃ LOẠI BỎ BABEL: Code React được chuyển đổi sang JavaScript thuần (React.createElement) để TỐI ƯU HIỆU SUẤT VÀ PIN -->
+
+  <style>
+    /* Tối ưu hóa CSS: Thêm transition cho mượt mà và feedback cảm ứng */
+    :root,[data-theme]{transition:color .25s ease,background-color .25s ease}
+    :root{
+      --bg:#0b132b;--card:#0f1b2d;--text:#eaf2ff;--muted:#93a3b8;
+      --primary:#f59e0b;--primary-fg:#0b132b;--ring:#f59e0b66;
+      --border:#203047;--nav-bg:rgba(16,24,40,.88);--shadow:0 12px 36px rgba(0,0,0,.28);
+      --gradient:linear-gradient(135deg,#60a5fa 0%,#f59e0b 100%)
+    }
+    [data-theme=light]{--bg:#f6f7fb;--card:#ffffff;--text:#0f172a;--muted:#64748b;--primary:#0ea5e9;--primary-fg:#ffffff;--ring:#0ea5e955;--border:#e5e7eb;--nav-bg:rgba(255,255,255,.92)}
+    [data-theme=lucbao]{--bg:#081414;--card:#102424;--text:#e0f2f1;--muted:#80cbc4;--primary:#f4ff81;--primary-fg:#0c1113;--ring:#f4ff8166;--border:color-mix(in srgb,var(--text) 10%, transparent);--nav-bg:rgba(16,36,36,.86)}
+    .btn{display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--border);background:var(--card);color:var(--text);padding:.6rem .9rem;border-radius:14px;transition:background-color .15s,transform .1s}
+    .btn:active{transform:scale(0.98);opacity:.8} /* Phản hồi cảm ứng */
+    .btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+    .btn-primary{background:var(--primary);color:var(--primary-fg);border-color:transparent}
+    .chip{font-size:.72rem;border:1px solid var(--border);padding:.15rem .45rem;border-radius:999px;color:var(--muted)}
+    .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:40;backdrop-filter:blur(8px);background:var(--nav-bg);border-top:1px solid var(--border)}
+    .tabbtn{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:.55rem 0;font-size:.74rem;color:var(--muted);transition:color .2s}
+    .tabbtn[aria-current=true]{color:var(--text)}
+    .safe-bottom{padding-bottom:calc(env(safe-area-inset-bottom) + 10px)}
+    .sheet{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top-left-radius:18px;border-top-right-radius:18px;border:1px solid var(--border);box-shadow:var(--shadow);z-index:60;padding:10px;animation:slideUp .3s ease-out}
+    .err{position:fixed;inset:0;background:rgba(0,0,0,.8);color:#fff;z-index:9999;display:none;align-items:center;justify-content:center;padding:20px;text-align:left}
+    .err-card{background:#111827;border:1px solid #374151;border-radius:14px;max-width:900px;width:100%;padding:18px}
+    input[type="range"]{-webkit-appearance:none;appearance:none;height:6px;width:100%;background:var(--muted);border-radius:999px}
+    input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:16px;height:16px;border-radius:50%;background:var(--primary);cursor:pointer}
+    input[type="range"]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--primary);cursor:pointer}
+    .dropdown{position:relative}
+    .dropdown-menu{position:absolute;right:0;top:100%;margin-top:.4rem;background:var(--card);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);min-width:200px;z-index:50;padding:.4rem;animation:fadeIn .2s ease-out}
+    .dropdown-item{display:flex;align-items:center;gap:.5rem;padding:.6rem .7rem;border-radius:10px;transition:background-color .15s}
+    .dropdown-item:hover{background-color:rgba(255,255,255,.06)}
+    /* Custom CSS cho Dropdown Link mới (shadow-glow) */
+    .shadow-glow { box-shadow: 0 0 12px rgba(255, 255, 255, 0.1); }
+    /* Animations */
+    @keyframes slideUp { from {transform: translateY(100%);} to {transform: translateY(0);} }
+    @keyframes fadeIn { from {opacity: 0; transform: translateY(-10px);} to {opacity: 1; transform: translateY(0);} }
+  </style>
+</head>
+<body class="bg-[var(--bg)] text-[var(--text)] font-sans">
+  <div id="root"></div>
+
+  <!-- Audio Elements -->
+  <audio id="mstq-player" preload="metadata" playsinline webkit-playsinline crossOrigin="anonymous"></audio>
+  <audio id="mstq-preload" preload="auto" playsinline webkit-playsinline muted crossOrigin="anonymous"></audio>
+
+  <!-- Error overlay -->
+  <div id="err" class="err">
+    <div class="err-card">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-bold">Đã bắt lỗi runtime</h3>
+        <button onclick="document.getElementById('err').style.display='none'" class="btn">Đóng</button>
+      </div>
+      <pre id="errlog" class="mt-3 whitespace-pre-wrap text-sm"></pre>
+    </div>
+  </div>
+
+  <script>
+    // Bắt lỗi toàn cục
+    (function(){
+      const show=(m)=>{const el=document.getElementById('err');const log=document.getElementById('errlog');if(log)log.textContent=String(m||'Unknown');if(el)el.style.display='flex';console.error('[GLOBAL ERROR]',m)};
+      window.addEventListener('error',e=>show(e.error||e.message||e));
+      window.addEventListener('unhandledrejection',e=>show(e.reason||e));
+    })();
+    // SW
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').catch(()=>{}); });
+    }
+  </script>
+
+  <script type="text/javascript">
+    const { useState, useEffect, useRef, useCallback, createElement: e } = React;
+
+    /* ===== Keys & utils ===== */
+    const SONGS_CACHE_KEY='mstq_songs_v13';
+    const RESUME_KEY='mstq_resume_v18'; // Đã cập nhật key để xóa resume cũ (nâng cấp logic)
+    const THEME_KEY='music-theme', SPEED_KEY='mstq_speed', MUTED_KEY='mstq_muted';
+    const SHUFFLE_KEY='mstq_shuffle', REPEAT_KEY='mstq_repeat';
+    const POWER_KEY='mstq_power_save', TIMER_KEY='mstq_sleep_timer', STOP_END_KEY='mstq_stop_at_end';
+    const SRC_PREF_KEY='mstq_sources_pref'; // Đã loại bỏ FAVORITES_KEY
+    const COMPRESSOR_KEY='mstq_compressor_on';
+    const INITIAL_VISIBLE=120, VISIBLE_STEP=160;
+
+    const isiOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const save=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}};
+    const load=(k,d)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch{return d}};
+    const clamp=(x,min,max)=>Math.min(Math.max(x,min),max);
+    const formatTime=s=>{if(!isFinite(s)||s<0)return'0:00';const m=Math.floor(s/60),sec=Math.floor(s%60);return`${m}:${String(sec).padStart(2,'0')}`};
+    const sanitizeRepeat=(r)=> (r==='off'||r==='all'||r==='one')?r:'all';
+    const haptic=(ms=14)=>{ try{ navigator.vibrate?.(ms); }catch{} };
+    
+    // Icon component (dùng React.createElement)
+    const Icon = ({d=22,p="M5 12h14"}) => e('svg', {width:d, height:d, viewBox:"0 0 24 24", fill:"none", stroke:"currentColor", strokeWidth:"1.7"},
+      e('path', {d:p, strokeLinecap:"round", strokeLinejoin:"round"})
+    );
+
+    // FIX: Sử dụng raw URL từ GitHub cho ảnh fallback
+    const ICON_URL = 'https://raw.githubusercontent.com/thiensutinhquang/PlayMusic/main/images/icons/icon-192x192.png';
+    // ĐÃ LOẠI BỎ LOGO_SVG (Base64) - CHUYỂN SANG DÙNG URL TRỰC TIẾP
+    const LOGO_FALLBACK_URL = ICON_URL;
+    const LOGO_PLACEHOLDER = 'https://placehold.co/24x24/102424/e0f2f1?text=MSTQ';
+
+    const Icons={ // Đã đổi tên từ 'I' thành 'Icons' để tránh lỗi Identifier has already been declared
+      home:(d)=>e(Icon, {d:d, p:"M3 10.5 12 3l9 7.5v8.5a1.5 1.5 0 0 1-1.5 1.5H4.5A1.5 1.5 0 0 1 3 19V10.5Z"}),
+      search:(d)=>e(Icon, {d:d, p:"M21 21l-4.3-4.3M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z"}),
+      lib:(d)=>e(Icon, {d:d, p:"M4 19h16M6 17V5a2 2 0 0 1 2-2h0M12 17V3h0M18 17V7a2 2 0 0 0-2-2h0"}),
+      queue:(d)=>e(Icon, {d:d, p:"M4 6h16M4 12h10M4 18h7"}),
+      settings:(d)=>e(Icon, {d:d, p:"M12 15.5A3.5 3.5 0 1 0 12 8.5a3.5 3.5 0 0 0 0 7Z M19.4 15l1.1 1.9-1.7 3-2.2-.4-.9 1.9h-3.4l-.9-1.9-2.2.4-1.7-3 1.1-1.9Z"}),
+      play:(d)=>e(Icon, {d:d, p:"M8 5v14l11-7z"}), pause:(d)=>e(Icon, {d:d, p:"M6 5h4v14H6zM14 5h4v14h-4z"}),
+      // Cập nhật biểu tượng Next/Back để giống với hình mẫu (<< và >>)
+      next:(d)=>e(Icon, {d:d, p:"M13 5 20 12l-7 7V5z M4 5h2v14H4z"}), // Biểu tượng next track rõ ràng hơn
+      back:(d)=>e(Icon, {d:d, p:"M11 19 4 12l7-7v14z M18 5h2v14h-2z"}), // Biểu tượng previous track rõ ràng hơn
+      more:(d)=>e(Icon, {d:d, p:"M6 12h.01M12 12h.01M18 12h.01"}),
+      repeat:(d)=>e(Icon, {d:d, p:"M17 1v4H7a5 5 0 0 0 0 10h1M7 23v-4h10a5 5 0 0 0 0-10h-1"}),
+      shuffle:(d)=>e(Icon, {d:d, p:"M4 4l7 7-7 7M15 4h5M20 4l-6 6M15 20h5M20 20l-6-6"}),
+      download:(d)=>e(Icon, {d:d, p:"M12 3v12m0 0l4-4m-4 4-4-4M5 21h14"}),
+      share:(d)=>e(Icon, {d:d, p:"M18 8a3 3 0 1 0-2-5.1A3 3 0 0 0 18 8Z M6 12a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z M16 14l-6 3m-6-8 6 3"}),
+      heart:(d, fill)=>e('svg', {width:d, height:d, viewBox:"0 0 0 24 24", fill:fill?'currentColor':'none', stroke:"currentColor", strokeWidth:"1.7"},
+        e('path', {d:"M20.8 5.2a5.5 5.5 0 0 0-7.8 0L12 6.2l-.9-1a5.5 5.5 0 0 0-7.8 0 5.5 5.5 0 0 0 0 7.8L12 21l8.7-8a5.5 5.5 0 0 0 0-7.8Z", strokeLinecap:"round", strokeLinejoin:"round", fill:fill?'var(--primary)': 'none'})
+      )
+    };
+
+    function App(){
+      /* Tabs & theme */
+      const [tab,setTab]=useState('home');
+      const [theme,setTheme]=useState(localStorage.getItem(THEME_KEY)||'lucbao');
+      useEffect(()=>{document.documentElement.setAttribute('data-theme',theme);localStorage.setItem(THEME_KEY,theme);},[theme]);
+
+      /* Start Gate (một chạm + auto 5s) */
+      const [needsStart,setNeedsStart]=useState(true);
+      const autoStartRef=useRef(null);
+      const startTimerRef=useRef(null); // Ref để giữ timer cho StartGate
+
+      /* Install & Links */
+      const installEvtRef=useRef(null);
+      const [linksOpen,setLinksOpen]=useState(false);
+      const linkRef = useRef(null); // Ref cho dropdown
+      
+      useEffect(()=>{
+        const onPrompt=(e)=>{ e.preventDefault(); installEvtRef.current=e; };
+        window.addEventListener('beforeinstallprompt',onPrompt);
+        return()=>window.removeEventListener('beforeinstallprompt',onPrompt);
+      },[]);
+      const askInstall=async()=>{ haptic(); try{ await installEvtRef.current?.prompt(); await audioCtxRef.current?.resume?.(); }catch{} };
+
+      /* Playback state */
+      const [playlist,setPlaylist]=useState([]);
+      const [loading,setLoading]=useState(true);
+      const [visible,setVisible]=useState(INITIAL_VISIBLE);
+      const [filter,setFilter]=useState('');
+      const [sourcePref,setSourcePref]=useState(load(SRC_PREF_KEY,{archive:true,custom:false,customText:""}));
+      useEffect(()=>save(SRC_PREF_KEY,sourcePref),[sourcePref]);
+
+      const [currentIndex,setCurrentIndex]=useState(0);
+      const [playing,setPlaying]=useState(false);
+      const [progress,setProgress]=useState({current:0,duration:0});
+      const [shuffle,setShuffle]=useState(load(SHUFFLE_KEY,false));
+      const [repeat,setRepeat]=useState(sanitizeRepeat(load(REPEAT_KEY,'all')));
+      const [stopAtEnd,setStopAtEnd]=useState(load(STOP_END_KEY,false));
+      useEffect(()=>save(SHUFFLE_KEY,shuffle),[shuffle]);
+      useEffect(()=>save(REPEAT_KEY,repeat),[repeat]);
+      useEffect(()=>save(STOP_END_KEY,stopAtEnd),[stopAtEnd]);
+
+      const [upNext,setUpNext]=useState([]);
+      const enqueueNext=(s)=>{ haptic(); setUpNext(q=> q.includes(s.id)? q : [...q,s.id]); };
+      const moveUp=(id)=>{ haptic(); setUpNext(q=>{ const i=q.indexOf(id); if(i<=0) return q; const a=q.slice(); [a[i-1],a[i]]=[a[i],a[i-1]]; return a; }); };
+      const moveDown=(id)=>{ haptic(); setUpNext(q=>{ const i=q.indexOf(id); if(i<0||i===q.length-1) return q; const a=q.slice(); [a[i+1],a[i]]=[a[i],a[i+1]]; return a; }); };
+      const removeFromQueue=(id)=>{ haptic(); setUpNext(q=>q.filter(x=>x!==id)); };
+      const clearQueue=()=>{ haptic(); setUpNext([]); };
+
+      /* Audio & WebAudio graph (Gain -> Compressor -> Destination) */
+      const audioRef=useRef(null), preloadRef=useRef(null);
+      useEffect(()=>{ audioRef.current=document.getElementById('mstq-player'); preloadRef.current=document.getElementById('mstq-preload'); },[]);
+      const [volume,setVolume]=useState(load(RESUME_KEY,{volume:.9}).volume??.9);
+      const [playbackRate,setPlaybackRate]=useState(parseFloat(localStorage.getItem(SPEED_KEY)||'1')||1);
+      const [muted,setMuted]=useState(localStorage.getItem(MUTED_KEY)==='1');
+      const [compressorOn,setCompressorOn]=useState(load(COMPRESSOR_KEY,true));
+
+      const audioCtxRef=useRef(null), gainRef=useRef(null), compNodeRef=useRef(null), srcNodeRef=useRef(null);
+      const ensureAudioContext=async()=>{
+        try{
+          if(!audioCtxRef.current){
+            // Tối ưu hóa latency cho trải nghiệm nghe nhạc mượt mà hơn
+            const ctx=new (window.AudioContext||window.webkitAudioContext)({latencyHint:'playback'});
+            const a=audioRef.current;
+            const src=ctx.createMediaElementSource(a);
+            const gain=ctx.createGain(); gain.gain.value=1;
+            const comp=ctx.createDynamicsCompressor();
+            comp.threshold.value=-18; comp.knee.value=24; comp.ratio.value=6; comp.attack.value=0.008; comp.release.value=0.25;
+            // src -> gain -> (compressor?) -> dest
+            src.connect(gain);
+            if(compressorOn){ gain.connect(comp).connect(ctx.destination); } else { gain.connect(ctx.destination); }
+            audioCtxRef.current=ctx; gainRef.current=gain; compNodeRef.current=comp; srcNodeRef.current=src;
+          }
+          await audioCtxRef.current.resume();
+        }catch{}
+      };
+      useEffect(()=>{ try{
+        if(audioCtxRef.current && gainRef.current){
+          gainRef.current.disconnect();
+          const dst=audioCtxRef.current.destination;
+          if(compressorOn){ gainRef.current.connect(compNodeRef.current).connect(dst); }
+          else { gainRef.current.connect(dst); }
+        }}catch{} },[compressorOn]);
+
+      const fadeTo=async(target=1,ms=800)=>{
+        try{
+          if(!audioCtxRef.current || !gainRef.current) return;
+          const g=gainRef.current;
+          const now=audioCtxRef.current.currentTime;
+          g.gain.cancelScheduledValues(now);
+          g.gain.setValueAtTime(g.gain.value, now);
+          g.gain.linearRampToValueAtTime(target, now + ms/1000);
+        }catch{}
+      };
+
+      useEffect(()=>{const a=audioRef.current;if(a){a.volume=volume}},[volume]);
+      useEffect(()=>{const a=audioRef.current;if(a){a.playbackRate=playbackRate}localStorage.setItem(SPEED_KEY,String(playbackRate))},[playbackRate]);
+      useEffect(()=>{const a=audioRef.current;if(a){a.muted=muted}localStorage.setItem(MUTED_KEY,muted?'1':'0')},[muted]);
+
+      /* Power save & timer */
+      const [powerSave,setPowerSave]=useState(load(POWER_KEY,false));
+      useEffect(()=>save(POWER_KEY,powerSave),[powerSave]);
+      const [timerLeft,setTimerLeft]=useState(load(TIMER_KEY,null));
+      const timerRef=useRef(null);
+      const startSleepTimer=(ms)=>{
+        haptic();
+        clearInterval(timerRef.current);
+        const end=Date.now()+ms; setTimerLeft(ms); save(TIMER_KEY,ms);
+        timerRef.current=setInterval(()=>{ const left=end-Date.now(); if(left<=0){ clearInterval(timerRef.current); setTimerLeft(null); save(TIMER_KEY,null); pauseAll(); } else setTimerLeft(left); },1000);
+      };
+      const cancelSleepTimer=()=>{ haptic(); clearInterval(timerRef.current); setTimerLeft(null); save(TIMER_KEY,null);};
+      useEffect(()=>{ const v=load(TIMER_KEY,null); if(v&&v>0) startSleepTimer(v); return()=>clearInterval(timerRef.current); },[]);
+
+      /* Data sources */
+      // Dùng ICON_URL mới cho fallback image
+      const FALLBACK_SONGS=[{id:"testmp3testfile/mpthreetest.mp3",title:"Bài hát mẫu (Tạm thời)",artist:"Public Domain",stream_url:"https://archive.org/download/testmp3testfile/mpthreetest.mp3",artwork:ICON_URL,duration:5,lyrics:"Bài mẫu.",item_identifier:"testmp3testfile"}];
+
+      const parseCustom=(txt)=>{
+        const lines=txt.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+        const out=[]; let last="";
+        for(const ln of lines){
+          if(ln.startsWith('#EXTINF:')){ last=ln.split(',').slice(1).join(',').trim(); }
+          else if(/^https?:\/\//i.test(ln)){
+            out.push({id:ln,title:last||ln.split('/').pop(),artist:'Custom',stream_url:ln,artwork:ICON_URL,duration:0,lyrics:'',item_identifier:'custom'}); last="";
+          }
+        }
+        if(!out.length){
+          for(const ln of lines) if(/^https?:\/\//i.test(ln))
+            out.push({id:ln,title:ln.split('/').pop(),artist:'Custom',stream_url:ln,artwork:ICON_URL,duration:0,lyrics:'',item_identifier:'custom'});
+        }
+        return out;
+      };
+
+      const refetch=useCallback(async()=>{
+        setLoading(true);
+        try{
+          let all=[];
+          if(sourcePref.archive!==false){
+            const queries=[
+              'uploader:(tinhquang) AND mediatype:(audio)',
+              'uploader:(thiensutinhquang) AND mediatype:(audio)',
+              'creator:("Minh Su Tinh Quang") AND mediatype:(audio)'
+            ];
+            let docs=[];let ok=false;
+            for(const q of queries){
+              const url=`https://archive.org/advancedsearch.php?q=${encodeURIComponent(q)}&fl[]=identifier,title,creator,description&sort[]=publicdate+desc&rows=200&page=1&output=json`;
+              const r=await fetch(url,{cache:'no-store'}); if(!r.ok) continue;
+              const j=await r.json(); const list=j?.response?.docs||[]; if(list.length){docs=list;ok=true;break;}
+            }
+            if(ok){
+              for(const d of docs){
+                try{
+                  const meta=await fetch(`https://archive.org/metadata/${d.identifier}`,{cache:'no-store'}).then(r=>r.json());
+                  (meta.files||[]).forEach(f=>{
+                    if(String(f.format||'').toUpperCase().includes('MP3')){
+                      all.push({id:`${d.identifier}/${f.name}`,title:(f.title||d.title||f.name||'').replace(/\.mp3$/i,'').replace(/_/g,' ').trim(),artist:d.creator||'TinhQuang',stream_url:`https://archive.org/download/${d.identifier}/${encodeURIComponent(f.name)}`,artwork:`https://archive.org/download/${d.identifier}/__ia_thumb.jpg`,duration:parseFloat(f.length||0)||0,lyrics:d.description||'',item_identifier:d.identifier});
+                    }
+                  });
+                }catch{}
+              }
+            }
+          }
+          if(sourcePref.custom && sourcePref.customText?.trim()){
+            all=[...all, ...parseCustom(sourcePref.customText)];
+          }
+          if(!all.length){ all=FALLBACK_SONGS; }
+          setPlaylist(all);
+          save(SONGS_CACHE_KEY,all);
+        }catch{
+          const cached=load(SONGS_CACHE_KEY,null);
+          setPlaylist(cached?.length?cached:FALLBACK_SONGS);
+        }
+        setLoading(false);
+      },[sourcePref]);
+      useEffect(()=>{refetch()},[]);
+
+      const current=playlist[currentIndex]||null;
+
+      /* Preload an toàn (Tắt khi PowerSave hoặc chạy nền để tiết kiệm pin) */
+      const queuePreload=useCallback((idx)=>{
+        const n=(idx+1)%playlist.length;
+        const next=playlist[n]; const pre=preloadRef.current;
+        if(!next||!pre) return;
+        // Nếu Bật PowerSave HOẶC đang chạy nền thì tắt preload
+        if (powerSave || document.visibilityState!=='visible') { pre.removeAttribute('src'); pre.load(); return; }
+        if(pre.src!==next.stream_url){ pre.src=next.stream_url; pre.load(); }
+      },[playlist,powerSave]);
+      useEffect(()=>{ if(playlist.length) queuePreload(currentIndex); },[playlist.length,currentIndex,queuePreload]);
+      useEffect(()=>{ const h=()=>queuePreload(currentIndex); document.addEventListener('visibilitychange',h); return()=>document.removeEventListener('visibilitychange',h); },[queuePreload,currentIndex]);
+
+      /* Media Session */
+      useEffect(()=>{
+        const a=audioRef.current; if(!a||!current||!('mediaSession' in navigator)) return;
+        try{
+          navigator.mediaSession.metadata=new MediaMetadata({
+            title:current.title, artist:current.artist||'minhsutinhquang', album:'MSTQ Music',
+            artwork:[{src:current.artwork||ICON_URL,sizes:'512x512',type:'image/png'}]
+          });
+          navigator.mediaSession.setActionHandler('play',()=>playPause());
+          navigator.mediaSession.setActionHandler('pause',()=>playPause());
+          navigator.mediaSession.setActionHandler('previoustrack',()=>prevTrack());
+          navigator.mediaSession.setActionHandler('nexttrack',()=>nextTrack());
+          navigator.mediaSession.setActionHandler('seekto',d=>{ const a=audioRef.current; if(a && d.seekTime!=null) a.currentTime=d.seekTime; });
+          navigator.mediaSession.playbackState=playing?'playing':'paused';
+        }catch{}
+      },[current,playing]);
+
+
+      /* --- Playback Control Functions (Order adjusted to fix initialization error) --- */
+      
+      const computeNextIndex = useCallback((dir)=> {
+        if(!playlist.length) return 0;
+        if(shuffle){ let r=Math.floor(Math.random()*playlist.length); if (r===currentIndex && playlist.length>1) r=(r+1)%playlist.length; return r; }
+        if(dir>0) return (currentIndex+1)%playlist.length;
+        if(dir<0) return (currentIndex-1+playlist.length)%playlist.length;
+        return currentIndex;
+      },[playlist.length,shuffle,currentIndex]);
+
+      const playIndex=useCallback(async(i,{fadeIn=true}={})=>{
+        const a=audioRef.current; if(!a) return;
+        await ensureAudioContext();
+        a.loop=false; a.muted=false; if(a.volume<0.6) a.volume=0.85;
+        setCurrentIndex(i); setPlaying(true); targetPlayingRef.current=true;
+        const s=playlist[i]; if(!s) return;
+        
+        // Cải tiến Crossfade
+        if(a.src===s.stream_url && a.currentTime>0){
+          a.play().catch(()=>{});
+        }else{
+          if(fadeIn) await fadeTo(0.2,120); // Fade out bài cũ
+          a.src=s.stream_url; a.load(); 
+          if(fadeIn) { await fadeTo(0.1,10); await a.play(); await fadeTo(1,800);}
+          else { a.play().catch(()=>{}); }
+        }
+
+        queuePreload(i);
+      },[playlist,queuePreload]);
+
+      // Phải đặt handleEnd trước nextTrack/prevTrack nếu chúng gọi nó
+      const handleEnd=useCallback(()=>{
+        const a=audioRef.current; if(a) a.loop=false;
+        if(repeat==='one'){ const a=audioRef.current; if(a){ a.currentTime=0; a.loop=false; a.play().catch(()=>{});} return; }
+        // Sử dụng computeNextIndex để kiểm tra nếu đây là bài cuối cùng
+        const nextIdx = computeNextIndex(+1);
+        if((stopAtEnd || repeat==='off') && !upNext.length && nextIdx === 0 && currentIndex === playlist.length-1){ 
+          setPlaying(false); targetPlayingRef.current=false; 
+          return; 
+        }
+        nextTrack(); // Gọi nextTrack
+      },[repeat,stopAtEnd,currentIndex,playlist.length,upNext.length]); // nextTrack phụ thuộc vào handleEnd, nhưng handleEnd cũng gọi nextTrack. Sử dụng nextTrack làm dependency của handleEnd là không cần thiết vì nextTrack được gọi bên trong một hàm callback và không phải là state.
+
+      const nextTrack=useCallback(()=>{
+        haptic();
+        if(!playlist.length) return;
+        if(upNext.length){
+          const nextId=upNext[0]; setUpNext(q=>q.slice(1));
+          const i=playlist.findIndex(x=>x.id===nextId);
+          if(i>=0){ playIndex(i); return; }
+        }
+        let i=computeNextIndex(+1);
+        if(playlist.length>1 && i===currentIndex && !shuffle){ i=(i+1)%playlist.length; }
+        playIndex(i);
+      },[playlist.length,computeNextIndex,upNext,currentIndex,shuffle,playIndex]);
+
+      const prevTrack=useCallback(()=>{
+        haptic();
+        if(!playlist.length) return;
+        const a=audioRef.current; if(a?.currentTime>3){ a.currentTime=0; return; }
+        const i=computeNextIndex(-1);
+        playIndex(i);
+      },[playlist.length,computeNextIndex,playIndex]);
+      
+      const pickSong=async(s)=>{ haptic(); const i=playlist.findIndex(x=>x.id===s.id); if(i>=0) playIndex(i); };
+
+      const playPause=async()=>{
+        haptic();
+        const a=audioRef.current; if(!a) return;
+        await ensureAudioContext();
+        a.loop=false; a.muted=false; if(a.volume<0.6) a.volume=0.85;
+        if(!current && playlist.length){ playIndex(0,{fadeIn:false}); setNeedsStart(false); return; }
+        if(playing){ 
+          setPlaying(false); targetPlayingRef.current=false; 
+          try{await fadeTo(0.01,150)}catch{} a.pause(); 
+        }
+        else{ 
+          setPlaying(true); targetPlayingRef.current=true; setNeedsStart(false); 
+          try{ await fadeTo(1,200); }catch{} a.play().catch(()=>{}); 
+        }
+      };
+      const pauseAll=()=>{const a=audioRef.current; if(a){ setPlaying(false); targetPlayingRef.current=false; a.pause(); }};
+      
+      /* --- End Playback Control Functions --- */
+
+
+      /* Watchdog/Recovery (Tối ưu mượt mà và liên tục) */
+      const targetPlayingRef=useRef(false);
+      const lastProgRef=useRef({t:0,pos:0});
+      const stallScoreRef=useRef(0);
+      const lastManualPauseRef=useRef(0);
+      const lastRecoverRef=useRef(0);
+
+      useEffect(()=>{
+        let lock=null;
+        const reqLock=async()=>{try{if('wakeLock'in navigator && document.visibilityState==='visible'){lock=await navigator.wakeLock.request('screen');}}catch{}};
+        const vis=()=>{ if(document.visibilityState==='visible'){ reqLock(); if(targetPlayingRef.current){ audioRef.current?.play?.().catch(()=>{}); } } };
+        reqLock(); document.addEventListener('visibilitychange',vis);
+        return()=>{document.removeEventListener('visibilitychange',vis);try{lock?.release?.()}catch{}};
+      },[]);
+
+      // Phải đặt useEffect này sau khi handleEnd được định nghĩa
+      useEffect(()=>{
+        const a=audioRef.current; if(!a) return;
+        const onTime=()=>{ 
+          if(!isFinite(a.duration)) return;
+          setProgress({current:a.currentTime||0,duration:a.duration||0});
+          const now=Date.now();
+          if(Math.abs(a.currentTime-(lastProgRef.current.pos||0))>0.25){ lastProgRef.current={t:now,pos:a.currentTime}; stallScoreRef.current=0; }
+          // Tự động next bài sớm 0.5s để mượt mà và liên tục
+          if(a.duration>1 && !a.paused && !a.loop && (a.currentTime>=a.duration-0.5)){ handleEnd(); }
+        };
+        const onEnded=()=>{ handleEnd(); };
+        const onPause=()=>{ if(!targetPlayingRef.current){ lastManualPauseRef.current=Date.now(); } };
+        a.addEventListener('timeupdate',onTime);
+        a.addEventListener('ended',onEnded);
+        a.addEventListener('pause',onPause);
+        ['stalled','suspend','waiting','error','abort'].forEach(e=>a.addEventListener(e,()=>{}));
+        return()=>{a.removeEventListener('timeupdate',onTime);a.removeEventListener('ended',onEnded);a.removeEventListener('pause',onPause);['stalled','suspend','waiting','error','abort'].forEach(e=>a.removeEventListener(e,()=>{}));};
+      },[handleEnd]); // handleEnd đã được định nghĩa ở trên.
+
+      useEffect(()=>{
+        // Tối ưu hóa tần suất kiểm tra (giảm khi PowerSave)
+        const interval = powerSave ? 10000 : 6000;
+        const tick=setInterval(async()=>{
+          const a=audioRef.current; if(!a||!current) return;
+          save(RESUME_KEY,{index:currentIndex,id:current.id,currentTime:a.currentTime||0,volume:a.volume,rate:a.playbackRate,muted:a.muted,playing:targetPlayingRef.current});
+          if(!targetPlayingRef.current) return;
+          if(Date.now()-lastManualPauseRef.current<2000) return; // Vừa tạm dừng thủ công
+
+          // Tăng ngưỡng stagnate khi PowerSave để tiết kiệm pin
+          const visibilityCheckTime = document.visibilityState==='visible'?20000:15000;
+          const stagnate = (Date.now()-(lastProgRef.current.t||0) > visibilityCheckTime);
+          const poorReady = a.readyState<2;
+          const now=Date.now();
+          const canRecover = now - (lastRecoverRef.current||0) > (powerSave?4000:3000);
+
+          if(a.paused && canRecover){
+            lastRecoverRef.current=now;
+            try{ await ensureAudioContext(); a.play(); return; }catch{}
+          }
+          if((stagnate || poorReady) && canRecover){
+            lastRecoverRef.current=now;
+            stallScoreRef.current++;
+            try{
+              await ensureAudioContext();
+              if(a.paused) await a.play();
+              if(poorReady){ a.load(); await a.play().catch(()=>{}); }
+            }catch{ /* ignored */ }
+
+            // Nếu bị đơ quá nhiều lần, chuyển bài
+            const limit=(document.visibilityState==='visible'?(powerSave?5:3):(powerSave?4:3));
+            if(stallScoreRef.current>=limit){ stallScoreRef.current=0; nextTrack(); }
+          }
+        },interval);
+        return()=>clearInterval(tick);
+      },[currentIndex,current,powerSave,nextTrack]);
+
+      /* Resume khi đã có playlist */
+      useEffect(()=>{
+        const a=audioRef.current; if(!a) return;
+        const r=load(RESUME_KEY,null);
+        if(r&&playlist.length){
+          const idx=Math.min(Math.max(0,r.index||0),playlist.length-1);
+          setCurrentIndex(idx);
+          setTimeout(()=>{ const s=playlist[idx]; if(!s) return;
+            if(a.src!==s.stream_url){ a.src=s.stream_url; a.load(); }
+            a.currentTime=Number(r.currentTime||0); a.volume=r.volume??volume; a.playbackRate=r.rate??playbackRate; a.muted=false; a.loop=false;
+            if(r.playing){ setPlaying(true); targetPlayingRef.current=true; }
+          },0);
+        }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      },[playlist.length]);
+
+      /* Favorites (ĐÃ LOẠI BỎ logic toggleFav, isFav) */
+      // Giữ lại state để tránh lỗi nếu có component phụ thuộc vào nó (mặc dù đã cố gắng loại bỏ)
+      const [favs,setFavs]=useState(load('mstq_favorites_v0',[]));
+      const toggleFav = () => {}; // Hàm rỗng, không làm gì cả
+      const isFav = () => false; // Luôn trả về false
+
+      /* ---- UI Components (Chuyển sang JS thuần) ---- */
+      const TopBar=({title})=>{
+        
+        // FIX: Cấu trúc Link Dropdown mới (theo yêu cầu)
+        
+        const SimpleLinkDropdown = e('div', {className: "dropdown", onClick: (e) => e.stopPropagation()}, // FIX: Chặn sự kiện lan truyền
+            e('button', {className: "btn", onClick: ()=>{haptic();setLinksOpen(o=>!o)}}, "Liên kết ▾"),
+            linksOpen && e('div', {className: "dropdown-menu", onMouseLeave: ()=>setLinksOpen(false)},
+                e('a', {className: "dropdown-item", href: "https://thiensutinhquang.github.io/home/", target: "_blank", rel: "noopener"}, "🏠 Trang chủ"),
+                e('a', {className: "dropdown-item", href: "https://thiensutinhquang.github.io/PlayMusic/", target: "_blank", rel: "noopener"}, "🎵 Play Nhạc"),
+                e('hr', {className: "my-1 border-[var(--border)]"}),
+                e('div', {className: "px-2 py-1 text-[var(--muted)] text-xs font-semibold"}, "Nền tảng"),
+                e('a', {className: "dropdown-item", href: "https://www.youtube.com/@ThiensuTinhQuang", target: "_blank", rel: "noopener"}, "▶️ YouTube"),
+                e('a', {className: "dropdown-item", href: "https://www.tiktok.com/@minhsutinhquang", target: "_blank", rel: "noopener"}, "🎶 TikTok"),
+                e('a', {className: "dropdown-item", href: "https://www.facebook.com/groups/minhsutinhquang", target: "_blank", rel: "noopener"}, "👥 Facebook Group"),
+                e('a', {className: "dropdown-item", href: "https://t.me/Giaoly_phap_don_ngo", target: "_blank", rel: "noopener"}, "💬 Telegram"),
+                e('a', {className: "dropdown-item", href: "https://zalo.me/g/dukrae245", target: "_blank", rel: "noopener"}, "📱 Zalo")
+            )
+        );
+        
+        // Logo (FIX: Chuyển sang URL trực tiếp + Fallback đơn giản)
+        const LogoElement = e('img', {
+            src: LOGO_FALLBACK_URL, 
+            width: "24", height: "24", 
+            className: "rounded-md", 
+            alt: "MSTQ logo",
+            onError: (e) => { e.target.src = LOGO_PLACEHOLDER; e.target.onError = null; }
+        });
+
+
+        return e('header', {className: "fixed top-0 inset-x-0 z-30 px-4 py-3 flex items-center justify-between bg-[var(--nav-bg)] backdrop-blur-lg border-b border-[var(--border)]"},
+          e('div', {className: "flex items-center gap-2"},
+            LogoElement, // Logo đã sửa
+            e('h1', {className: "font-semibold"}, title)
+          ),
+          e('div', {className: "flex items-center gap-2"},
+            e('button', {className: "btn", onClick: askInstall}, "Cài đặt ứng dụng"),
+            SimpleLinkDropdown, // Dùng Dropdown Link mới
+            e('button', {className: "btn", onClick: ()=>{haptic();setTheme(t=>t==='lucbao'?'light':'lucbao')}}, "Chủ đề")
+          )
+        );
+      };
+
+      const [sheetFor,setSheetFor]=useState(null);
+      const closeSheet=()=>setSheetFor(null);
+
+      async function shareTrack(s){
+        haptic();
+        try{
+          if(navigator.share){
+            await navigator.share({title:s.title, text:`Nghe: ${s.title} – ${s.artist||''}`, url:s.stream_url});
+          }else{
+            await navigator.clipboard.writeText(s.stream_url);
+            // Dùng Toast Message thay cho alert()
+            const tempMsg = document.createElement('div');
+            tempMsg.className = 'fixed bottom-[110px] left-1/2 -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg z-[1000] opacity-0 transition-opacity duration-300';
+            tempMsg.textContent = 'Đã sao chép link phát vào bộ nhớ tạm.';
+            document.body.appendChild(tempMsg);
+            setTimeout(() => { tempMsg.style.opacity = 1; }, 10);
+            setTimeout(() => { tempMsg.style.opacity = 0; tempMsg.addEventListener('transitionend', () => tempMsg.remove()); }, 2000);
+          }
+        }catch{}
+      }
+      function downloadTrack(s){
+        haptic();
+        // LỘT XÁC FIX: Dùng window.open để khắc phục lỗi chặn tải xuống của trình duyệt
+        window.open(s.stream_url, '_blank');
+      }
+
+      const HomeTab=()=>{
+        const list = filter.trim()
+          ? playlist.filter(s => (s.title||'').toLowerCase().includes(filter.toLowerCase()) || (s.artist||'').toLowerCase().includes(filter.toLowerCase()))
+          : playlist;
+
+        const handleAction = (e, actionFunc, song) => {
+          e.stopPropagation(); // Chặn sự kiện lan truyền lên nút Phát bài hát
+          e.preventDefault(); // Ngăn chặn hành vi mặc định (nếu có)
+          actionFunc(song);
+        };
+        
+        // Tối ưu hóa SongItem: Đã thêm số thứ tự và highlight rõ ràng (ĐỎ PHA TRẮNG)
+        const SongItem = (s, index) => {
+            const isCurrent = current?.id === s.id;
+            const itemClasses = [
+                "flex items-center gap-3 p-1.5 rounded-xl border border-[var(--border)] transition-all",
+                // Màu highlight Đỏ pha Trắng
+                isCurrent ? 'ring-2 ring-[var(--ring)] bg-red-900/40' : 'hover:bg-[var(--card)]/20' 
+            ].join(' ');
+
+            const currentStyle = isCurrent ? 'text-red-300' : ''; // Màu chữ Đỏ nhạt cho bài đang phát
+
+            return e('div', {key: s.id, className: itemClasses},
+              
+              // 1. Số thứ tự và nút play (cho dòng đang được chọn)
+              e('div', {className: `w-8 text-center flex-shrink-0 text-sm font-bold ${currentStyle}`},
+                  isCurrent ? Icons.play(16) : (index + 1) + '.' // Hiển thị Play icon nếu đang phát
+              ),
+
+              // 2. Thông tin bài hát (Phần bấm để phát)
+              e('button', {className: "flex-grow text-left min-w-0 flex flex-col justify-center", onClick: (e)=>{e.stopPropagation(); pickSong(s);}}, // Chỉ phát nhạc khi bấm vào phần text
+                e('div', {className: `font-semibold text-sm truncate ${currentStyle}`}, s.title||'Untitled'),
+                e('div', {className: "text-xs text-[var(--muted)] truncate"}, s.artist||'minhsutinhquang')
+              ),
+              
+              // 3. Khu vực nút và thời lượng
+              e('div', {className: "flex items-center gap-1 flex-shrink-0"},
+                /* ĐÃ LOẠI BỎ NÚT YÊU THÍCH theo yêu cầu */
+                
+                // Nút Tải về (SỬA LỖI: Gọi qua handleAction)
+                e('button', {className: "w-8 h-8 flex items-center justify-center rounded-full", title: "Tải về", 
+                  onClick: (e)=>handleAction(e, downloadTrack, s)}, e(Icons.download, {d:18})),
+                
+                // Nút Chia sẻ (SỬA LỖI: Gọi qua handleAction)
+                e('button', {className: "w-8 h-8 flex items-center justify-center rounded-full", title: "Chia sẻ", 
+                  onClick: (e)=>handleAction(e, shareTrack, s)}, e(Icons.share, {d:18})),
+                
+                // Thời lượng bài hát (gọn)
+                e('div', {className: "text-[11px] text-[var(--muted)] ml-1 w-8 text-right flex-shrink-0"}, formatTime(s.duration||0))
+              )
+            );
+        };
+
+        return e('div', {className: "px-4 py-3"},
+          e('div', {className: "flex items-center justify-between mb-2"},
+            e('h2', {className: "text-xl font-semibold"}, "Danh sách phát"),
+            e('span', {className: "chip"}, `${list.length} bài`)
+          ),
+          e('div', {className: "mb-3 flex gap-2"},
+            e('input', {className: "flex-1 bg-[var(--card)] border border-[var(--border)] rounded-xl p-2 focus:ring-2 focus:ring-[var(--primary)] focus:outline-none", placeholder: "Lọc nhanh theo tiêu đề / nghệ sĩ", value: filter, onChange: e=>setFilter(e.target.value)}),
+            e('button', {className: "btn", onClick: ()=>{haptic();setFilter('');setVisible(INITIAL_VISIBLE)}}, "Xoá")
+          ),
+          loading?(
+            e('div', {className: "animate-pulse space-y-3"}, Array.from({length:6}).map((_,i)=>e('div', {key:i, className: "h-14 rounded-xl bg-[var(--card)]/40"})))
+          ):(
+            e(React.Fragment, null,
+              e('div', {className: "space-y-0.5"}, list.slice(0,visible).map((s, index) => SongItem(s, index))), // Map kèm index
+              list.length>visible && e('button', {onClick: ()=>{haptic();setVisible(v=>Math.min(list.length,v+VISIBLE_STEP))}, className: "btn w-full mt-3"}, "Tải thêm")
+            )
+          ),
+          // Loại bỏ sheetFor vì không còn nút ⋯ 
+          sheetFor && e('div', {className: "sheet safe-bottom"},
+            e('div', {className: "flex items-center justify-between px-2"},
+              e('div', {className: "font-semibold truncate mr-2"}, sheetFor.title),
+              e('button', {className: "btn", onClick: ()=>{haptic();closeSheet()}}, "Đóng")
+            ),
+            e('div', {className: "mt-2 grid grid-cols-2 gap-2 px-2 pb-2"},
+              e('button', {className: "btn btn-primary", onClick: ()=>{enqueueNext(sheetFor); closeSheet(); setTab('queue');}}, "Phát tiếp theo"),
+              e('button', {className: "btn", onClick: ()=>{pickSong(sheetFor); closeSheet();}}, "Phát ngay"),
+              e('button', {className: "btn", onClick: ()=>{downloadTrack(sheetFor); closeSheet();}}, "Tải ngoại tuyến"),
+              e('button', {className: "btn", onClick: ()=>{shareTrack(sheetFor); closeSheet();}}, "Chia sẻ…")
+            )
+          )
+        );
+      };
+
+      const SearchTab=()=>{
+        const [kw,setKw]=useState(''); const [busy,setBusy]=useState(false);
+        const runQuery=async(q,sort='downloads+desc')=>{
+          haptic();
+          setBusy(true);
+          try{
+            const url=`https://archive.org/advancedsearch.php?q=${encodeURIComponent(q)}&fl[]=identifier,title,creator,description&sort[]=${encodeURIComponent(sort)}&rows=120&page=1&output=json`;
+            const r=await fetch(url,{cache:'no-store'}); const j=await r.json();
+            const docs=j?.response?.docs||[]; const out=[];
+            for(const d of docs){
+              try{
+                const meta=await fetch(`https://archive.org/metadata/${d.identifier}`,{cache:'no-store'}).then(r=>r.json());
+                (meta.files||[]).forEach(f=>{
+                  if(String(f.format||'').toUpperCase().includes('MP3')){
+                    out.push({id:`${d.identifier}/${f.name}`,title:(f.title||d.title||f.name||'').replace(/\.mp3$/i,'').replace(/_/g,' ').trim(),artist:d.creator||'Archive',stream_url:`https://archive.org/download/${d.identifier}/${encodeURIComponent(f.name)}`,artwork:`https://archive.org/download/${d.identifier}/__ia_thumb.jpg`,duration:parseFloat(f.length||0)||0,lyrics:d.description||'',item_identifier:d.identifier});
+                  }
+                });
+              }catch{}
+            }
+            if(out.length){ setPlaylist(out); setVisible(INITIAL_VISIBLE); setTab('home'); setFilter(''); }
+          }catch{} setBusy(false);
+        };
+        const quick=[{label:'Mới nhất',q:'mediatype:(audio)',sort:'publicdate+desc'},{label:'Phổ biến',q:'mediatype:(audio)',sort:'downloads+desc'},{label:'Pháp thoại',q:'"Minh Su Tinh Quang" mediatype:(audio)',sort:'downloads+desc'}];
+        return e('div', {className: "px-4 py-3"},
+          e('div', {className: "flex gap-2"},
+            e('input', {className: "flex-1 bg-[var(--card)] border border-[var(--border)] rounded-xl p-2 focus:ring-2 focus:ring-[var(--primary)] focus:outline-none", placeholder: "Tìm trên Archive.org...", value: kw, onChange: e=>setKw(e.target.value)}),
+            e('button', {className: "btn btn-primary", onClick: ()=>runQuery(`${kw} AND mediatype:(audio)`), disabled:!kw||busy}, busy?'Đang tìm…':'Tìm')
+          ),
+          e('div', {className: "flex gap-2 mt-3 flex-wrap"},
+            quick.map(x=>e('button', {key:x.label, className: "btn", onClick: ()=>runQuery(x.q,x.sort)}, x.label))
+          )
+        );
+      };
+
+      const LibraryTab=()=>{
+        const [custom,setCustom]=useState(sourcePref.customText||'');
+        return e('div', {className: "px-4 py-3 space-y-6"},
+          e('div', null,
+            e('h2', {className: "text-lg font-semibold mb-2"}, "Thư viện (Nguồn nhạc)"),
+            e('p', {className: "text-[var(--muted)] text-sm"}, "Mục này chứa các cài đặt nâng cao về nguồn nhạc."),
+            ),
+          e('div', {className: "p-3 rounded-2xl border border-[var(--border)]"},
+            e('h3', {className: "font-semibold mb-2"}, "Nguồn tuỳ chỉnh (M3U/URL)"),
+            e('label', {className: "flex items-center gap-2 mb-2"}, e('input', {type:"checkbox", checked:!!sourcePref.custom, onChange:e=>{haptic();setSourcePref(p=>({...p,custom:e.target.checked}))}}), " Bật"),
+            e('textarea', {className: "w-full bg-[var(--card)] border border-[var(--border)] rounded-xl p-2 min-h-[120px] focus:ring-2 focus:ring-[var(--primary)] focus:outline-none", placeholder: "https://.../song1.mp3\nhttps://.../song2.mp3", value:custom, onChange:e=>setCustom(e.target.value)}),
+            e('div', {className: "mt-2 flex gap-2"},
+              e('button', {className: "btn btn-primary", onClick:()=>{haptic();setSourcePref(p=>({...p,customText:custom,custom:true})); refetch();}}, "Tải vào danh sách"),
+              e('button', {className: "btn", onClick:()=>{haptic();setCustom(''); setSourcePref(p=>({...p,customText:''}));}}, "Xoá nội dung")
+            )
+          )
+        );
+      };
+
+      const QueueTab=()=>{ const items=upNext.map(id=>playlist.find(s=>s.id===id)).filter(Boolean);
+        return e('div', {className: "px-4 py-3"},
+          e('div', {className: "flex items-center justify-between mb-2"},
+            e('h2', {className: "text-lg font-semibold"}, "Hàng đợi “Phát tiếp theo”"),
+            e('div', {className: "flex gap-2"}, e('span', {className: "chip"}, `${items.length} mục`), items.length>0 && e('button', {className: "btn", onClick:()=>{haptic();clearQueue()}}, "Xoá hết"))
+          ),
+          items.length===0 ? e('p', {className: "text-[var(--muted)] text-sm"}, "Chưa có mục nào. Bấm ⋯ trên bài hát để thêm."):
+            e('div', {className: "space-y-2"}, items.map(s=>
+              e('div', {key:s.id, className: "flex items-center gap-3 p-3 rounded-2xl border border-[var(--border)]"},
+                e('img', {src:s.artwork||ICON_URL, alt:"", className: "w-10 h-10 rounded-lg object-cover"}),
+                e('div', {className: "flex-grow min-w-0"},
+                  e('div', {className: "font-semibold truncate"}, s.title),
+                  e('div', {className: "text-xs text-[var(--muted)] truncate"}, s.artist||'minhsutinhquang')
+                ),
+                e('div', {className: "flex gap-2"},
+                  e('button', {className: "btn", onClick:()=>moveUp(s.id)}, "↑"),
+                  e('button', {className: "btn", onClick:()=>moveDown(s.id)}, "↓"),
+                  e('button', {className: "btn", onClick:()=>removeFromQueue(s.id)}, "✕")
+                )
+              )
+            ))
+        );
+      };
+
+      const SettingsTab=()=>e('div', {className: "px-4 py-3 space-y-6"},
+        e('div', {className: "p-3 rounded-2xl border border-[var(--border)]"},
+          e('div', {className: "flex items-center justify-between mb-3"},
+            e('h3', {className: "font-semibold text-lg"}, "Giao diện"),
+            e('span', {className: "chip"}, theme)
+          ),
+          e('div', {className: "grid grid-cols-3 gap-3"},
+            [['Tối','dark'],['Sáng','light'],['Lục Bảo','lucbao']].map(([label,code])=>
+              e('button', {key:code, onClick:()=>{haptic();setTheme(code)}, className: `w-full text-left p-4 rounded-2xl border border-[var(--border)] ${theme===code?'ring-2 ring-[var(--ring)]':''}`},
+                e('div', {className: "font-semibold"}, label),
+                e('div', {className: "text-xs text-[var(--muted)]"}, code)
+              )
+            )
+          )
+        ),
+        e('div', {className: "p-3 rounded-2xl border border-[var(--border)]"},
+          e('h3', {className: "font-semibold mb-2"}, "Âm lượng & tốc độ"),
+          e('div', {className: "space-y-2"},
+            e('label', {className: "text-sm"}, `Âm lượng: ${(volume*100)|0}%`),
+            e('input', {type:"range", min:"0", max:"1", step:"0.01", value:volume, onChange:e=>{haptic(8);setVolume(parseFloat(e.target.value))}}),
+            e('div', {className: "flex gap-2 flex-wrap"},
+              [0.75,1,1.25,1.5].map(v=>
+                e('button', {key:v, className: `btn ${playbackRate===v?'btn-primary':''}`, onClick:()=>{haptic();setPlaybackRate(v)}}, `${v}x`)
+              ),
+              e('label', {className: "flex items-center gap-2 ml-1"},
+                e('input', {type:"checkbox", checked:muted, onChange:e=>{haptic();setMuted(e.target.checked)}}), " Tắt tiếng"
+              )
+            )
+          )
+        ),
+        e('div', {className: "p-3 rounded-2xl border border-[var(--border)]"},
+          e('h3', {className: "font-semibold mb-2"}, "Ổn định âm lượng (WebAudio)"),
+          e('label', {className: "flex items-center gap-2"},
+            e('input', {type:"checkbox", checked:!!compressorOn, onChange:e=>{haptic();setCompressorOn(e.target.checked)}}), " Bật Dynamics Compressor"
+          )
+        ),
+        e('div', {className: "p-3 rounded-2xl border border-[var(--border)]"},
+          e('h3', {className: "font-semibold mb-2"}, "Tiết kiệm pin & Chạy nền"),
+          e('label', {className: "flex items-center gap-2"},
+            e('input', {type:"checkbox", checked:!!powerSave, onChange:e=>{haptic();setPowerSave(e.target.checked)}}), " Bật tiết kiệm pin (tắt preload và giảm tần suất kiểm tra khi nền)"
+          )
+        ),
+        e('div', {className: "p-3 rounded-2xl border border-[var(--border)]"},
+          e('h3', {className: "font-semibold mb-3"}, "Hẹn giờ tắt nhạc"),
+          e('div', {className: "grid grid-cols-3 gap-2"},
+            [15,30,45,60,90,120].map(m=>e('button', {key:m, className: "btn", onClick:()=>startSleepTimer(m*60*1000)}, `${m} phút`))
+          ),
+          e('div', {className: "flex items-center gap-3 mt-3"},
+            e('span', {className: "chip"}, timerLeft?`Còn: ${formatTime(Math.ceil(timerLeft/1000))}`:'Không đặt'),
+            timerLeft && e('button', {className: "btn", onClick:cancelSleepTimer}, "Huỷ hẹn giờ"),
+            e('label', {className: "flex items-center gap-2 ml-auto"},
+              e('input', {type:"checkbox", checked:!!stopAtEnd, onChange:e=>{haptic();setStopAtEnd(e.target.checked)}}), " Dừng khi hết bài"
+            )
+          )
+        ),
+        e('div', {className: "p-3 rounded-2xl border border-[var(--border)]"},
+          e('h3', {className: "font-semibold mb-2"}, "Dữ liệu & Đồng bộ"),
+          e('div', {className: "flex flex-col gap-2"},
+            e('button', {className: "btn", onClick:()=>{haptic();refetch()}}, "Làm mới danh sách nhạc"),
+            e('button', {className: "btn", onClick:async()=>{
+              haptic();
+              try{ if('caches' in window){ const keys=await caches.keys(); for(const k of keys){ await caches.delete(k); } } }catch{}
+              try{ localStorage.clear(); }catch{}
+              location.reload();
+            }, style:{background:'#2a1313',borderColor:'#6b1d1d',color:'#fff'}}, "Xóa Cache & Làm mới tất cả")
+          )
+        )
+      );
+
+      /* Now Playing */
+      const [showNowPlaying,setShowNowPlaying]=useState(false);
+      const NowPlaying=()=>{
+        if(!current) return null;
+        const a=audioRef.current;
+        const onSeek=(e)=>{ 
+          if(!a||!isFinite(a.duration)) return; 
+          const newVal = parseFloat(e.target.value);
+          a.currentTime=clamp(newVal,0,a.duration); 
+        };
+        const dblLeft=()=>{ haptic(5); if(a) a.currentTime=Math.max(0,(a.currentTime||0)-10); };
+        const dblRight=()=>{ haptic(5); if(a) a.currentTime=Math.min(a.duration||0,(a.currentTime||0)+10); };
+        
+        const RepeatButton = () => {
+          let label = 'Lặp: Tắt';
+          let className = 'btn';
+          if (repeat === 'all') { label = 'Lặp: DS'; className += ' btn-primary'; } 
+          else if (repeat === 'one') { label = 'Lặp: 1'; className += ' btn-primary'; }
+          return e('button', {className: className, onClick: ()=>{haptic();setRepeat(r=> sanitizeRepeat(r==='off'?'all':r==='all'?'one':'off'))}}, 
+            Icons.repeat(18), ` ${label}`); 
+        };
+
+        return e('div', {className: "fixed inset-0 z-50 bg-[var(--bg)]/98 backdrop-blur-md overflow-y-auto"},
+          e('div', {className: "p-4 flex items-center justify-between border-b border-[var(--border)] sticky top-0 bg-[var(--nav-bg)] z-10"},
+            e('button', {className: "btn", onClick: ()=>{haptic();setShowNowPlaying(false)}}, "Đóng"),
+            e('div', {className: "font-semibold"}, "Đang phát"),
+            /* ĐÃ LOẠI BỎ nút Yêu thích */
+            e('div', {className: "w-10"}) // Giữ chỗ
+          ),
+          e('div', {className: "px-6 py-6 pb-20 max-w-xl mx-auto"},
+            e('div', {className: "mx-auto w-full max-w-[300px] aspect-square rounded-3xl shadow-xl overflow-hidden relative select-none", style:{background:'var(--gradient)'}},
+              e('div', {className: "absolute inset-0 z-10", onDoubleClick: dblLeft}),
+              e('div', {className: "absolute inset-0 left-1/2 z-10", onDoubleClick: dblRight}),
+              e('img', {src: current.artwork||ICON_URL, alt: "", className: "w-full h-full object-cover mix-blend-luminosity pointer-events-none"})
+            ),
+            e('div', {className: "mt-5 text-center"},
+              e('div', {className: "text-2xl font-bold truncate"}, current.title),
+              e('div', {className: "text-sm text-[var(--muted)] truncate"}, current.artist||'minhsutinhquang')
+            ),
+            e('div', {className: "mt-8 px-1"},
+              e('input', {type:"range", min:"0", max:progress.duration||0, step:"0.1", value:progress.current||0, onChange:onSeek, style:{width:'100%', accentColor:'var(--primary)'}}),
+              e('div', {className: "mt-1 text-[12px] text-[var(--muted)] flex justify-between"},
+                e('span', null, formatTime(progress.current)), e('span', null, formatTime(progress.duration))
+              )
+            ),
+            
+            // Hàng nút điều khiển chính: to hơn, dễ bấm hơn
+            e('div', {className: "mt-6 flex items-center justify-center gap-6"},
+              e('button', {className: `btn text-xl p-3 ${shuffle?'btn-primary':''}`, onClick:()=>{haptic();setShuffle(s=>!s)}}, Icons.shuffle(24)), 
+              e('button', {className: "btn text-3xl p-3", onClick:prevTrack}, Icons.back(32)), 
+              e('button', {className: "btn btn-primary text-4xl p-5 rounded-full", onClick:playPause}, playing?Icons.pause(36):Icons.play(36)), 
+              e('button', {className: "btn text-3xl p-3", onClick:nextTrack}, Icons.next(32)), 
+              e(RepeatButton, null)
+            ),
+
+            // Hàng tùy chọn phụ: Tốc độ và Âm lượng
+            e('div', {className: "mt-8 space-y-4"},
+              e('div', {className: "p-3 rounded-2xl border border-[var(--border)]"},
+                e('div', {className: "flex items-center justify-between mb-2"},
+                    e('div', {className: "font-semibold"}, "Âm lượng"),
+                    e('span', {className: "chip"}, `${(volume*100|0)}%`)
+                ),
+                e('input', {type:"range", min:"0", max:"1", step:"0.01", value:volume, onChange:e=>{haptic(8);setVolume(parseFloat(e.target.value))}, style:{accentColor:'var(--primary)'}})
+              ),
+              e('div', {className: "p-3 rounded-2xl border border-[var(--border)]"},
+                e('div', {className: "flex items-center justify-between mb-2"},
+                    e('div', {className: "font-semibold"}, "Tốc độ phát"),
+                    e('span', {className: "chip"}, `${playbackRate}x`)
+                ),
+                e('div', {className: "flex gap-2 justify-start"},
+                  [0.75,1,1.25,1.5,2.0].map(v=>
+                    e('button', {key:v, className: `btn text-sm ${playbackRate===v?'btn-primary':''}`, onClick:()=>{haptic();setPlaybackRate(v)}}, `${v}x`)
+                  )
+                )
+              )
+            )
+          )
+        );
+      };
+
+      /* ---- Render & auto start ---- */
+      useEffect(()=>{ 
+        const a=audioRef.current; if(!a) return;
+        if(current){
+          if(a.src!==current.stream_url){ a.src=current.stream_url; a.load(); }
+          a.loop=false; a.playbackRate=playbackRate; a.muted=false; 
+          document.title=`${playing?'▶':'⏸'} ${current.title} – MSTQ`;
+          if(playing && !needsStart){ a.play().catch(()=>{}); }
+        }else{
+          document.title='MSTQ Music';
+        }
+      },[currentIndex,playing,playbackRate,current,needsStart]);
+
+      // Popup StartGate tự chạy sau 4 giây (Đã thay đổi từ 5s xuống 4s)
+      const START_TIMEOUT_MS = 4000; 
+      
+      // Lột xác logic StartGate: Chỉ khởi động timer khi danh sách đã tải xong (!loading)
+      useEffect(()=>{
+        clearTimeout(startTimerRef.current);
+        if(!loading && needsStart){
+          startTimerRef.current=setTimeout(async()=>{
+            try{
+              await ensureAudioContext();
+              if(!playlist.length){ 
+                setNeedsStart(false); 
+                return; 
+              }
+              // Bắt buộc thoát màn hình StartGate
+              setNeedsStart(false); 
+              // Thử play để bắt đầu nghe nhạc
+              playIndex(0,{fadeIn:false}); 
+            }catch{
+                // Dù play thất bại, vẫn thoát màn hình StartGate sau 4s
+                setNeedsStart(false);
+            }
+          }, START_TIMEOUT_MS);
+        }
+        return()=>clearTimeout(startTimerRef.current);
+      },[loading, needsStart, playlist.length, playIndex]);
+
+
+      const TabBar=()=>e('nav', {className: "tabbar safe-bottom"},
+        e('div', {className: "flex"},
+          e('button', {className: "tabbtn", 'aria-current':tab==='home', onClick:()=>{haptic();setTab('home')}}, Icons.home(20), e('span', null, "Trang chủ")), 
+          e('button', {className: "tabbtn", 'aria-current':tab==='search', onClick:()=>{haptic();setTab('search')}}, Icons.search(20), e('span', null, "Tìm kiếm")), 
+          e('button', {className: "tabbtn", 'aria-current':tab==='settings', onClick:()=>{haptic();setTab('settings')}}, Icons.settings(20), e('span', null, "Cài đặt")), 
+          e('button', {className: "tabbtn", 'aria-current':tab==='queue', onClick:()=>{haptic();setTab('queue')}}, Icons.queue(20), e('span', null, "Hàng đợi"))
+        )
+      );
+
+      const MiniPlayer = () => current && !needsStart && e('div', {
+        // Tối ưu hóa MiniPlayer theo phong cách capsule/gọn gàng theo yêu cầu
+        className: "fixed left-2 right-2 rounded-2xl bg-[var(--card)]/95 border border-[var(--border)] backdrop-blur-md p-2 pt-3 z-50 shadow-[var(--shadow)]",
+        style:{bottom:'64px'}
+      },
+        e('div', {className: "flex items-center justify-between gap-3"},
+          // Phần thông tin bài hát (cực kỳ gọn gàng)
+          e('button', {className: "flex-grow min-w-0 text-left pr-2", onClick: ()=>{haptic();setShowNowPlaying(true)}},
+            e('p', {className: "truncate font-semibold"}, current.title),
+            e('p', {className: "text-xs text-[var(--muted)] truncate"}, current.artist||'minhsutinhquang'),
+          ),
+          
+          // Control Capsule (Đã căn giữa và mở rộng để dễ thao tác)
+          e('div', {className: "absolute inset-x-0 bottom-1/2 translate-y-1/2 flex justify-center pointer-events-none"},
+            e('div', {className: "flex items-center justify-center rounded-full bg-[var(--primary)] text-[var(--primary-fg)] overflow-hidden shadow-lg pointer-events-auto w-3/4 max-w-[200px]"},
+              // Nút Trở lại (Previous)
+              e('button', {className: "w-1/3 h-10 flex items-center justify-center p-2", onClick: ()=>{haptic();prevTrack()}, 'aria-label': "Previous"}, Icons.back(20)), 
+              // Nút Play/Pause
+              e('button', {className: "w-1/3 h-10 flex items-center justify-center p-2 border-x border-[var(--primary-fg)]/20", onClick: ()=>{haptic();playPause()}, 'aria-label': "Play/Pause"}, playing?Icons.pause(22):Icons.play(22)), 
+              // Nút Next
+              e('button', {className: "w-1/3 h-10 flex items-center justify-center p-2", onClick: ()=>{haptic();nextTrack()}, 'aria-label': "Next"}, Icons.next(20)) 
+            )
+          )
+        ),
+        // Thanh tiến trình mỏng ở dưới cùng
+        e('div', {className: "mt-3 h-1 bg-[var(--muted)]/20 rounded-full"},
+          e('div', {className: "h-1 bg-[var(--primary)] rounded-full transition-all duration-500", style:{width:`${progress.duration>0?(progress.current/progress.duration)*100:0}%`}})
+        )
+      );
+
+      const StartGate = () => needsStart && e('div', {className: "fixed inset-0 z-50 flex items-center justify-center bg-[var(--bg)]/95 backdrop-blur"},
+        e('div', {className: "p-5 rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-xl text-center max-w-sm"},
+          e('img', {src: LOGO_FALLBACK_URL, onError: (e) => { e.target.src = LOGO_PLACEHOLDER; e.target.onError = null; }, width: "64", height: "64", className: "mx-auto mb-3 rounded-xl", alt: "MSTQ logo"}),
+          e('h2', {className: "font-bold text-lg mb-2"}, "MSTQ Music"),
+          e('p', {className: "text-sm text-[var(--muted)] mb-3"}, `Chạm “Bắt đầu nghe” để mở quyền âm thanh. Hộp thoại sẽ tự đóng sau ${START_TIMEOUT_MS/1000} giây và thử phát tự động.`),
+          e('div', {className: "flex gap-2 justify-center"},
+            e('button', {className: "btn", onClick: askInstall}, "Cài đặt ứng dụng"),
+            e('button', {className: "btn btn-primary", onClick: async()=>{haptic(); await ensureAudioContext(); setNeedsStart(false); if(playlist.length){ playIndex(0,{fadeIn:false}); }}}, "Bắt đầu nghe")
+          ),
+          e('div', {className: "text-[12px] text-[var(--muted)] mt-2"}, loading?'Đang tải danh sách nhạc...':`Sẽ tự động bắt đầu sau ${START_TIMEOUT_MS/1000} giây…`)
+        )
+      );
+
+      const title = tab==='home'?'Trang chủ':tab==='search'?'Tìm kiếm':tab==='settings'?'Cài đặt':tab==='queue'?'Hàng đợi':'';
+
+      return e('div', {className: "min-h-screen", onClick: ()=>setLinksOpen(false), style:{paddingTop:64, paddingBottom:(current?188:104)}},
+        e(TopBar, {title:title}),
+        e(StartGate, null),
+        tab==='home' && e(HomeTab, null),
+        tab==='search' && e(SearchTab, null),
+        tab==='settings' && e(SettingsTab, null),
+        tab==='queue' && e(QueueTab, null),
+        e('nav', {className: "tabbar safe-bottom"},
+          e('div', {className: "flex"},
+            e('button', {className: "tabbtn", 'aria-current':tab==='home', onClick:()=>{haptic();setTab('home')}}, Icons.home(20), e('span', null, "Trang chủ")), 
+            e('button', {className: "tabbtn", 'aria-current':tab==='search', onClick:()=>{haptic();setTab('search')}}, Icons.search(20), e('span', null, "Tìm kiếm")), 
+            e('button', {className: "tabbtn", 'aria-current':tab==='settings', onClick:()=>{haptic();setTab('settings')}}, Icons.settings(20), e('span', null, "Cài đặt")), 
+            e('button', {className: "tabbtn", 'aria-current':tab==='queue', onClick:()=>{haptic();setTab('queue')}}, Icons.queue(20), e('span', null, "Hàng đợi"))
+          )
+        ),
+        e(MiniPlayer, null),
+        showNowPlaying && !needsStart && e(NowPlaying, null)
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(e(App, null));
+  </script>
+</body>
+</html>
