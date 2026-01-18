@@ -152,12 +152,20 @@
       const [linksOpen,setLinksOpen]=useState(false);
       const linkRef = useRef(null); // Ref cho dropdown
       
-      useEffect(()=>{
-        const onPrompt=(e)=>{ e.preventDefault(); installEvtRef.current=e; };
-        window.addEventListener('beforeinstallprompt',onPrompt);
-        return()=>window.removeEventListener('beforeinstallprompt',onPrompt);
-      },[]);
-      const askInstall=async()=>{ haptic(); try{ await installEvtRef.current?.prompt(); await audioCtxRef.current?.resume?.(); }catch{} };
+      // FIX: Chuyển logic install sang PWA Engine toàn cục
+      const askInstall = async () => { 
+        haptic(); 
+        try { await audioCtxRef.current?.resume?.(); } catch {} // Resume Audio Context trước
+
+        // Gọi trực tiếp logic thông minh từ PWA Engine (được định nghĩa ở cuối file)
+        if (window.pwaEngine) {
+            window.pwaEngine.showSmartGuide();
+        } else {
+            console.warn("PWA Engine chưa sẵn sàng");
+            // Fallback cực đơn giản nếu engine chưa load
+            alert("Vui lòng mở menu trình duyệt chọn 'Thêm vào màn hình chính' (Add to Home Screen).");
+        }
+      };
 
       /* Playback state */
       const [playlist,setPlaylist]=useState([]);
