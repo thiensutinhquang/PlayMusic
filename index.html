@@ -75,9 +75,21 @@
   </div>
 
   <script>
-    // Bắt lỗi toàn cục
+    // Bắt lỗi toàn cục - PHIÊN BẢN CHUYÊN GIA (Lọc nhiễu)
     (function(){
-      const show=(m)=>{const el=document.getElementById('err');const log=document.getElementById('errlog');if(log)log.textContent=String(m||'Unknown');if(el)el.style.display='flex';console.error('[GLOBAL ERROR]',m)};
+      const show=(m)=>{
+        // Bỏ qua các lỗi "vặt" do trình duyệt chặn play hoặc chuyển bài nhanh
+        const str = String(m||'');
+        if(str.includes('AbortError') || str.includes('NotAllowedError') || str.includes('Interrupted') || str.includes('The play() request was interrupted')) {
+            console.warn('[Silent Error]', m);
+            return; // Im lặng là vàng
+        }
+        const el=document.getElementById('err');
+        const log=document.getElementById('errlog');
+        if(log) log.textContent=str;
+        if(el) el.style.display='flex';
+        console.error('[GLOBAL ERROR]',m);
+      };
       window.addEventListener('error',e=>show(e.error||e.message||e));
       window.addEventListener('unhandledrejection',e=>show(e.reason||e));
     })();
@@ -343,35 +355,36 @@
         setCurrentIndex(i); setPlaying(true); targetPlayingRef.current=true;
         const s=playlist[i]; if(!s) return;
         
-        // --- LOGIC PHÁT NHẠC SỐNG CÒN (SURVIVAL MODE) ---
-        // Vứt bỏ 'await fadeTo' ở đoạn Fade-Out. Tại sao?
-        // Vì khi chạy nền, setTimeout bị HDH bóp nghẹt. 
-        // 120ms fade-out có thể biến thành 10 giây treo -> Mất Audio Context -> App Chết.
+        // --- LOGIC PHÁT NHẠC SỐNG CÒN (SURVIVAL MODE - NO FADE OUT) ---
+        // Không dùng await fadeTo(...) khi chuyển bài.
+        // Chỉ đơn giản là cắt và phát ngay lập tức.
         
-        // Cập nhật ngay lập tức (Sync)
         if(a.src===s.stream_url && a.currentTime>0){
           a.play().catch(()=>{});
         }else{
-          // Cắt bụp bài cũ ngay lập tức, không thương tiếc
+          // 1. Reset Gain ngay lập tức để tránh 'tiếng bụp' nhưng không được dùng setTimeout
           if(gainRef.current) {
              gainRef.current.gain.cancelScheduledValues(audioCtxRef.current.currentTime);
-             gainRef.current.gain.value = 0; // Mute tức thì để tránh tiếng 'bụp' cơ học
+             gainRef.current.gain.value = 0.05; // Giảm volume xuống gần 0 cực nhanh
           }
           
           a.src=s.stream_url; 
           a.load(); 
           
-          // Sau khi load, mới fade-in nhẹ nhàng
-          if(fadeIn) { 
-             try{ 
-               await a.play(); 
-               // Fade-in nhanh (800ms) sau khi đã bắt đầu phát
-               if(gainRef.current) {
-                 gainRef.current.gain.linearRampToValueAtTime(1, audioCtxRef.current.currentTime + 0.8);
-               }
-             } catch(e){ console.warn("Play error:",e); }
+          try {
+             // 2. Gọi Play ngay lập tức. Quan trọng: Handle Promise để tránh lỗi runtime
+             await a.play();
+             
+             // 3. Nếu thành công, Fade-In rất nhanh (an toàn)
+             if(gainRef.current) {
+               const now = audioCtxRef.current.currentTime;
+               gainRef.current.gain.setValueAtTime(0.05, now);
+               gainRef.current.gain.linearRampToValueAtTime(1, now + 0.5); // 0.5s fade-in
+             }
+          } catch(e) {
+             console.warn("Auto-play blocked or interrupted:", e);
+             // Không làm gì cả, đã có global error handler lo việc chặn thông báo
           }
-          else { a.play().catch(()=>{}); }
         }
 
         queuePreload(i);
@@ -449,7 +462,8 @@
           setProgress({current:a.currentTime||0,duration:a.duration||0});
           const now=Date.now();
           if(Math.abs(a.currentTime-(lastProgRef.current.pos||0))>0.25){ lastProgRef.current={t:now,pos:a.currentTime}; stallScoreRef.current=0; }
-          // Tăng độ nhạy kết thúc bài hát (0.5s -> 0.8s) để bù đắp độ trễ timer khi tắt màn hình
+          // QUAN TRỌNG: Chỉ dùng logic này làm dự phòng. Event 'ended' mới là chính.
+          // Tăng buffer lên 0.8s để bắt sớm nếu máy quá lag
           if(a.duration>1 && !a.paused && !a.loop && (a.currentTime>=a.duration-0.8)){ handleEnd(); }
         };
         const onEnded=()=>{ handleEnd(); };
@@ -883,10 +897,8 @@
         }
       },[currentIndex,playing,playbackRate,current,needsStart]);
 
-      // Popup StartGate tự chạy sau 4 giây (Đã thay đổi từ 5s xuống 4s)
       const START_TIMEOUT_MS = 4000; 
       
-      // Lột xác logic StartGate: Chỉ khởi động timer khi danh sách đã tải xong (!loading)
       useEffect(()=>{
         clearTimeout(startTimerRef.current);
         if(!loading && needsStart){
@@ -897,12 +909,9 @@
                 setNeedsStart(false); 
                 return; 
               }
-              // Bắt buộc thoát màn hình StartGate
               setNeedsStart(false); 
-              // Thử play để bắt đầu nghe nhạc
               playIndex(0,{fadeIn:false}); 
             }catch{
-                // Dù play thất bại, vẫn thoát màn hình StartGate sau 4s
                 setNeedsStart(false);
             }
           }, START_TIMEOUT_MS);
@@ -921,30 +930,23 @@
       );
 
       const MiniPlayer = () => current && !needsStart && e('div', {
-        // Tối ưu hóa MiniPlayer theo phong cách capsule/gọn gàng theo yêu cầu
         className: "fixed left-2 right-2 rounded-2xl bg-[var(--card)]/95 border border-[var(--border)] backdrop-blur-md p-2 pt-3 z-50 shadow-[var(--shadow)]",
         style:{bottom:'64px'}
       },
         e('div', {className: "flex items-center justify-between gap-3"},
-          // Phần thông tin bài hát (cực kỳ gọn gàng)
           e('button', {className: "flex-grow min-w-0 text-left pr-2", onClick: ()=>{haptic();setShowNowPlaying(true)}},
             e('p', {className: "truncate font-semibold"}, current.title),
             e('p', {className: "text-xs text-[var(--muted)] truncate"}, current.artist||'minhsutinhquang'),
           ),
           
-          // Control Capsule (Đã căn giữa và mở rộng để dễ thao tác)
           e('div', {className: "absolute inset-x-0 bottom-1/2 translate-y-1/2 flex justify-center pointer-events-none"},
             e('div', {className: "flex items-center justify-center rounded-full bg-[var(--primary)] text-[var(--primary-fg)] overflow-hidden shadow-lg pointer-events-auto w-3/4 max-w-[200px]"},
-              // Nút Trở lại (Previous)
               e('button', {className: "w-1/3 h-10 flex items-center justify-center p-2", onClick: ()=>{haptic();prevTrack()}, 'aria-label': "Previous"}, Icons.back(20)), 
-              // Nút Play/Pause
               e('button', {className: "w-1/3 h-10 flex items-center justify-center p-2 border-x border-[var(--primary-fg)]/20", onClick: ()=>{haptic();playPause()}, 'aria-label': "Play/Pause"}, playing?Icons.pause(22):Icons.play(22)), 
-              // Nút Next
               e('button', {className: "w-1/3 h-10 flex items-center justify-center p-2", onClick: ()=>{haptic();nextTrack()}, 'aria-label': "Next"}, Icons.next(20)) 
             )
           )
         ),
-        // Thanh tiến trình mỏng ở dưới cùng
         e('div', {className: "mt-3 h-1 bg-[var(--muted)]/20 rounded-full"},
           e('div', {className: "h-1 bg-[var(--primary)] rounded-full transition-all duration-500", style:{width:`${progress.duration>0?(progress.current/progress.duration)*100:0}%`}})
         )
