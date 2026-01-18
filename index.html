@@ -85,6 +85,28 @@
         color: var(--muted);
     }
     .icon-btn-mini:active { background-color: var(--border); transform: scale(0.9); }
+
+    /* === TET TOAST STYLE === */
+    .toast-container {
+        position: fixed; top: 100px; left: 50%; transform: translateX(-50%);
+        z-index: 2000; pointer-events: none;
+        width: 90%; max-width: 380px;
+        text-align: center;
+    }
+    .toast-tet {
+        background: linear-gradient(135deg, #d32f2f, #b71c1c); /* Đỏ Tết */
+        color: #ffff00; /* Chữ Vàng */
+        border: 2px solid #ffeb3b;
+        padding: 14px 20px;
+        border-radius: 16px;
+        box-shadow: 0 10px 40px rgba(211, 47, 47, 0.6);
+        font-weight: 600;
+        font-size: 0.95rem;
+        animation: toastSlide 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        display: inline-block;
+        pointer-events: auto;
+    }
+    @keyframes toastSlide { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
   </style>
 </head>
 <body class="bg-[var(--bg)] text-[var(--text)] font-sans">
@@ -208,6 +230,15 @@
       const installEvtRef=useRef(null);
       const [linksOpen,setLinksOpen]=useState(false);
       const linkRef = useRef(null);
+      const [toast, setToast] = useState(null); // Trạng thái thông báo
+
+      // Xóa thông báo sau 3 giây
+      useEffect(() => {
+          if (toast) {
+              const timer = setTimeout(() => setToast(null), 3500);
+              return () => clearTimeout(timer);
+          }
+      }, [toast]);
       
       const askInstall = async () => { 
         haptic(); 
@@ -584,42 +615,46 @@
         }catch{}
       }
 
-      async function downloadTrack(s){
+      /* === UPDATED DOWNLOAD TRACK FUNCTION === */
+      async function downloadTrack(s) {
         haptic();
-        const btn = document.activeElement;
-        const originalHTML = btn.innerHTML;
-        btn.innerHTML = '⏳'; 
-        btn.disabled = true;
+        
+        // 1. Thông báo ngay lập tức
+        setToast(`🧧 Đang chuẩn bị tải: "${s.title}"...`);
 
         try {
+            if(!s.stream_url) throw new Error("No URL");
+
             const response = await fetch(s.stream_url);
-            if(!response.ok) throw new Error('Network error');
+            if (!response.ok) throw new Error('Network error');
             const blob = await response.blob();
             const url = window.URL.createObjectURL(blob);
-            
+
             const a = document.createElement('a');
             a.style.display = 'none';
             a.href = url;
-            a.download = `${s.title.replace(/[^a-z0-9]/gi, '_')}.mp3`; 
+            // Xử lý tên file: Giữ nguyên Tiếng Việt, chỉ bỏ ký tự đặc biệt của hệ thống file
+            a.download = `${s.title.replace(/[\/\\:*?"<>|]/g, '')}.mp3`;
             document.body.appendChild(a);
             a.click();
-            
+
             window.URL.revokeObjectURL(url);
             document.body.removeChild(a);
-        } catch(e) {
+            
+            setToast('✅ Đã tải xong! Chúc bạn nghe nhạc vui vẻ.');
+        } catch (e) {
             console.error(e);
-            const a = document.createElement('a');
-            a.href = s.stream_url;
-            a.download = ''; 
-            a.target = '_blank';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-        } finally {
+            // Fallback: Mở link trực tiếp
+            setToast('⚠️ Đang chuyển hướng để tải...');
             setTimeout(() => {
-                btn.innerHTML = originalHTML;
-                btn.disabled = false;
-            }, 1000);
+                const a = document.createElement('a');
+                a.href = s.stream_url;
+                a.download = '';
+                a.target = '_blank';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            }, 800);
         }
       }
 
@@ -1012,6 +1047,12 @@
         // FIX FLICKER: Gọi TopBar như Component chuẩn (e(TopBar))
         e(TopBar, {title, askInstall, linksOpen, setLinksOpen, setTheme}),
         e(StartGate, null),
+        
+        /* Toast Notification */
+        toast && e('div', {className: "toast-container"},
+            e('div', {className: "toast-tet"}, toast)
+        ),
+
         tab==='home' && e(HomeTab, null),
         tab==='search' && e(SearchTab, null),
         tab==='settings' && e(SettingsTab, null),
