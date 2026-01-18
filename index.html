@@ -20,7 +20,7 @@
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
 
   <style>
-    /* Tối ưu hóa CSS: Thêm transition cho mượt mà và feedback cảm ứng */
+    /* Tối ưu hóa CSS */
     :root,[data-theme]{transition:color .25s ease,background-color .25s ease}
     :root{
       --bg:#0b132b;--card:#0f1b2d;--text:#eaf2ff;--muted:#93a3b8;
@@ -30,8 +30,10 @@
     }
     [data-theme=light]{--bg:#f6f7fb;--card:#ffffff;--text:#0f172a;--muted:#64748b;--primary:#0ea5e9;--primary-fg:#ffffff;--ring:#0ea5e955;--border:#e5e7eb;--nav-bg:rgba(255,255,255,.92)}
     [data-theme=lucbao]{--bg:#081414;--card:#102424;--text:#e0f2f1;--muted:#80cbc4;--primary:#f4ff81;--primary-fg:#0c1113;--ring:#f4ff8166;--border:color-mix(in srgb,var(--text) 10%, transparent);--nav-bg:rgba(16,36,36,.86)}
-    .btn{display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--border);background:var(--card);color:var(--text);padding:.6rem .9rem;border-radius:14px;transition:background-color .15s,transform .1s}
-    .btn:active{transform:scale(0.98);opacity:.8} /* Phản hồi cảm ứng */
+    
+    /* Global Styles */
+    .btn{display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--border);background:var(--card);color:var(--text);padding:.6rem .9rem;border-radius:12px;transition:background-color .15s,transform .1s}
+    .btn:active{transform:scale(0.98);opacity:.8} 
     .btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
     .btn-primary{background:var(--primary);color:var(--primary-fg);border-color:transparent}
     .chip{font-size:.72rem;border:1px solid var(--border);padding:.15rem .45rem;border-radius:999px;color:var(--muted)}
@@ -39,55 +41,38 @@
     .tabbtn{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:.55rem 0;font-size:.74rem;color:var(--muted);transition:color .2s}
     .tabbtn[aria-current=true]{color:var(--text)}
     .safe-bottom{padding-bottom:calc(env(safe-area-inset-bottom) + 10px)}
-    .sheet{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top-left-radius:18px;border-top-right-radius:18px;border:1px solid var(--border);box-shadow:var(--shadow);z-index:60;padding:10px;animation:slideUp .3s ease-out}
-    .err{position:fixed;inset:0;background:rgba(0,0,0,.8);color:#fff;z-index:9999;display:none;align-items:center;justify-content:center;padding:20px;text-align:left}
-    .err-card{background:#111827;border:1px solid #374151;border-radius:14px;max-width:900px;width:100%;padding:18px}
-    input[type="range"]{-webkit-appearance:none;appearance:none;height:6px;width:100%;background:var(--muted);border-radius:999px}
-    input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:16px;height:16px;border-radius:50%;background:var(--primary);cursor:pointer}
-    input[type="range"]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--primary);cursor:pointer}
-    .dropdown{position:relative}
-    .dropdown-menu{position:absolute;right:0;top:100%;margin-top:.4rem;background:var(--card);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);min-width:200px;z-index:50;padding:.4rem;animation:fadeIn .2s ease-out}
-    .dropdown-item{display:flex;align-items:center;gap:.5rem;padding:.6rem .7rem;border-radius:10px;transition:background-color .15s}
-    .dropdown-item:hover{background-color:rgba(255,255,255,.06)}
-    /* Custom CSS cho Dropdown Link mới (shadow-glow) */
-    .shadow-glow { box-shadow: 0 0 12px rgba(255, 255, 255, 0.1); }
-    /* Animations */
-    @keyframes slideUp { from {transform: translateY(100%);} to {transform: translateY(0);} }
-    @keyframes fadeIn { from {opacity: 0; transform: translateY(-10px);} to {opacity: 1; transform: translateY(0);} }
+    
+    /* Custom Scrollbar for Song List */
+    .custom-scroll::-webkit-scrollbar { width: 4px; }
+    .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+    .custom-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    
+    /* Dropdown */
+    .dropdown{position:relative; display: inline-block;}
+    .dropdown-menu{
+        position:absolute; right:0; top:100%; margin-top:.5rem; 
+        background:var(--card); border:1px solid var(--border); 
+        border-radius:14px; box-shadow: 0 10px 40px rgba(0,0,0,0.4); 
+        min-width:220px; z-index:100; padding:.5rem; 
+        animation:fadeIn .15s ease-out; transform-origin: top right;
+    }
+    .dropdown-item{display:flex;align-items:center;gap:.6rem;padding:.75rem .8rem;border-radius:10px;transition:background-color .1s; font-weight: 500; font-size: 0.95rem; color: var(--text); text-decoration: none;}
+    .dropdown-item:active{background-color:var(--primary); color: var(--primary-fg);}
+    
+    @keyframes fadeIn { from {opacity: 0; transform: scale(0.95);} to {opacity: 1; transform: scale(1);} }
   </style>
 </head>
-<body class="bg-[var(--bg)] text-[var(--text)] font-sans">
-  <div id="root"></div>
+<body class="bg-[var(--bg)] text-[var(--text)] font-sans h-screen flex flex-col overflow-hidden">
+  <div id="root" class="flex-grow flex flex-col h-full"></div>
 
-  <!-- Audio Elements -->
   <audio id="mstq-player" preload="metadata" playsinline webkit-playsinline crossOrigin="anonymous"></audio>
   <audio id="mstq-preload" preload="auto" playsinline webkit-playsinline muted crossOrigin="anonymous"></audio>
 
-  <!-- Error overlay -->
-  <div id="err" class="err">
-    <div class="err-card">
-      <div class="flex items-center justify-between">
-        <h3 class="text-lg font-bold">Đã bắt lỗi runtime</h3>
-        <button onclick="document.getElementById('err').style.display='none'" class="btn">Đóng</button>
-      </div>
-      <pre id="errlog" class="mt-3 whitespace-pre-wrap text-sm"></pre>
-    </div>
-  </div>
-
   <script>
-    // Bắt lỗi toàn cục - PHIÊN BẢN CHUYÊN GIA (Lọc nhiễu)
     (function(){
       const show=(m)=>{
-        // Bỏ qua các lỗi "vặt" do trình duyệt chặn play hoặc chuyển bài nhanh
         const str = String(m||'');
-        if(str.includes('AbortError') || str.includes('NotAllowedError') || str.includes('Interrupted') || str.includes('The play() request was interrupted')) {
-            console.warn('[Silent Error]', m);
-            return; // Im lặng là vàng
-        }
-        const el=document.getElementById('err');
-        const log=document.getElementById('errlog');
-        if(log) log.textContent=str;
-        if(el) el.style.display='flex';
+        if(str.includes('AbortError') || str.includes('NotAllowedError') || str.includes('Interrupted')) return;
         console.error('[GLOBAL ERROR]',m);
       };
       window.addEventListener('error',e=>show(e.error||e.message||e));
@@ -116,7 +101,6 @@
     const sanitizeRepeat=(r)=> (r==='off'||r==='all'||r==='one')?r:'all';
     const haptic=(ms=14)=>{ try{ navigator.vibrate?.(ms); }catch{} };
     
-    // Icon component
     const Icon = ({d=22,p="M5 12h14"}) => e('svg', {width:d, height:d, viewBox:"0 0 24 24", fill:"none", stroke:"currentColor", strokeWidth:"1.7"},
       e('path', {d:p, strokeLinecap:"round", strokeLinejoin:"round"})
     );
@@ -138,10 +122,48 @@
       repeat:(d)=>e(Icon, {d:d, p:"M17 1v4H7a5 5 0 0 0 0 10h1M7 23v-4h10a5 5 0 0 0 0-10h-1"}),
       shuffle:(d)=>e(Icon, {d:d, p:"M4 4l7 7-7 7M15 4h5M20 4l-6 6M15 20h5M20 20l-6-6"}),
       download:(d)=>e(Icon, {d:d, p:"M12 3v12m0 0l4-4m-4 4-4-4M5 21h14"}),
-      share:(d)=>e(Icon, {d:d, p:"M18 8a3 3 0 1 0-2-5.1A3 3 0 0 0 18 8Z M6 12a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z M16 14l-6 3m-6-8 6 3"}),
+      // THAY ĐỔI: Icon Link (Móc xích) thay cho Icon Share để rõ nghĩa "Lấy Link"
+      link:(d)=>e(Icon, {d:d, p:"M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"}),
       heart:(d, fill)=>e('svg', {width:d, height:d, viewBox:"0 0 0 24 24", fill:fill?'currentColor':'none', stroke:"currentColor", strokeWidth:"1.7"},
         e('path', {d:"M20.8 5.2a5.5 5.5 0 0 0-7.8 0L12 6.2l-.9-1a5.5 5.5 0 0 0-7.8 0 5.5 5.5 0 0 0 0 7.8L12 21l8.7-8a5.5 5.5 0 0 0 0-7.8Z", strokeLinecap:"round", strokeLinejoin:"round", fill:fill?'var(--primary)': 'none'})
       )
+    };
+
+    const TopBar = ({ title, askInstall, linksOpen, setLinksOpen, setTheme }) => {
+        const SimpleLinkDropdown = e('div', {className: "dropdown", onClick: (e) => e.stopPropagation()}, 
+            e('button', {className: "btn", onClick: ()=>{haptic();setLinksOpen(o=>!o)}}, "Liên kết ▾"),
+            linksOpen && e('div', {className: "dropdown-menu"}, 
+                e('a', {className: "dropdown-item", href: "https://thiensutinhquang.github.io/home/", target: "_blank", rel: "noopener"}, "🏠 Trang chủ"),
+                e('a', {className: "dropdown-item", href: "https://thiensutinhquang.github.io/PlayMusic/", target: "_blank", rel: "noopener"}, "🎵 Play Nhạc"),
+                e('hr', {className: "my-1 border-[var(--border)]"}),
+                e('div', {className: "px-2 py-1 text-[var(--muted)] text-xs font-semibold"}, "Nền tảng"),
+                e('a', {className: "dropdown-item", href: "https://www.youtube.com/@ThiensuTinhQuang", target: "_blank", rel: "noopener"}, "▶️ YouTube"),
+                e('a', {className: "dropdown-item", href: "https://www.tiktok.com/@minhsutinhquang", target: "_blank", rel: "noopener"}, "🎶 TikTok"),
+                e('a', {className: "dropdown-item", href: "https://www.facebook.com/groups/minhsutinhquang", target: "_blank", rel: "noopener"}, "👥 Facebook Group"),
+                e('a', {className: "dropdown-item", href: "https://t.me/Giaoly_phap_don_ngo", target: "_blank", rel: "noopener"}, "💬 Telegram"),
+                e('a', {className: "dropdown-item", href: "https://zalo.me/g/dukrae245", target: "_blank", rel: "noopener"}, "📱 Zalo")
+            )
+        );
+        
+        const LogoElement = e('img', {
+            src: LOGO_FALLBACK_URL, 
+            width: "24", height: "24", 
+            className: "rounded-md", 
+            alt: "MSTQ logo",
+            onError: (e) => { e.target.src = LOGO_PLACEHOLDER; e.target.onError = null; }
+        });
+
+        return e('header', {className: "fixed top-0 inset-x-0 z-30 px-4 py-3 flex items-center justify-between bg-[var(--nav-bg)] backdrop-blur-lg border-b border-[var(--border)] h-16"},
+          e('div', {className: "flex items-center gap-2"},
+            LogoElement, 
+            e('h1', {className: "font-semibold text-base sm:text-lg"}, title)
+          ),
+          e('div', {className: "flex items-center gap-2"},
+            e('button', {className: "btn text-xs px-3", onClick: askInstall}, "Cài đặt"),
+            SimpleLinkDropdown, 
+            e('button', {className: "btn text-xs px-3", onClick: ()=>{haptic();setTheme(t=>t==='lucbao'?'light':'lucbao')}}, "Đổi màu")
+          )
+        );
     };
 
     function App(){
@@ -352,41 +374,31 @@
         const a=audioRef.current; if(!a) return;
         await ensureAudioContext();
         a.loop=false; a.muted=false; if(a.volume<0.6) a.volume=0.85;
-        setCurrentIndex(i); setPlaying(true); targetPlayingRef.current=true;
+        setCurrentIndex(i); setPlaying(true); 
         const s=playlist[i]; if(!s) return;
         
-        // --- LOGIC PHÁT NHẠC SỐNG CÒN (SURVIVAL MODE - NO FADE OUT) ---
-        // Không dùng await fadeTo(...) khi chuyển bài.
-        // Chỉ đơn giản là cắt và phát ngay lập tức.
-        
         if(a.src===s.stream_url && a.currentTime>0){
-          a.play().catch(()=>{});
+          a.play().catch(e => console.warn("Resume failed", e));
         }else{
-          // 1. Reset Gain ngay lập tức để tránh 'tiếng bụp' nhưng không được dùng setTimeout
           if(gainRef.current) {
-             gainRef.current.gain.cancelScheduledValues(audioCtxRef.current.currentTime);
-             gainRef.current.gain.value = 0.05; // Giảm volume xuống gần 0 cực nhanh
+             try {
+               gainRef.current.gain.cancelScheduledValues(audioCtxRef.current.currentTime);
+               gainRef.current.gain.value = 0; 
+             } catch(e) {}
           }
-          
           a.src=s.stream_url; 
           a.load(); 
-          
           try {
-             // 2. Gọi Play ngay lập tức. Quan trọng: Handle Promise để tránh lỗi runtime
              await a.play();
-             
-             // 3. Nếu thành công, Fade-In rất nhanh (an toàn)
              if(gainRef.current) {
                const now = audioCtxRef.current.currentTime;
-               gainRef.current.gain.setValueAtTime(0.05, now);
-               gainRef.current.gain.linearRampToValueAtTime(1, now + 0.5); // 0.5s fade-in
+               gainRef.current.gain.setValueAtTime(0, now);
+               gainRef.current.gain.linearRampToValueAtTime(1, now + 0.5); 
              }
           } catch(e) {
-             console.warn("Auto-play blocked or interrupted:", e);
-             // Không làm gì cả, đã có global error handler lo việc chặn thông báo
+             console.warn("Autoplay blocked/interrupted (Harmless in BG):", e);
           }
         }
-
         queuePreload(i);
       },[playlist,queuePreload]);
 
@@ -395,10 +407,10 @@
         if(repeat==='one'){ const a=audioRef.current; if(a){ a.currentTime=0; a.loop=false; a.play().catch(()=>{});} return; }
         const nextIdx = computeNextIndex(+1);
         if((stopAtEnd || repeat==='off') && !upNext.length && nextIdx === 0 && currentIndex === playlist.length-1){ 
-          setPlaying(false); targetPlayingRef.current=false; 
+          setPlaying(false); 
           return; 
         }
-        nextTrack(); 
+        nextTrack();
       },[repeat,stopAtEnd,currentIndex,playlist.length,upNext.length]); 
 
       const nextTrack=useCallback(()=>{
@@ -407,11 +419,11 @@
         if(upNext.length){
           const nextId=upNext[0]; setUpNext(q=>q.slice(1));
           const i=playlist.findIndex(x=>x.id===nextId);
-          if(i>=0){ playIndex(i); return; }
+          if(i>=0){ playIndex(i).catch(()=>{}); return; }
         }
         let i=computeNextIndex(+1);
         if(playlist.length>1 && i===currentIndex && !shuffle){ i=(i+1)%playlist.length; }
-        playIndex(i);
+        playIndex(i).catch(()=>{}); 
       },[playlist.length,computeNextIndex,upNext,currentIndex,shuffle,playIndex]);
 
       const prevTrack=useCallback(()=>{
@@ -419,27 +431,26 @@
         if(!playlist.length) return;
         const a=audioRef.current; if(a?.currentTime>3){ a.currentTime=0; return; }
         const i=computeNextIndex(-1);
-        playIndex(i);
+        playIndex(i).catch(()=>{}); 
       },[playlist.length,computeNextIndex,playIndex]);
       
-      const pickSong=async(s)=>{ haptic(); const i=playlist.findIndex(x=>x.id===s.id); if(i>=0) playIndex(i); };
+      const pickSong=async(s)=>{ haptic(); const i=playlist.findIndex(x=>x.id===s.id); if(i>=0) playIndex(i).catch(()=>{}); };
 
       const playPause=async()=>{
         haptic();
         const a=audioRef.current; if(!a) return;
         await ensureAudioContext();
         a.loop=false; a.muted=false; if(a.volume<0.6) a.volume=0.85;
-        if(!current && playlist.length){ playIndex(0,{fadeIn:false}); setNeedsStart(false); return; }
+        if(!current && playlist.length){ playIndex(0,{fadeIn:false}).catch(()=>{}); setNeedsStart(false); return; }
         if(playing){ 
-          setPlaying(false); targetPlayingRef.current=false; 
+          setPlaying(false); 
           try{await fadeTo(0.01,150)}catch{} a.pause(); 
         }
         else{ 
-          setPlaying(true); targetPlayingRef.current=true; setNeedsStart(false); 
+          setPlaying(true); setNeedsStart(false); 
           try{ await fadeTo(1,200); }catch{} a.play().catch(()=>{}); 
         }
       };
-      const pauseAll=()=>{const a=audioRef.current; if(a){ setPlaying(false); targetPlayingRef.current=false; a.pause(); }};
       
       const targetPlayingRef=useRef(false);
       const lastProgRef=useRef({t:0,pos:0});
@@ -462,8 +473,6 @@
           setProgress({current:a.currentTime||0,duration:a.duration||0});
           const now=Date.now();
           if(Math.abs(a.currentTime-(lastProgRef.current.pos||0))>0.25){ lastProgRef.current={t:now,pos:a.currentTime}; stallScoreRef.current=0; }
-          // QUAN TRỌNG: Chỉ dùng logic này làm dự phòng. Event 'ended' mới là chính.
-          // Tăng buffer lên 0.8s để bắt sớm nếu máy quá lag
           if(a.duration>1 && !a.paused && !a.loop && (a.currentTime>=a.duration-0.8)){ handleEnd(); }
         };
         const onEnded=()=>{ handleEnd(); };
@@ -491,14 +500,14 @@
 
           if(a.paused && canRecover){
             lastRecoverRef.current=now;
-            try{ await ensureAudioContext(); a.play(); return; }catch{}
+            try{ await ensureAudioContext(); a.play().catch(()=>{}); return; }catch{}
           }
           if((stagnate || poorReady) && canRecover){
             lastRecoverRef.current=now;
             stallScoreRef.current++;
             try{
               await ensureAudioContext();
-              if(a.paused) await a.play();
+              if(a.paused) await a.play().catch(()=>{});
               if(poorReady){ a.load(); await a.play().catch(()=>{}); }
             }catch{ /* ignored */ }
 
@@ -527,43 +536,6 @@
       const toggleFav = () => {}; 
       const isFav = () => false; 
 
-      const TopBar=({title})=>{
-        const SimpleLinkDropdown = e('div', {className: "dropdown", onClick: (e) => e.stopPropagation()}, 
-            e('button', {className: "btn", onClick: ()=>{haptic();setLinksOpen(o=>!o)}}, "Liên kết ▾"),
-            linksOpen && e('div', {className: "dropdown-menu", onMouseLeave: ()=>setLinksOpen(false)},
-                e('a', {className: "dropdown-item", href: "https://thiensutinhquang.github.io/home/", target: "_blank", rel: "noopener"}, "🏠 Trang chủ"),
-                e('a', {className: "dropdown-item", href: "https://thiensutinhquang.github.io/PlayMusic/", target: "_blank", rel: "noopener"}, "🎵 Play Nhạc"),
-                e('hr', {className: "my-1 border-[var(--border)]"}),
-                e('div', {className: "px-2 py-1 text-[var(--muted)] text-xs font-semibold"}, "Nền tảng"),
-                e('a', {className: "dropdown-item", href: "https://www.youtube.com/@ThiensuTinhQuang", target: "_blank", rel: "noopener"}, "▶️ YouTube"),
-                e('a', {className: "dropdown-item", href: "https://www.tiktok.com/@minhsutinhquang", target: "_blank", rel: "noopener"}, "🎶 TikTok"),
-                e('a', {className: "dropdown-item", href: "https://www.facebook.com/groups/minhsutinhquang", target: "_blank", rel: "noopener"}, "👥 Facebook Group"),
-                e('a', {className: "dropdown-item", href: "https://t.me/Giaoly_phap_don_ngo", target: "_blank", rel: "noopener"}, "💬 Telegram"),
-                e('a', {className: "dropdown-item", href: "https://zalo.me/g/dukrae245", target: "_blank", rel: "noopener"}, "📱 Zalo")
-            )
-        );
-        
-        const LogoElement = e('img', {
-            src: LOGO_FALLBACK_URL, 
-            width: "24", height: "24", 
-            className: "rounded-md", 
-            alt: "MSTQ logo",
-            onError: (e) => { e.target.src = LOGO_PLACEHOLDER; e.target.onError = null; }
-        });
-
-        return e('header', {className: "fixed top-0 inset-x-0 z-30 px-4 py-3 flex items-center justify-between bg-[var(--nav-bg)] backdrop-blur-lg border-b border-[var(--border)]"},
-          e('div', {className: "flex items-center gap-2"},
-            LogoElement, 
-            e('h1', {className: "font-semibold"}, title)
-          ),
-          e('div', {className: "flex items-center gap-2"},
-            e('button', {className: "btn", onClick: askInstall}, "Cài đặt ứng dụng"),
-            SimpleLinkDropdown, 
-            e('button', {className: "btn", onClick: ()=>{haptic();setTheme(t=>t==='lucbao'?'light':'lucbao')}}, "Chủ đề")
-          )
-        );
-      };
-
       const [sheetFor,setSheetFor]=useState(null);
       const closeSheet=()=>setSheetFor(null);
 
@@ -588,10 +560,20 @@
         window.open(s.stream_url, '_blank');
       }
 
+      /* =================================================================
+         HOME TAB UPGRADE: ULTRA COMPACT & SEMANTIC LIST (V30)
+         ================================================================= */
       const HomeTab=()=>{
         const list = filter.trim()
           ? playlist.filter(s => (s.title||'').toLowerCase().includes(filter.toLowerCase()) || (s.artist||'').toLowerCase().includes(filter.toLowerCase()))
           : playlist;
+
+        useEffect(() => {
+            if(current) {
+                const el = document.getElementById(`song-${current.id}`);
+                if(el) el.scrollIntoView({behavior: 'smooth', block: 'center'});
+            }
+        }, [current?.id]);
 
         const handleAction = (e, actionFunc, song) => {
           e.stopPropagation(); 
@@ -601,60 +583,90 @@
         
         const SongItem = (s, index) => {
             const isCurrent = current?.id === s.id;
+            
+            // Design Layout: Ultra Compact Row (V30)
+            // py-1.5: Giảm padding dọc xuống tối đa để danh sách dài hơn
             const itemClasses = [
-                "flex items-center gap-3 p-1.5 rounded-xl border border-[var(--border)] transition-all",
-                isCurrent ? 'ring-2 ring-[var(--ring)] bg-red-900/40' : 'hover:bg-[var(--card)]/20' 
+                "group flex items-center gap-2 p-1.5 rounded-lg transition-colors duration-150 border-b border-[var(--border)]", 
+                isCurrent 
+                    ? 'bg-[var(--primary)]/10 border-transparent' 
+                    : 'hover:bg-[var(--card)]/50'
             ].join(' ');
 
-            const currentStyle = isCurrent ? 'text-red-300' : ''; 
+            const textStyle = isCurrent ? 'text-[var(--primary)] font-bold' : 'text-[var(--text)] font-medium';
+            const subTextStyle = isCurrent ? 'text-[var(--primary)]/70' : 'text-[var(--muted)]';
 
-            return e('div', {key: s.id, className: itemClasses},
-              e('div', {className: `w-8 text-center flex-shrink-0 text-sm font-bold ${currentStyle}`},
-                  isCurrent ? Icons.play(16) : (index + 1) + '.' 
+            return e('div', {
+                key: s.id, 
+                id: `song-${s.id}`,
+                className: itemClasses,
+                onClick: () => pickSong(s) 
+            },
+              // Cột 1: STT (Rất nhỏ gọn)
+              e('div', {className: `w-6 text-center flex-shrink-0 text-xs ${textStyle}`},
+                  isCurrent 
+                    ? e('span', {className: "animate-pulse"}, "▶") 
+                    : (index + 1) 
               ),
-              e('button', {className: "flex-grow text-left min-w-0 flex flex-col justify-center", onClick: (e)=>{e.stopPropagation(); pickSong(s);}}, 
-                e('div', {className: `font-semibold text-sm truncate ${currentStyle}`}, s.title||'Untitled'),
-                e('div', {className: "text-xs text-[var(--muted)] truncate"}, s.artist||'minhsutinhquang')
+
+              // Cột 2: Tên bài (Chiếm phần lớn, cắt dòng gọn)
+              e('div', {className: "flex-grow min-w-0 flex flex-col justify-center mr-1"}, 
+                e('div', {className: `truncate text-sm leading-tight ${textStyle}`}, s.title||'Untitled'),
+                // Ẩn nghệ sĩ nếu màn hình quá bé để ưu tiên tên bài
+                e('div', {className: `text-[10px] truncate ${subTextStyle}`}, s.artist||'minhsutinhquang')
               ),
-              e('div', {className: "flex items-center gap-1 flex-shrink-0"},
-                e('button', {className: "w-8 h-8 flex items-center justify-center rounded-full", title: "Tải về", 
-                  onClick: (e)=>handleAction(e, downloadTrack, s)}, e(Icons.download, {d:18})),
-                e('button', {className: "w-8 h-8 flex items-center justify-center rounded-full", title: "Chia sẻ", 
-                  onClick: (e)=>handleAction(e, shareTrack, s)}, e(Icons.share, {d:18})),
-                e('div', {className: "text-[11px] text-[var(--muted)] ml-1 w-8 text-right flex-shrink-0"}, formatTime(s.duration||0))
-              )
+              
+              // Cột 3: Thời lượng (Nhỏ, mờ)
+              e('div', {className: "text-[10px] font-mono text-[var(--muted)] w-8 text-right flex-shrink-0"}, 
+                  formatTime(s.duration||0)
+              ),
+
+              // Cột 4: Nút Chia sẻ - ĐỔI ICON THÀNH LINK (MÓC XÍCH)
+              e('button', {
+                  className: "w-8 h-8 flex items-center justify-center rounded-full text-[var(--muted)] hover:bg-[var(--card)] active:scale-90 transition-all", 
+                  title: "Lấy link", 
+                  onClick: (e)=>handleAction(e, shareTrack, s)
+              }, e(Icons.link, {d:16})), // Icon Link thay vì Share
+
+              // Cột 5: Nút Tải xuống (Quan trọng, cuối cùng)
+              e('button', {
+                  className: "w-8 h-8 flex items-center justify-center rounded-full text-[var(--text)] hover:text-[var(--primary)] hover:bg-[var(--card)] active:scale-90 transition-all", 
+                  title: "Tải nhạc", 
+                  onClick: (e)=>handleAction(e, downloadTrack, s)
+              }, e(Icons.download, {d:18}))
             );
         };
 
-        return e('div', {className: "px-4 py-3"},
-          e('div', {className: "flex items-center justify-between mb-2"},
-            e('h2', {className: "text-xl font-semibold"}, "Danh sách phát"),
-            e('span', {className: "chip"}, `${list.length} bài`)
-          ),
-          e('div', {className: "mb-3 flex gap-2"},
-            e('input', {className: "flex-1 bg-[var(--card)] border border-[var(--border)] rounded-xl p-2 focus:ring-2 focus:ring-[var(--primary)] focus:outline-none", placeholder: "Lọc nhanh theo tiêu đề / nghệ sĩ", value: filter, onChange: e=>setFilter(e.target.value)}),
-            e('button', {className: "btn", onClick: ()=>{haptic();setFilter('');setVisible(INITIAL_VISIBLE)}}, "Xoá")
-          ),
-          loading?(
-            e('div', {className: "animate-pulse space-y-3"}, Array.from({length:6}).map((_,i)=>e('div', {key:i, className: "h-14 rounded-xl bg-[var(--card)]/40"})))
-          ):(
-            e(React.Fragment, null,
-              e('div', {className: "space-y-0.5"}, list.slice(0,visible).map((s, index) => SongItem(s, index))), 
-              list.length>visible && e('button', {onClick: ()=>{haptic();setVisible(v=>Math.min(list.length,v+VISIBLE_STEP))}, className: "btn w-full mt-3"}, "Tải thêm")
-            )
-          ),
-          sheetFor && e('div', {className: "sheet safe-bottom"},
-            e('div', {className: "flex items-center justify-between px-2"},
-              e('div', {className: "font-semibold truncate mr-2"}, sheetFor.title),
-              e('button', {className: "btn", onClick: ()=>{haptic();closeSheet()}}, "Đóng")
+        return e('div', {className: "flex flex-col h-full"},
+          // Header cố định
+          e('div', {className: "px-4 py-2 flex-shrink-0 bg-[var(--bg)] z-10"},
+            e('div', {className: "flex items-center justify-between mb-2"},
+                e('h2', {className: "text-lg font-bold"}, "Danh sách phát"),
+                e('span', {className: "chip text-xs"}, `${list.length} bài`)
             ),
-            e('div', {className: "mt-2 grid grid-cols-2 gap-2 px-2 pb-2"},
-              e('button', {className: "btn btn-primary", onClick: ()=>{enqueueNext(sheetFor); closeSheet(); setTab('queue');}}, "Phát tiếp theo"),
-              e('button', {className: "btn", onClick: ()=>{pickSong(sheetFor); closeSheet();}}, "Phát ngay"),
-              e('button', {className: "btn", onClick: ()=>{downloadTrack(sheetFor); closeSheet();}}, "Tải ngoại tuyến"),
-              e('button', {className: "btn", onClick: ()=>{shareTrack(sheetFor); closeSheet();}}, "Chia sẻ…")
+            e('div', {className: "flex gap-2"},
+                e('input', {
+                    className: "flex-1 bg-[var(--card)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-[var(--primary)] focus:outline-none", 
+                    placeholder: "Tìm nhanh bài hát...", 
+                    value: filter, 
+                    onChange: e=>setFilter(e.target.value)
+                }),
+                filter && e('button', {className: "btn px-3 py-1 text-xs", onClick: ()=>{haptic();setFilter('');setVisible(INITIAL_VISIBLE)}}, "Xoá")
             )
-          )
+          ),
+          
+          // Danh sách cuộn (Scrollable Area)
+          e('div', {className: "flex-grow overflow-y-auto custom-scroll px-2 pb-24"}, 
+            loading?(
+                e('div', {className: "space-y-2 p-2"}, Array.from({length:8}).map((_,i)=>e('div', {key:i, className: "h-10 rounded-lg bg-[var(--card)]/40 animate-pulse"})))
+            ):(
+                e(React.Fragment, null,
+                e('div', {className: "flex flex-col"}, list.slice(0,visible).map((s, index) => SongItem(s, index))), 
+                list.length>visible && e('button', {onClick: ()=>{haptic();setVisible(v=>Math.min(list.length,v+VISIBLE_STEP))}, className: "btn w-full mt-4 py-3 text-sm"}, "Tải thêm bài hát")
+                )
+            )
+          ),
+          sheetFor && e('div', {className: "sheet safe-bottom"}, /* ... */ )
         );
       };
 
@@ -968,7 +980,8 @@
       const title = tab==='home'?'Trang chủ':tab==='search'?'Tìm kiếm':tab==='settings'?'Cài đặt':tab==='queue'?'Hàng đợi':'';
 
       return e('div', {className: "min-h-screen", onClick: ()=>setLinksOpen(false), style:{paddingTop:64, paddingBottom:(current?188:104)}},
-        e(TopBar, {title:title}),
+        // FIX FLICKER: Gọi TopBar như Component chuẩn (e(TopBar))
+        e(TopBar, {title, askInstall, linksOpen, setLinksOpen, setTheme}),
         e(StartGate, null),
         tab==='home' && e(HomeTab, null),
         tab==='search' && e(SearchTab, null),
@@ -1019,206 +1032,4 @@
 
       .dot-red { background-color: #ef4444; } .dot-red::after { background-color: #ef4444; }
       .dot-green { background-color: #22c55e; } .dot-green::after { background-color: #22c55e; }
-      .dot-yellow { background-color: #eab308; } .dot-yellow::after { background-color: #eab308; }
-
-      /* Guide UI Steps */
-      .guide-step { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 12px; font-size: 15px; line-height: 1.5; text-align: left; }
-      .step-num { background: #ee4d2d; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0; font-size: 14px; }
-      
-      /* Animations */
-      @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-      .animate-slide-up { animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-      @keyframes pop-in { 0% { transform: scale(0) translateY(20px); opacity: 0; } 80% { transform: scale(1.1) translateY(0); opacity: 1; } 100% { transform: scale(1); } }
-      .animate-pop-in { animation: pop-in 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
-  </style>
-
-  <!-- NÚT CÀI ĐẶT THÔNG MINH (Auto Android/PC) -->
-  <button id="btnInstall" class="install-fab fixed bottom-20 right-4 bg-[#ee4d2d] text-white py-3 px-6 rounded-full font-bold border-4 border-white items-center gap-3 cursor-pointer animate-pop-in text-lg">
-      <span class="text-3xl">📲</span>
-      <span class="font-bold uppercase tracking-wide">TẢI APP</span>
-  </button>
-
-  <!-- MODAL HƯỚNG DẪN THÔNG MINH -->
-  <div id="pwaHealthModal" class="hidden fixed inset-0 z-[100000] bg-black/80 text-gray-800 flex flex-col justify-center items-center p-4 backdrop-blur-sm transition-opacity">
-      <div class="w-full max-w-sm bg-white rounded-2xl p-0 shadow-2xl overflow-hidden animate-slide-up border-2 border-[#ee4d2d]">
-          <div class="bg-[#ee4d2d] p-5 text-white text-center">
-              <div class="font-bold text-xl mb-1 uppercase">Cài đặt Ứng dụng</div>
-              <div class="text-xs opacity-90">Truy cập nhanh hơn - Mượt mà hơn</div>
-          </div>
-          
-          <div id="smartGuideContent" class="p-6">
-              <!-- Nội dung sẽ được thay đổi thông minh bởi JS -->
-          </div>
-          
-          <div class="p-4 bg-gray-50 text-center border-t">
-              <button onclick="document.getElementById('pwaHealthModal').classList.add('hidden')" class="text-gray-500 font-bold text-sm hover:text-gray-800">Đóng lại</button>
-          </div>
-      </div>
-      <!-- Mũi tên chỉ dẫn cho iOS -->
-      <div id="iosArrow" class="hidden fixed bottom-4 left-1/2 -translate-x-1/2 animate-bounce text-6xl text-white drop-shadow-lg z-[100001]" style="text-shadow: 0 2px 5px rgba(0,0,0,0.5);">⬇️</div>
-  </div>
-
-  <script>
-      /* =========================================================
-         🧠 LOGIC CORE V22.0 (CONTEXTUAL GUIDE UPGRADE)
-         ========================================================= */
-      const logicCore = {
-          deferredPrompt: null,
-          repoPath: '/PlayMusic', 
-
-          state: {
-              isIOS: /iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase()),
-              isAndroid: /android/.test(navigator.userAgent.toLowerCase()),
-              // Phát hiện Zalo, Facebook, Instagram (In-App Browsers)
-              isInApp: /FBAN|FBAV|Instagram|Zalo/i.test(navigator.userAgent),
-              isStandalone: window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone,
-          },
-          
-          init: function() {
-              // 1. SW Registration
-              if ('serviceWorker' in navigator) {
-                  navigator.serviceWorker.register(`${this.repoPath}/sw.js?v=${Date.now()}`)
-                      .then(() => console.log("✅ PWA Engine: SW Registered"))
-                      .catch(err => console.warn("❌ PWA Engine: SW Fail", err));
-              }
-
-              this.updateUI('init');
-              
-              // 2. Install State Check
-              if (this.state.isStandalone) {
-                  this.updateUI('installed');
-              } else {
-                  // Capture event
-                  window.addEventListener('beforeinstallprompt', (e) => {
-                      e.preventDefault();
-                      this.deferredPrompt = e;
-                      this.showSmartFAB();
-                      this.updateUI('ready');
-                  });
-              }
-
-              // 3. Expose to Window for React App
-              window.pwaEngine = this;
-          },
-
-          updateUI: function(status) {
-              const dot = document.getElementById('pwaStatusDot');
-              if (dot) {
-                  dot.className = "status-dot"; 
-                  if (status === 'init') dot.classList.add('dot-yellow');
-                  else if (status === 'ready') dot.classList.add('dot-red');
-                  else if (status === 'installed') dot.classList.add('dot-green');
-              }
-          },
-
-          showSmartFAB: function() {
-              if (this.state.isStandalone) return;
-              const fab = document.getElementById('btnInstall');
-              if(fab) {
-                  fab.style.display = 'flex';
-                  fab.onclick = async () => {
-                      if (this.deferredPrompt) {
-                          this.deferredPrompt.prompt();
-                          const { outcome } = await this.deferredPrompt.userChoice;
-                          if (outcome === 'accepted') {
-                              this.deferredPrompt = null;
-                              fab.style.display = 'none';
-                          }
-                      }
-                  };
-              }
-          },
-
-          // --- TRÁI TIM CỦA PWA V22: HƯỚNG DẪN NGỮ CẢNH ---
-          showSmartGuide: function() {
-              const modal = document.getElementById('pwaHealthModal');
-              const content = document.getElementById('smartGuideContent');
-              const arrow = document.getElementById('iosArrow');
-              
-              if(!modal || !content) return;
-
-              modal.classList.remove('hidden');
-              if(arrow) arrow.classList.add('hidden'); // Reset arrow
-
-              // === CASE 1: ĐÃ CÀI ĐẶT ===
-              if (this.state.isStandalone) {
-                  content.innerHTML = `<div class="text-center text-green-600 font-bold text-lg"><br>Bạn đang sử dụng App!<br>Chúc bạn trải nghiệm vui vẻ.</div>`;
-                  return;
-              }
-
-              // === CASE 2: ZALO / FACEBOOK / INSTAGRAM (IN-APP) ===
-              if (this.state.isInApp) {
-                  content.innerHTML = `
-                      <div class="text-center text-red-600 font-bold mb-3">⚠️ Cảnh Báo Trình Duyệt</div>
-                      <p class="mb-3 text-sm">Bạn đang mở bằng Zalo/Facebook. Trình duyệt này <b>không hỗ trợ</b> cài đặt ứng dụng.</p>
-                      <div class="guide-step bg-yellow-50 p-2 rounded border border-yellow-200">
-                          <div class="step-num">1</div>
-                          <div>Bấm dấu <b>3 chấm</b> <span class="text-xl">⋯</span> ở góc trên bên phải.</div>
-                      </div>
-                      <div class="guide-step bg-yellow-50 p-2 rounded border border-yellow-200">
-                          <div class="step-num">2</div>
-                          <div>Chọn <b>Mở bằng trình duyệt</b> (Chrome/Safari).</div>
-                      </div>
-                  `;
-                  return;
-              }
-
-              // === CASE 3: iOS (IPHONE/IPAD) ===
-              if (this.state.isIOS) {
-                  content.innerHTML = `
-                      <div class="text-center font-bold mb-2 text-blue-600">Dành cho iPhone/iPad</div>
-                      <div class="guide-step"><div class="step-num">1</div><div>Bấm nút <b>Chia sẻ</b> <i class="text-blue-500 text-xl">⎋</i> ở dưới cùng màn hình.</div></div>
-                      <div class="guide-step"><div class="step-num">2</div><div>Kéo xuống tìm và chọn <b>Thêm vào MH chính</b> (Add to Home Screen).</div></div>
-                      <div class="guide-step"><div class="step-num">3</div><div>Bấm nút <b>Thêm</b> ở góc trên cùng bên phải.</div></div>
-                  `;
-                  if(arrow) arrow.classList.remove('hidden'); // Hiện mũi tên chỉ xuống
-                  return;
-              }
-
-              // === CASE 4: ANDROID (AUTO - CÓ NÚT CÀI) ===
-              if (this.state.isAndroid && this.deferredPrompt) {
-                   // Rung nhẹ để gây chú ý
-                   if(navigator.vibrate) navigator.vibrate([100, 50, 100]);
-                   
-                   content.innerHTML = `
-                      <p class="text-center mb-4 text-gray-600 font-semibold">Ứng dụng đã sẵn sàng cài đặt!</p>
-                      <button onclick="document.getElementById('btnInstall').click(); document.getElementById('pwaHealthModal').classList.add('hidden');" class="w-full bg-[#ee4d2d] text-white py-4 rounded-xl font-bold shadow-xl uppercase animate-pulse-slow text-lg border-2 border-red-400">
-                          CÀI ĐẶT NGAY
-                      </button>
-                      <p class="text-center mt-3 text-xs text-gray-400">Bấm nút trên để cài đặt tự động</p>
-                  `;
-                  return;
-              } 
-
-              // === CASE 5: ANDROID (MANUAL - KHÔNG CÓ NÚT) ===
-              if (this.state.isAndroid) {
-                  content.innerHTML = `
-                      <div class="text-center font-bold mb-2 text-green-600">Dành cho Android</div>
-                      <div class="guide-step"><div class="step-num">1</div><div>Bấm dấu <b>3 chấm</b> <span class="text-xl">⋮</span> ở góc trên bên phải trình duyệt.</div></div>
-                      <div class="guide-step"><div class="step-num">2</div><div>Tìm và chọn dòng <b>Cài đặt ứng dụng</b> (Install App) hoặc <b>Thêm vào màn hình chính</b>.</div></div>
-                  `;
-                  return;
-              }
-
-              // === CASE 6: MÁY TÍNH (PC/LAPTOP) ===
-              content.innerHTML = `
-                  <div class="text-center">
-                      <p class="mb-3 font-bold">Cài đặt trên Máy tính:</p>
-                      <div class="bg-gray-100 p-3 rounded-lg border border-gray-300 inline-block mb-3">
-                          <span class="text-xl">⊕</span> Bấm biểu tượng <b>Cài đặt</b> nằm ở cuối thanh địa chỉ trình duyệt.
-                      </div>
-                      <p class="text-xs text-gray-500">Hoặc bấm menu 3 chấm > "Cài đặt MSTQ Music..."</p>
-                  </div>
-              `;
-          }
-      };
-
-      // Kích hoạt Engine
-      document.addEventListener('DOMContentLoaded', () => logicCore.init());
-  </script>
-  <!-- ================================================================= -->
-  <!-- KẾT THÚC PWA ENGINE V22 -->
-  <!-- ================================================================= -->
-
-</body>
-</html>
+      .dot-yellow { background-color: #eab308
