@@ -1,86 +1,76 @@
-/* sw.js – MSTQ Music PWA Service Worker
- * Chiến lược:
- * - cache-first cho file tĩnh nội bộ (HTML/CSS/JS/manifest/icon)
- * - network-first cho metadata Archive.org (giảm lỗi khi nền)
- * - KHÔNG can thiệp streaming audio (Range request) để trình duyệt xử lý
- */
-const STATIC_CACHE = 'mstq-static-v1';
-const META_CACHE   = 'mstq-meta-v1';
+// PWA Service Worker V21 - MSTQ Music Edition
+// Phiên bản: Hỗ trợ manifest.webmanifest và cấu trúc thư mục gốc
+const CACHE_NAME = 'mstq-pwa-v21-webmanifest';
 
-self.addEventListener('install', (event) => {
+// [QUAN TRỌNG] Tên repo của dự án
+const BASE = '/PlayMusic'; 
+
+const STATIC_ASSETS = [
+  `${BASE}/`,
+  `${BASE}/index.html`,
+  // Cache đúng tên file manifest gốc của bạn
+  `${BASE}/manifest.webmanifest`,
+  // Cache đúng đường dẫn icon trong thư mục images/icons/
+  `${BASE}/images/icons/icon-192x192.png`,
+  `${BASE}/images/icons/icon-512x512.png`,
+  // Cache luôn các thư viện CDN để chạy Offline cơ bản
+  'https://cdn.tailwindcss.com',
+  'https://unpkg.com/react@18/umd/react.production.min.js',
+  'https://unpkg.com/react-dom@18/umd/react-dom.production.min.js'
+];
+
+// 1. INSTALL
+self.addEventListener('install', event => {
   self.skipWaiting();
   event.waitUntil(
-    caches.open(STATIC_CACHE).then((cache) =>
-      cache.addAll([
-        './',
-        './index.html',
-        './manifest.webmanifest',
-        './images/icon-192.png',
-        './images/icon-512.png'
-      ]).catch(() => {})
-    )
+    caches.open(CACHE_NAME).then(async cache => {
+      console.log('[SW] Caching assets...');
+      await Promise.all(STATIC_ASSETS.map(url => 
+        fetch(url, { cache: 'reload' }).then(res => {
+          if (res.ok) return cache.put(url, res);
+          console.warn('[SW] Skip:', url);
+        }).catch(() => {})
+      ));
+    })
   );
 });
 
-self.addEventListener('activate', (event) => {
+// 2. ACTIVATE (Tự động dọn cache cũ)
+self.addEventListener('activate', event => {
   event.waitUntil(
-    (async () => {
-      // dọn cache cũ nếu đổi version
-      const keys = await caches.keys();
-      await Promise.all(
-        keys
-          .filter((k) => ![STATIC_CACHE, META_CACHE].includes(k))
-          .map((k) => caches.delete(k))
-      );
-      await self.clients.claim();
-    })()
+    caches.keys().then(keys =>
+      Promise.all(keys.map(k => k !== CACHE_NAME && caches.delete(k)))
+    ).then(() => self.clients.claim())
   );
 });
 
-self.addEventListener('fetch', (event) => {
+// 3. FETCH (Chiến lược Network First an toàn cho MSTQ Music)
+self.addEventListener('fetch', event => {
   const req = event.request;
-  const url = new URL(req.url);
-
-  // Bỏ qua non-GET
+  
+  // Chỉ xử lý GET request
   if (req.method !== 'GET') return;
 
-  // Nội bộ: cache-first cho tĩnh
-  if (url.origin === location.origin) {
-    // Không cache audio
-    if (/\.(mp3|m4a|aac|opus|ogg)$/i.test(url.pathname)) return;
-
-    if (/\.(html|webmanifest|png|jpg|jpeg|gif|svg|ico|js|css)$/i.test(url.pathname) || url.pathname === '/' ) {
-      event.respondWith(
-        caches.match(req).then((hit) =>
-          hit ||
-          fetch(req).then((res) => {
-            const resClone = res.clone();
-            caches.open(STATIC_CACHE).then((c) => c.put(req, resClone));
-            return res;
-          }).catch(() => hit) // nếu network fail, dùng cache nếu có
-        )
-      );
-      return;
-    }
+  // Streaming Audio (Range Requests): Luôn ưu tiên mạng để tua/phát ổn định
+  if (req.headers.get('range') || /\.(mp3|m4a|aac|opus|ogg)$/i.test(req.url)) {
+    return; // Để trình duyệt tự xử lý streaming
   }
 
-  // Archive.org:
-  if (url.hostname.endsWith('archive.org')) {
-    // Stream audio: để nguyên cho trình duyệt (Range requests)
-    if (url.pathname.includes('/download/')) return;
-
-    // Metadata/API: network-first, fallback cache
+  // HTML & Manifest: Luôn ưu tiên mạng để lấy nội dung mới nhất, Fallback về cache
+  // Đã cập nhật để kiểm tra đúng tên file manifest.webmanifest
+  if (req.mode === 'navigate' || req.url.includes('manifest.webmanifest') || req.url.includes('index.html')) {
     event.respondWith(
-      fetch(req)
-        .then((res) => {
-          const clone = res.clone();
-          caches.open(META_CACHE).then((c) => c.put(req, clone));
-          return res;
-        })
-        .catch(() => caches.match(req))
+      fetch(req).then(res => {
+        const clone = res.clone();
+        caches.open(CACHE_NAME).then(c => c.put(req, clone));
+        return res;
+      }).catch(() => caches.match(req))
     );
     return;
   }
 
-  // Mặc định: pass-through
+  // Assets (Ảnh/CSS/JS): Ưu tiên Cache cho nhanh
+  event.respondWith(
+    caches.match(req).then(res => res || fetch(req))
+  );
 });
