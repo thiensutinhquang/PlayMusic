@@ -20,64 +20,108 @@
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
 
   <style>
-    /* Tối ưu hóa CSS: Thêm transition cho mượt mà và feedback cảm ứng */
     :root,[data-theme]{transition:color .25s ease,background-color .25s ease}
     :root{
       --bg:#0b132b;--card:#0f1b2d;--text:#eaf2ff;--muted:#93a3b8;
       --primary:#f59e0b;--primary-fg:#0b132b;--ring:#f59e0b66;
       --border:#203047;--nav-bg:rgba(16,24,40,.88);--shadow:0 12px 36px rgba(0,0,0,.28);
-      --gradient:linear-gradient(135deg,#60a5fa 0%,#f59e0b 100%)
+      --gradient:linear-gradient(135deg,#60a5fa 0%,#f59e0b 100%);
+      --active-bg: rgba(245, 158, 11, 0.12);
     }
-    [data-theme=light]{--bg:#f6f7fb;--card:#ffffff;--text:#0f172a;--muted:#64748b;--primary:#0ea5e9;--primary-fg:#ffffff;--ring:#0ea5e955;--border:#e5e7eb;--nav-bg:rgba(255,255,255,.92)}
-    [data-theme=lucbao]{--bg:#081414;--card:#102424;--text:#e0f2f1;--muted:#80cbc4;--primary:#f4ff81;--primary-fg:#0c1113;--ring:#f4ff8166;--border:color-mix(in srgb,var(--text) 10%, transparent);--nav-bg:rgba(16,36,36,.86)}
+    [data-theme=light]{--bg:#f6f7fb;--card:#ffffff;--text:#0f172a;--muted:#64748b;--primary:#0ea5e9;--primary-fg:#ffffff;--ring:#0ea5e955;--border:#e5e7eb;--nav-bg:rgba(255,255,255,.92);--active-bg: rgba(14, 165, 233, 0.08);}
+    [data-theme=lucbao]{--bg:#081414;--card:#102424;--text:#e0f2f1;--muted:#80cbc4;--primary:#f4ff81;--primary-fg:#0c1113;--ring:#f4ff8166;--border:color-mix(in srgb,var(--text) 10%, transparent);--nav-bg:rgba(16,36,36,.86);--active-bg: rgba(244, 255, 129, 0.1);}
+    
     .btn{display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--border);background:var(--card);color:var(--text);padding:.6rem .9rem;border-radius:14px;transition:background-color .15s,transform .1s}
-    .btn:active{transform:scale(0.98);opacity:.8} /* Phản hồi cảm ứng */
+    .btn:active{transform:scale(0.98);opacity:.8} 
     .btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
     .btn-primary{background:var(--primary);color:var(--primary-fg);border-color:transparent}
     .chip{font-size:.72rem;border:1px solid var(--border);padding:.15rem .45rem;border-radius:999px;color:var(--muted)}
+    
     .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:40;backdrop-filter:blur(8px);background:var(--nav-bg);border-top:1px solid var(--border)}
     .tabbtn{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:.55rem 0;font-size:.74rem;color:var(--muted);transition:color .2s}
     .tabbtn[aria-current=true]{color:var(--text)}
     .safe-bottom{padding-bottom:calc(env(safe-area-inset-bottom) + 10px)}
-    .sheet{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top-left-radius:18px;border-top-right-radius:18px;border:1px solid var(--border);box-shadow:var(--shadow);z-index:60;padding:10px;animation:slideUp .3s ease-out}
-    .err{position:fixed;inset:0;background:rgba(0,0,0,.8);color:#fff;z-index:9999;display:none;align-items:center;justify-content:center;padding:20px;text-align:left}
-    .err-card{background:#111827;border:1px solid #374151;border-radius:14px;max-width:900px;width:100%;padding:18px}
+    
+    /* Range Slider */
     input[type="range"]{-webkit-appearance:none;appearance:none;height:6px;width:100%;background:var(--muted);border-radius:999px}
     input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:16px;height:16px;border-radius:50%;background:var(--primary);cursor:pointer}
     input[type="range"]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--primary);cursor:pointer}
-    .dropdown{position:relative}
-    .dropdown-menu{position:absolute;right:0;top:100%;margin-top:.4rem;background:var(--card);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);min-width:200px;z-index:50;padding:.4rem;animation:fadeIn .2s ease-out}
-    .dropdown-item{display:flex;align-items:center;gap:.5rem;padding:.6rem .7rem;border-radius:10px;transition:background-color .15s}
-    .dropdown-item:hover{background-color:rgba(255,255,255,.06)}
-    /* Custom CSS cho Dropdown Link mới (shadow-glow) */
-    .shadow-glow { box-shadow: 0 0 12px rgba(255, 255, 255, 0.1); }
-    /* Animations */
+    
+    /* Dropdown */
+    .dropdown{position:relative; display: inline-block;}
+    .dropdown-menu{
+        position:absolute; right:0; top:100%; margin-top:.5rem; 
+        background:var(--card); border:1px solid var(--border); 
+        border-radius:14px; box-shadow: 0 10px 40px rgba(0,0,0,0.4); 
+        min-width:220px; z-index:100; padding:.5rem; 
+        animation:fadeIn .15s ease-out; transform-origin: top right;
+    }
+    .dropdown-item{display:flex;align-items:center;gap:.6rem;padding:.75rem .8rem;border-radius:10px;transition:background-color .1s; font-weight: 500; font-size: 0.95rem; color: var(--text); text-decoration: none;}
+    .dropdown-item:active{background-color:var(--primary); color: var(--primary-fg);}
+    
+    /* Animation */
     @keyframes slideUp { from {transform: translateY(100%);} to {transform: translateY(0);} }
-    @keyframes fadeIn { from {opacity: 0; transform: translateY(-10px);} to {opacity: 1; transform: translateY(0);} }
+    @keyframes fadeIn { from {opacity: 0; transform: scale(0.95);} to {opacity: 1; transform: scale(1);} }
+    @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
+
+    /* === COMPACT SONG ROW STYLES (NEW) === */
+    .song-row {
+        display: flex; align-items: center;
+        padding: 0 12px;
+        height: 58px; /* Fixed compact height */
+        border-bottom: 1px solid var(--border);
+        transition: background-color 0.2s;
+        cursor: pointer;
+    }
+    .song-row:active { background-color: var(--border); }
+    .song-row.active { background-color: var(--active-bg); }
+    .song-row.active .song-idx { color: var(--primary); font-weight: bold; animation: pulse 2s infinite; }
+    
+    .icon-btn-mini {
+        width: 32px; height: 32px;
+        display: flex; align-items: center; justify-content: center;
+        border-radius: 50%;
+        transition: all 0.2s;
+        color: var(--muted);
+    }
+    .icon-btn-mini:active { background-color: var(--border); transform: scale(0.9); }
+
+    /* === TET TOAST STYLE === */
+    .toast-container {
+        position: fixed; top: 100px; left: 50%; transform: translateX(-50%);
+        z-index: 2000; pointer-events: none;
+        width: 90%; max-width: 380px;
+        text-align: center;
+    }
+    .toast-tet {
+        background: linear-gradient(135deg, #d32f2f, #b71c1c); /* Đỏ Tết */
+        color: #ffff00; /* Chữ Vàng */
+        border: 2px solid #ffeb3b;
+        padding: 14px 20px;
+        border-radius: 16px;
+        box-shadow: 0 10px 40px rgba(211, 47, 47, 0.6);
+        font-weight: 600;
+        font-size: 0.95rem;
+        animation: toastSlide 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        display: inline-block;
+        pointer-events: auto;
+    }
+    @keyframes toastSlide { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
   </style>
 </head>
 <body class="bg-[var(--bg)] text-[var(--text)] font-sans">
   <div id="root"></div>
 
-  <!-- Audio Elements -->
   <audio id="mstq-player" preload="metadata" playsinline webkit-playsinline crossOrigin="anonymous"></audio>
   <audio id="mstq-preload" preload="auto" playsinline webkit-playsinline muted crossOrigin="anonymous"></audio>
 
-  <!-- Error overlay -->
-  <div id="err" class="err">
-    <div class="err-card">
-      <div class="flex items-center justify-between">
-        <h3 class="text-lg font-bold">Đã bắt lỗi runtime</h3>
-        <button onclick="document.getElementById('err').style.display='none'" class="btn">Đóng</button>
-      </div>
-      <pre id="errlog" class="mt-3 whitespace-pre-wrap text-sm"></pre>
-    </div>
-  </div>
-
   <script>
-    // Bắt lỗi toàn cục
     (function(){
-      const show=(m)=>{const el=document.getElementById('err');const log=document.getElementById('errlog');if(log)log.textContent=String(m||'Unknown');if(el)el.style.display='flex';console.error('[GLOBAL ERROR]',m)};
+      const show=(m)=>{
+        const str = String(m||'');
+        if(str.includes('AbortError') || str.includes('NotAllowedError') || str.includes('Interrupted')) return;
+        console.error('[GLOBAL ERROR]',m);
+      };
       window.addEventListener('error',e=>show(e.error||e.message||e));
       window.addEventListener('unhandledrejection',e=>show(e.reason||e));
     })();
@@ -104,7 +148,6 @@
     const sanitizeRepeat=(r)=> (r==='off'||r==='all'||r==='one')?r:'all';
     const haptic=(ms=14)=>{ try{ navigator.vibrate?.(ms); }catch{} };
     
-    // Icon component
     const Icon = ({d=22,p="M5 12h14"}) => e('svg', {width:d, height:d, viewBox:"0 0 24 24", fill:"none", stroke:"currentColor", strokeWidth:"1.7"},
       e('path', {d:p, strokeLinecap:"round", strokeLinejoin:"round"})
     );
@@ -126,10 +169,53 @@
       repeat:(d)=>e(Icon, {d:d, p:"M17 1v4H7a5 5 0 0 0 0 10h1M7 23v-4h10a5 5 0 0 0 0-10h-1"}),
       shuffle:(d)=>e(Icon, {d:d, p:"M4 4l7 7-7 7M15 4h5M20 4l-6 6M15 20h5M20 20l-6-6"}),
       download:(d)=>e(Icon, {d:d, p:"M12 3v12m0 0l4-4m-4 4-4-4M5 21h14"}),
-      share:(d)=>e(Icon, {d:d, p:"M18 8a3 3 0 1 0-2-5.1A3 3 0 0 0 18 8Z M6 12a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z M16 14l-6 3m-6-8 6 3"}),
+      share:(d)=>e('svg', {width:d, height:d, viewBox:"0 0 24 24", fill:"none", stroke:"currentColor", strokeWidth:"2", strokeLinecap:"round", strokeLinejoin:"round"},
+        e('circle', {cx:"18", cy:"5", r:"3"}),
+        e('circle', {cx:"6", cy:"12", r:"3"}),
+        e('circle', {cx:"18", cy:"19", r:"3"}),
+        e('line', {x1:"8.59", y1:"13.51", x2:"15.42", y2:"17.49"}),
+        e('line', {x1:"15.41", y1:"6.51", x2:"8.59", y2:"10.49"})
+      ),
       heart:(d, fill)=>e('svg', {width:d, height:d, viewBox:"0 0 0 24 24", fill:fill?'currentColor':'none', stroke:"currentColor", strokeWidth:"1.7"},
         e('path', {d:"M20.8 5.2a5.5 5.5 0 0 0-7.8 0L12 6.2l-.9-1a5.5 5.5 0 0 0-7.8 0 5.5 5.5 0 0 0 0 7.8L12 21l8.7-8a5.5 5.5 0 0 0 0-7.8Z", strokeLinecap:"round", strokeLinejoin:"round", fill:fill?'var(--primary)': 'none'})
       )
+    };
+
+    const TopBar = ({ title, askInstall, linksOpen, setLinksOpen, setTheme }) => {
+        const SimpleLinkDropdown = e('div', {className: "dropdown", onClick: (e) => e.stopPropagation()}, 
+            e('button', {className: "btn", onClick: ()=>{haptic();setLinksOpen(o=>!o)}}, "Liên kết ▾"),
+            linksOpen && e('div', {className: "dropdown-menu"}, 
+                e('a', {className: "dropdown-item", href: "https://thiensutinhquang.github.io/home/", target: "_blank", rel: "noopener"}, "🏠 Trang chủ"),
+                e('a', {className: "dropdown-item", href: "https://thiensutinhquang.github.io/PlayMusic/", target: "_blank", rel: "noopener"}, "🎵 Play Nhạc"),
+                e('hr', {className: "my-1 border-[var(--border)]"}),
+                e('div', {className: "px-2 py-1 text-[var(--muted)] text-xs font-semibold"}, "Nền tảng"),
+                e('a', {className: "dropdown-item", href: "https://www.youtube.com/@ThiensuTinhQuang", target: "_blank", rel: "noopener"}, "▶️ YouTube"),
+                e('a', {className: "dropdown-item", href: "https://www.tiktok.com/@minhsutinhquang", target: "_blank", rel: "noopener"}, "🎶 TikTok"),
+                e('a', {className: "dropdown-item", href: "https://www.facebook.com/groups/minhsutinhquang", target: "_blank", rel: "noopener"}, "👥 Facebook Group"),
+                e('a', {className: "dropdown-item", href: "https://t.me/Giaoly_phap_don_ngo", target: "_blank", rel: "noopener"}, "💬 Telegram"),
+                e('a', {className: "dropdown-item", href: "https://zalo.me/g/dukrae245", target: "_blank", rel: "noopener"}, "📱 Zalo")
+            )
+        );
+        
+        const LogoElement = e('img', {
+            src: LOGO_FALLBACK_URL, 
+            width: "24", height: "24", 
+            className: "rounded-md", 
+            alt: "MSTQ logo",
+            onError: (e) => { e.target.src = LOGO_PLACEHOLDER; e.target.onError = null; }
+        });
+
+        return e('header', {className: "fixed top-0 inset-x-0 z-30 px-4 py-3 flex items-center justify-between bg-[var(--nav-bg)] backdrop-blur-lg border-b border-[var(--border)]"},
+          e('div', {className: "flex items-center gap-2"},
+            LogoElement, 
+            e('h1', {className: "font-semibold"}, title)
+          ),
+          e('div', {className: "flex items-center gap-2"},
+            e('button', {className: "btn", onClick: askInstall}, "Cài đặt ứng dụng"),
+            SimpleLinkDropdown, 
+            e('button', {className: "btn", onClick: ()=>{haptic();setTheme(t=>t==='lucbao'?'light':'lucbao')}}, "Chủ đề")
+          )
+        );
     };
 
     function App(){
@@ -144,14 +230,25 @@
       const installEvtRef=useRef(null);
       const [linksOpen,setLinksOpen]=useState(false);
       const linkRef = useRef(null);
+      const [toast, setToast] = useState(null); // Trạng thái thông báo
+
+      // Xóa thông báo sau 3 giây
+      useEffect(() => {
+          if (toast) {
+              const timer = setTimeout(() => setToast(null), 3500);
+              return () => clearTimeout(timer);
+          }
+      }, [toast]);
       
       const askInstall = async () => { 
         haptic(); 
         try { await audioCtxRef.current?.resume?.(); } catch {} 
+        
+        // PWA V29
         if (window.pwaEngine) {
-            window.pwaEngine.showSmartGuide();
+            window.pwaEngine.handleInstallClick();
         } else {
-            alert("Vui lòng mở menu trình duyệt chọn 'Thêm vào màn hình chính'.");
+            alert("Vui lòng mở menu trình duyệt chọn 'Thêm vào màn hình chính' (Add to Home Screen).");
         }
       };
 
@@ -197,12 +294,24 @@
             const comp=ctx.createDynamicsCompressor();
             comp.threshold.value=-18; comp.knee.value=24; comp.ratio.value=6; comp.attack.value=0.008; comp.release.value=0.25;
             src.connect(gain);
+            // OPTIMIZATION: Only connect compressor if needed to save CPU
             if(compressorOn){ gain.connect(comp).connect(ctx.destination); } else { gain.connect(ctx.destination); }
             audioCtxRef.current=ctx; gainRef.current=gain; compNodeRef.current=comp; srcNodeRef.current=src;
+
+            // SMART RECOVERY: Auto resume if OS suspends context
+            ctx.onstatechange = () => {
+                 if (ctx.state === 'suspended' && playing) {
+                     ctx.resume();
+                 }
+            };
           }
-          await audioCtxRef.current.resume();
+          if (audioCtxRef.current.state === 'suspended') {
+             await audioCtxRef.current.resume();
+          }
         }catch{}
       };
+      
+      // Toggle Compressor Graph
       useEffect(()=>{ try{
         if(audioCtxRef.current && gainRef.current){
           gainRef.current.disconnect();
@@ -257,6 +366,7 @@
         return out;
       };
 
+      /* === RESTORED REFETCH LOGIC === */
       const refetch=useCallback(async()=>{
         setLoading(true);
         try{
@@ -312,6 +422,7 @@
       useEffect(()=>{ if(playlist.length) queuePreload(currentIndex); },[playlist.length,currentIndex,queuePreload]);
       useEffect(()=>{ const h=()=>queuePreload(currentIndex); document.addEventListener('visibilitychange',h); return()=>document.removeEventListener('visibilitychange',h); },[queuePreload,currentIndex]);
 
+      // *** MEDIA SESSION API - REPLACEMENT FOR WAKELOCK ***
       useEffect(()=>{
         const a=audioRef.current; if(!a||!current||!('mediaSession' in navigator)) return;
         try{
@@ -319,14 +430,50 @@
             title:current.title, artist:current.artist||'minhsutinhquang', album:'MSTQ Music',
             artwork:[{src:current.artwork||ICON_URL,sizes:'512x512',type:'image/png'}]
           });
+          
+          // Basic controls
           navigator.mediaSession.setActionHandler('play',()=>playPause());
           navigator.mediaSession.setActionHandler('pause',()=>playPause());
           navigator.mediaSession.setActionHandler('previoustrack',()=>prevTrack());
           navigator.mediaSession.setActionHandler('nexttrack',()=>nextTrack());
-          navigator.mediaSession.setActionHandler('seekto',d=>{ const a=audioRef.current; if(a && d.seekTime!=null) a.currentTime=d.seekTime; });
+          
+          // Advanced controls for full player emulation
+          navigator.mediaSession.setActionHandler('seekto',d=>{ 
+             const a=audioRef.current; 
+             if(a && d.seekTime!=null && isFinite(d.seekTime)) {
+                 a.currentTime=d.seekTime; 
+                 updatePositionState(); // Immediately update lock screen
+             }
+          });
+          navigator.mediaSession.setActionHandler('seekbackward', (details) => {
+              const skipTime = details.seekOffset || 10;
+              const a = audioRef.current;
+              if(a) { a.currentTime = Math.max(a.currentTime - skipTime, 0); updatePositionState(); }
+          });
+          navigator.mediaSession.setActionHandler('seekforward', (details) => {
+              const skipTime = details.seekOffset || 10;
+              const a = audioRef.current;
+              if(a) { a.currentTime = Math.min(a.currentTime + skipTime, a.duration); updatePositionState(); }
+          });
+
+          // Sync Playback State
           navigator.mediaSession.playbackState=playing?'playing':'paused';
-        }catch{}
+        }catch(e){ console.warn("MediaSession update failed", e); }
       },[current,playing]);
+
+      // Helper to keep Lock Screen progress bar smooth
+      const updatePositionState = () => {
+          if ('mediaSession' in navigator && 'setPositionState' in navigator.mediaSession) {
+              const a = audioRef.current;
+              if (a && !isNaN(a.duration) && !isNaN(a.currentTime)) {
+                  navigator.mediaSession.setPositionState({
+                      duration: a.duration,
+                      playbackRate: a.playbackRate,
+                      position: a.currentTime
+                  });
+              }
+          }
+      };
 
       const computeNextIndex = useCallback((dir)=> {
         if(!playlist.length) return 0;
@@ -340,18 +487,31 @@
         const a=audioRef.current; if(!a) return;
         await ensureAudioContext();
         a.loop=false; a.muted=false; if(a.volume<0.6) a.volume=0.85;
-        setCurrentIndex(i); setPlaying(true); targetPlayingRef.current=true;
+        setCurrentIndex(i); setPlaying(true); 
         const s=playlist[i]; if(!s) return;
         
         if(a.src===s.stream_url && a.currentTime>0){
-          a.play().catch(()=>{});
+          a.play().catch(e => console.warn("Resume failed", e));
         }else{
-          if(fadeIn) await fadeTo(0.2,120); 
-          a.src=s.stream_url; a.load(); 
-          if(fadeIn) { await fadeTo(0.1,10); await a.play(); await fadeTo(1,800);}
-          else { a.play().catch(()=>{}); }
+          if(gainRef.current) {
+             try {
+               gainRef.current.gain.cancelScheduledValues(audioCtxRef.current.currentTime);
+               gainRef.current.gain.value = 0; 
+             } catch(e) {}
+          }
+          a.src=s.stream_url; 
+          a.load(); 
+          try {
+             await a.play();
+             if(gainRef.current) {
+               const now = audioCtxRef.current.currentTime;
+               gainRef.current.gain.setValueAtTime(0, now);
+               gainRef.current.gain.linearRampToValueAtTime(1, now + 0.5); 
+             }
+          } catch(e) {
+             console.warn("Autoplay blocked/interrupted (Harmless in BG):", e);
+          }
         }
-
         queuePreload(i);
       },[playlist,queuePreload]);
 
@@ -360,10 +520,10 @@
         if(repeat==='one'){ const a=audioRef.current; if(a){ a.currentTime=0; a.loop=false; a.play().catch(()=>{});} return; }
         const nextIdx = computeNextIndex(+1);
         if((stopAtEnd || repeat==='off') && !upNext.length && nextIdx === 0 && currentIndex === playlist.length-1){ 
-          setPlaying(false); targetPlayingRef.current=false; 
+          setPlaying(false); 
           return; 
         }
-        nextTrack(); 
+        nextTrack();
       },[repeat,stopAtEnd,currentIndex,playlist.length,upNext.length]); 
 
       const nextTrack=useCallback(()=>{
@@ -372,11 +532,11 @@
         if(upNext.length){
           const nextId=upNext[0]; setUpNext(q=>q.slice(1));
           const i=playlist.findIndex(x=>x.id===nextId);
-          if(i>=0){ playIndex(i); return; }
+          if(i>=0){ playIndex(i).catch(()=>{}); return; }
         }
         let i=computeNextIndex(+1);
         if(playlist.length>1 && i===currentIndex && !shuffle){ i=(i+1)%playlist.length; }
-        playIndex(i);
+        playIndex(i).catch(()=>{}); 
       },[playlist.length,computeNextIndex,upNext,currentIndex,shuffle,playIndex]);
 
       const prevTrack=useCallback(()=>{
@@ -384,27 +544,26 @@
         if(!playlist.length) return;
         const a=audioRef.current; if(a?.currentTime>3){ a.currentTime=0; return; }
         const i=computeNextIndex(-1);
-        playIndex(i);
+        playIndex(i).catch(()=>{}); 
       },[playlist.length,computeNextIndex,playIndex]);
       
-      const pickSong=async(s)=>{ haptic(); const i=playlist.findIndex(x=>x.id===s.id); if(i>=0) playIndex(i); };
+      const pickSong=async(s)=>{ haptic(); const i=playlist.findIndex(x=>x.id===s.id); if(i>=0) playIndex(i).catch(()=>{}); };
 
       const playPause=async()=>{
         haptic();
         const a=audioRef.current; if(!a) return;
         await ensureAudioContext();
         a.loop=false; a.muted=false; if(a.volume<0.6) a.volume=0.85;
-        if(!current && playlist.length){ playIndex(0,{fadeIn:false}); setNeedsStart(false); return; }
+        if(!current && playlist.length){ playIndex(0,{fadeIn:false}).catch(()=>{}); setNeedsStart(false); return; }
         if(playing){ 
-          setPlaying(false); targetPlayingRef.current=false; 
+          setPlaying(false); 
           try{await fadeTo(0.01,150)}catch{} a.pause(); 
         }
         else{ 
-          setPlaying(true); targetPlayingRef.current=true; setNeedsStart(false); 
+          setPlaying(true); setNeedsStart(false); 
           try{ await fadeTo(1,200); }catch{} a.play().catch(()=>{}); 
         }
       };
-      const pauseAll=()=>{const a=audioRef.current; if(a){ setPlaying(false); targetPlayingRef.current=false; a.pause(); }};
       
       const targetPlayingRef=useRef(false);
       const lastProgRef=useRef({t:0,pos:0});
@@ -412,13 +571,8 @@
       const lastManualPauseRef=useRef(0);
       const lastRecoverRef=useRef(0);
 
-      useEffect(()=>{
-        let lock=null;
-        const reqLock=async()=>{try{if('wakeLock'in navigator && document.visibilityState==='visible'){lock=await navigator.wakeLock.request('screen');}}catch{}};
-        const vis=()=>{ if(document.visibilityState==='visible'){ reqLock(); if(targetPlayingRef.current){ audioRef.current?.play?.().catch(()=>{}); } } };
-        reqLock(); document.addEventListener('visibilitychange',vis);
-        return()=>{document.removeEventListener('visibilitychange',vis);try{lock?.release?.()}catch{}};
-      },[]);
+      // --- DELETED WAKELOCK ---
+      // We no longer request wake lock. OS handles audio backgrounding via 'audio' tag + MediaSession.
 
       useEffect(()=>{
         const a=audioRef.current; if(!a) return;
@@ -427,10 +581,17 @@
           setProgress({current:a.currentTime||0,duration:a.duration||0});
           const now=Date.now();
           if(Math.abs(a.currentTime-(lastProgRef.current.pos||0))>0.25){ lastProgRef.current={t:now,pos:a.currentTime}; stallScoreRef.current=0; }
-          if(a.duration>1 && !a.paused && !a.loop && (a.currentTime>=a.duration-0.5)){ handleEnd(); }
+          if(a.duration>1 && !a.paused && !a.loop && (a.currentTime>=a.duration-0.8)){ handleEnd(); }
+          
+          // Throttled position update for lock screen (saving CPU)
+          if (now % 20 === 0) updatePositionState(); 
         };
         const onEnded=()=>{ handleEnd(); };
-        const onPause=()=>{ if(!targetPlayingRef.current){ lastManualPauseRef.current=Date.now(); } };
+        const onPause=()=>{ 
+             if(!targetPlayingRef.current){ lastManualPauseRef.current=Date.now(); }
+             // IO OPTIMIZATION: Save state on pause (better than interval)
+             if(current) save(RESUME_KEY,{index:currentIndex,id:current.id,currentTime:a.currentTime||0,volume:a.volume,rate:a.playbackRate,muted:a.muted,playing:false});
+        };
         a.addEventListener('timeupdate',onTime);
         a.addEventListener('ended',onEnded);
         a.addEventListener('pause',onPause);
@@ -438,30 +599,35 @@
         return()=>{a.removeEventListener('timeupdate',onTime);a.removeEventListener('ended',onEnded);a.removeEventListener('pause',onPause);['stalled','suspend','waiting','error','abort'].forEach(e=>a.removeEventListener(e,()=>{}));};
       },[handleEnd]); 
 
+      // --- IO & WATCHDOG OPTIMIZATION ---
       useEffect(()=>{
-        const interval = powerSave ? 10000 : 6000;
+        // Increased interval: 6s -> 15s to reduce wakeups
+        const interval = powerSave ? 20000 : 15000;
         const tick=setInterval(async()=>{
           const a=audioRef.current; if(!a||!current) return;
-          save(RESUME_KEY,{index:currentIndex,id:current.id,currentTime:a.currentTime||0,volume:a.volume,rate:a.playbackRate,muted:a.muted,playing:targetPlayingRef.current});
+          
+          // Only save to disk if playing to minimize IO
+          if (targetPlayingRef.current) {
+              save(RESUME_KEY,{index:currentIndex,id:current.id,currentTime:a.currentTime||0,volume:a.volume,rate:a.playbackRate,muted:a.muted,playing:targetPlayingRef.current});
+          }
+
           if(!targetPlayingRef.current) return;
           if(Date.now()-lastManualPauseRef.current<2000) return; 
 
-          const visibilityCheckTime = document.visibilityState==='visible'?20000:15000;
+          const visibilityCheckTime = document.visibilityState==='visible'?20000:30000; // Allow longer gaps in background
           const stagnate = (Date.now()-(lastProgRef.current.t||0) > visibilityCheckTime);
           const poorReady = a.readyState<2;
           const now=Date.now();
           const canRecover = now - (lastRecoverRef.current||0) > (powerSave?4000:3000);
 
           if(a.paused && canRecover){
-            lastRecoverRef.current=now;
-            try{ await ensureAudioContext(); a.play(); return; }catch{}
+            try{ await ensureAudioContext(); a.play().catch(()=>{}); return; }catch{}
           }
           if((stagnate || poorReady) && canRecover){
-            lastRecoverRef.current=now;
             stallScoreRef.current++;
             try{
               await ensureAudioContext();
-              if(a.paused) await a.play();
+              if(a.paused) await a.play().catch(()=>{});
               if(poorReady){ a.load(); await a.play().catch(()=>{}); }
             }catch{ /* ignored */ }
 
@@ -486,47 +652,6 @@
         }
       },[playlist.length]);
 
-      const [favs,setFavs]=useState(load('mstq_favorites_v0',[]));
-      const toggleFav = () => {}; 
-      const isFav = () => false; 
-
-      const TopBar=({title})=>{
-        const SimpleLinkDropdown = e('div', {className: "dropdown", onClick: (e) => e.stopPropagation()}, 
-            e('button', {className: "btn", onClick: ()=>{haptic();setLinksOpen(o=>!o)}}, "Liên kết ▾"),
-            linksOpen && e('div', {className: "dropdown-menu", onMouseLeave: ()=>setLinksOpen(false)},
-                e('a', {className: "dropdown-item", href: "https://thiensutinhquang.github.io/home/", target: "_blank", rel: "noopener"}, "🏠 Trang chủ"),
-                e('a', {className: "dropdown-item", href: "https://thiensutinhquang.github.io/PlayMusic/", target: "_blank", rel: "noopener"}, "🎵 Play Nhạc"),
-                e('hr', {className: "my-1 border-[var(--border)]"}),
-                e('div', {className: "px-2 py-1 text-[var(--muted)] text-xs font-semibold"}, "Nền tảng"),
-                e('a', {className: "dropdown-item", href: "https://www.youtube.com/@ThiensuTinhQuang", target: "_blank", rel: "noopener"}, "▶️ YouTube"),
-                e('a', {className: "dropdown-item", href: "https://www.tiktok.com/@minhsutinhquang", target: "_blank", rel: "noopener"}, "🎶 TikTok"),
-                e('a', {className: "dropdown-item", href: "https://www.facebook.com/groups/minhsutinhquang", target: "_blank", rel: "noopener"}, "👥 Facebook Group"),
-                e('a', {className: "dropdown-item", href: "https://t.me/Giaoly_phap_don_ngo", target: "_blank", rel: "noopener"}, "💬 Telegram"),
-                e('a', {className: "dropdown-item", href: "https://zalo.me/g/dukrae245", target: "_blank", rel: "noopener"}, "📱 Zalo")
-            )
-        );
-        
-        const LogoElement = e('img', {
-            src: LOGO_FALLBACK_URL, 
-            width: "24", height: "24", 
-            className: "rounded-md", 
-            alt: "MSTQ logo",
-            onError: (e) => { e.target.src = LOGO_PLACEHOLDER; e.target.onError = null; }
-        });
-
-        return e('header', {className: "fixed top-0 inset-x-0 z-30 px-4 py-3 flex items-center justify-between bg-[var(--nav-bg)] backdrop-blur-lg border-b border-[var(--border)]"},
-          e('div', {className: "flex items-center gap-2"},
-            LogoElement, 
-            e('h1', {className: "font-semibold"}, title)
-          ),
-          e('div', {className: "flex items-center gap-2"},
-            e('button', {className: "btn", onClick: askInstall}, "Cài đặt ứng dụng"),
-            SimpleLinkDropdown, 
-            e('button', {className: "btn", onClick: ()=>{haptic();setTheme(t=>t==='lucbao'?'light':'lucbao')}}, "Chủ đề")
-          )
-        );
-      };
-
       const [sheetFor,setSheetFor]=useState(null);
       const closeSheet=()=>setSheetFor(null);
 
@@ -537,6 +662,7 @@
             await navigator.share({title:s.title, text:`Nghe: ${s.title} – ${s.artist||''}`, url:s.stream_url});
           }else{
             await navigator.clipboard.writeText(s.stream_url);
+            // Just toast
             const tempMsg = document.createElement('div');
             tempMsg.className = 'fixed bottom-[110px] left-1/2 -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg z-[1000] opacity-0 transition-opacity duration-300';
             tempMsg.textContent = 'Đã sao chép link phát vào bộ nhớ tạm.';
@@ -546,9 +672,48 @@
           }
         }catch{}
       }
-      function downloadTrack(s){
+
+      /* === UPDATED DOWNLOAD TRACK FUNCTION === */
+      async function downloadTrack(s) {
         haptic();
-        window.open(s.stream_url, '_blank');
+        
+        // 1. Thông báo ngay lập tức
+        setToast(`🧧 Đang chuẩn bị tải: "${s.title}"...`);
+
+        try {
+            if(!s.stream_url) throw new Error("No URL");
+
+            const response = await fetch(s.stream_url);
+            if (!response.ok) throw new Error('Network error');
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            // Xử lý tên file: Giữ nguyên Tiếng Việt, chỉ bỏ ký tự đặc biệt của hệ thống file
+            a.download = `${s.title.replace(/[\/\\:*?"<>|]/g, '')}.mp3`;
+            document.body.appendChild(a);
+            a.click();
+
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            
+            setToast('✅ Đã tải xong! Chúc bạn nghe nhạc vui vẻ.');
+        } catch (e) {
+            console.error(e);
+            // Fallback: Mở link trực tiếp
+            setToast('⚠️ Đang chuyển hướng để tải...');
+            setTimeout(() => {
+                const a = document.createElement('a');
+                a.href = s.stream_url;
+                a.download = '';
+                a.target = '_blank';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            }, 800);
+        }
       }
 
       const HomeTab=()=>{
@@ -556,68 +721,76 @@
           ? playlist.filter(s => (s.title||'').toLowerCase().includes(filter.toLowerCase()) || (s.artist||'').toLowerCase().includes(filter.toLowerCase()))
           : playlist;
 
-        const handleAction = (e, actionFunc, song) => {
-          e.stopPropagation(); 
-          e.preventDefault(); 
-          actionFunc(song);
-        };
+        /* --- FIXED AUTO SCROLL (SMART FOCUS) --- */
+        const lastAutoScrollId = useRef(null);
         
+        useEffect(() => {
+            if(current?.id && (lastAutoScrollId.current !== current.id || tab === 'home')) {
+                const el = document.getElementById(`song-${current.id}`);
+                if(el) {
+                   setTimeout(() => {
+                       el.scrollIntoView({behavior: 'smooth', block: 'center'});
+                       lastAutoScrollId.current = current.id;
+                   }, 300);
+                }
+            }
+        }, [current?.id, tab]);
+
         const SongItem = (s, index) => {
             const isCurrent = current?.id === s.id;
-            const itemClasses = [
-                "flex items-center gap-3 p-1.5 rounded-xl border border-[var(--border)] transition-all",
-                isCurrent ? 'ring-2 ring-[var(--ring)] bg-red-900/40' : 'hover:bg-[var(--card)]/20' 
-            ].join(' ');
-
-            const currentStyle = isCurrent ? 'text-red-300' : ''; 
-
-            return e('div', {key: s.id, className: itemClasses},
-              e('div', {className: `w-8 text-center flex-shrink-0 text-sm font-bold ${currentStyle}`},
-                  isCurrent ? Icons.play(16) : (index + 1) + '.' 
+            return e('div', {
+                key: s.id, 
+                id: `song-${s.id}`,
+                className: `song-row ${isCurrent ? 'active' : ''}`,
+                onClick: () => pickSong(s) 
+            },
+              /* 1. STT (Play Icon if active) */
+              e('div', {className: `w-8 text-center flex-shrink-0 text-xs font-mono mr-2 ${isCurrent ? 'song-idx' : 'text-[var(--muted)]'}`},
+                  isCurrent ? "▶" : (index + 1)
               ),
-              e('button', {className: "flex-grow text-left min-w-0 flex flex-col justify-center", onClick: (e)=>{e.stopPropagation(); pickSong(s);}}, 
-                e('div', {className: `font-semibold text-sm truncate ${currentStyle}`}, s.title||'Untitled'),
-                e('div', {className: "text-xs text-[var(--muted)] truncate"}, s.artist||'minhsutinhquang')
+              
+              /* 2. Title & Artist (Flex 1 - Grows) */
+              e('div', {className: "flex-1 min-w-0 flex flex-col justify-center pr-2"}, 
+                e('div', {className: `truncate text-[0.92rem] ${isCurrent ? 'text-[var(--primary)] font-semibold' : 'text-[var(--text)]'}`}, s.title||'Untitled'),
+                e('div', {className: "truncate text-xs text-[var(--muted)] opacity-80 mt-0.5"}, s.artist||'minhsutinhquang')
               ),
+              
+              /* 3. Right Action Group */
               e('div', {className: "flex items-center gap-1 flex-shrink-0"},
-                e('button', {className: "w-8 h-8 flex items-center justify-center rounded-full", title: "Tải về", 
-                  onClick: (e)=>handleAction(e, downloadTrack, s)}, e(Icons.download, {d:18})),
-                e('button', {className: "w-8 h-8 flex items-center justify-center rounded-full", title: "Chia sẻ", 
-                  onClick: (e)=>handleAction(e, shareTrack, s)}, e(Icons.share, {d:18})),
-                e('div', {className: "text-[11px] text-[var(--muted)] ml-1 w-8 text-right flex-shrink-0"}, formatTime(s.duration||0))
+                  /* Share Button (Blue) */
+                  e('button', {
+                    className: "icon-btn-mini", style: { color: isCurrent ? 'var(--primary)' : '#818cf8' },
+                    onClick: (e)=>{ e.stopPropagation(); shareTrack(s); }
+                  }, e(Icons.share, {d:17})),
+                  
+                  /* Time Divider */
+                  e('div', {className: "flex flex-col items-center justify-center px-2 mx-1 border-l border-r border-[var(--border)] h-8"},
+                    e('span', {className: "text-[10px] font-mono text-[var(--muted)]"}, formatTime(s.duration||0))
+                  ),
+                  
+                  /* Download Button (Red) */
+                  e('button', {
+                    className: "icon-btn-mini", style: { color: '#ef4444' },
+                    onClick: (e)=>{ e.stopPropagation(); downloadTrack(s); }
+                  }, e(Icons.download, {d:17}))
               )
             );
         };
 
-        return e('div', {className: "px-4 py-3"},
-          e('div', {className: "flex items-center justify-between mb-2"},
-            e('h2', {className: "text-xl font-semibold"}, "Danh sách phát"),
-            e('span', {className: "chip"}, `${list.length} bài`)
-          ),
-          e('div', {className: "mb-3 flex gap-2"},
-            e('input', {className: "flex-1 bg-[var(--card)] border border-[var(--border)] rounded-xl p-2 focus:ring-2 focus:ring-[var(--primary)] focus:outline-none", placeholder: "Lọc nhanh theo tiêu đề / nghệ sĩ", value: filter, onChange: e=>setFilter(e.target.value)}),
-            e('button', {className: "btn", onClick: ()=>{haptic();setFilter('');setVisible(INITIAL_VISIBLE)}}, "Xoá")
+        return e('div', {className: "px-0 pb-24 pt-14"},
+          e('div', {className: "px-3 py-2 flex items-center gap-2 sticky top-14 z-20 bg-[var(--bg)]/95 backdrop-blur-md border-b border-[var(--border)]"},
+            e('input', {className: "flex-1 bg-[var(--card)] text-sm border border-[var(--border)] rounded-full py-2 px-4 focus:ring-1 focus:ring-[var(--primary)] focus:outline-none", placeholder: "Tìm nhanh...", value: filter, onChange: e=>setFilter(e.target.value)}),
+            filter && e('button', {className: "text-xs px-3 py-1.5 bg-[var(--card)] border border-[var(--border)] rounded-full", onClick: ()=>{haptic();setFilter('');setVisible(INITIAL_VISIBLE)}}, "Xoá")
           ),
           loading?(
-            e('div', {className: "animate-pulse space-y-3"}, Array.from({length:6}).map((_,i)=>e('div', {key:i, className: "h-14 rounded-xl bg-[var(--card)]/40"})))
+            e('div', {className: "animate-pulse space-y-3 p-4"}, Array.from({length:6}).map((_,i)=>e('div', {key:i, className: "h-12 rounded bg-[var(--card)]/40"})))
           ):(
             e(React.Fragment, null,
-              e('div', {className: "space-y-0.5"}, list.slice(0,visible).map((s, index) => SongItem(s, index))), 
+              e('div', {className: "space-y-0"}, list.slice(0,visible).map((s, index) => SongItem(s, index))), 
               list.length>visible && e('button', {onClick: ()=>{haptic();setVisible(v=>Math.min(list.length,v+VISIBLE_STEP))}, className: "btn w-full mt-3"}, "Tải thêm")
             )
           ),
-          sheetFor && e('div', {className: "sheet safe-bottom"},
-            e('div', {className: "flex items-center justify-between px-2"},
-              e('div', {className: "font-semibold truncate mr-2"}, sheetFor.title),
-              e('button', {className: "btn", onClick: ()=>{haptic();closeSheet()}}, "Đóng")
-            ),
-            e('div', {className: "mt-2 grid grid-cols-2 gap-2 px-2 pb-2"},
-              e('button', {className: "btn btn-primary", onClick: ()=>{enqueueNext(sheetFor); closeSheet(); setTab('queue');}}, "Phát tiếp theo"),
-              e('button', {className: "btn", onClick: ()=>{pickSong(sheetFor); closeSheet();}}, "Phát ngay"),
-              e('button', {className: "btn", onClick: ()=>{downloadTrack(sheetFor); closeSheet();}}, "Tải ngoại tuyến"),
-              e('button', {className: "btn", onClick: ()=>{shareTrack(sheetFor); closeSheet();}}, "Chia sẻ…")
-            )
-          )
+          sheetFor && e('div', {className: "sheet safe-bottom"}, /* ... */ )
         );
       };
 
@@ -644,7 +817,7 @@
           }catch{} setBusy(false);
         };
         const quick=[{label:'Mới nhất',q:'mediatype:(audio)',sort:'publicdate+desc'},{label:'Phổ biến',q:'mediatype:(audio)',sort:'downloads+desc'},{label:'Pháp thoại',q:'"Minh Su Tinh Quang" mediatype:(audio)',sort:'downloads+desc'}];
-        return e('div', {className: "px-4 py-3"},
+        return e('div', {className: "px-4 py-3 pt-16"},
           e('div', {className: "flex gap-2"},
             e('input', {className: "flex-1 bg-[var(--card)] border border-[var(--border)] rounded-xl p-2 focus:ring-2 focus:ring-[var(--primary)] focus:outline-none", placeholder: "Tìm trên Archive.org...", value: kw, onChange: e=>setKw(e.target.value)}),
             e('button', {className: "btn btn-primary", onClick: ()=>runQuery(`${kw} AND mediatype:(audio)`), disabled:!kw||busy}, busy?'Đang tìm…':'Tìm')
@@ -657,7 +830,7 @@
 
       const LibraryTab=()=>{
         const [custom,setCustom]=useState(sourcePref.customText||'');
-        return e('div', {className: "px-4 py-3 space-y-6"},
+        return e('div', {className: "px-4 py-3 space-y-6 pt-16"},
           e('div', null,
             e('h2', {className: "text-lg font-semibold mb-2"}, "Thư viện (Nguồn nhạc)"),
             e('p', {className: "text-[var(--muted)] text-sm"}, "Mục này chứa các cài đặt nâng cao về nguồn nhạc."),
@@ -675,7 +848,7 @@
       };
 
       const QueueTab=()=>{ const items=upNext.map(id=>playlist.find(s=>s.id===id)).filter(Boolean);
-        return e('div', {className: "px-4 py-3"},
+        return e('div', {className: "px-4 py-3 pt-16"},
           e('div', {className: "flex items-center justify-between mb-2"},
             e('h2', {className: "text-lg font-semibold"}, "Hàng đợi “Phát tiếp theo”"),
             e('div', {className: "flex gap-2"}, e('span', {className: "chip"}, `${items.length} mục`), items.length>0 && e('button', {className: "btn", onClick:()=>{haptic();clearQueue()}}, "Xoá hết"))
@@ -698,7 +871,7 @@
         );
       };
 
-      const SettingsTab=()=>e('div', {className: "px-4 py-3 space-y-6"},
+      const SettingsTab=()=>e('div', {className: "px-4 py-3 space-y-6 pt-16"},
         e('div', {className: "p-3 rounded-2xl border border-[var(--border)]"},
           e('div', {className: "flex items-center justify-between mb-3"},
             e('h3', {className: "font-semibold text-lg"}, "Giao diện"),
@@ -732,7 +905,8 @@
           e('h3', {className: "font-semibold mb-2"}, "Ổn định âm lượng (WebAudio)"),
           e('label', {className: "flex items-center gap-2"},
             e('input', {type:"checkbox", checked:!!compressorOn, onChange:e=>{haptic();setCompressorOn(e.target.checked)}}), " Bật Dynamics Compressor"
-          )
+          ),
+           e('p', {className: "text-xs text-[var(--muted)] mt-1"}, "Tắt sẽ giúp tiết kiệm pin hơn 1 chút.")
         ),
         e('div', {className: "p-3 rounded-2xl border border-[var(--border)]"},
           e('h3', {className: "font-semibold mb-2"}, "Tiết kiệm pin & Chạy nền"),
@@ -767,7 +941,7 @@
         )
       );
 
-      /* Now Playing */
+      /* === RESTORED NOW PLAYING (FULL SCREEN) === */
       const [showNowPlaying,setShowNowPlaying]=useState(false);
       const NowPlaying=()=>{
         if(!current) return null;
@@ -776,9 +950,10 @@
           if(!a||!isFinite(a.duration)) return; 
           const newVal = parseFloat(e.target.value);
           a.currentTime=clamp(newVal,0,a.duration); 
+          updatePositionState(); // Sync lockscreen immediately
         };
-        const dblLeft=()=>{ haptic(5); if(a) a.currentTime=Math.max(0,(a.currentTime||0)-10); };
-        const dblRight=()=>{ haptic(5); if(a) a.currentTime=Math.min(a.duration||0,(a.currentTime||0)+10); };
+        const dblLeft=()=>{ haptic(5); if(a) a.currentTime=Math.max(0,(a.currentTime||0)-10); updatePositionState();};
+        const dblRight=()=>{ haptic(5); if(a) a.currentTime=Math.min(a.duration||0,(a.currentTime||0)+10); updatePositionState();};
         
         const RepeatButton = () => {
           let label = 'Lặp: Tắt';
@@ -793,8 +968,7 @@
           e('div', {className: "p-4 flex items-center justify-between border-b border-[var(--border)] sticky top-0 bg-[var(--nav-bg)] z-10"},
             e('button', {className: "btn", onClick: ()=>{haptic();setShowNowPlaying(false)}}, "Đóng"),
             e('div', {className: "font-semibold"}, "Đang phát"),
-            /* ĐÃ LOẠI BỎ nút Yêu thích */
-            e('div', {className: "w-10"}) // Giữ chỗ
+            e('div', {className: "w-10"}) // Spacer
           ),
           e('div', {className: "px-6 py-6 pb-20 max-w-xl mx-auto"},
             e('div', {className: "mx-auto w-full max-w-[300px] aspect-square rounded-3xl shadow-xl overflow-hidden relative select-none", style:{background:'var(--gradient)'}},
@@ -813,7 +987,7 @@
               )
             ),
             
-            // Hàng nút điều khiển chính: to hơn, dễ bấm hơn
+            // Player Controls (Original Layout)
             e('div', {className: "mt-6 flex items-center justify-center gap-6"},
               e('button', {className: `btn text-xl p-3 ${shuffle?'btn-primary':''}`, onClick:()=>{haptic();setShuffle(s=>!s)}}, Icons.shuffle(24)), 
               e('button', {className: "btn text-3xl p-3", onClick:prevTrack}, Icons.back(32)), 
@@ -822,7 +996,6 @@
               e(RepeatButton, null)
             ),
 
-            // Hàng tùy chọn phụ: Tốc độ và Âm lượng
             e('div', {className: "mt-8 space-y-4"},
               e('div', {className: "p-3 rounded-2xl border border-[var(--border)]"},
                 e('div', {className: "flex items-center justify-between mb-2"},
@@ -847,6 +1020,7 @@
         );
       };
 
+      /* ---- Render & auto start ---- */
       useEffect(()=>{ 
         const a=audioRef.current; if(!a) return;
         if(current){
@@ -874,7 +1048,7 @@
               setNeedsStart(false); 
               playIndex(0,{fadeIn:false}); 
             }catch{
-                setNeedsStart(false);
+                 setNeedsStart(false);
             }
           }, START_TIMEOUT_MS);
         }
@@ -930,8 +1104,15 @@
       const title = tab==='home'?'Trang chủ':tab==='search'?'Tìm kiếm':tab==='settings'?'Cài đặt':tab==='queue'?'Hàng đợi':'';
 
       return e('div', {className: "min-h-screen", onClick: ()=>setLinksOpen(false), style:{paddingTop:64, paddingBottom:(current?188:104)}},
-        e(TopBar, {title:title}),
+        // FIX FLICKER: Gọi TopBar như Component chuẩn (e(TopBar))
+        e(TopBar, {title, askInstall, linksOpen, setLinksOpen, setTheme}),
         e(StartGate, null),
+        
+        /* Toast Notification */
+        toast && e('div', {className: "toast-container"},
+            e('div', {className: "toast-tet"}, toast)
+        ),
+
         tab==='home' && e(HomeTab, null),
         tab==='search' && e(SearchTab, null),
         tab==='settings' && e(SettingsTab, null),
@@ -953,7 +1134,7 @@
   </script>
 
   <!-- ================================================================= -->
-  <!-- BẮT ĐẦU PWA ENGINE V22 - SMART CONTEXTUAL GUIDE -->
+  <!-- BẮT ĐẦU PWA ENGINE V29 - SMART INTELLIGENT INSTALL -->
   <!-- ================================================================= -->
 
   <style>
@@ -1022,7 +1203,7 @@
 
   <script>
       /* =========================================================
-         🧠 LOGIC CORE V22.0 (CONTEXTUAL GUIDE UPGRADE)
+         🧠 LOGIC CORE V29.0 (INTELLIGENT INSTALL ACTION)
          ========================================================= */
       const logicCore = {
           deferredPrompt: null,
@@ -1031,13 +1212,12 @@
           state: {
               isIOS: /iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase()),
               isAndroid: /android/.test(navigator.userAgent.toLowerCase()),
-              // Phát hiện Zalo, Facebook, Instagram (In-App Browsers)
+              isPC: !/iphone|ipad|ipod|android/i.test(navigator.userAgent), // Phát hiện PC
               isInApp: /FBAN|FBAV|Instagram|Zalo/i.test(navigator.userAgent),
               isStandalone: window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone,
           },
           
           init: function() {
-              // 1. SW Registration
               if ('serviceWorker' in navigator) {
                   navigator.serviceWorker.register(`${this.repoPath}/sw.js?v=${Date.now()}`)
                       .then(() => console.log("✅ PWA Engine: SW Registered"))
@@ -1046,11 +1226,11 @@
 
               this.updateUI('init');
               
-              // 2. Install State Check
+              // Check installed status
               if (this.state.isStandalone) {
                   this.updateUI('installed');
               } else {
-                  // Capture event
+                  // Capture event for Android/PC Chrome
                   window.addEventListener('beforeinstallprompt', (e) => {
                       e.preventDefault();
                       this.deferredPrompt = e;
@@ -1059,7 +1239,7 @@
                   });
               }
 
-              // 3. Expose to Window for React App
+              // Expose for React
               window.pwaEngine = this;
           },
 
@@ -1078,46 +1258,57 @@
               const fab = document.getElementById('btnInstall');
               if(fab) {
                   fab.style.display = 'flex';
-                  fab.onclick = async () => {
-                      if (this.deferredPrompt) {
-                          this.deferredPrompt.prompt();
-                          const { outcome } = await this.deferredPrompt.userChoice;
-                          if (outcome === 'accepted') {
-                              this.deferredPrompt = null;
-                              fab.style.display = 'none';
-                          }
-                      }
-                  };
+                  fab.onclick = () => this.handleInstallClick();
               }
           },
 
-          // --- TRÁI TIM CỦA PWA V22: HƯỚNG DẪN NGỮ CẢNH ---
-          showSmartGuide: function() {
+          // --- TRUNG TÂM XỬ LÝ CLICK THÔNG MINH ---
+          handleInstallClick: async function() {
               const modal = document.getElementById('pwaHealthModal');
               const content = document.getElementById('smartGuideContent');
               const arrow = document.getElementById('iosArrow');
-              
               if(!modal || !content) return;
 
               modal.classList.remove('hidden');
-              if(arrow) arrow.classList.add('hidden'); // Reset arrow
+              if(arrow) arrow.classList.add('hidden'); // Reset
 
-              // === CASE 1: ĐÃ CÀI ĐẶT ===
+              // === CASE 1: ĐÃ CÀI ĐẶT (STANDALONE) ===
               if (this.state.isStandalone) {
-                  content.innerHTML = `<div class="text-center text-green-600 font-bold text-lg"><br>Bạn đang sử dụng App!<br>Chúc bạn trải nghiệm vui vẻ.</div>`;
+                  content.innerHTML = `
+                      <div class="text-center">
+                          <div class="text-green-500 text-5xl mb-3">🎉</div>
+                          <h3 class="text-xl font-bold text-gray-800 mb-2">Đã cài đặt thành công!</h3>
+                          <p class="text-gray-600">Bác đang sử dụng phiên bản Ứng dụng.<br>Chúc bác nghe nhạc vui vẻ ạ.</p>
+                      </div>
+                  `;
                   return;
               }
 
-              // === CASE 2: ZALO / FACEBOOK / INSTAGRAM (IN-APP) ===
+              // === CASE 2: CÓ THỂ CÀI TỰ ĐỘNG (ANDROID/PC CHROME) ===
+              if (this.deferredPrompt) {
+                  // Gọi prompt ngay lập tức
+                  modal.classList.add('hidden'); // Ẩn modal hướng dẫn đi
+                  this.deferredPrompt.prompt();
+                  const { outcome } = await this.deferredPrompt.userChoice;
+                  if (outcome === 'accepted') {
+                      this.deferredPrompt = null;
+                      // Sau khi cài xong thì ẩn nút FAB luôn
+                      const fab = document.getElementById('btnInstall');
+                      if(fab) fab.style.display = 'none';
+                  }
+                  return;
+              }
+
+              // === CASE 3: IN-APP BROWSER (ZALO/FB) ===
               if (this.state.isInApp) {
                   content.innerHTML = `
                       <div class="text-center text-red-600 font-bold mb-3">⚠️ Cảnh Báo Trình Duyệt</div>
-                      <p class="mb-3 text-sm">Bạn đang mở bằng Zalo/Facebook. Trình duyệt này <b>không hỗ trợ</b> cài đặt ứng dụng.</p>
-                      <div class="guide-step bg-yellow-50 p-2 rounded border border-yellow-200">
+                      <p class="mb-3 text-sm">Bác đang mở bằng Zalo/Facebook nên không cài được ạ.</p>
+                      <div class="guide-step bg-yellow-50 p-2 rounded border border-yellow-200 text-left">
                           <div class="step-num">1</div>
-                          <div>Bấm dấu <b>3 chấm</b> <span class="text-xl">⋯</span> ở góc trên bên phải.</div>
+                          <div>Bấm dấu <b>3 chấm</b> <span class="text-xl">⋯</span> ở góc trên phải.</div>
                       </div>
-                      <div class="guide-step bg-yellow-50 p-2 rounded border border-yellow-200">
+                      <div class="guide-step bg-yellow-50 p-2 rounded border border-yellow-200 text-left">
                           <div class="step-num">2</div>
                           <div>Chọn <b>Mở bằng trình duyệt</b> (Chrome/Safari).</div>
                       </div>
@@ -1125,53 +1316,44 @@
                   return;
               }
 
-              // === CASE 3: iOS (IPHONE/IPAD) ===
+              // === CASE 4: iOS (IPHONE/IPAD) ===
               if (this.state.isIOS) {
                   content.innerHTML = `
                       <div class="text-center font-bold mb-2 text-blue-600">Dành cho iPhone/iPad</div>
-                      <div class="guide-step"><div class="step-num">1</div><div>Bấm nút <b>Chia sẻ</b> <i class="text-blue-500 text-xl">⎋</i> ở dưới cùng màn hình.</div></div>
-                      <div class="guide-step"><div class="step-num">2</div><div>Kéo xuống tìm và chọn <b>Thêm vào MH chính</b> (Add to Home Screen).</div></div>
-                      <div class="guide-step"><div class="step-num">3</div><div>Bấm nút <b>Thêm</b> ở góc trên cùng bên phải.</div></div>
+                      <div class="guide-step"><div class="step-num">1</div><div>Bấm nút <b>Chia sẻ</b> <i class="text-blue-500 text-xl">⎋</i> ở dưới cùng.</div></div>
+                      <div class="guide-step"><div class="step-num">2</div><div>Kéo lên chọn <b>Thêm vào MH chính</b>.</div></div>
+                      <div class="guide-step"><div class="step-num">3</div><div>Bấm nút <b>Thêm</b> ở góc trên cùng.</div></div>
                   `;
-                  if(arrow) arrow.classList.remove('hidden'); // Hiện mũi tên chỉ xuống
+                  if(arrow) arrow.classList.remove('hidden');
                   return;
               }
 
-              // === CASE 4: ANDROID (AUTO - CÓ NÚT CÀI) ===
-              if (this.state.isAndroid && this.deferredPrompt) {
-                   // Rung nhẹ để gây chú ý
-                   if(navigator.vibrate) navigator.vibrate([100, 50, 100]);
-                   
-                   content.innerHTML = `
-                      <p class="text-center mb-4 text-gray-600 font-semibold">Ứng dụng đã sẵn sàng cài đặt!</p>
-                      <button onclick="document.getElementById('btnInstall').click(); document.getElementById('pwaHealthModal').classList.add('hidden');" class="w-full bg-[#ee4d2d] text-white py-4 rounded-xl font-bold shadow-xl uppercase animate-pulse-slow text-lg border-2 border-red-400">
-                          CÀI ĐẶT NGAY
-                      </button>
-                      <p class="text-center mt-3 text-xs text-gray-400">Bấm nút trên để cài đặt tự động</p>
-                  `;
-                  return;
-              } 
-
-              // === CASE 5: ANDROID (MANUAL - KHÔNG CÓ NÚT) ===
+              // === CASE 5: ANDROID (THỦ CÔNG) ===
               if (this.state.isAndroid) {
                   content.innerHTML = `
                       <div class="text-center font-bold mb-2 text-green-600">Dành cho Android</div>
-                      <div class="guide-step"><div class="step-num">1</div><div>Bấm dấu <b>3 chấm</b> <span class="text-xl">⋮</span> ở góc trên bên phải trình duyệt.</div></div>
-                      <div class="guide-step"><div class="step-num">2</div><div>Tìm và chọn dòng <b>Cài đặt ứng dụng</b> (Install App) hoặc <b>Thêm vào màn hình chính</b>.</div></div>
+                      <div class="guide-step"><div class="step-num">1</div><div>Bấm dấu <b>3 chấm</b> <span class="text-xl">⋮</span> ở góc trên bên phải.</div></div>
+                      <div class="guide-step"><div class="step-num">2</div><div>Chọn <b>Cài đặt ứng dụng</b> hoặc <b>Thêm vào màn hình chính</b>.</div></div>
                   `;
                   return;
               }
 
-              // === CASE 6: MÁY TÍNH (PC/LAPTOP) ===
-              content.innerHTML = `
-                  <div class="text-center">
-                      <p class="mb-3 font-bold">Cài đặt trên Máy tính:</p>
-                      <div class="bg-gray-100 p-3 rounded-lg border border-gray-300 inline-block mb-3">
-                          <span class="text-xl">⊕</span> Bấm biểu tượng <b>Cài đặt</b> nằm ở cuối thanh địa chỉ trình duyệt.
+              // === CASE 6: PC/LAPTOP (THỦ CÔNG) ===
+              if (this.state.isPC) {
+                    content.innerHTML = `
+                      <div class="text-center">
+                          <p class="mb-3 font-bold text-lg">Cài đặt trên Máy tính</p>
+                          <div class="bg-blue-50 p-4 rounded-xl border border-blue-200 inline-block mb-3 text-left">
+                              <div class="flex items-center gap-3 mb-2">
+                                  <span class="text-2xl">⊕</span> 
+                                  <span>Bấm biểu tượng <b>Cài đặt</b> ở cuối thanh địa chỉ (trên cùng bên phải).</span>
+                              </div>
+                              <div class="text-sm text-gray-500 italic ml-8">Hoặc bấm menu 3 chấm > "Cài đặt MSTQ Music..."</div>
+                          </div>
                       </div>
-                      <p class="text-xs text-gray-500">Hoặc bấm menu 3 chấm > "Cài đặt MSTQ Music..."</p>
-                  </div>
-              `;
+                  `;
+                  return;
+              }
           }
       };
 
@@ -1179,7 +1361,7 @@
       document.addEventListener('DOMContentLoaded', () => logicCore.init());
   </script>
   <!-- ================================================================= -->
-  <!-- KẾT THÚC PWA ENGINE V22 -->
+  <!-- KẾT THÚC PWA ENGINE V29 -->
   <!-- ================================================================= -->
 
 </body>
