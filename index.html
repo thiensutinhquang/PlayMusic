@@ -140,10 +140,16 @@
     const COMPRESSOR_KEY='mstq_compressor_on';
     const INITIAL_VISIBLE=120, VISIBLE_STEP=160;
 
-    // NHẬN DIỆN THIẾT BỊ DI ĐỘNG ĐỂ BYPASS WEBAUDIO 
+    // ĐỘC CHIÊU V14: Lõi xác định thiết bị
     const isMobileOS = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     
-    const save=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}};
+    // Tối ưu IO: Không ghi đĩa nếu đang bị ẩn để giảm CPU
+    const save=(k,v)=>{
+        try{ 
+            if (document.visibilityState === 'hidden' && k !== TIMER_KEY) return; 
+            localStorage.setItem(k,JSON.stringify(v))
+        }catch{}
+    };
     const load=(k,d)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch{return d}};
     const clamp=(x,min,max)=>Math.min(Math.max(x,min),max);
     const formatTime=s=>{if(!isFinite(s)||s<0)return'0:00';const m=Math.floor(s/60),sec=Math.floor(s%60);return`${m}:${String(sec).padStart(2,'0')}`};
@@ -459,11 +465,11 @@
       };
 
       // =========================================================================
-      // NATIVE PLAY FUNCTION: BẮT LỖI AUTOPLAY BLOCKED THÔNG MINH
+      // NATIVE PLAY FUNCTION: TÁCH LỖI AUTOPLAY ĐỂ KHÔNG SẬP REACT POPUP
       // =========================================================================
       const playIndex = useCallback(async(i, {fadeIn=true}={}) => {
         const a = audioRef.current; if(!a) return;
-        const s = playlist[i]; if(!s) return;
+        const s = playlistRef.current[i]; if(!s) return; // Dùng Ref để tránh stale closure
         
         await ensureAudioContext();
         a.loop=false; a.muted=false; if(a.volume<0.6) a.volume=0.85;
@@ -474,7 +480,10 @@
         }
         
         try {
-            await a.play();
+            const playPromise = a.play();
+            if (playPromise !== undefined) {
+                await playPromise;
+            }
             if(gainRef.current && !isMobileOS) {
                const now = audioCtxRef.current.currentTime;
                gainRef.current.gain.setValueAtTime(0, now);
@@ -484,24 +493,24 @@
             setPlaying(true); 
         } catch(e) {
             console.warn("Autoplay blocked by browser policy:", e);
-            // TRÌNH DUYỆT CHẶN: Ép trạng thái về Paused và báo cho user biết
+            // TRÌNH DUYỆT CHẶN: Ép trạng thái về Paused, KHÔNG làm sập luồng Code
             setCurrentIndex(i); 
             setPlaying(false); 
             
-            // Hiện Toast màu đỏ thân thiện báo cho người dùng
+            // Báo cho người dùng biết (Đỏ lừ)
             if (!document.getElementById('autoplay-toast')) {
                const tempMsg = document.createElement('div');
                tempMsg.id = 'autoplay-toast';
-               tempMsg.className = 'fixed top-20 left-1/2 -translate-x-1/2 bg-rose-600 text-white font-bold px-5 py-3 rounded-full z-[9999] opacity-0 transition-opacity duration-300 shadow-2xl text-sm flex items-center gap-2';
-               tempMsg.innerHTML = '<span>Trình duyệt chặn tự động phát. Bấm</span> <span class="bg-white text-rose-600 px-2 py-0.5 rounded text-xs">▶ Phát Nhạc</span>';
+               tempMsg.className = 'fixed top-24 left-1/2 -translate-x-1/2 bg-rose-600 text-white font-bold px-5 py-3 rounded-2xl z-[9999] opacity-0 transition-opacity duration-300 shadow-[0_10px_40px_rgba(225,29,72,0.6)] text-sm flex items-center gap-2 pointer-events-none';
+               tempMsg.innerHTML = '<span>Trình duyệt đang chặn tự phát. Bấm</span> <span class="bg-white text-rose-600 px-2 py-0.5 rounded text-xs">▶ Phát</span>';
                document.body.appendChild(tempMsg);
                setTimeout(() => { tempMsg.style.opacity = 1; }, 10);
                setTimeout(() => { tempMsg.style.opacity = 0; tempMsg.addEventListener('transitionend', () => tempMsg.remove()); }, 4500);
             }
         }
-      }, [playlist]);
+      }, []); // Bỏ dependency playlist để hàm này không bị re-create liên tục
 
-      // NATIVE NEXT TRACK LẤY TỪ REF
+      // NATIVE NEXT TRACK
       const handleNextTrackNative = async () => {
           const pl = playlistRef.current;
           const idx = currentIndexRef.current;
@@ -530,22 +539,21 @@
 
       const prevTrack=useCallback(()=>{
         haptic();
-        if(!playlist.length) return;
+        if(!playlistRef.current.length) return;
         const a=audioRef.current; if(a?.currentTime>3){ a.currentTime=0; return; }
-        
         const idx = currentIndexRef.current;
-        const nextIdx = (idx - 1 + playlist.length) % playlist.length;
+        const nextIdx = (idx - 1 + playlistRef.current.length) % playlistRef.current.length;
         playIndex(nextIdx); 
-      },[playlist.length, playIndex]);
+      },[playIndex]);
       
-      const pickSong=async(s)=>{ haptic(); const i=playlist.findIndex(x=>x.id===s.id); if(i>=0) playIndex(i); };
+      const pickSong=async(s)=>{ haptic(); const i=playlistRef.current.findIndex(x=>x.id===s.id); if(i>=0) playIndex(i); };
 
       const playPause=async()=>{
         haptic();
         const a=audioRef.current; if(!a) return;
         await ensureAudioContext();
         a.loop=false; a.muted=false; if(a.volume<0.6) a.volume=0.85;
-        if(!current && playlist.length){ playIndex(0,{fadeIn:false}); setNeedsStart(false); return; }
+        if(!current && playlistRef.current.length){ playIndex(0,{fadeIn:false}); setNeedsStart(false); return; }
         if(playing){ 
           setPlaying(false); 
           try{await fadeTo(0.01,150)}catch{} a.pause(); 
@@ -558,7 +566,9 @@
       
       const lastMediaSessionUpdateRef=useRef(0);
 
-      // GIAO THỨC CHUYỂN BÀI NGẦM (NATIVE ON-ENDED EVENT)
+      // =========================================================================
+      // GIAO THỨC CHUYỂN BÀI NGẦM (NATIVE ON-ENDED EVENT) - KHÔNG ĐƯỢC CHẾT
+      // =========================================================================
       useEffect(()=>{
         const a = audioRef.current; if(!a) return;
         
@@ -566,14 +576,15 @@
           if(!isFinite(a.duration)) return;
           setProgress({current:a.currentTime||0, duration:a.duration||0});
           
-          const now=Date.now();
-          if (now - (lastMediaSessionUpdateRef.current || 0) > 1000) {
+          // Tối ưu CPU cực mạnh: Chỉ update MediaSession khi số Giây (Int) thay đổi
+          const currentSec = Math.floor(a.currentTime);
+          if (currentSec !== lastMediaSessionUpdateRef.current) {
               updatePositionState(); 
-              lastMediaSessionUpdateRef.current = now;
+              lastMediaSessionUpdateRef.current = currentSec;
           }
         };
 
-        const onEndedNative = async () => {
+        const onEndedNative = () => {
             const pl = playlistRef.current;
             const idx = currentIndexRef.current;
             const rep = repeatRef.current;
@@ -607,22 +618,30 @@
                 return;
             }
 
+            // ÉP CHẠY PROMISE TRỰC TIẾP TRONG EVENT LOOP (Chống iOS Kill)
             const nextSong = pl[nextIdx];
             if (nextSong) {
                 a.src = nextSong.stream_url;
                 a.load();
-                try {
-                    await a.play(); 
-                    setCurrentIndex(nextIdx); 
-                    setPlaying(true);
-                } catch(e) {
-                    console.error("OS killed autoplay", e);
+                const playPromise = a.play();
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        setCurrentIndex(nextIdx); 
+                        setPlaying(true);
+                    }).catch(error => {
+                        console.error("OS killed background autoplay on next track:", error);
+                        setCurrentIndex(nextIdx); 
+                        setPlaying(false);
+                    });
                 }
             }
         };
 
         const onPause = () => { 
-             if(current) save(RESUME_KEY,{index:currentIndex,id:current.id,currentTime:a.currentTime||0,volume:a.volume,rate:a.playbackRate,muted:a.muted,playing:false});
+             // Khong luu khi tat man hinh de tiet kiem CPU/IO
+             if(current && document.visibilityState === 'visible') {
+                 save(RESUME_KEY,{index:currentIndexRef.current,id:current.id,currentTime:a.currentTime||0,volume:a.volume,rate:a.playbackRate,muted:a.muted,playing:false});
+             }
         };
         
         a.addEventListener('timeupdate',onTime);
@@ -696,33 +715,39 @@
       }
 
       // ==========================================
-      // THUẬT TOÁN ĐÓNG POPUP TUYỆT ĐỐI (AUTO START HACK)
+      // THUẬT TOÁN ĐÓNG POPUP TUYỆT ĐỐI (TRÁNH KẸT 0s)
       // ==========================================
-      const handleStartApp = useCallback(() => {
-          if (!needsStart) return;
-          
-          // Ưu tiên MỘT: Dọn dẹp Popup ngay lập tức để hở màn hình UI ra!
-          setNeedsStart(false); 
+      const handleManualStart = async () => {
+          // Bấm bằng tay thì ăn ngay
           haptic();
-          
-          // Sau khi đóng popup, mới cố gắng Play nhạc (Né sập React nếu bị Browser chặn)
-          if (playlist.length > 0) {
+          setNeedsStart(false); 
+          await ensureAudioContext();
+          if (playlistRef.current.length > 0) {
               playIndex(0, {fadeIn: false});
           }
-      }, [needsStart, playlist, playIndex]);
+      };
 
       useEffect(() => {
           let timer;
           if (needsStart && !loading) {
               if (startCountdown > 0) {
+                  // Đang đếm lùi
                   timer = setTimeout(() => setStartCountdown(c => c - 1), 1000);
               } else if (startCountdown === 0) {
-                  // Gọi thẳng hàm xử lý đóng popup + thử play
-                  handleStartApp();
+                  // ĐÃ VỀ 0 -> Tắt Popup ngay lập tức (Ưu tiên UI)
+                  setNeedsStart(false);
+                  
+                  // Chờ UI biến mất (100ms) rồi mới lén lút đẩy lệnh phát nhạc ngầm
+                  // Nếu trình duyệt block, hàm playIndex sẽ tự bắt lỗi mà không làm sập tiến trình React
+                  setTimeout(() => {
+                      if (playlistRef.current.length > 0) {
+                          playIndex(0, {fadeIn: false});
+                      }
+                  }, 100);
               }
           }
           return () => clearTimeout(timer);
-      }, [needsStart, loading, startCountdown, handleStartApp]);
+      }, [needsStart, loading, startCountdown, playIndex]);
 
       const HomeTab=()=>{
         const list = filter.trim()
@@ -845,7 +870,7 @@
           e('label', {className: "flex items-center gap-2"},
             e('input', {type:"checkbox", checked:!!compressorOn, onChange:e=>{haptic();setCompressorOn(e.target.checked)}}), " Bật Dynamics Compressor"
           ),
-           e('p', {className: "text-xs text-emerald-400 mt-2 font-semibold"}, "✓ Chế độ Di động: Hệ thống đã vô hiệu hóa tính năng này để bảo vệ pin và giữ nhạc chạy nền liên tục không bị HĐH cắt ngang.")
+           e('p', {className: "text-xs text-emerald-400 mt-2 font-semibold"}, "✓ Chế độ Di động: Hệ thống đã tự động vô hiệu hóa tính năng này để bảo vệ pin và giữ nhạc chạy nền liên tục không bị HĐH cắt ngang.")
         ),
         e('div', {className: "p-3 rounded-2xl border border-[var(--border)]"},
           e('h3', {className: "font-semibold mb-3"}, "Hẹn giờ tắt nhạc"),
@@ -997,7 +1022,6 @@
         )
       );
 
-      // CỬA MỞ BẤT TỬ: Khóa Z-index cao nhất, ôm trọn màn hình
       const StartGate = () => needsStart && e('div', {className: "fixed inset-0 z-[99999] flex items-center justify-center bg-[var(--bg)]/95 backdrop-blur"},
         e('div', {className: "p-5 rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-2xl text-center max-w-sm w-[90%]"},
           e('img', {src: LOGO_FALLBACK_URL, onError: (e) => { e.target.src = LOGO_PLACEHOLDER; e.target.onError = null; }, width: "64", height: "64", className: "mx-auto mb-3 rounded-xl", alt: "MSTQ logo"}),
@@ -1008,7 +1032,7 @@
             e('button', {
                 className: "btn btn-primary flex-1", 
                 disabled: loading,
-                onClick: handleStartApp
+                onClick: handleManualStart
             }, loading ? "Đang tải..." : `Bắt đầu (${startCountdown}s)`)
           )
         )
