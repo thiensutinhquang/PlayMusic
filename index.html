@@ -112,9 +112,8 @@
 <body class="bg-[var(--bg)] text-[var(--text)] font-sans">
   <div id="root"></div>
 
-  <!-- Thẻ Audio gốc - Linh hồn của trình phát -->
-  <audio id="mstq-player" preload="metadata" playsinline webkit-playsinline crossOrigin="anonymous"></audio>
-  <audio id="mstq-preload" preload="none" playsinline webkit-playsinline muted crossOrigin="anonymous"></audio>
+  <!-- THẺ AUDIO: Bổ sung playsinline bắt buộc để chống gián đoạn trên iOS -->
+  <audio id="mstq-player" preload="auto" playsinline webkit-playsinline crossOrigin="anonymous"></audio>
 
   <script>
     (function(){
@@ -141,7 +140,7 @@
     const COMPRESSOR_KEY='mstq_compressor_on';
     const INITIAL_VISIBLE=120, VISIBLE_STEP=160;
 
-    // NHẬN DIỆN THIẾT BỊ DI ĐỘNG ĐỂ BYPASS WEBAUDIO (CHỐNG LỖI TẮT NHẠC NỀN)
+    // NHẬN DIỆN THIẾT BỊ DI ĐỘNG ĐỂ BYPASS WEBAUDIO 
     const isMobileOS = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     
     const save=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}};
@@ -224,7 +223,7 @@
       useEffect(()=>{document.documentElement.setAttribute('data-theme',theme);localStorage.setItem(THEME_KEY,theme);},[theme]);
 
       const [needsStart,setNeedsStart]=useState(true);
-      const startTimerRef=useRef(null);
+      const [startCountdown, setStartCountdown] = useState(4); // Bộ đếm lùi
       const [linksOpen,setLinksOpen]=useState(false);
       const [toast, setToast] = useState(null);
 
@@ -237,7 +236,6 @@
       
       const askInstall = async () => { 
         haptic(); 
-        // PWA V29
         if (window.pwaEngine) {
             window.pwaEngine.handleInstallClick();
         } else {
@@ -258,19 +256,25 @@
       const [shuffle,setShuffle]=useState(load(SHUFFLE_KEY,false));
       const [repeat,setRepeat]=useState(sanitizeRepeat(load(REPEAT_KEY,'all')));
       const [stopAtEnd,setStopAtEnd]=useState(load(STOP_END_KEY,false));
-      useEffect(()=>save(SHUFFLE_KEY,shuffle),[shuffle]);
-      useEffect(()=>save(REPEAT_KEY,repeat),[repeat]);
-      useEffect(()=>save(STOP_END_KEY,stopAtEnd),[stopAtEnd]);
-
+      
       const [upNext,setUpNext]=useState([]);
+      
+      // Dùng useRef để native JS Event thoát khỏi sự quản lý chậm chạp của React Background
+      const playlistRef = useRef(playlist); useEffect(()=>{playlistRef.current=playlist},[playlist]);
+      const currentIndexRef = useRef(currentIndex); useEffect(()=>{currentIndexRef.current=currentIndex},[currentIndex]);
+      const shuffleRef = useRef(shuffle); useEffect(()=>{shuffleRef.current=shuffle; save(SHUFFLE_KEY,shuffle);},[shuffle]);
+      const repeatRef = useRef(repeat); useEffect(()=>{repeatRef.current=repeat; save(REPEAT_KEY,repeat);},[repeat]);
+      const stopAtEndRef = useRef(stopAtEnd); useEffect(()=>{stopAtEndRef.current=stopAtEnd; save(STOP_END_KEY,stopAtEnd);},[stopAtEnd]);
+      const upNextRef = useRef(upNext); useEffect(()=>{upNextRef.current=upNext},[upNext]);
+
       const enqueueNext=(s)=>{ haptic(); setUpNext(q=> q.includes(s.id)? q : [...q,s.id]); };
       const moveUp=(id)=>{ haptic(); setUpNext(q=>{ const i=q.indexOf(id); if(i<=0) return q; const a=q.slice(); [a[i-1],a[i]]=[a[i],a[i-1]]; return a; }); };
       const moveDown=(id)=>{ haptic(); setUpNext(q=>{ const i=q.indexOf(id); if(i<0||i===q.length-1) return q; const a=q.slice(); [a[i+1],a[i]]=[a[i],a[i+1]]; return a; }); };
       const removeFromQueue=(id)=>{ haptic(); setUpNext(q=>q.filter(x=>x!==id)); };
       const clearQueue=()=>{ haptic(); setUpNext([]); };
 
-      const audioRef=useRef(null), preloadRef=useRef(null);
-      useEffect(()=>{ audioRef.current=document.getElementById('mstq-player'); preloadRef.current=document.getElementById('mstq-preload'); },[]);
+      const audioRef=useRef(null);
+      useEffect(()=>{ audioRef.current=document.getElementById('mstq-player'); },[]);
       const [volume,setVolume]=useState(load(RESUME_KEY,{volume:.9}).volume??.9);
       const [playbackRate,setPlaybackRate]=useState(parseFloat(localStorage.getItem(SPEED_KEY)||'1')||1);
       const [muted,setMuted]=useState(localStorage.getItem(MUTED_KEY)==='1');
@@ -281,10 +285,7 @@
       
       const ensureAudioContext=async()=>{
         try{
-          // ĐIỂM SÁNG V13: BYPASS HOÀN TOÀN WEBAUDIO TRÊN MOBILE ĐỂ CHỐNG TẮT NHẠC
-          if (isMobileOS) {
-              return; 
-          }
+          if (isMobileOS) return; // Bảo vệ mạng sống trên iOS/Android
 
           if(!audioCtxRef.current){
             const ctx=new (window.AudioContext||window.webkitAudioContext)({latencyHint:'playback'});
@@ -301,17 +302,13 @@
             audioCtxRef.current=ctx; gainRef.current=gain; compNodeRef.current=comp; srcNodeRef.current=src;
 
             ctx.onstatechange = () => {
-                 if (ctx.state === 'suspended' && playing) {
-                     ctx.resume();
-                 }
+                 if (ctx.state === 'suspended' && playing) ctx.resume();
             };
           }
           if (audioCtxRef.current.state === 'suspended') {
              await audioCtxRef.current.resume();
           }
-        }catch(e){
-            console.warn("AudioContext Init Error:", e);
-        }
+        }catch(e){}
       };
       
       useEffect(()=>{ try{
@@ -415,24 +412,7 @@
 
       const current=playlist[currentIndex]||null;
 
-      const queuePreload=useCallback((idx)=>{
-        const n=(idx+1)%playlist.length;
-        const next=playlist[n]; const pre=preloadRef.current;
-        if(!next||!pre) return;
-        
-        // ĐIỂM SÁNG V13: Nếu màn hình tắt hoặc đang mobile thì DỪNG PRELOAD để tránh iOS kill tiến trình
-        if (isMobileOS || powerSave || document.visibilityState!=='visible') { 
-            pre.removeAttribute('src'); 
-            pre.load(); 
-            return; 
-        }
-        if(pre.src!==next.stream_url){ pre.src=next.stream_url; pre.load(); }
-      },[playlist,powerSave]);
-      
-      useEffect(()=>{ if(playlist.length) queuePreload(currentIndex); },[playlist.length,currentIndex,queuePreload]);
-      useEffect(()=>{ const h=()=>queuePreload(currentIndex); document.addEventListener('visibilitychange',h); return()=>document.removeEventListener('visibilitychange',h); },[queuePreload,currentIndex]);
-
-      // *** MEDIA SESSION API (POCKET MODE SYNC) ***
+      // *** MEDIA SESSION API (LOCKSCREEN SYNC) ***
       useEffect(()=>{
         const a=audioRef.current; if(!a||!current||!('mediaSession' in navigator)) return;
         try{
@@ -462,7 +442,7 @@
           });
 
           navigator.mediaSession.playbackState=playing?'playing':'paused';
-        }catch(e){ console.warn("MediaSession update failed", e); }
+        }catch(e){}
       },[current,playing]);
 
       const updatePositionState = () => {
@@ -478,86 +458,94 @@
           }
       };
 
-      const computeNextIndex = useCallback((dir)=> {
-        if(!playlist.length) return 0;
-        if(shuffle){ let r=Math.floor(Math.random()*playlist.length); if (r===currentIndex && playlist.length>1) r=(r+1)%playlist.length; return r; }
-        if(dir>0) return (currentIndex+1)%playlist.length;
-        if(dir<0) return (currentIndex-1+playlist.length)%playlist.length;
-        return currentIndex;
-      },[playlist.length,shuffle,currentIndex]);
-
-      const playIndex=useCallback(async(i,{fadeIn=true}={})=>{
-        const a=audioRef.current; if(!a) return;
+      // =========================================================================
+      // NATIVE PLAY FUNCTION: BẮT LỖI AUTOPLAY BLOCKED THÔNG MINH
+      // =========================================================================
+      const playIndex = useCallback(async(i, {fadeIn=true}={}) => {
+        const a = audioRef.current; if(!a) return;
+        const s = playlist[i]; if(!s) return;
+        
         await ensureAudioContext();
         a.loop=false; a.muted=false; if(a.volume<0.6) a.volume=0.85;
-        setCurrentIndex(i); setPlaying(true); 
-        const s=playlist[i]; if(!s) return;
         
-        if(a.src===s.stream_url && a.currentTime>0){
-          a.play().catch(e => console.warn("Resume failed", e));
-        }else{
-          if(gainRef.current && !isMobileOS) {
-             try {
-               gainRef.current.gain.cancelScheduledValues(audioCtxRef.current.currentTime);
-               gainRef.current.gain.value = 0; 
-             } catch(e) {}
-          }
-          a.src=s.stream_url; 
-          a.load(); 
-          try {
-             await a.play();
-             if(gainRef.current && !isMobileOS) {
+        if(a.src !== s.stream_url) {
+            a.src = s.stream_url; 
+            a.load();
+        }
+        
+        try {
+            await a.play();
+            if(gainRef.current && !isMobileOS) {
                const now = audioCtxRef.current.currentTime;
                gainRef.current.gain.setValueAtTime(0, now);
                gainRef.current.gain.linearRampToValueAtTime(1, now + 0.5); 
-             }
-          } catch(e) {
-             console.warn("Autoplay blocked/interrupted:", e);
+            }
+            setCurrentIndex(i); 
+            setPlaying(true); 
+        } catch(e) {
+            console.warn("Autoplay blocked by browser policy:", e);
+            // TRÌNH DUYỆT CHẶN: Ép trạng thái về Paused và báo cho user biết
+            setCurrentIndex(i); 
+            setPlaying(false); 
+            
+            // Hiện Toast màu đỏ thân thiện báo cho người dùng
+            if (!document.getElementById('autoplay-toast')) {
+               const tempMsg = document.createElement('div');
+               tempMsg.id = 'autoplay-toast';
+               tempMsg.className = 'fixed top-20 left-1/2 -translate-x-1/2 bg-rose-600 text-white font-bold px-5 py-3 rounded-full z-[9999] opacity-0 transition-opacity duration-300 shadow-2xl text-sm flex items-center gap-2';
+               tempMsg.innerHTML = '<span>Trình duyệt chặn tự động phát. Bấm</span> <span class="bg-white text-rose-600 px-2 py-0.5 rounded text-xs">▶ Phát Nhạc</span>';
+               document.body.appendChild(tempMsg);
+               setTimeout(() => { tempMsg.style.opacity = 1; }, 10);
+               setTimeout(() => { tempMsg.style.opacity = 0; tempMsg.addEventListener('transitionend', () => tempMsg.remove()); }, 4500);
+            }
+        }
+      }, [playlist]);
+
+      // NATIVE NEXT TRACK LẤY TỪ REF
+      const handleNextTrackNative = async () => {
+          const pl = playlistRef.current;
+          const idx = currentIndexRef.current;
+          const shuf = shuffleRef.current;
+          const un = upNextRef.current;
+          
+          if (!pl.length) return;
+          
+          let nextIdx = idx;
+          if (un.length > 0) {
+              const nextId = un[0];
+              setUpNext(q => q.slice(1)); 
+              nextIdx = pl.findIndex(x => x.id === nextId);
+              if (nextIdx < 0) nextIdx = (idx + 1) % pl.length;
+          } else if (shuf) {
+              nextIdx = Math.floor(Math.random() * pl.length);
+              if (nextIdx === idx && pl.length > 1) nextIdx = (nextIdx + 1) % pl.length;
+          } else {
+              nextIdx = (idx + 1) % pl.length;
           }
-        }
-        queuePreload(i);
-      },[playlist,queuePreload]);
+          
+          await playIndex(nextIdx);
+      };
 
-      const handleEnd=useCallback(()=>{
-        const a=audioRef.current; if(a) a.loop=false;
-        if(repeat==='one'){ const a=audioRef.current; if(a){ a.currentTime=0; a.loop=false; a.play().catch(()=>{});} return; }
-        const nextIdx = computeNextIndex(+1);
-        if((stopAtEnd || repeat==='off') && !upNext.length && nextIdx === 0 && currentIndex === playlist.length-1){ 
-          setPlaying(false); 
-          return; 
-        }
-        nextTrack();
-      },[repeat,stopAtEnd,currentIndex,playlist.length,upNext.length]); 
-
-      const nextTrack=useCallback(()=>{
-        haptic();
-        if(!playlist.length) return;
-        if(upNext.length){
-          const nextId=upNext[0]; setUpNext(q=>q.slice(1));
-          const i=playlist.findIndex(x=>x.id===nextId);
-          if(i>=0){ playIndex(i).catch(()=>{}); return; }
-        }
-        let i=computeNextIndex(+1);
-        if(playlist.length>1 && i===currentIndex && !shuffle){ i=(i+1)%playlist.length; }
-        playIndex(i).catch(()=>{}); 
-      },[playlist.length,computeNextIndex,upNext,currentIndex,shuffle,playIndex]);
+      const nextTrack = useCallback(() => { haptic(); handleNextTrackNative(); }, [playIndex]);
 
       const prevTrack=useCallback(()=>{
         haptic();
         if(!playlist.length) return;
         const a=audioRef.current; if(a?.currentTime>3){ a.currentTime=0; return; }
-        const i=computeNextIndex(-1);
-        playIndex(i).catch(()=>{}); 
-      },[playlist.length,computeNextIndex,playIndex]);
+        
+        const idx = currentIndexRef.current;
+        const nextIdx = (idx - 1 + playlist.length) % playlist.length;
+        playIndex(nextIdx); 
+      },[playlist.length, playIndex]);
       
-      const pickSong=async(s)=>{ haptic(); const i=playlist.findIndex(x=>x.id===s.id); if(i>=0) playIndex(i).catch(()=>{}); };
+      const pickSong=async(s)=>{ haptic(); const i=playlist.findIndex(x=>x.id===s.id); if(i>=0) playIndex(i); };
 
       const playPause=async()=>{
         haptic();
         const a=audioRef.current; if(!a) return;
         await ensureAudioContext();
         a.loop=false; a.muted=false; if(a.volume<0.6) a.volume=0.85;
-        if(!current && playlist.length){ playIndex(0,{fadeIn:false}).catch(()=>{}); setNeedsStart(false); return; }
+        if(!current && playlist.length){ playIndex(0,{fadeIn:false}); setNeedsStart(false); return; }
         if(playing){ 
           setPlaying(false); 
           try{await fadeTo(0.01,150)}catch{} a.pause(); 
@@ -569,34 +557,79 @@
       };
       
       const lastMediaSessionUpdateRef=useRef(0);
-      const targetPlayingRef=useRef(false);
 
-      // --- ĐIỂM SÁNG V13: EVENT LISNETERS & SYNC TỐI ƯU ---
+      // GIAO THỨC CHUYỂN BÀI NGẦM (NATIVE ON-ENDED EVENT)
       useEffect(()=>{
-        const a=audioRef.current; if(!a) return;
-        const onTime=()=>{ 
+        const a = audioRef.current; if(!a) return;
+        
+        const onTime = () => { 
           if(!isFinite(a.duration)) return;
-          setProgress({current:a.currentTime||0,duration:a.duration||0});
+          setProgress({current:a.currentTime||0, duration:a.duration||0});
           
-          // Sync Lockscreen 1 lần / giây (Cực mượt và nhẹ)
           const now=Date.now();
           if (now - (lastMediaSessionUpdateRef.current || 0) > 1000) {
               updatePositionState(); 
               lastMediaSessionUpdateRef.current = now;
           }
-          if(a.duration>1 && !a.paused && !a.loop && (a.currentTime>=a.duration-0.8)){ handleEnd(); }
         };
-        const onEnded=()=>{ handleEnd(); };
-        const onPause=()=>{ 
-             // Tối ưu IO: Chỉ lưu lịch sử khi thực sự bấm pause, không lưu bừa bãi
+
+        const onEndedNative = async () => {
+            const pl = playlistRef.current;
+            const idx = currentIndexRef.current;
+            const rep = repeatRef.current;
+            const stopE = stopAtEndRef.current;
+            const un = upNextRef.current;
+
+            if (!pl.length) return;
+            a.loop = false;
+
+            if (rep === 'one') {
+                a.currentTime = 0;
+                a.play().catch(()=>{});
+                return;
+            }
+
+            let nextIdx = idx;
+            if (un.length > 0) {
+                const nextId = un[0];
+                setUpNext(q => q.slice(1)); 
+                nextIdx = pl.findIndex(x => x.id === nextId);
+                if (nextIdx < 0) nextIdx = (idx + 1) % pl.length;
+            } else if (shuffleRef.current) {
+                nextIdx = Math.floor(Math.random() * pl.length);
+                if (nextIdx === idx && pl.length > 1) nextIdx = (nextIdx + 1) % pl.length;
+            } else {
+                nextIdx = (idx + 1) % pl.length;
+            }
+
+            if ((stopE || rep === 'off') && !un.length && nextIdx === 0 && idx === pl.length - 1) {
+                setPlaying(false);
+                return;
+            }
+
+            const nextSong = pl[nextIdx];
+            if (nextSong) {
+                a.src = nextSong.stream_url;
+                a.load();
+                try {
+                    await a.play(); 
+                    setCurrentIndex(nextIdx); 
+                    setPlaying(true);
+                } catch(e) {
+                    console.error("OS killed autoplay", e);
+                }
+            }
+        };
+
+        const onPause = () => { 
              if(current) save(RESUME_KEY,{index:currentIndex,id:current.id,currentTime:a.currentTime||0,volume:a.volume,rate:a.playbackRate,muted:a.muted,playing:false});
         };
         
         a.addEventListener('timeupdate',onTime);
-        a.addEventListener('ended',onEnded);
+        a.addEventListener('ended',onEndedNative);
         a.addEventListener('pause',onPause);
-        return()=>{a.removeEventListener('timeupdate',onTime);a.removeEventListener('ended',onEnded);a.removeEventListener('pause',onPause);};
-      },[handleEnd]); 
+        return()=>{a.removeEventListener('timeupdate',onTime);a.removeEventListener('ended',onEndedNative);a.removeEventListener('pause',onPause);};
+      },[]); 
 
       // KHÔI PHỤC BÀI ĐANG NGHE DỞ
       useEffect(()=>{
@@ -608,7 +641,7 @@
           setTimeout(()=>{ const s=playlist[idx]; if(!s) return;
             if(a.src!==s.stream_url){ a.src=s.stream_url; a.load(); }
             a.currentTime=Number(r.currentTime||0); a.volume=r.volume??volume; a.playbackRate=r.rate??playbackRate; a.muted=false; a.loop=false;
-            if(r.playing){ setPlaying(true); targetPlayingRef.current=true; }
+            if(r.playing){ setPlaying(true); }
           },0);
         }
       },[playlist.length]);
@@ -661,6 +694,35 @@
             }, 800);
         }
       }
+
+      // ==========================================
+      // THUẬT TOÁN ĐÓNG POPUP TUYỆT ĐỐI (AUTO START HACK)
+      // ==========================================
+      const handleStartApp = useCallback(() => {
+          if (!needsStart) return;
+          
+          // Ưu tiên MỘT: Dọn dẹp Popup ngay lập tức để hở màn hình UI ra!
+          setNeedsStart(false); 
+          haptic();
+          
+          // Sau khi đóng popup, mới cố gắng Play nhạc (Né sập React nếu bị Browser chặn)
+          if (playlist.length > 0) {
+              playIndex(0, {fadeIn: false});
+          }
+      }, [needsStart, playlist, playIndex]);
+
+      useEffect(() => {
+          let timer;
+          if (needsStart && !loading) {
+              if (startCountdown > 0) {
+                  timer = setTimeout(() => setStartCountdown(c => c - 1), 1000);
+              } else if (startCountdown === 0) {
+                  // Gọi thẳng hàm xử lý đóng popup + thử play
+                  handleStartApp();
+              }
+          }
+          return () => clearTimeout(timer);
+      }, [needsStart, loading, startCountdown, handleStartApp]);
 
       const HomeTab=()=>{
         const list = filter.trim()
@@ -783,7 +845,7 @@
           e('label', {className: "flex items-center gap-2"},
             e('input', {type:"checkbox", checked:!!compressorOn, onChange:e=>{haptic();setCompressorOn(e.target.checked)}}), " Bật Dynamics Compressor"
           ),
-           e('p', {className: "text-xs text-rose-500 mt-2 font-semibold"}, "Hệ thống đã tự động TẮT tính năng này trên nền tảng Điện Thoại (iOS/Android) để đảm bảo Nhạc chạy ẩn đút túi quần không bao giờ bị ngắt.")
+           e('p', {className: "text-xs text-emerald-400 mt-2 font-semibold"}, "✓ Chế độ Di động: Hệ thống đã vô hiệu hóa tính năng này để bảo vệ pin và giữ nhạc chạy nền liên tục không bị HĐH cắt ngang.")
         ),
         e('div', {className: "p-3 rounded-2xl border border-[var(--border)]"},
           e('h3', {className: "font-semibold mb-3"}, "Hẹn giờ tắt nhạc"),
@@ -935,14 +997,19 @@
         )
       );
 
-      const StartGate = () => needsStart && e('div', {className: "fixed inset-0 z-50 flex items-center justify-center bg-[var(--bg)]/95 backdrop-blur"},
-        e('div', {className: "p-5 rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-xl text-center max-w-sm"},
+      // CỬA MỞ BẤT TỬ: Khóa Z-index cao nhất, ôm trọn màn hình
+      const StartGate = () => needsStart && e('div', {className: "fixed inset-0 z-[99999] flex items-center justify-center bg-[var(--bg)]/95 backdrop-blur"},
+        e('div', {className: "p-5 rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-2xl text-center max-w-sm w-[90%]"},
           e('img', {src: LOGO_FALLBACK_URL, onError: (e) => { e.target.src = LOGO_PLACEHOLDER; e.target.onError = null; }, width: "64", height: "64", className: "mx-auto mb-3 rounded-xl", alt: "MSTQ logo"}),
           e('h2', {className: "font-bold text-lg mb-2"}, "MSTQ Music"),
-          e('p', {className: "text-sm text-[var(--muted)] mb-3"}, `Chạm “Bắt đầu nghe” để mở quyền âm thanh. Hộp thoại sẽ tự đóng và thử phát tự động.`),
-          e('div', {className: "flex gap-2 justify-center"},
-            e('button', {className: "btn", onClick: askInstall}, "Cài đặt ứng dụng"),
-            e('button', {className: "btn btn-primary", onClick: async()=>{haptic(); await ensureAudioContext(); setNeedsStart(false); if(playlist.length){ playIndex(0,{fadeIn:false}); }}}, "Bắt đầu nghe")
+          e('p', {className: "text-sm text-[var(--muted)] mb-4"}, loading ? "Đang tải dữ liệu, vui lòng đợi..." : `Hộp thoại sẽ tự động đóng và phát nhạc sau ${startCountdown} giây.`),
+          e('div', {className: "flex gap-3 justify-center"},
+            e('button', {className: "btn flex-1", onClick: askInstall}, "Cài đặt App"),
+            e('button', {
+                className: "btn btn-primary flex-1", 
+                disabled: loading,
+                onClick: handleStartApp
+            }, loading ? "Đang tải..." : `Bắt đầu (${startCountdown}s)`)
           )
         )
       );
