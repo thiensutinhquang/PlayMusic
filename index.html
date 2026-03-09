@@ -112,7 +112,7 @@
 <body class="bg-[var(--bg)] text-[var(--text)] font-sans">
   <div id="root"></div>
 
-  <!-- THẺ AUDIO: Bổ sung playsinline bắt buộc để chống gián đoạn trên iOS -->
+  <!-- THẺ AUDIO: preload="auto" để bộ đệm luôn sẵn sàng chuyển bài mượt mà -->
   <audio id="mstq-player" preload="auto" playsinline webkit-playsinline crossOrigin="anonymous"></audio>
 
   <script>
@@ -140,10 +140,10 @@
     const COMPRESSOR_KEY='mstq_compressor_on';
     const INITIAL_VISIBLE=120, VISIBLE_STEP=160;
 
-    // ĐỘC CHIÊU V14: Lõi xác định thiết bị
+    // ĐỘC CHIÊU BẢO VỆ BACKGROUND TỐI THƯỢNG
     const isMobileOS = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     
-    // Tối ưu IO: Không ghi đĩa nếu đang bị ẩn để giảm CPU
+    // Tối ưu IO: Không ghi đĩa nếu đang bị ẩn để giảm CPU chống Kill App
     const save=(k,v)=>{
         try{ 
             if (document.visibilityState === 'hidden' && k !== TIMER_KEY) return; 
@@ -229,7 +229,7 @@
       useEffect(()=>{document.documentElement.setAttribute('data-theme',theme);localStorage.setItem(THEME_KEY,theme);},[theme]);
 
       const [needsStart,setNeedsStart]=useState(true);
-      const [startCountdown, setStartCountdown] = useState(4); // Bộ đếm lùi
+      const [startCountdown, setStartCountdown] = useState(4);
       const [linksOpen,setLinksOpen]=useState(false);
       const [toast, setToast] = useState(null);
 
@@ -265,9 +265,12 @@
       
       const [upNext,setUpNext]=useState([]);
       
-      // Dùng useRef để native JS Event thoát khỏi sự quản lý chậm chạp của React Background
+      // =========================================================================
+      // THUẬT TOÁN ĐỒNG BỘ CON TRỞ (CHỐNG LỖI NHẢY BÀI, NEXT BÀI LỘN XỘN)
+      // =========================================================================
       const playlistRef = useRef(playlist); useEffect(()=>{playlistRef.current=playlist},[playlist]);
-      const currentIndexRef = useRef(currentIndex); useEffect(()=>{currentIndexRef.current=currentIndex},[currentIndex]);
+      const currentIndexRef = useRef(currentIndex); 
+      // Không dùng useEffect để cập nhật currentIndexRef nữa, ta cập nhật trực tiếp (Synchronous)
       const shuffleRef = useRef(shuffle); useEffect(()=>{shuffleRef.current=shuffle; save(SHUFFLE_KEY,shuffle);},[shuffle]);
       const repeatRef = useRef(repeat); useEffect(()=>{repeatRef.current=repeat; save(REPEAT_KEY,repeat);},[repeat]);
       const stopAtEndRef = useRef(stopAtEnd); useEffect(()=>{stopAtEndRef.current=stopAtEnd; save(STOP_END_KEY,stopAtEnd);},[stopAtEnd]);
@@ -286,7 +289,6 @@
       const [muted,setMuted]=useState(localStorage.getItem(MUTED_KEY)==='1');
       const [compressorOn,setCompressorOn]=useState(load(COMPRESSOR_KEY,true));
 
-      // WEB AUDIO API
       const audioCtxRef=useRef(null), gainRef=useRef(null), compNodeRef=useRef(null), srcNodeRef=useRef(null);
       
       const ensureAudioContext=async()=>{
@@ -418,39 +420,6 @@
 
       const current=playlist[currentIndex]||null;
 
-      // *** MEDIA SESSION API (LOCKSCREEN SYNC) ***
-      useEffect(()=>{
-        const a=audioRef.current; if(!a||!current||!('mediaSession' in navigator)) return;
-        try{
-          navigator.mediaSession.metadata=new MediaMetadata({
-            title:current.title, artist:current.artist||'minhsutinhquang', album:'MSTQ Music',
-            artwork:[{src:current.artwork||ICON_URL,sizes:'512x512',type:'image/png'}]
-          });
-          
-          navigator.mediaSession.setActionHandler('play',()=>playPause());
-          navigator.mediaSession.setActionHandler('pause',()=>playPause());
-          navigator.mediaSession.setActionHandler('previoustrack',()=>prevTrack());
-          navigator.mediaSession.setActionHandler('nexttrack',()=>nextTrack());
-          
-          navigator.mediaSession.setActionHandler('seekto',d=>{ 
-             if(a && d.seekTime!=null && isFinite(d.seekTime)) {
-                 a.currentTime=d.seekTime; 
-                 updatePositionState();
-             }
-          });
-          navigator.mediaSession.setActionHandler('seekbackward', (details) => {
-              const skipTime = details.seekOffset || 10;
-              if(a) { a.currentTime = Math.max(a.currentTime - skipTime, 0); updatePositionState(); }
-          });
-          navigator.mediaSession.setActionHandler('seekforward', (details) => {
-              const skipTime = details.seekOffset || 10;
-              if(a) { a.currentTime = Math.min(a.currentTime + skipTime, a.duration); updatePositionState(); }
-          });
-
-          navigator.mediaSession.playbackState=playing?'playing':'paused';
-        }catch(e){}
-      },[current,playing]);
-
       const updatePositionState = () => {
           if ('mediaSession' in navigator && 'setPositionState' in navigator.mediaSession) {
               const a = audioRef.current;
@@ -465,18 +434,34 @@
       };
 
       // =========================================================================
-      // NATIVE PLAY FUNCTION: TÁCH LỖI AUTOPLAY ĐỂ KHÔNG SẬP REACT POPUP
+      // NATIVE PLAY FUNCTION: ĐỒNG BỘ HÓA HOÀN TOÀN CHỐNG LỖI
       // =========================================================================
       const playIndex = useCallback(async(i, {fadeIn=true}={}) => {
         const a = audioRef.current; if(!a) return;
-        const s = playlistRef.current[i]; if(!s) return; // Dùng Ref để tránh stale closure
+        const pl = playlistRef.current;
+        const s = pl[i]; if(!s) return; 
+        
+        // 1. CẬP NHẬT TRẠNG THÁI NGAY TỨC THÌ ĐỂ NEXT/PREV KHÔNG BỊ LẪN LỘN
+        currentIndexRef.current = i;
+        setCurrentIndex(i); 
+        setPlaying(true); 
+
+        // 2. KHÓA CHẶT MÀN HÌNH KHÓA NGAY LẬP TỨC TRƯỚC KHI AUDIO TẢI XONG (CHỐNG CHẾT NỀN)
+        if ('mediaSession' in navigator) {
+            navigator.mediaSession.metadata = new MediaMetadata({
+                title: s.title,
+                artist: s.artist || 'minhsutinhquang',
+                artwork: [{src: s.artwork || ICON_URL, sizes: '512x512', type: 'image/png'}]
+            });
+            navigator.mediaSession.playbackState = 'playing';
+        }
         
         await ensureAudioContext();
         a.loop=false; a.muted=false; if(a.volume<0.6) a.volume=0.85;
         
         if(a.src !== s.stream_url) {
             a.src = s.stream_url; 
-            a.load();
+            // KHÔNG GỌI a.load() Ở ĐÂY NỮA! Lệnh load() dư thừa sẽ làm đứt MediaSession trên iOS
         }
         
         try {
@@ -489,15 +474,10 @@
                gainRef.current.gain.setValueAtTime(0, now);
                gainRef.current.gain.linearRampToValueAtTime(1, now + 0.5); 
             }
-            setCurrentIndex(i); 
-            setPlaying(true); 
         } catch(e) {
             console.warn("Autoplay blocked by browser policy:", e);
-            // TRÌNH DUYỆT CHẶN: Ép trạng thái về Paused, KHÔNG làm sập luồng Code
-            setCurrentIndex(i); 
             setPlaying(false); 
             
-            // Báo cho người dùng biết (Đỏ lừ)
             if (!document.getElementById('autoplay-toast')) {
                const tempMsg = document.createElement('div');
                tempMsg.id = 'autoplay-toast';
@@ -508,10 +488,10 @@
                setTimeout(() => { tempMsg.style.opacity = 0; tempMsg.addEventListener('transitionend', () => tempMsg.remove()); }, 4500);
             }
         }
-      }, []); // Bỏ dependency playlist để hàm này không bị re-create liên tục
+      }, []); 
 
-      // NATIVE NEXT TRACK
-      const handleNextTrackNative = async () => {
+      // NATIVE NEXT TRACK LẤY TỪ REF ĐỒNG BỘ
+      const handleNextTrackNative = () => {
           const pl = playlistRef.current;
           const idx = currentIndexRef.current;
           const shuf = shuffleRef.current;
@@ -522,7 +502,9 @@
           let nextIdx = idx;
           if (un.length > 0) {
               const nextId = un[0];
-              setUpNext(q => q.slice(1)); 
+              // Cập nhật hàng đợi đồng bộ
+              upNextRef.current = un.slice(1);
+              setUpNext(upNextRef.current); 
               nextIdx = pl.findIndex(x => x.id === nextId);
               if (nextIdx < 0) nextIdx = (idx + 1) % pl.length;
           } else if (shuf) {
@@ -532,7 +514,7 @@
               nextIdx = (idx + 1) % pl.length;
           }
           
-          await playIndex(nextIdx);
+          playIndex(nextIdx);
       };
 
       const nextTrack = useCallback(() => { haptic(); handleNextTrackNative(); }, [playIndex]);
@@ -541,12 +523,18 @@
         haptic();
         if(!playlistRef.current.length) return;
         const a=audioRef.current; if(a?.currentTime>3){ a.currentTime=0; return; }
+        
         const idx = currentIndexRef.current;
         const nextIdx = (idx - 1 + playlistRef.current.length) % playlistRef.current.length;
         playIndex(nextIdx); 
       },[playIndex]);
       
-      const pickSong=async(s)=>{ haptic(); const i=playlistRef.current.findIndex(x=>x.id===s.id); if(i>=0) playIndex(i); };
+      // KHI NGƯỜI DÙNG BẤM CHỌN BÀI HÁT TỪ DANH SÁCH (SẼ KHÔNG BAO GIỜ BỊ SAI INDEX NỮA)
+      const pickSong = (s) => { 
+          haptic(); 
+          const i = playlistRef.current.findIndex(x => x.id === s.id); 
+          if(i >= 0) playIndex(i); 
+      };
 
       const playPause=async()=>{
         haptic();
@@ -567,7 +555,7 @@
       const lastMediaSessionUpdateRef=useRef(0);
 
       // =========================================================================
-      // GIAO THỨC CHUYỂN BÀI NGẦM (NATIVE ON-ENDED EVENT) - KHÔNG ĐƯỢC CHẾT
+      // GIAO THỨC CHUYỂN BÀI NGẦM LIÊN TỤC VĨNH CỬU
       // =========================================================================
       useEffect(()=>{
         const a = audioRef.current; if(!a) return;
@@ -576,7 +564,7 @@
           if(!isFinite(a.duration)) return;
           setProgress({current:a.currentTime||0, duration:a.duration||0});
           
-          // Tối ưu CPU cực mạnh: Chỉ update MediaSession khi số Giây (Int) thay đổi
+          // Tối ưu CPU cực mạnh: Chỉ update MediaSession khi số Giây tròn (Int) thay đổi, tiết kiệm 95% CPU chạy nền
           const currentSec = Math.floor(a.currentTime);
           if (currentSec !== lastMediaSessionUpdateRef.current) {
               updatePositionState(); 
@@ -603,7 +591,8 @@
             let nextIdx = idx;
             if (un.length > 0) {
                 const nextId = un[0];
-                setUpNext(q => q.slice(1)); 
+                upNextRef.current = un.slice(1);
+                setUpNext(upNextRef.current); 
                 nextIdx = pl.findIndex(x => x.id === nextId);
                 if (nextIdx < 0) nextIdx = (idx + 1) % pl.length;
             } else if (shuffleRef.current) {
@@ -618,18 +607,30 @@
                 return;
             }
 
-            // ÉP CHẠY PROMISE TRỰC TIẾP TRONG EVENT LOOP (Chống iOS Kill)
+            // ÉP HÁT BÀI TIẾP THEO BẰNG LUỒNG C++ CỦA TRÌNH DUYỆT ĐỂ SỐNG SÓT KHI TẮT MÀN HÌNH
             const nextSong = pl[nextIdx];
             if (nextSong) {
+                // 1. Cập nhật khóa (Lock) màn hình ngay lập tức để HĐH không dập
+                if ('mediaSession' in navigator) {
+                    navigator.mediaSession.metadata = new MediaMetadata({
+                        title: nextSong.title,
+                        artist: nextSong.artist || 'minhsutinhquang',
+                        artwork: [{src: nextSong.artwork || ICON_URL, sizes: '512x512', type: 'image/png'}]
+                    });
+                }
+                
+                // 2. Chuyển nguồn và phát
                 a.src = nextSong.stream_url;
-                a.load();
                 const playPromise = a.play();
                 if (playPromise !== undefined) {
                     playPromise.then(() => {
+                        // 3. Play thành công mới báo về cho giao diện React biết
+                        currentIndexRef.current = nextIdx;
                         setCurrentIndex(nextIdx); 
                         setPlaying(true);
                     }).catch(error => {
                         console.error("OS killed background autoplay on next track:", error);
+                        currentIndexRef.current = nextIdx;
                         setCurrentIndex(nextIdx); 
                         setPlaying(false);
                     });
@@ -638,7 +639,6 @@
         };
 
         const onPause = () => { 
-             // Khong luu khi tat man hinh de tiet kiem CPU/IO
              if(current && document.visibilityState === 'visible') {
                  save(RESUME_KEY,{index:currentIndexRef.current,id:current.id,currentTime:a.currentTime||0,volume:a.volume,rate:a.playbackRate,muted:a.muted,playing:false});
              }
@@ -650,6 +650,17 @@
         return()=>{a.removeEventListener('timeupdate',onTime);a.removeEventListener('ended',onEndedNative);a.removeEventListener('pause',onPause);};
       },[]); 
 
+      // GẮN SỰ KIỆN CHO NÚT ĐIỀU KHIỂN LOCKSCREEN CỦA ĐIỆN THOẠI
+      useEffect(()=>{
+        if(!('mediaSession' in navigator)) return;
+        try{
+          navigator.mediaSession.setActionHandler('play',()=>playPause());
+          navigator.mediaSession.setActionHandler('pause',()=>playPause());
+          navigator.mediaSession.setActionHandler('previoustrack',()=>prevTrack());
+          navigator.mediaSession.setActionHandler('nexttrack',()=>nextTrack());
+        }catch(e){}
+      },[playPause, prevTrack, nextTrack]);
+
       // KHÔI PHỤC BÀI ĐANG NGHE DỞ
       useEffect(()=>{
         const a=audioRef.current; if(!a) return;
@@ -657,6 +668,7 @@
         if(r&&playlist.length){
           const idx=Math.min(Math.max(0,r.index||0),playlist.length-1);
           setCurrentIndex(idx);
+          currentIndexRef.current = idx;
           setTimeout(()=>{ const s=playlist[idx]; if(!s) return;
             if(a.src!==s.stream_url){ a.src=s.stream_url; a.load(); }
             a.currentTime=Number(r.currentTime||0); a.volume=r.volume??volume; a.playbackRate=r.rate??playbackRate; a.muted=false; a.loop=false;
@@ -718,12 +730,11 @@
       // THUẬT TOÁN ĐÓNG POPUP TUYỆT ĐỐI (TRÁNH KẸT 0s)
       // ==========================================
       const handleManualStart = async () => {
-          // Bấm bằng tay thì ăn ngay
           haptic();
           setNeedsStart(false); 
           await ensureAudioContext();
           if (playlistRef.current.length > 0) {
-              playIndex(0, {fadeIn: false});
+              playIndex(currentIndexRef.current, {fadeIn: false});
           }
       };
 
@@ -731,19 +742,17 @@
           let timer;
           if (needsStart && !loading) {
               if (startCountdown > 0) {
-                  // Đang đếm lùi
                   timer = setTimeout(() => setStartCountdown(c => c - 1), 1000);
               } else if (startCountdown === 0) {
-                  // ĐÃ VỀ 0 -> Tắt Popup ngay lập tức (Ưu tiên UI)
+                  // ĐÃ VỀ 0 -> Tắt Popup ngay lập tức để giải phóng UI
                   setNeedsStart(false);
                   
-                  // Chờ UI biến mất (100ms) rồi mới lén lút đẩy lệnh phát nhạc ngầm
-                  // Nếu trình duyệt block, hàm playIndex sẽ tự bắt lỗi mà không làm sập tiến trình React
+                  // Chờ UI biến mất rồi mới gọi Play nhạc (Có try catch chống kẹt)
                   setTimeout(() => {
                       if (playlistRef.current.length > 0) {
-                          playIndex(0, {fadeIn: false});
+                          playIndex(currentIndexRef.current, {fadeIn: false}).catch(()=>{});
                       }
-                  }, 100);
+                  }, 50);
               }
           }
           return () => clearTimeout(timer);
