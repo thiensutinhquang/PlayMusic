@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Master Blueprint - MSTQ Music Architecture</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #0f172a; scroll-behavior: smooth; }
+        code, pre { font-family: 'JetBrains Mono', monospace; }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #10b981 0%, #0ea5e9 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .sidebar-link { transition: all 0.2s ease-in-out; border-left: 3px solid transparent; }
+        .sidebar-link:hover, .sidebar-link.active {
+            border-left-color: #10b981; color: #047857; background-color: #ecfdf5; font-weight: 600;
+            padding-left: 1.75rem;
+        }
+
+        .architecture-box {
+            background: white; border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); transition: transform 0.2s;
+        }
+        .architecture-box:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+
+        /* Nút in PDF */
+        @media print {
+            aside, .no-print { display: none !important; }
+            main { margin-left: 0 !important; padding: 0 !important; width: 100% !important; background: white !important; }
+            .architecture-box { break-inside: avoid; box-shadow: none; border-color: #cbd5e1; }
+            body { background: white; }
+        }
+    </style>
+</head>
+<body class="flex antialiased selection:bg-emerald-200 selection:text-emerald-900">
+
+    <!-- Sidebar Navigation -->
+    <aside class="w-72 fixed h-screen bg-white border-r border-slate-200 hidden xl:flex flex-col shadow-lg z-50">
+        <div class="p-6 border-b border-slate-100 bg-slate-50">
+            <h1 class="text-2xl font-black text-slate-900 tracking-tight leading-tight">
+                MSTQ <br><span class="gradient-text text-3xl">Architecture</span>
+            </h1>
+            <p class="text-xs text-slate-500 mt-2 uppercase tracking-widest font-bold">Bản Đồ Mã Nguồn Lõi</p>
+        </div>
+        <nav class="flex-1 overflow-y-auto py-6 text-sm text-slate-600 font-medium space-y-1">
+            <a href="#tong-quan" class="sidebar-link block px-6 py-3">1. Tổng Quan Công Nghệ</a>
+            <a href="#loi-am-thanh" class="sidebar-link block px-6 py-3">2. Lõi Âm Thanh Bất Tử</a>
+            <a href="#quan-ly-state" class="sidebar-link block px-6 py-3">3. Sơ Đồ State & Trí Nhớ</a>
+            <a href="#ui-components" class="sidebar-link block px-6 py-3">4. Cấu Trúc UI (React)</a>
+            <a href="#pwa-engine" class="sidebar-link block px-6 py-3">5. PWA Engine V29</a>
+            <a href="#quy-tac-phat-trien" class="sidebar-link block px-6 py-3 text-rose-600 font-bold">6. Quy Tắc Cấm Kỵ (Must Read)</a>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 xl:ml-72 bg-slate-50 min-h-screen pb-20">
+        
+        <!-- FAB Print -->
+        <button onclick="window.print()" class="no-print fixed bottom-8 right-8 z-[100] bg-slate-900 hover:bg-slate-800 text-white px-6 py-3 rounded-full shadow-2xl font-bold flex items-center gap-2 transition-transform hover:scale-105 border-2 border-slate-700">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+            Xuất Bản PDF
+        </button>
+
+        <header class="bg-slate-900 text-white py-20 px-10 relative overflow-hidden">
+            <div class="relative z-10 max-w-4xl mx-auto">
+                <h2 class="text-emerald-400 font-bold tracking-widest uppercase mb-4 text-sm">Tài liệu Nội bộ - Phân quyền: Cấp Kiến trúc sư</h2>
+                <h1 class="text-5xl font-extrabold mb-6 leading-tight">Giải Phẫu Mã Nguồn <br>MSTQ Music App</h1>
+                <p class="text-lg text-slate-300 leading-relaxed font-light">
+                    Tài liệu này ghi chép lại cấu trúc dữ liệu, luồng hoạt động và các "thủ thuật cấp thấp" (Hack OS) được áp dụng để giữ ứng dụng chạy ngầm liên tục trên các thiết bị di động khắt khe nhất (như Xiaomi MIUI, iOS).
+                </p>
+            </div>
+        </header>
+
+        <div class="max-w-5xl mx-auto px-10 py-12 space-y-20">
+
+            <!-- 1. TỔNG QUAN -->
+            <section id="tong-quan" class="scroll-mt-12">
+                <h2 class="text-3xl font-bold text-slate-900 mb-8 pb-4 border-b-2 border-slate-200">1. Tổng Quan Công Nghệ (Tech Stack)</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="architecture-box">
+                        <h3 class="font-bold text-lg text-slate-800 mb-1">React 18 (UMD)</h3>
+                        <p class="text-sm text-slate-500">Render UI toàn bộ ứng dụng mà không cần Node.js hay Webpack. Chạy trực tiếp từ CDN.</p>
+                    </div>
+                    <div class="architecture-box">
+                        <h3 class="font-bold text-lg text-slate-800 mb-1">Tailwind CSS</h3>
+                        <p class="text-sm text-slate-500">Hệ thống Utility-classes quản lý giao diện, theme (Light/Dark/Lục bảo) bằng CSS Variables.</p>
+                    </div>
+                    <div class="architecture-box border-l-4 border-l-emerald-500">
+                        <h3 class="font-bold text-lg text-emerald-700 mb-1">Native HTML5 Audio</h3>
+                        <p class="text-sm text-slate-500">Cốt lõi phát nhạc. Bị thao túng bởi JS để đánh lừa OS quản lý pin.</p>
+                    </div>
+                    <div class="architecture-box border-l-4 border-l-blue-500">
+                        <h3 class="font-bold text-lg text-blue-700 mb-1">MediaSession API</h3>
+                        <p class="text-sm text-slate-500">Đồng bộ Tên bài hát, Ảnh bìa và Nút Next/Prev ra ngoài Màn hình khóa.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2. LÕI ÂM THANH BẤT TỬ -->
+            <section id="loi-am-thanh" class="scroll-mt-12">
+                <h2 class="text-3xl font-bold text-slate-900 mb-8 pb-4 border-b-2 border-slate-200 flex items-center">
+                    <span class="bg-rose-100 text-rose-600 p-2 rounded-lg mr-4">🔥</span> 2. Lõi Âm Thanh Bất Tử (Heart of the System)
+                </h2>
+                <p class="text-slate-600 mb-6">Đây là nơi chứa những dòng code đáng giá nhất của ứng dụng, giải quyết bài toán "Tắt màn hình bị HĐH giết App".</p>
+
+                <div class="space-y-6">
+                    <div class="architecture-box bg-slate-900 text-slate-300 border-none">
+                        <h4 class="font-bold text-white text-xl mb-3">A. Thuật toán "Silence WakeLock" (Spotify Engine)</h4>
+                        <p class="text-sm mb-4 leading-relaxed">Sử dụng một thẻ <code class="bg-slate-800 text-emerald-400 px-1 rounded">id="mstq-wakelock"</code> phát một đoạn nhạc Base64 câm (im lặng) lặp đi lặp lại vô tận. Điều này tạo ra một "luồng âm thanh ảo", báo cáo với Hệ điều hành rằng ứng dụng đang liên tục hoạt động, cấm HĐH đưa ứng dụng vào chế độ ngủ đông (Doze Mode).</p>
+                        <pre class="bg-black p-4 rounded-lg text-xs font-mono text-cyan-300 overflow-x-auto"><code>&lt;audio id="mstq-wakelock" loop playsinline style="display:none;"&gt;
+   &lt;source src="data:audio/mpeg;base64,SUQzBA..." type="audio/mpeg"&gt;
+&lt;/audio&gt;</code></pre>
+                    </div>
+
+                    <div class="architecture-box border border-emerald-200 bg-emerald-50">
+                        <h4 class="font-bold text-emerald-900 text-xl mb-3">B. Kiến trúc Ping-Pong (Double Engine Audio)</h4>
+                        <p class="text-sm text-emerald-800 mb-4 leading-relaxed">
+                            Sử dụng 2 thẻ Audio: <b>Thẻ A</b> và <b>Thẻ B</b>. Khi thẻ A đang hát bài 1, thẻ B sẽ bí mật "kéo mạng" (load) bài 2 vào RAM. Ngay khoảnh khắc thẻ A kết thúc, thẻ B lập tức hát lên. 
+                            <br><br><b>Mục đích:</b> Xóa bỏ độ trễ 3 giây chờ tải mạng giữa 2 bài hát. Không có khoảng im lặng -> HĐH không có lý do để giết tiến trình.
+                        </p>
+                        <pre class="bg-white p-4 rounded-lg text-xs font-mono text-slate-800 border border-emerald-100 overflow-x-auto"><code>const activePlayerIdRef = useRef('a'); // Con trỏ xác định thẻ nào đang nắm quyền
+// Khi bài kết thúc:
+const newActive = e.target.id === 'mstq-player-a' ? pB : pA;
+activePlayerIdRef.current = newActive.id === 'mstq-player-a' ? 'a' : 'b';
+newActive.play(); // Kêu ngay tức thì vì đã được Preload</code></pre>
+                    </div>
+
+                    <div class="architecture-box">
+                        <h4 class="font-bold text-slate-800 text-xl mb-3">C. WebAudio Bypass (Bảo vệ Mobile)</h4>
+                        <p class="text-sm text-slate-600 mb-4 leading-relaxed">
+                            WebAudio API (`AudioContext`) dùng để làm mượt âm lượng, nhưng nó là "kịch độc" trên Mobile. iOS/Android sẽ tự động Suspend AudioContext khi tắt màn hình.
+                        </p>
+                        <pre class="bg-slate-100 p-4 rounded-lg text-xs font-mono text-rose-600 border border-slate-200"><code>const isMobileOS = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+const ensureAudioContext = async () => {
+    if (isMobileOS) return; // BYPASS TOÀN BỘ WEBAUDIO NẾU LÀ ĐIỆN THOẠI
+    // ... logic web audio cho PC
+}</code></pre>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3. QUẢN LÝ TRẠNG THÁI -->
+            <section id="quan-ly-state" class="scroll-mt-12">
+                <h2 class="text-3xl font-bold text-slate-900 mb-8 pb-4 border-b-2 border-slate-200">3. Sơ Đồ Quản Lý Trạng Thái (State & Memory)</h2>
+                <p class="text-slate-600 mb-6">Ứng dụng sử dụng React <code class="font-mono text-blue-600">useState</code> cho UI, nhưng sử dụng <code class="font-mono text-rose-600">useRef</code> cho các luồng xử lý Âm thanh ngầm để tránh lỗi bất đồng bộ (Race Condition).</p>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse bg-white shadow-sm rounded-xl overflow-hidden">
+                        <thead class="bg-slate-800 text-white">
+                            <tr>
+                                <th class="p-4 font-semibold text-sm w-1/3">State / Ref Name</th>
+                                <th class="p-4 font-semibold text-sm w-1/3">LocalStorage Key</th>
+                                <th class="p-4 font-semibold text-sm">Chức năng cốt lõi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-200 text-sm">
+                            <tr class="hover:bg-slate-50 transition">
+                                <td class="p-4 font-mono text-blue-600 font-bold">playlist<br><span class="text-rose-500 font-normal">playlistRef</span></td>
+                                <td class="p-4 font-mono text-slate-500">mstq_songs_v18</td>
+                                <td class="p-4 text-slate-700">Chứa mảng các object bài hát. Ref dùng để cho luồng C++ Native gọi tới mà không bị lỗi Stale Closure.</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50 transition">
+                                <td class="p-4 font-mono text-blue-600 font-bold">currentIndex<br><span class="text-rose-500 font-normal">currentIndexRef</span></td>
+                                <td class="p-4 font-mono text-slate-500">Nằm trong mstq_resume_v22</td>
+                                <td class="p-4 text-slate-700">Vị trí bài hát hiện tại. <b>Phải đồng bộ</b> cả State (để UI sáng viền) và Ref (để hàm Play lấy đúng URL).</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50 transition">
+                                <td class="p-4 font-mono text-blue-600 font-bold">sourcePref</td>
+                                <td class="p-4 font-mono text-slate-500">mstq_sources_pref</td>
+                                <td class="p-4 text-slate-700">Lưu cài đặt Nguồn tải nhạc (Bật Archive, nguồn tự chọn M3U).</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50 transition bg-rose-50/50">
+                                <td class="p-4 font-mono text-rose-600 font-bold">lastMediaSessionUpdateRef</td>
+                                <td class="p-4 font-mono text-slate-500">- (Không lưu)</td>
+                                <td class="p-4 text-slate-700">Biến cực kỳ quan trọng. Giới hạn việc cập nhật Màn hình khóa chỉ 1 lần/giây (Tối ưu 95% CPU khi chạy nền).</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- 4. CẤU TRÚC COMPONENT UI -->
+            <section id="ui-components" class="scroll-mt-12">
+                <h2 class="text-3xl font-bold text-slate-900 mb-8 pb-4 border-b-2 border-slate-200">4. Phân rã Component UI (React)</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="border border-slate-200 rounded-xl p-6 bg-white">
+                        <h3 class="font-bold text-slate-800 text-lg mb-2"><code>&lt;StartGate /&gt;</code></h3>
+                        <p class="text-sm text-slate-600">Popup đếm ngược 4s đầu tiên. Đóng vai trò <b>Mở khóa (Unlock)</b> quyền tương tác âm thanh của trình duyệt mà không cần người dùng thao tác.</p>
+                    </div>
+                    <div class="border border-slate-200 rounded-xl p-6 bg-white">
+                        <h3 class="font-bold text-slate-800 text-lg mb-2"><code>&lt;TopBar /&gt;</code></h3>
+                        <p class="text-sm text-slate-600">Thanh điều hướng cố định trên cùng. Chứa chức năng đổi Theme và Dropdown Menu "Liên kết" (chống che khuất Z-index = 100).</p>
+                    </div>
+                    <div class="border border-slate-200 rounded-xl p-6 bg-white">
+                        <h3 class="font-bold text-slate-800 text-lg mb-2"><code>&lt;HomeTab /&gt;</code></h3>
+                        <p class="text-sm text-slate-600">Render danh sách `playlist`. Sử dụng kỹ thuật cắt mảng (slice) thông qua biến `visible` để tối ưu DOM ban đầu (không render 1000 bài cùng lúc). Có auto-scroll tới bài đang phát.</p>
+                    </div>
+                    <div class="border border-slate-200 rounded-xl p-6 bg-white border-b-4 border-b-emerald-500">
+                        <h3 class="font-bold text-slate-800 text-lg mb-2"><code>&lt;MiniPlayer /&gt;</code> & <code>&lt;NowPlaying /&gt;</code></h3>
+                        <p class="text-sm text-slate-600">MiniPlayer nổi dưới đáy. Khi click mở ra NowPlaying toàn màn hình. Điều khiển chức năng Next/Prev/Play/Tua nhạc.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 5. PWA ENGINE -->
+            <section id="pwa-engine" class="scroll-mt-12">
+                <h2 class="text-3xl font-bold text-slate-900 mb-8 pb-4 border-b-2 border-slate-200">5. PWA Engine V29 (Hệ thống Cài đặt Thông minh)</h2>
+                <p class="text-slate-600 mb-6">Đoạn script JS thuần nằm dưới cùng file HTML, hoạt động hoàn toàn độc lập với React để bắt các sự kiện cấp hệ điều hành.</p>
+                
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-8">
+                    <ul class="space-y-4 text-sm text-slate-700">
+                        <li class="flex items-start">
+                            <span class="bg-blue-100 text-blue-700 font-bold px-2 py-1 rounded mr-3 mt-0.5 text-xs">Phát hiện In-App</span>
+                            <div>Nếu người dùng mở link từ Zalo/Facebook, trình duyệt con (Webview) này không hỗ trợ nhạc nền. Engine sẽ hiện Modal đỏ cảnh báo người dùng bấm 3 chấm -> Mở bằng Chrome/Safari.</div>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="bg-green-100 text-green-700 font-bold px-2 py-1 rounded mr-3 mt-0.5 text-xs">Cài đặt PC/Android</span>
+                            <div>Bắt sự kiện `beforeinstallprompt`. Nếu người dùng dùng Chrome, nút [Tải App] (FAB) sẽ hiện lên dưới góc phải. Bấm vào sẽ gọi lệnh cài đặt PWA tự động.</div>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="bg-slate-200 text-slate-700 font-bold px-2 py-1 rounded mr-3 mt-0.5 text-xs">Nhận diện iOS</span>
+                            <div>Safari iOS không cho cài tự động. Engine sẽ hiện Modal hướng dẫn từng bước: "Bấm nút Chia sẻ -> Thêm vào MH chính" kèm hiệu ứng mũi tên nhấp nháy chỉ đúng vị trí nút ở dưới đáy màn hình.</div>
+                        </li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- 6. QUY TẮC CẤM KỴ -->
+            <section id="quy-tac-phat-trien" class="scroll-mt-12">
+                <h2 class="text-3xl font-bold text-rose-700 mb-8 pb-4 border-b-2 border-rose-200 flex items-center">
+                    <svg class="w-8 h-8 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                    6. Quy Tắc Cấm Kỵ Khi Sửa Code (Must Read)
+                </h2>
+                
+                <div class="bg-rose-50 border-l-4 border-rose-500 p-6 rounded-r-xl">
+                    <p class="font-bold text-rose-900 mb-4">NẾU VI PHẠM CÁC QUY TẮC NÀY, CHỨC NĂNG NGHE NHẠC NỀN SẼ BỊ PHÁ HỎNG NGAY LẬP TỨC:</p>
+                    
+                    <ul class="space-y-5 text-sm text-rose-800">
+                        <li>
+                            <strong class="text-rose-900">1. KHÔNG đưa thẻ Audio vào làm Component của React:</strong><br>
+                            Hai thẻ `<audio id="mstq-player-a">` và `<audio id="mstq-player-b">` PHẢI nằm ở file HTML tĩnh (ngoài thẻ `<div id="root"></div>`). Nếu đưa vào React, mỗi lần re-render, thẻ Audio sẽ bị phá hủy và tạo lại -> Cắt đứt luồng nhạc nền.
+                        </li>
+                        <li>
+                            <strong class="text-rose-900">2. KHÔNG DÙNG State (`currentIndex`) bên trong hàm `onEndedNative`:</strong><br>
+                            Bên trong <code>useEffect</code> gán sự kiện cho thẻ Audio, TUYỆT ĐỐI chỉ được đọc giá trị từ <code>currentIndexRef.current</code> và <code>playlistRef.current</code>. Lấy giá trị từ biến State thông thường sẽ bị lỗi Stale Closure (lấy nhầm bài cũ).
+                        </li>
+                        <li>
+                            <strong class="text-rose-900">3. KHÔNG gọi `audio.load()` vô tội vạ:</strong><br>
+                            Hàm <code>playIndex</code> trong code đã xóa bỏ lệnh <code>a.load()</code> khi chuyển bài thông thường. Gọi <code>load()</code> sẽ làm đứt kết nối mạng trong khoảnh khắc, khiến iOS Lockscreen bị đơ và HĐH ngắt tiến trình.
+                        </li>
+                        <li>
+                            <strong class="text-rose-900">4. Bắt buộc Bypass WebAudio trên điện thoại:</strong><br>
+                            Đừng cố bắt ép <code>AudioContext</code> chạy trên mobile. Luôn giữ nguyên đoạn code <code>if (isMobileOS) return;</code> trong hàm <code>ensureAudioContext</code>.
+                        </li>
+                    </ul>
+                </div>
+            </section>
+
+        </div>
+        
+        <footer class="bg-white border-t border-slate-200 text-center py-10 text-slate-500 text-sm no-print">
+            <p class="font-semibold text-slate-600">MSTQ Music App - Kiến trúc Cấp cao.</p>
+            <p class="mt-1 text-xs">V16: Ping-Pong Double Engine & Silence WakeLock</p>
+        </footer>
+    </main>
+
+    <script>
+        // JS mượt mà cho Sidebar Navigation
+        const links = document.querySelectorAll('.sidebar-link');
+        const sections = document.querySelectorAll('section');
+
+        window.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                if (scrollY >= sectionTop - 150) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            links.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href').includes(current)) {
+                    link.classList.add('active');
+                }
+            });
+        });
+
+        links.forEach(link => {
+            link.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
+</body>
+</html>
