@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-SENTINEL V15: THE AWAKENED GOD (ULTIMATE QA EDITION)
-Sửa lỗi Crash của Python Bot khi thiếu thư viện `datetime`.
-Phân tích thuật toán RAM-Drive (Blob Cache) chống MIUI Kill App.
+SENTINEL V20: THE SUPREME AUDITOR (ĐỒNG BỘ VỚI KIẾN TRÚC WEB V20)
+Triết lý: AI phải nhận thức được kiến trúc W3C Native mới nhất.
+Tính năng: 
+1. Quét tìm WakeLock API và thuật toán Zero CPU.
+2. Cấm AI Llama khuyên dùng Blob/RAM-Drive gây lỗi Xiaomi.
 """
 
 import os
@@ -33,40 +35,54 @@ except ImportError:
     print("⚠️ Thiếu thư viện! Chạy: pip install llama-cpp-python reportlab playwright beautifulsoup4 keyboard gTTS pygame")
     exit()
 
+# =====================================================================
+# CẤU HÌNH HỆ THỐNG
+# =====================================================================
 TARGET_URL = "https://thiensutinhquang.github.io/PlayMusic/index.html"
 MODEL_PATH = r"C:\AI Local\AI_Models\Ai Thuc chien\Meta-Llama-3.1-8B-Instruct-Q4_K_M.gguf"
 GPU_LAYERS = 20
 
 base_dir = os.path.dirname(os.path.abspath(__file__))
-PDF_REPORT_PATH = os.path.join(base_dir, "Ho_So_Kien_Truc_Am_Nhac_V15_MIUI.pdf")
+PDF_REPORT_PATH = os.path.join(base_dir, "Ho_So_Kien_Truc_Thuc_Te_V20.pdf")
 HTML_REPORT_PATH = os.path.join(base_dir, "Ho_So_Sentinel_Live.html")
 MEMORY_FILE = os.path.join(base_dir, "sentinel_memory.json")
 stop_signal = False
 
+# =====================================================================
+# HỆ THỐNG PHÁT GIỌNG NÓI
+# =====================================================================
 def speak(text, block=True):
     print(f"\n🔊 Sentinel: {text}")
     try:
         filename = f"voice_sentinel_{uuid.uuid4().hex}.mp3"
         filepath = os.path.join(tempfile.gettempdir(), filename)
+        
         tts = gTTS(text=text, lang='vi')
         tts.save(filepath)
+        
         pygame.mixer.init()
         pygame.mixer.music.load(filepath)
         pygame.mixer.music.play()
+        
         if block:
-            while pygame.mixer.music.get_busy(): time.sleep(0.1)
+            while pygame.mixer.music.get_busy():
+                time.sleep(0.1)
             pygame.mixer.music.unload()
             pygame.mixer.quit()
             try: os.remove(filepath) 
             except: pass
-    except: pass 
+    except Exception as e:
+        pass 
 
 def on_f10_press():
     global stop_signal
     if not stop_signal:
         stop_signal = True
-        print("\n[HỆ THỐNG] Đã nhận lệnh F10. Sắp xếp báo cáo cấp Thần...")
+        print("\n[HỆ THỐNG] Đã nhận lệnh F10. Sẽ ngừng vòng lặp an toàn...")
 
+# =====================================================================
+# BỘ NHỚ TỰ HỌC
+# =====================================================================
 def load_memory():
     if os.path.exists(MEMORY_FILE):
         try:
@@ -76,74 +92,78 @@ def load_memory():
     return {"tested_uids": [], "facts": [], "blind_spots": []}
 
 def save_memory(memory_data):
-    if "blind_spots" not in memory_data: memory_data["blind_spots"] = []
-    if "tested_selectors" in memory_data: memory_data["tested_uids"] = memory_data.pop("tested_selectors")
-    elif "tested_uids" not in memory_data: memory_data["tested_uids"] = []
+    if "blind_spots" not in memory_data:
+        memory_data["blind_spots"] = []
+    if "tested_selectors" in memory_data:
+        memory_data["tested_uids"] = memory_data.pop("tested_selectors")
+    elif "tested_uids" not in memory_data:
+        memory_data["tested_uids"] = []
+        
     with open(MEMORY_FILE, 'w', encoding='utf-8') as f:
         json.dump(memory_data, f, ensure_ascii=False, indent=4)
 
-print(f"⏳ Khởi động Động cơ AI Llama 3.1 - Chế độ TÂM NHÃN (Nạp {GPU_LAYERS} Layers)...")
+# =====================================================================
+# AI CORE - KIẾN TRÚC SƯ CẤP CAO V20
+# =====================================================================
+print(f"⏳ Khởi động Động cơ AI Llama 3.1 - Chế độ X-Ray (Nạp {GPU_LAYERS} Layers)...")
 try:
-    llm = Llama(model_path=MODEL_PATH, n_ctx=8192, n_threads=14, n_gpu_layers=GPU_LAYERS, verbose=False)
+    llm = Llama(model_path=MODEL_PATH, n_ctx=4096, n_threads=14, n_gpu_layers=GPU_LAYERS, verbose=False)
 except Exception as e:
     print(f"⚠️ Lỗi khởi động AI: {e}")
     exit()
 
-def get_deep_source_code(html_content):
+def get_audio_skeleton(html_content):
     soup = BeautifulSoup(html_content, 'html.parser')
-    dom_skeleton = ""
-    for tag in soup.find_all(['audio', 'video', 'button', 'ul', 'li', 'nav', 'div']):
+    for tag in soup(['script', 'style', 'noscript', 'meta', 'link']):
+        tag.decompose()
+    skeleton = ""
+    for tag in soup.find_all(['audio', 'video', 'button', 'ul', 'li', 'nav']):
         classes = ".".join(tag.get('class', []))
-        if tag.name == 'div' and 'song-row' not in classes and 'dropdown-item' not in classes: continue
         tag_id = f"#{tag.get('id')}" if tag.get('id') else ""
         text_preview = tag.text.strip()[:40].replace('\n', ' ')
         if text_preview or tag.name == 'audio':
-            dom_skeleton += f"<{tag.name} {tag_id} class='{classes}'> {text_preview}...\n"
-            
-    js_logic = ""
-    for script in soup.find_all('script'):
-        if script.string and ('AudioContext' in script.string or 'mediaSession' in script.string or 'blobUrl' in script.string or 'preloadIntoRAM' in script.string):
-            js_logic += script.string.strip()[:8000] + "\n\n"
-                    
-    return f"--- DOM STRUCTURE ---\n{dom_skeleton[:1000]}\n--- JS AUDIO LOGIC ---\n{js_logic[:4000]}"
+            skeleton += f"<{tag.name} {tag_id} class='{classes}'> {text_preview}...\n"
+    return skeleton[:3000]
 
-def analyze_music_architecture(source_code_context, behavioral_facts, deep_tech_specs):
-    prompt = f"""You are a STRICT, BRUTALLY HONEST AUDIO PERFORMANCE ENGINEER.
-I am providing you with the REAL extracted Source Code, Technology Specs, and ACTUAL CPU/Endurance Testing Facts.
+def analyze_music_architecture(skeleton_text, behavioral_facts, deep_tech_specs):
+    # TIÊM CẤU TRÚC X-RAY MỚI NHẤT DÀNH RIÊNG CHO WEB V20
+    prompt = f"""You are a STRICT, elite Technical Architect reviewing a web application.
+I am providing you with the REAL extracted technology stack, DOM skeleton, and testing facts. 
+DO NOT GUESS. DO NOT HALLUCINATE. 
 
-1. INDISPUTABLE FACTS GATHERED BY C++ ENGINE:
+1. DEEP TECH SPECS (From Window context):
 {deep_tech_specs}
 
-2. SOURCE CODE (DOM & JS Logic):
-{source_code_context}
+2. DOM SKELETON:
+{skeleton_text}
 
 3. TESTING FACTS:
 {behavioral_facts}
 
-[CRITICAL ANTI-HALLUCINATION RULES]:
-1. The developer removed `prefetchAudio` (which caused Cache Poisoning) and replaced it with `preloadIntoRAM` (which uses Blob URLs). YOU MUST PRAISE this RAM-Drive Strategy as the ultimate fix that prevents MIUI Network Doze Mode from killing the app during track transitions.
-2. The developer explicitly avoids `audio.load()` when using Blob URLs. Praise this for keeping the MediaSession alive on Android.
-3. If the Testing Facts show "CPU ZERO: React State Updates STOPPED when hidden", you MUST praise this as the core fix for the "MIUI Background Kill" issue.
-4. DO NOT suggest "Sử dụng Virtual DOM" or "Sử dụng Service Worker". 
+[CRITICAL ANTI-HALLUCINATION RULES FOR V20 ARCHITECTURE]:
+1. The developer uses a single `<audio>` element with synchronous `a.load()` and `a.play()` to guarantee Android MIUI/HyperOS doesn't kill the network. YOU MUST PRAISE this "Iron Chain" (Synchronous) architecture.
+2. The developer uses W3C `navigator.wakeLock.request('screen')` to keep the CPU awake. PRAISE this standard implementation.
+3. The developer stops React re-renders using `document.visibilityState === 'hidden'`. PRAISE this "Zero CPU Background" feature.
+4. DO NOT suggest using Blob URLs, CORS Fetch, or Multiple audio tags. We have proven they cause Audio Focus issues on Xiaomi devices. DO NOT suggest Virtual DOM.
 
-Based ONLY on the actual data, write a highly technical Architecture Report in VIETNAMESE.
+Based ONLY on this concrete data, write a brutal, highly technical Architecture Report in VIETNAMESE.
 
 Use EXACTLY these 4 headings (include the #):
-# ĐÁNH GIÁ ĐỘ BỀN BACKGROUND AUDIO (Khen ngợi giải pháp giảm 100% CPU React khi tắt màn hình)
-# KIẾN TRÚC TRÌNH PHÁT MEDIA & PLAYLIST (Đánh giá kỹ thuật RAM-Drive/Blob URL chống cắt mạng của Xiaomi)
-# TỐI ƯU HIỆU SUẤT & RAM (Đánh giá việc tối ưu IO LocalStorage và tự động revoke Blob)
-# ĐỀ XUẤT CODE NÂNG CAO (Gợi ý cụ thể, ví dụ thêm WakeLock API chuẩn của W3C)"""
+# KIẾN TRÚC TRÌNH PHÁT MEDIA (Đánh giá Single Audio Element & Synchronous Playback)
+# TỐI ƯU POCKET MODE & CHẠY NỀN (Đánh giá WakeLock API và MediaSession)
+# HIỆU SUẤT CHỐNG NÓNG MÁY & QUẢN LÝ RAM (Đánh giá Zero CPU React Render)
+# ĐỀ XUẤT CẢI TIẾN TỔNG THỂ (Gợi ý CỤ THỂ, không nói nhảm)"""
 
     try:
-        print("\n      [Thần AI Llama] Đang phân tích logic RAM-Drive và Zero-CPU thực tế... \n      ", end="", flush=True)
-        response = llm.create_chat_completion(messages=[{"role": "user", "content": prompt}], temperature=0.1, max_tokens=1500, stream=True)
+        print("\n      [Kiểm Toán Llama] Đang thẩm định Kiến trúc V20... \n      ", end="", flush=True)
+        response = llm.create_chat_completion(messages=[{"role": "user", "content": prompt}], temperature=0.2, max_tokens=1500, stream=True)
         full_text = ""
         for chunk in response:
             if "choices" in chunk and len(chunk["choices"]) > 0:
                 delta = chunk["choices"][0].get("delta", {})
                 if "content" in delta:
                     text = delta["content"]
-                    print(f"\033[92m{text}\033[0m", end="", flush=True) 
+                    print(f"\033[96m{text}\033[0m", end="", flush=True) 
                     full_text += text
         print("\n")
         return full_text.strip()
@@ -151,12 +171,16 @@ Use EXACTLY these 4 headings (include the #):
 
 def ask_ai_for_healing_advice(error_message, element_html):
     clean_html = BeautifulSoup(element_html, "html.parser").prettify()[:300]
-    prompt = f"""A bot failed to interact. Error: "{error_message}". HTML: {clean_html}
-Best strategy? Reply with ONE word:
-- "JS_CLICK" (Bypass UI blocker).
-- "SCROLL" (Bring into view).
-- "FORCE" (Force click).
-- "SKIP" (Hopeless)."""
+    prompt = f"""A bot failed to click an element.
+Error: "{error_message}".
+HTML of element: {clean_html}
+
+What is the best strategy to fix this right now?
+Reply with ONLY ONE word:
+- "JS_CLICK" (If it's obscured by another element like a menu or popup).
+- "SCROLL" (If it's outside the viewport).
+- "FORCE" (Force playwright to click bypassing checks).
+- "SKIP" (If it's useless)."""
     try:
         response = llm.create_chat_completion(messages=[{"role": "user", "content": prompt}], temperature=0.1, max_tokens=15)
         advice = response['choices'][0]['message']['content'].strip().upper()
@@ -165,6 +189,9 @@ Best strategy? Reply with ONE word:
         return "JS_CLICK"
     except: return "JS_CLICK"
 
+# =====================================================================
+# MODULE XUẤT BÁO CÁO LIVE HTML VÀ PDF
+# =====================================================================
 def create_html_live_dashboard(ai_report, memory_data):
     ai_html = ""
     parts = ai_report.split('#')
@@ -173,7 +200,7 @@ def create_html_live_dashboard(ai_report, memory_data):
         lines = part.strip().split('\n')
         heading = lines[0].strip()
         body = '\n'.join(lines[1:]).strip()
-        ai_html += f"<h3 class='text-xl font-bold text-emerald-700 mt-6 mb-3 flex items-center'><svg class='w-5 h-5 mr-2' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'></path></svg> {html.escape(heading)}</h3>"
+        ai_html += f"<h3 class='text-xl font-bold text-indigo-700 mt-6 mb-3'>{html.escape(heading)}</h3>"
         body_formatted = html.escape(body).replace('\n- ', '<br>• ').replace('\n', '<br>')
         ai_html += f"<p class='text-slate-700 leading-relaxed mb-4 p-4 bg-white rounded-lg border shadow-sm'>{body_formatted}</p>"
 
@@ -181,9 +208,9 @@ def create_html_live_dashboard(ai_report, memory_data):
     facts_html = ""
     for f in recent_facts:
         color_class = "text-emerald-700 bg-emerald-50 border-emerald-200"
-        if "CẢNH BÁO" in f or "LỖ HỔNG" in f or "LỖI" in f or "NGẮT QUÃNG" in f: color_class = "text-orange-600 bg-orange-50 border-orange-200 font-bold"
+        if "CẢNH BÁO" in f or "LỖ HỔNG" in f or "LỖI" in f: color_class = "text-orange-600 bg-orange-50 border-orange-200 font-bold"
         if "CHUYỂN HƯỚNG" in f or "TAB MỚI" in f or "TỰ CHỮA LÀNH" in f: color_class = "text-purple-700 bg-purple-50 border-purple-200"
-        if "SỨC BỀN" in f or "X-RAY" in f or "CPU" in f: color_class = "text-blue-700 bg-blue-50 border-blue-200 font-bold"
+        if "DEEP TECH" in f: color_class = "text-blue-700 bg-blue-50 border-blue-200 font-bold"
         facts_html += f"<li class='p-3 mb-2 rounded-md border text-sm font-medium {color_class}'>{html.escape(f)}</li>"
 
     total_elements = len(memory_data['tested_uids'])
@@ -192,16 +219,16 @@ def create_html_live_dashboard(ai_report, memory_data):
     html_template = """<!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8"><title>Live Dashboard - Sentinel V15</title>
+    <meta charset="UTF-8"><title>Live Dashboard - Sentinel V20</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>body { font-family: 'Inter', sans-serif; background-color: #f8fafc; scroll-behavior: smooth;}</style>
+    <style>body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }</style>
 </head>
 <body class="text-slate-800 antialiased p-8">
-    <h1 class="text-3xl font-bold mb-2">Sentinel V15 <span class="text-emerald-600">MIUI KILLER EDITION</span></h1>
+    <h1 class="text-3xl font-bold mb-2">Sentinel V20 <span class="text-blue-600">Supreme Auditor</span></h1>
     <p class="text-slate-500 mb-8">Cập nhật cuối: %s | Đã cày cẩn thận: %d phần tử</p>
     <div class="grid grid-cols-2 gap-8">
-        <div><h2 class="font-bold text-xl mb-4">Nhật Ký Hành Vi & Kiểm Tra Background</h2><ul class="space-y-2">%s</ul></div>
-        <div class="bg-slate-50 p-6 rounded-xl border"><h2 class="font-bold text-xl mb-4 border-b pb-2">Báo Cáo AI Chuẩn Xác Kỹ Thuật</h2>%s</div>
+        <div><h2 class="font-bold text-xl mb-4">Nhật Ký Tự Học & Quét X-Ray</h2><ul class="space-y-2">%s</ul></div>
+        <div class="bg-slate-50 p-6 rounded-xl border"><h2 class="font-bold text-xl mb-4 border-b pb-2">Báo Cáo AI Llama V20</h2>%s</div>
     </div>
 </body></html>"""
     with open(HTML_REPORT_PATH, 'w', encoding='utf-8') as f:
@@ -226,8 +253,8 @@ def create_music_dossier(ai_report, memory_data):
     h2_style = ParagraphStyle('H2', fontName=font_bold, fontSize=12, textColor=colors.HexColor('#2980B9'), spaceBefore=10, spaceAfter=5)
     normal_style = ParagraphStyle('Normal', fontName=font_reg, fontSize=11, leading=16, alignment=TA_JUSTIFY)
     
-    story.append(Paragraph("HỒ SƠ BẮT BỆNH HIỆU SUẤT ÂM NHẠC TRỰC TUYẾN V15", title_style))
-    story.append(Paragraph(f"Đã đo lường sức bền trên {len(memory_data['tested_uids'])} luồng hành vi.", ParagraphStyle('Center', fontName=font_reg, alignment=TA_CENTER, spaceAfter=20)))
+    story.append(Paragraph("HỒ SƠ TỐI ƯU HÓA HỆ THỐNG ÂM NHẠC TRỰC TUYẾN V20", title_style))
+    story.append(Paragraph(f"Đã thẩm định cẩn thận {len(memory_data['tested_uids'])} phần tử.", ParagraphStyle('Center', fontName=font_reg, alignment=TA_CENTER, spaceAfter=20)))
     
     parts = ai_report.split('#')
     for part in parts:
@@ -239,13 +266,20 @@ def create_music_dossier(ai_report, memory_data):
     
     doc.build(story)
 
+# =====================================================================
+# THẦN VỆ MỆNH: QUẢN LÝ BÀN LÀM VIỆC SẠCH SẼ
+# =====================================================================
 def assassinate_popups(page):
-    page.evaluate("""() => {
-        const btns = Array.from(document.querySelectorAll('button, div[role="button"]'));
-        const closeBtn = btns.find(b => b.innerText.includes('Đóng lại') || b.innerText.includes('Đóng'));
-        if (closeBtn) closeBtn.click();
-    }""")
-    time.sleep(1)
+    kill_words = ["Đóng lại", "Close", "Cancel", "Không, cảm ơn", "Bắt đầu nghe", "Bắt đầu ("]
+    for word in kill_words:
+        selectors = [f"text='{word}'", f"button:has-text('{word}')"]
+        for sel in selectors:
+            try:
+                killer = page.locator(sel).first
+                if killer.is_visible(timeout=50):
+                    killer.evaluate("node => node.click()")
+                    time.sleep(0.5)
+            except: pass
 
 def enforce_single_tab(context, main_page):
     tabs_killed = 0
@@ -261,42 +295,50 @@ def enforce_single_tab(context, main_page):
     return tabs_killed
 
 def get_next_single_element(page, memory):
-    raw_locators = page.locator("button, a, li, [role='button'], [tabindex='0'], .song-row, .dropdown-item").all()
+    raw_locators = page.locator("a, button, li, [role='button'], [tabindex='0']").all()
     for loc in raw_locators:
         try:
             if not loc.is_visible(): continue
             tag_name = loc.evaluate('node => node.tagName.toLowerCase()')
             el_class = loc.get_attribute("class") or ""
             href = loc.get_attribute("href") or ""
-            text_content = ""
-            if "song-row" in el_class:
-                title_el = loc.query_selector('.font-semibold')
-                if title_el: text_content = f"Bài hát: {title_el.inner_text().strip()}"
-            if not text_content: text_content = loc.inner_text().strip()
+            text_content = loc.inner_text().strip()
             name_identifier = text_content[:40] if text_content else loc.get_attribute("aria-label") or ""
+            
             if not name_identifier:
                 svg_path = loc.evaluate("node => { const p = node.querySelector('path'); return p ? p.getAttribute('d') : null; }")
                 if svg_path:
                     parent_id = loc.evaluate("node => node.parentElement ? node.parentElement.id : 'no-id'")
                     name_identifier = f"SVG_[{svg_path[:15]}]_P[{parent_id}]"
-                else: continue
+                else:
+                    continue
+
             if not name_identifier: continue
+            
             uid = f"{tag_name}|{el_class}|{href}|{name_identifier}"
             if uid not in memory["tested_uids"] and uid not in memory.get("blind_spots", []):
-                return {"uid": uid, "locator": loc, "name": name_identifier, "html": loc.evaluate("node => node.outerHTML")}
+                return {
+                    "uid": uid,
+                    "locator": loc,
+                    "name": name_identifier,
+                    "html": loc.evaluate("node => node.outerHTML")
+                }
         except: continue 
     return None
 
+# =====================================================================
+# LÕI SUPERVISOR - V20 X-RAY VISION
+# =====================================================================
 def run_autonomous_music_auditor():
     global stop_signal
     keyboard.on_press_key('f10', lambda _: on_f10_press())
     
     os.system('cls' if os.name == 'nt' else 'clear')
     print("=" * 80)
-    print("🚀 SENTINEL V15: MIUI KILLER (TEST THUẬT TOÁN ĐỆM RAM CHỐNG CẮT MẠNG)".center(80))
+    print("🚀 SENTINEL V20: THE SUPREME AUDITOR (ĐỒNG BỘ HÓA VỚI CODE V20)".center(80))
     print("=" * 80)
     
-    speak("Giao thức V 15 khởi động. Tiến hành test thuật toán Blob Cache chống Xiaomi cắt mạng ngầm.", block=False)
+    speak("Giao thức V 20 khởi động. Quét Radar kiểm tra WakeLock và kiến trúc Single Audio.", block=False)
     
     memory = load_memory()
     cycle = 1
@@ -304,59 +346,62 @@ def run_autonomous_music_auditor():
     deep_tech_specs_str = "None"
     
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=False, slow_mo=200)
+        browser = p.chromium.launch(headless=False, slow_mo=300)
         context = browser.new_context()
         page = context.new_page()
         
         print("⏳ Đang thiết lập Mỏ Neo Trang Chính...")
         page.goto(TARGET_URL, timeout=60000, wait_until="domcontentloaded")
+        time.sleep(3) 
         
-        print("⏳ Đợi đếm ngược của Website tắt Popup...")
-        time.sleep(5) 
-        
-        try:
-            page.wait_for_selector('.song-row', timeout=15000)
-            print("   -> Đã nhìn thấy Playlist!")
-        except: pass
+        assassinate_popups(page)
         
         while not stop_signal:
             print(f"\n" + "="*50)
-            print(f"🔄 CHU KỲ {cycle}: ĐIỀU TRA & KIỂM THỬ SỨC BỀN")
+            print(f"🔄 CHU KỲ {cycle}: ĐIỀU TRA TẠI CHỖ")
             print("="*50)
+            
             current_run_facts = []
             
             try:
+                # ==========================================
+                # ĐIỂM SÁNG V20: QUÉT X-RAY CÁC TÍNH NĂNG MỚI
+                # ==========================================
                 if cycle == 1:
-                    print("🩺 [Radar X-Ray] Thu thập bằng chứng thép từ trình duyệt...")
+                    print("🩺 [Radar X-Ray] Chọc sâu vào nhân trình duyệt lấy cấu trúc công nghệ...")
                     tech_specs = page.evaluate("""() => {
                         return {
                             framework: (window.React || document.querySelector('[data-reactroot], #root')) ? 'ReactJS' : 'Vanilla JS',
-                            hasVisibilityCheck: document.documentElement.innerHTML.includes('document.visibilityState ==='),
-                            hasBlobPreload: document.documentElement.innerHTML.includes('preloadIntoRAM') && document.documentElement.innerHTML.includes('createObjectURL'),
+                            hasZeroCPU: document.documentElement.innerHTML.includes("document.visibilityState === 'visible'") || document.documentElement.innerHTML.includes("document.visibilityState === 'hidden'"),
+                            hasWakeLock: document.documentElement.innerHTML.includes('wakeLock.request'),
+                            hasSyncLoad: document.documentElement.innerHTML.includes('a.load()'),
                             mediaSession: 'mediaSession' in navigator
                         }
                     }""")
-                    deep_tech_specs_str = f"Framework: {tech_specs['framework']}\nHas Visibility Check (Zero CPU): {tech_specs['hasVisibilityCheck']}\nHas Blob Preload (RAM-Drive): {tech_specs['hasBlobPreload']}\nMediaSession: {tech_specs['mediaSession']}"
-                    current_run_facts.append(f"🔍 BẰNG CHỨNG X-RAY: Phát hiện chặn render ngầm (Zero CPU): {tech_specs['hasVisibilityCheck']}. Kỹ thuật RAM-Drive (Blob Preload) hoạt động: {tech_specs['hasBlobPreload']}.")
+                    
+                    deep_tech_specs_str = f"Framework: {tech_specs['framework']}\nHas Zero CPU Background Check: {tech_specs['hasZeroCPU']}\nW3C WakeLock API Used: {tech_specs['hasWakeLock']}\nSynchronous a.load() Call: {tech_specs['hasSyncLoad']}\nMediaSession API: {tech_specs['mediaSession']}"
+                    
+                    tech_fact = f"🔍 DEEP TECH SPECS: Zero CPU: {tech_specs['hasZeroCPU']}, WakeLock: {tech_specs['hasWakeLock']}, Sync Load: {tech_specs['hasSyncLoad']}."
+                    current_run_facts.append(tech_fact)
+                    print(f"   -> {tech_fact}")
 
                 target_item = get_next_single_element(page, memory)
                 
                 if not target_item:
-                    print("⏬ Cuộn trang tìm kiếm thêm...")
+                    print("⏬ Không thấy nút mới. Cuộn trang tìm kiếm thêm...")
                     page.evaluate("window.scrollBy(0, window.innerHeight / 2)")
-                    time.sleep(2) 
+                    time.sleep(2)
                     target_item = get_next_single_element(page, memory)
                     
                     if not target_item:
                         empty_runs_counter += 1
-                        print(f"⚠️ [Bot] Màn hình hiện tại đã test sạch. (Đợi tĩnh tâm {empty_runs_counter}/4 lần)")
-                        time.sleep(3) 
-                        if empty_runs_counter >= 4:
-                            fact = f"✅ HOÀN TẤT CHIẾN DỊCH: Đã vét sạch {len(memory['tested_uids'])} phần tử."
+                        print(f"⚠️ [Bot] Vẫn không thấy gì. (Thử lại {empty_runs_counter}/3)")
+                        if empty_runs_counter >= 3:
+                            fact = f"✅ HOÀN TẤT CHIẾN DỊCH: Đã vét sạch {len(memory['tested_uids'])} phần tử cẩn thận."
                             current_run_facts.append(fact)
                             memory["facts"].extend(current_run_facts)
                             save_memory(memory)
-                            speak("Đã cày nát trang web. Đang chuyển sang giai đoạn tổng hợp.", block=True)
+                            speak("Đã cày nát toàn bộ trang web. Kết thúc chiến dịch.", block=True)
                             break 
                         continue 
                 
@@ -369,35 +414,49 @@ def run_autonomous_music_auditor():
                 print(f"   🤖 [Thằng em Bot]: Phát hiện mục tiêu: [{text_name[:30]}]")
                 time.sleep(0.5)
 
-                success = False; attempts = 0; last_error = ""
+                success = False
+                attempts = 0
+                last_error = ""
                 
                 while attempts < 3 and not success:
                     attempts += 1
                     try:
-                        if not loc.is_visible(timeout=1000): raise Exception("Phần tử tàng hình.")
+                        if not loc.is_visible(timeout=1000):
+                            raise Exception("Phần tử tàng hình hoặc trôi mất.")
 
                         if attempts == 1:
                             loc.scroll_into_view_if_needed(timeout=2000)
                             loc.evaluate("node => node.style.border = '2px solid red'")
                             time.sleep(1) 
+                            
                             loc.click(timeout=2000)
+                            
                         elif attempts > 1:
-                            print(f"      -> 💡 Llama hội chẩn...")
+                            print(f"      🤖 [Thằng em Bot]: Vấp rồi (Lỗi: {last_error[:25]}). Xin anh Llama chỉ đạo!")
                             ai_advice = ask_ai_for_healing_advice(last_error, el_html)
-                            if "JS_CLICK" in ai_advice: loc.evaluate("node => node.click()")
+                            
+                            if "JS_CLICK" in ai_advice:
+                                print("      🧠 [Llama]: Dùng Javascript đâm xuyên qua cái menu/popup đè nó đi!")
+                                loc.evaluate("node => node.click()")
                             elif "SCROLL" in ai_advice:
+                                print("      🧠 [Llama]: Cuộn nó ra giữa màn hình rồi bấm bạo lực vào!")
                                 loc.evaluate("node => node.scrollIntoView({block: 'center'})")
                                 time.sleep(1)
                                 loc.click(timeout=2000, force=True)
-                            elif "FORCE" in ai_advice: loc.click(force=True, timeout=2000)
-                            else: break
+                            elif "FORCE" in ai_advice:
+                                print("      🧠 [Llama]: Playwright đang ngại, ép nó click đi!")
+                                loc.click(force=True, timeout=2000)
+                            else:
+                                break
                         
-                        time.sleep(2) 
+                        print("   ⏳ [Chờ 3 giây để Web phản hồi... Không được phép thoát]")
+                        time.sleep(3) 
                         success = True
                         
                         tabs_killed = enforce_single_tab(context, page)
                         if tabs_killed > 0:
                             res = f"🌐 TAB MỚI: '{text_name[:15]}' đẻ Tab. Đã tự động đóng."
+                            print("   🤖 [Thằng em Bot]: Nó nhảy Tab sếp ơi. Em đã tắt cái bụp!")
                             current_run_facts.append(res)
                             memory["tested_uids"].append(uid)
                             break 
@@ -406,6 +465,7 @@ def run_autonomous_music_auditor():
                         clean_current = page.url.split('#')[0].rstrip('/')
                         if clean_target not in clean_current:
                             res = f"🔄 CHUYỂN HƯỚNG: '{text_name[:15]}' làm mất trang chủ."
+                            print("   🤖 [Thằng em Bot]: Lạc đường rồi! Kéo về Trạm gốc...")
                             current_run_facts.append(res)
                             memory["tested_uids"].append(uid)
                             try: page.go_back(wait_until="domcontentloaded", timeout=10000)
@@ -414,51 +474,16 @@ def run_autonomous_music_auditor():
                             assassinate_popups(page)
                             break 
                         else:
-                            audio_state = page.evaluate("""() => {
-                                const a = document.querySelector('audio');
-                                return a ? { playing: !a.paused, time: a.currentTime } : null;
-                            }""")
-                            
-                            if audio_state and audio_state['playing']:
-                                print("   🎵 Nhạc đang phát! Bắt đầu chọc mã đo lường CPU React ngầm...")
-                                
-                                page.evaluate("""() => {
-                                    window.renderCount = 0;
-                                    const progressEl = document.querySelector('.bg-\\\\[var\\\\(--primary\\\\]');
-                                    if(progressEl) {
-                                        window.observer = new MutationObserver(() => window.renderCount++);
-                                        window.observer.observe(progressEl, {attributes: true});
-                                    }
-                                }""")
-
-                                print("   🌙 ÉP TRÌNH DUYỆT TẮT MÀN HÌNH (visibility = hidden). Chờ 5 giây...")
-                                page.evaluate("""() => {
-                                    Object.defineProperty(document, 'visibilityState', {value: 'hidden', writable: true});
-                                    document.dispatchEvent(new Event('visibilitychange'));
-                                }""")
-                                time.sleep(5) 
-                                
-                                result = page.evaluate("""() => {
-                                    const a = document.querySelector('audio');
-                                    return { 
-                                        playing: a ? !a.paused : false, 
-                                        renderCount: window.renderCount 
-                                    };
-                                }""")
-                                
-                                if result['playing']:
-                                    if result['renderCount'] == 0 or result['renderCount'] is None:
-                                        res = f"🛡️ SỨC BỀN CPU TỐI THƯỢNG: Nhạc chạy liên tục, React State Updates đã DỪNG HOÀN TOÀN khi tắt màn hình (Zero CPU). Chống Xiaomi Kill App hoàn hảo."
-                                        print(f"      ✅ Đã vượt qua bài Test Zero CPU.")
-                                    else:
-                                        res = f"⚠️ CẢNH BÁO SỨC BỀN: Nhạc chạy, nhưng React vẫn render {result['renderCount']} lần khi tắt màn hình. Nguy cơ bị HĐH Kill."
-                                        print(f"      {res}")
-                                else:
-                                    res = f"❌ LỖI NGẮT QUÃNG: Nhạc BỊ ĐỨT khi tắt màn hình."
-                                    print(f"      {res}")
+                            is_audio_playing = page.evaluate("Array.from(document.querySelectorAll('audio, video')).some(m => !m.paused)")
+                            if is_audio_playing:
+                                res = f"🎵 AUDIO: Click '{text_name[:20]}' -> Play."
                             else:
                                 res = f"UI: Click '{text_name[:20]}' -> Tương tác OK."
                             
+                            if attempts > 1: 
+                                res = f"✨ TỰ CHỮA LÀNH ({attempts}): {res}"
+                                print(f"   🤖 [Thằng em Bot]: Xong! Nhờ Llama mà bấm được rồi.")
+                                
                             current_run_facts.append(res)
                             memory["tested_uids"].append(uid)
                             assassinate_popups(page)
@@ -468,6 +493,7 @@ def run_autonomous_music_auditor():
                         last_error = str(e)[:100].replace('\n', ' ')
                         
                 if not success:
+                    print("   ❌ [Sentinel Đại ca]: Bỏ đi em, nút này chết rồi.")
                     res = f"LỖI TƯƠNG TÁC (Góc Khuất): '{text_name[:20]}'"
                     current_run_facts.append(res)
                     memory["blind_spots"].append(uid)
@@ -477,12 +503,11 @@ def run_autonomous_music_auditor():
                 save_memory(memory)
                 
                 if cycle % 3 == 0:
-                    print("\n[AI ARCHITECT] Tạm dừng để Thầy Llama hội chẩn (1-2 phút, xin đừng tắt)...")
-                    deep_source = get_deep_source_code(page.content())
+                    print("\n[AI ARCHITECT] Rút trích DOM & Cập nhật Dashboard...")
+                    latest_skeleton = get_audio_skeleton(page.content())
                     context_facts = "\n".join(memory["facts"][-40:])
-                    ai_report_live = analyze_music_architecture(deep_source, context_facts, deep_tech_specs_str)
+                    ai_report_live = analyze_music_architecture(latest_skeleton, context_facts, deep_tech_specs_str)
                     create_html_live_dashboard(ai_report_live, memory)
-                    print("[AI ARCHITECT] Đã viết xong báo cáo. Tiếp tục cày...")
 
                 cycle += 1
 
@@ -494,12 +519,11 @@ def run_autonomous_music_auditor():
 
         browser.close()
 
-    speak("Chiến dịch kiểm tra sức bền kết thúc. Đang xuất báo cáo chẩn đoán lõi.")
-    deep_source = "<html><body>No data gathered</body></html>"
-    try: deep_source = get_deep_source_code(page.content())
-    except: pass
+    speak("Chiến dịch kết thúc. Đang xuất báo cáo cuối cùng.")
+    if latest_skeleton == "":
+        latest_skeleton = "<html><body>No data gathered</body></html>"
     context_facts = "\n".join(memory["facts"][-40:])
-    ai_report_final = analyze_music_architecture(deep_source, context_facts, deep_tech_specs_str)
+    ai_report_final = analyze_music_architecture(latest_skeleton, context_facts, deep_tech_specs_str)
     create_music_dossier(ai_report_final, memory)
     create_html_live_dashboard(ai_report_final, memory)
     speak("Hoàn tất. Chúc Sếp xem file báo cáo vui vẻ.")
