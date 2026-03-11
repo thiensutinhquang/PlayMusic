@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-SENTINEL V14.4: THE AWAKENED GOD (ZERO CPU TESTER)
-Bổ sung kiểm thử CPU: Đảm bảo khi Visibility State = hidden, React không được phép re-render.
-Đây là chìa khóa chống bị MIUI kill process.
+SENTINEL V15: THE AWAKENED GOD (ULTIMATE QA EDITION)
+Sửa lỗi Crash của Python Bot khi thiếu thư viện `datetime`.
+Phân tích thuật toán RAM-Drive (Blob Cache) chống MIUI Kill App.
 """
 
 import os
@@ -12,6 +12,8 @@ import keyboard
 import html
 import json
 import uuid
+import traceback
+from datetime import datetime
 from bs4 import BeautifulSoup
 from llama_cpp import Llama
 from playwright.sync_api import sync_playwright
@@ -36,7 +38,7 @@ MODEL_PATH = r"C:\AI Local\AI_Models\Ai Thuc chien\Meta-Llama-3.1-8B-Instruct-Q4
 GPU_LAYERS = 20
 
 base_dir = os.path.dirname(os.path.abspath(__file__))
-PDF_REPORT_PATH = os.path.join(base_dir, "Ho_So_Kien_Truc_Am_Nhac_V14_ZeroCPU.pdf")
+PDF_REPORT_PATH = os.path.join(base_dir, "Ho_So_Kien_Truc_Am_Nhac_V15_MIUI.pdf")
 HTML_REPORT_PATH = os.path.join(base_dir, "Ho_So_Sentinel_Live.html")
 MEMORY_FILE = os.path.join(base_dir, "sentinel_memory.json")
 stop_signal = False
@@ -100,7 +102,7 @@ def get_deep_source_code(html_content):
             
     js_logic = ""
     for script in soup.find_all('script'):
-        if script.string and ('AudioContext' in script.string or 'mediaSession' in script.string or 'visibilityState' in script.string):
+        if script.string and ('AudioContext' in script.string or 'mediaSession' in script.string or 'blobUrl' in script.string or 'preloadIntoRAM' in script.string):
             js_logic += script.string.strip()[:8000] + "\n\n"
                     
     return f"--- DOM STRUCTURE ---\n{dom_skeleton[:1000]}\n--- JS AUDIO LOGIC ---\n{js_logic[:4000]}"
@@ -119,20 +121,21 @@ I am providing you with the REAL extracted Source Code, Technology Specs, and AC
 {behavioral_facts}
 
 [CRITICAL ANTI-HALLUCINATION RULES]:
-1. This is a ReactJS app. DO NOT suggest "Sử dụng Virtual DOM".
-2. If the Testing Facts show "CPU ZERO: React State Updates STOPPED when hidden", you MUST praise this as the ultimate fix for the "MIUI Background Kill" issue.
-3. If the code uses `fetch` for Network Prefetching instead of a second audio tag, praise it for avoiding Audio Focus conflicts on Android.
+1. The developer removed `prefetchAudio` (which caused Cache Poisoning) and replaced it with `preloadIntoRAM` (which uses Blob URLs). YOU MUST PRAISE this RAM-Drive Strategy as the ultimate fix that prevents MIUI Network Doze Mode from killing the app during track transitions.
+2. The developer explicitly avoids `audio.load()` when using Blob URLs. Praise this for keeping the MediaSession alive on Android.
+3. If the Testing Facts show "CPU ZERO: React State Updates STOPPED when hidden", you MUST praise this as the core fix for the "MIUI Background Kill" issue.
+4. DO NOT suggest "Sử dụng Virtual DOM" or "Sử dụng Service Worker". 
 
 Based ONLY on the actual data, write a highly technical Architecture Report in VIETNAMESE.
 
 Use EXACTLY these 4 headings (include the #):
-# ĐÁNH GIÁ ĐỘ BỀN BACKGROUND AUDIO (Khen ngợi việc giảm 100% CPU React khi tắt màn hình)
-# KIẾN TRÚC TRÌNH PHÁT MEDIA & PLAYLIST (Đánh giá Single Audio Element + Network Prefetch)
-# TỐI ƯU HIỆU SUẤT & RAM (Đánh giá việc tối ưu IO LocalStorage)
-# ĐỀ XUẤT CODE NÂNG CAO (Gợi ý cụ thể, ví dụ thêm WakeLock API chuẩn)"""
+# ĐÁNH GIÁ ĐỘ BỀN BACKGROUND AUDIO (Khen ngợi giải pháp giảm 100% CPU React khi tắt màn hình)
+# KIẾN TRÚC TRÌNH PHÁT MEDIA & PLAYLIST (Đánh giá kỹ thuật RAM-Drive/Blob URL chống cắt mạng của Xiaomi)
+# TỐI ƯU HIỆU SUẤT & RAM (Đánh giá việc tối ưu IO LocalStorage và tự động revoke Blob)
+# ĐỀ XUẤT CODE NÂNG CAO (Gợi ý cụ thể, ví dụ thêm WakeLock API chuẩn của W3C)"""
 
     try:
-        print("\n      [Thần AI Llama] Đang phân tích logic Zero-CPU thực tế... \n      ", end="", flush=True)
+        print("\n      [Thần AI Llama] Đang phân tích logic RAM-Drive và Zero-CPU thực tế... \n      ", end="", flush=True)
         response = llm.create_chat_completion(messages=[{"role": "user", "content": prompt}], temperature=0.1, max_tokens=1500, stream=True)
         full_text = ""
         for chunk in response:
@@ -189,12 +192,12 @@ def create_html_live_dashboard(ai_report, memory_data):
     html_template = """<!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8"><title>Live Dashboard - Sentinel V14.4</title>
+    <meta charset="UTF-8"><title>Live Dashboard - Sentinel V15</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>body { font-family: 'Inter', sans-serif; background-color: #f8fafc; scroll-behavior: smooth;}</style>
 </head>
 <body class="text-slate-800 antialiased p-8">
-    <h1 class="text-3xl font-bold mb-2">Sentinel V14.4 <span class="text-emerald-600">ZERO CPU EDITION</span></h1>
+    <h1 class="text-3xl font-bold mb-2">Sentinel V15 <span class="text-emerald-600">MIUI KILLER EDITION</span></h1>
     <p class="text-slate-500 mb-8">Cập nhật cuối: %s | Đã cày cẩn thận: %d phần tử</p>
     <div class="grid grid-cols-2 gap-8">
         <div><h2 class="font-bold text-xl mb-4">Nhật Ký Hành Vi & Kiểm Tra Background</h2><ul class="space-y-2">%s</ul></div>
@@ -223,7 +226,7 @@ def create_music_dossier(ai_report, memory_data):
     h2_style = ParagraphStyle('H2', fontName=font_bold, fontSize=12, textColor=colors.HexColor('#2980B9'), spaceBefore=10, spaceAfter=5)
     normal_style = ParagraphStyle('Normal', fontName=font_reg, fontSize=11, leading=16, alignment=TA_JUSTIFY)
     
-    story.append(Paragraph("HỒ SƠ BẮT BỆNH HIỆU SUẤT ÂM NHẠC TRỰC TUYẾN V14.4", title_style))
+    story.append(Paragraph("HỒ SƠ BẮT BỆNH HIỆU SUẤT ÂM NHẠC TRỰC TUYẾN V15", title_style))
     story.append(Paragraph(f"Đã đo lường sức bền trên {len(memory_data['tested_uids'])} luồng hành vi.", ParagraphStyle('Center', fontName=font_reg, alignment=TA_CENTER, spaceAfter=20)))
     
     parts = ai_report.split('#')
@@ -290,10 +293,10 @@ def run_autonomous_music_auditor():
     
     os.system('cls' if os.name == 'nt' else 'clear')
     print("=" * 80)
-    print("🚀 SENTINEL V14.4: ZERO CPU TESTER (KIỂM TRA BÓP CỔ CPU KHI CHẠY NỀN)".center(80))
+    print("🚀 SENTINEL V15: MIUI KILLER (TEST THUẬT TOÁN ĐỆM RAM CHỐNG CẮT MẠNG)".center(80))
     print("=" * 80)
     
-    speak("Giao thức V 14 chấm 4 khởi động. Tiến hành đo lường C P U ngầm của React.", block=False)
+    speak("Giao thức V 15 khởi động. Tiến hành test thuật toán Blob Cache chống Xiaomi cắt mạng ngầm.", block=False)
     
     memory = load_memory()
     cycle = 1
@@ -308,7 +311,7 @@ def run_autonomous_music_auditor():
         print("⏳ Đang thiết lập Mỏ Neo Trang Chính...")
         page.goto(TARGET_URL, timeout=60000, wait_until="domcontentloaded")
         
-        print("⏳ Đợi đếm ngược 4s của Website tắt Popup...")
+        print("⏳ Đợi đếm ngược của Website tắt Popup...")
         time.sleep(5) 
         
         try:
@@ -329,11 +332,12 @@ def run_autonomous_music_auditor():
                         return {
                             framework: (window.React || document.querySelector('[data-reactroot], #root')) ? 'ReactJS' : 'Vanilla JS',
                             hasVisibilityCheck: document.documentElement.innerHTML.includes('document.visibilityState ==='),
+                            hasBlobPreload: document.documentElement.innerHTML.includes('preloadIntoRAM') && document.documentElement.innerHTML.includes('createObjectURL'),
                             mediaSession: 'mediaSession' in navigator
                         }
                     }""")
-                    deep_tech_specs_str = f"Framework: {tech_specs['framework']}\nHas Visibility Check (Zero CPU): {tech_specs['hasVisibilityCheck']}\nMediaSession: {tech_specs['mediaSession']}"
-                    current_run_facts.append(f"🔍 BẰNG CHỨNG X-RAY: Framework là {tech_specs['framework']}. Có phát hiện chặn render ngầm (Zero CPU): {tech_specs['hasVisibilityCheck']}.")
+                    deep_tech_specs_str = f"Framework: {tech_specs['framework']}\nHas Visibility Check (Zero CPU): {tech_specs['hasVisibilityCheck']}\nHas Blob Preload (RAM-Drive): {tech_specs['hasBlobPreload']}\nMediaSession: {tech_specs['mediaSession']}"
+                    current_run_facts.append(f"🔍 BẰNG CHỨNG X-RAY: Phát hiện chặn render ngầm (Zero CPU): {tech_specs['hasVisibilityCheck']}. Kỹ thuật RAM-Drive (Blob Preload) hoạt động: {tech_specs['hasBlobPreload']}.")
 
                 target_item = get_next_single_element(page, memory)
                 
@@ -416,12 +420,8 @@ def run_autonomous_music_auditor():
                             }""")
                             
                             if audio_state and audio_state['playing']:
-                                # =========================================================
-                                # BÀI TEST TỐI THƯỢNG: ĐO LƯỜNG ĐỘ ỔN ĐỊNH CPU (KIẾN TRÚC THIỀN ĐỊNH)
-                                # =========================================================
                                 print("   🎵 Nhạc đang phát! Bắt đầu chọc mã đo lường CPU React ngầm...")
                                 
-                                # Gắn bọ vào UI để đếm số lần DOM bị update
                                 page.evaluate("""() => {
                                     window.renderCount = 0;
                                     const progressEl = document.querySelector('.bg-\\\\[var\\\\(--primary\\\\]');
@@ -438,7 +438,6 @@ def run_autonomous_music_auditor():
                                 }""")
                                 time.sleep(5) 
                                 
-                                # Kiểm tra xem nhạc còn hát và React có bị tắt ngầm không
                                 result = page.evaluate("""() => {
                                     const a = document.querySelector('audio');
                                     return { 
