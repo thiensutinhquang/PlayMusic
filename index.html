@@ -143,24 +143,8 @@
     const sanitizeRepeat=(r)=> (r==='off'||r==='all'||r==='one')?r:'all';
     const haptic=(ms=14)=>{ try{ navigator.vibrate?.(ms); }catch{} };
 
-    // VŨ KHÍ TỐI THƯỢNG V21: C++ Native Network Prefetching
-    // Ép nhân trình duyệt tải file MP3 tiếp theo vào Cache đĩa cứng bằng thẻ <link>
-    // Không dùng JS fetch() -> Không bị MIUI bắt lỗi ngốn pin ngầm.
-    const nativePrefetch = (url) => {
-        if (!url) return;
-        try {
-            // Xóa các thẻ prefetch cũ để không đầy RAM
-            document.querySelectorAll('link[rel="prefetch"][as="audio"]').forEach(el => el.remove());
-            
-            const link = document.createElement('link');
-            link.rel = 'prefetch';
-            link.as = 'audio';
-            link.href = url;
-            link.crossOrigin = 'anonymous';
-            document.head.appendChild(link);
-            console.log("🚀 [W3C Prefetch] Đã lệnh cho C++ kéo bài hát tiếp theo vào Cache đĩa cứng.");
-        } catch(e) {}
-    };
+    // V22: XÓA BỎ HOÀN TOÀN HÀM PREFETCH VÌ NÓ LÀM TRÀN RAM GÂY CÂM LOA Ở BÀI THỨ 3
+    // GIỮ LẠI WAKELOCK VÀ KHÔNG NHẢ RA GIỮA CHỪNG KHI CHUYỂN BÀI
 
     // W3C WakeLock API chuẩn (Giữ CPU luôn thức khi nghe nhạc)
     let wakeLock = null;
@@ -481,7 +465,7 @@
       }, []);
 
       // =========================================================================
-      // NATIVE PLAY FUNCTION V21: KHÔNG DÙNG AUDIO.LOAD()
+      // NATIVE PLAY FUNCTION V22: KHÔI PHỤC AUDIO.LOAD() VÀ BỎ PREFETCH
       // =========================================================================
       const playIndexSync = useCallback((i) => {
         const a = audioRef.current; 
@@ -502,9 +486,9 @@
         a.loop = false; 
         if(a.src !== s.stream_url) {
             a.src = s.stream_url; 
-            // XÓA LỆNH a.load() TẠI ĐÂY!
-            // Việc gán a.src tự động gọi luồng tải nội bộ an toàn của Chrome.
-            // Ép a.load() sẽ làm đứt kết nối hardware decoder, gây lỗi "Thanh chạy nhưng câm loa".
+            // V22 FIX: BẮT BUỘC PHẢI CÓ LOAD() ĐỂ RESET BỘ GIẢI MÃ PHẦN CỨNG ANDROID
+            // Nếu không có dòng này, đến bài thứ 3 Decoder sẽ bị tràn và câm loa
+            a.load(); 
         }
         
         // Phát đồng bộ và bắt lỗi Promise gọn gàng
@@ -512,10 +496,7 @@
         if (playPromise !== undefined) {
             playPromise.then(() => {
                 requestWakeLock();
-                // Nhạc đã kêu -> Kích hoạt Native C++ Prefetch bài tiếp theo ngay lập tức!
-                const nextIdx = getNextIndexLogic(i);
-                const nextSong = pl[nextIdx];
-                if (nextSong) nativePrefetch(nextSong.stream_url);
+                // V22: KHÔNG GỌI PREFETCH NỮA ĐỂ BẢO VỆ RAM CHỐNG CÂM LOA
             }).catch(e => {
                 console.warn("Autoplay blocked by OS:", e);
                 if (document.visibilityState === 'visible') {
@@ -587,7 +568,8 @@
             if(playing || (!a.paused && a.currentTime > 0)){ 
               if (document.visibilityState === 'visible') setPlaying(false); 
               a.pause(); 
-              releaseWakeLock();
+              // V22: Chỉ nhả Wakelock khi người dùng chủ động BẤM PAUSE
+              releaseWakeLock(); 
               if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
             }
             else{ 
@@ -601,10 +583,11 @@
       };
       
       const lastMediaSessionUpdateRef=useRef(0);
+      const isTransitioningRef=useRef(false); // V22: Chốt chặn bảo vệ Early Swap
 
       // =========================================================================
-      // GIAO THỨC CHUYỂN BÀI NGẦM CHUẨN MỰC
-      // Lắng nghe sự kiện gốc của trình duyệt
+      // GIAO THỨC EARLY SWAP V22: CHUYỂN BÀI TRƯỚC KHI MẤT AUDIO FOCUS
+      // Đánh lừa Xiaomi rằng bài hát chưa bao giờ kết thúc
       // =========================================================================
       useEffect(()=>{
         const a = audioRef.current; 
@@ -621,6 +604,16 @@
           if (currentSec !== lastMediaSessionUpdateRef.current) {
               updatePositionState(); 
               lastMediaSessionUpdateRef.current = currentSec;
+          }
+
+          // V22 EARLY SWAP: Chuyển bài khi còn 0.5s cuối cùng
+          // Lúc này âm thanh đang phát, HĐH Android sẽ không dám cắt mạng
+          if (a.duration > 3 && a.currentTime >= a.duration - 0.5) {
+              if (!isTransitioningRef.current) {
+                  isTransitioningRef.current = true;
+                  handleNextTrackNative();
+                  setTimeout(() => { isTransitioningRef.current = false; }, 2000); // Mở khóa sau 2s
+              }
           }
         };
 
@@ -640,21 +633,12 @@
                 return;
             }
 
-            const nextIdx = getNextIndexLogic(idx);
-            if (un.length > 0) {
-                upNextRef.current = un.slice(1);
-                if (document.visibilityState === 'visible') setUpNext(upNextRef.current); 
+            // V22: onEnded chỉ hoạt động như một phương án dự phòng nếu Early Swap bị trượt
+            if (!isTransitioningRef.current) {
+                isTransitioningRef.current = true;
+                handleNextTrackNative();
+                setTimeout(() => { isTransitioningRef.current = false; }, 2000);
             }
-
-            if ((stopE || rep === 'off') && !un.length && nextIdx === 0 && idx === pl.length - 1) {
-                if (document.visibilityState === 'visible') setPlaying(false);
-                releaseWakeLock();
-                if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
-                return;
-            }
-
-            // Đồng bộ: Gọi luồng chuyển bài ngay lập tức khi file mp3 vừa hết
-            playIndexSync(nextIdx);
         };
 
         const onPause = () => { 
@@ -662,15 +646,27 @@
                  save(RESUME_KEY,{index:currentIndexRef.current,id:current.id,currentTime:a.currentTime||0,volume:a.volume,rate:a.playbackRate,muted:a.muted,playing:false});
              }
         };
+
+        // V22: BẮT LỖI ĐỂ TRÁNH KẸT VĨNH VIỄN
+        const onError = (e) => {
+            console.error("Audio Pipeline Error:", e);
+            if (!isTransitioningRef.current) {
+                isTransitioningRef.current = true;
+                handleNextTrackNative(); // Tự động nhảy bài nếu lỗi mạng
+                setTimeout(() => { isTransitioningRef.current = false; }, 2000);
+            }
+        };
         
         a.addEventListener('timeupdate',onTime);
         a.addEventListener('ended',onEndedNative);
         a.addEventListener('pause',onPause);
+        a.addEventListener('error',onError);
         
         return()=>{
             a.removeEventListener('timeupdate',onTime);
             a.removeEventListener('ended',onEndedNative);
             a.removeEventListener('pause',onPause);
+            a.removeEventListener('error',onError);
         };
       },[getNextIndexLogic, playIndexSync]); 
 
@@ -697,8 +693,7 @@
             a.currentTime=Number(r.currentTime||0); a.volume=r.volume??volume; a.playbackRate=r.rate??playbackRate; a.muted=false; a.loop=false;
             if(r.playing){ setPlaying(true); requestWakeLock(); }
             
-            // Kéo luôn bài kế tiếp ngay khi Load trang xong
-            nativePrefetch(playlist[getNextIndexLogic(idx)]?.stream_url);
+            // V22: BỎ PREFETCH TẠI ĐÂY LUÔN
           },0);
         }
       },[playlist.length, getNextIndexLogic]);
