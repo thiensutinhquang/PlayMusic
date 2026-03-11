@@ -106,8 +106,9 @@
 <body class="bg-[var(--bg)] text-[var(--text)] font-sans">
   <div id="root"></div>
 
-  <!-- SINGLE ENGINE: 1 Thẻ Audio duy nhất, chuẩn mực W3C -->
-  <audio id="mstq-player" preload="metadata" playsinline webkit-playsinline crossOrigin="anonymous"></audio>
+  <!-- NATIVE HTML5 AUDIO (Chuẩn mực W3C) - Không dùng bất kỳ thủ thuật rác nào -->
+  <!-- Bắt buộc dùng preload="auto" để nó tự đệm dữ liệu -->
+  <audio id="mstq-player" preload="auto" playsinline webkit-playsinline crossOrigin="anonymous"></audio>
 
   <script>
     (function(){
@@ -124,8 +125,8 @@
   <script type="text/javascript">
     const { useState, useEffect, useRef, useCallback, createElement: e } = React;
 
-    const SONGS_CACHE_KEY='mstq_songs_v29';
-    const RESUME_KEY='mstq_resume_v29'; 
+    const SONGS_CACHE_KEY='mstq_songs_v30';
+    const RESUME_KEY='mstq_resume_v30'; 
     const THEME_KEY='music-theme', SPEED_KEY='mstq_speed', MUTED_KEY='mstq_muted';
     const SHUFFLE_KEY='mstq_shuffle', REPEAT_KEY='mstq_repeat';
     const POWER_KEY='mstq_power_save', TIMER_KEY='mstq_sleep_timer', STOP_END_KEY='mstq_stop_at_end';
@@ -147,6 +148,20 @@
     const formatTime=s=>{if(!isFinite(s)||s<0)return'0:00';const m=Math.floor(s/60),sec=Math.floor(s%60);return`${m}:${String(sec).padStart(2,'0')}`};
     const sanitizeRepeat=(r)=> (r==='off'||r==='all'||r==='one')?r:'all';
     const haptic=(ms=14)=>{ try{ navigator.vibrate?.(ms); }catch{} };
+
+    // W3C WakeLock API chuẩn (Giữ CPU luôn thức khi nghe nhạc)
+    let wakeLock = null;
+    const requestWakeLock = async () => {
+        if ('wakeLock' in navigator) {
+            try { wakeLock = await navigator.wakeLock.request('screen'); } 
+            catch (err) {}
+        }
+    };
+    const releaseWakeLock = () => {
+        if (wakeLock !== null) {
+            wakeLock.release().then(() => { wakeLock = null; }).catch(()=>{});
+        }
+    };
 
     const Icon = ({d=22,p="M5 12h14"}) => e('svg', {width:d, height:d, viewBox:"0 0 24 24", fill:"none", stroke:"currentColor", strokeWidth:"1.7"},
       e('path', {d:p, strokeLinecap:"round", strokeLinejoin:"round"})
@@ -279,41 +294,46 @@
       const [muted,setMuted]=useState(localStorage.getItem(MUTED_KEY)==='1');
       const [compressorOn,setCompressorOn]=useState(load(COMPRESSOR_KEY,true));
 
-      // =========================================================================
-      // KIẾN TRÚC SOUNDCLOUD (BLOB PRELOADER): KÉO FILE VÀO RAM QUA API FETCH
-      // Sử dụng CORS hợp lệ từ archive.org để tránh lỗi "Mất Tiếng" (Opaque Response)
-      // =========================================================================
-      const preloadedBlobRef = useRef({ id: null, objUrl: null });
-
-      const executePreload = async (song) => {
-          if (!song || isMobileOS === false) return; // Chỉ làm trên Mobile để tiết kiệm tài nguyên
-          if (preloadedBlobRef.current.id === song.id) return; // Đã preload rồi thì thôi
-
-          try {
-              // Bỏ 'no-cors' đi! Archive.org cho phép CORS tự do.
-              // Điều này đảm bảo Blob trả về là dữ liệu MP3 thật 100%, không bị câm loa.
-              const response = await fetch(song.stream_url);
-              if (!response.ok) throw new Error("Network response was not ok");
-              
-              const blob = await response.blob();
-              const objUrl = URL.createObjectURL(blob);
-              
-              // Dọn rác RAM cũ
-              if (preloadedBlobRef.current.objUrl) {
-                  URL.revokeObjectURL(preloadedBlobRef.current.objUrl);
-              }
-              
-              preloadedBlobRef.current = { id: song.id, objUrl: objUrl };
-              console.log("[SoundCloud Engine] Đã nạp thành công bài tiếp theo vào RAM.");
-          } catch(e) {
-              console.log("[SoundCloud Engine] Tải trước thất bại, sẽ dùng mạng thông thường:", e);
-              preloadedBlobRef.current = { id: null, objUrl: null }; // Reset để dùng stream URL gốc
-          }
-      };
-
+      // LOẠI BỎ HOÀN TOÀN WEBAUDIO TRÊN MOBILE ĐỂ KHÔNG TRANH CHẤP ÂM THANH
+      const audioCtxRef=useRef(null), gainRef=useRef(null), compNodeRef=useRef(null);
       const ensureAudioContext = () => {
-        // CẤM SỬ DỤNG WEBAUDIO TRÊN ĐIỆN THOẠI
-        if (isMobileOS) return;
+        if (isMobileOS) return; 
+        try{
+          if(!audioCtxRef.current){
+            const ctx=new (window.AudioContext||window.webkitAudioContext)({latencyHint:'playback'});
+            const gain=ctx.createGain(); gain.gain.value=1;
+            const comp=ctx.createDynamicsCompressor();
+            comp.threshold.value=-18; comp.knee.value=24; comp.ratio.value=6; comp.attack.value=0.008; comp.release.value=0.25;
+            const src=ctx.createMediaElementSource(audioRef.current);
+            src.connect(gain);
+            if(compressorOn){ gain.connect(comp).connect(ctx.destination); } 
+            else { gain.connect(ctx.destination); }
+            audioCtxRef.current=ctx; gainRef.current=gain; compNodeRef.current=comp;
+          }
+          if (audioCtxRef.current.state === 'suspended') {
+             audioCtxRef.current.resume();
+          }
+        }catch(e){}
+      };
+      
+      useEffect(()=>{ try{
+        if(audioCtxRef.current && gainRef.current){
+          gainRef.current.disconnect();
+          const dst=audioCtxRef.current.destination;
+          if(compressorOn && !isMobileOS){ gainRef.current.connect(compNodeRef.current).connect(dst); }
+          else { gainRef.current.connect(dst); }
+        }}catch{} 
+      },[compressorOn]);
+
+      const fadeTo = (target=1, ms=800) => {
+        try{
+          if(!audioCtxRef.current || !gainRef.current || isMobileOS) return;
+          const g=gainRef.current;
+          const now=audioCtxRef.current.currentTime;
+          g.gain.cancelScheduledValues(now);
+          g.gain.setValueAtTime(g.gain.value, now);
+          g.gain.linearRampToValueAtTime(target, now + ms/1000);
+        }catch{}
       };
 
       useEffect(()=>{
@@ -447,12 +467,39 @@
       }, []);
 
       // =========================================================================
-      // NATIVE PLAY VỚI RAM-DRIVE: Lấy nhạc từ RAM nếu có, nếu không lấy từ Mạng
+      // NATIVE SYNCHRONOUS PROTOCOL: THE IRON CHAIN
+      // Bỏ toàn bộ Async/Await. Thiết lập Playback trực tiếp.
       // =========================================================================
-      const playIndexSync = useCallback(async (i) => {
-        const a = audioRef.current; 
-        if(!a) return;
-        
+      const triggerPlaySynchronously = (s) => {
+          const a = audioRef.current;
+          if(!a || !s) return;
+
+          a.loop = false;
+          a.src = s.stream_url;
+          
+          // Promise được bắt tại chỗ, không làm nghẽn Event Loop
+          a.play().then(() => {
+              requestWakeLock();
+              if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
+          }).catch(e => {
+              console.warn("Autoplay blocked:", e);
+              if (document.visibilityState === 'visible') {
+                  setPlaying(false);
+                  if (!document.getElementById('autoplay-toast')) {
+                     const tempMsg = document.createElement('div');
+                     tempMsg.id = 'autoplay-toast';
+                     tempMsg.className = 'fixed top-24 left-1/2 -translate-x-1/2 bg-rose-600 text-white font-bold px-5 py-3 rounded-2xl z-[9999] opacity-0 transition-opacity duration-300 shadow-xl text-sm flex items-center gap-2 pointer-events-none';
+                     tempMsg.innerHTML = '<span>HĐH chặn tự phát.</span> <span class="bg-white text-rose-600 px-2 py-0.5 rounded text-xs">Bấm ▶</span>';
+                     document.body.appendChild(tempMsg);
+                     setTimeout(() => { tempMsg.style.opacity = 1; }, 10);
+                     setTimeout(() => { tempMsg.style.opacity = 0; tempMsg.addEventListener('transitionend', () => tempMsg.remove()); }, 4000);
+                  }
+              }
+              if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
+          });
+      };
+
+      const playIndex = useCallback((i) => {
         const pl = playlistRef.current;
         const s = pl[i]; if(!s) return; 
         
@@ -463,47 +510,10 @@
         }
 
         updateMediaSessionMeta(s);
-        if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
-        
-        a.loop = false; 
-        
-        // KIỂM TRA RAM-DRIVE: Có Blob URL không?
-        let targetUrl = s.stream_url;
-        if (preloadedBlobRef.current.id === s.id && preloadedBlobRef.current.objUrl) {
-            targetUrl = preloadedBlobRef.current.objUrl;
-        }
+        ensureAudioContext(); 
+        triggerPlaySynchronously(s);
 
-        if(a.src !== targetUrl) {
-            a.src = targetUrl; 
-            a.load(); // Vẫn gọi load() để trình duyệt phân tích file cục bộ
-        }
-        
-        try {
-            const playPromise = a.play();
-            if (playPromise !== undefined) {
-                await playPromise;
-                // Nhạc kêu thành công -> Nạp luôn bài tiếp theo vào RAM (Chống kẹt mạng lúc màn hình tắt)
-                const nextIdx = getNextIndexLogic(i);
-                executePreload(pl[nextIdx]);
-            }
-        } catch(e) {
-            console.warn("Play failed:", e);
-            if (document.visibilityState === 'visible') {
-                setPlaying(false); 
-                if (!document.getElementById('autoplay-toast')) {
-                   const tempMsg = document.createElement('div');
-                   tempMsg.id = 'autoplay-toast';
-                   tempMsg.className = 'fixed top-24 left-1/2 -translate-x-1/2 bg-rose-600 text-white font-bold px-5 py-3 rounded-2xl z-[9999] opacity-0 transition-opacity duration-300 shadow-xl text-sm flex items-center gap-2 pointer-events-none';
-                   tempMsg.innerHTML = '<span>Lỗi phát nhạc.</span> <span class="bg-white text-rose-600 px-2 py-0.5 rounded text-xs">Bấm ▶</span>';
-                   document.body.appendChild(tempMsg);
-                   setTimeout(() => { tempMsg.style.opacity = 1; }, 10);
-                   setTimeout(() => { tempMsg.style.opacity = 0; tempMsg.addEventListener('transitionend', () => tempMsg.remove()); }, 4000);
-                }
-            }
-            if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
-        }
-
-      }, [updateMediaSessionMeta, getNextIndexLogic]); 
+      }, [updateMediaSessionMeta]); 
 
       const handleNextTrackNative = () => {
           const nextIdx = getNextIndexLogic(currentIndexRef.current);
@@ -511,13 +521,14 @@
               upNextRef.current = upNextRef.current.slice(1);
               if (document.visibilityState === 'visible') setUpNext(upNextRef.current);
           }
-          playIndexSync(nextIdx);
+          playIndex(nextIdx);
       };
 
+      // Tháo chốt an toàn để màn hình khóa nhạy bén nhất
       const nextTrack = useCallback(() => { 
           haptic(); 
           handleNextTrackNative(); 
-      }, [playIndexSync, getNextIndexLogic]);
+      }, [playIndex, getNextIndexLogic]);
 
       const prevTrack = useCallback(()=>{
         haptic();
@@ -526,13 +537,13 @@
         
         const idx = currentIndexRef.current;
         const nextIdx = (idx - 1 + playlistRef.current.length) % playlistRef.current.length;
-        playIndexSync(nextIdx); 
-      },[playIndexSync]);
+        playIndex(nextIdx); 
+      },[playIndex]);
       
       const pickSong = (s) => { 
           haptic(); 
           const i = playlistRef.current.findIndex(x => x.id === s.id); 
-          if(i >= 0) playIndexSync(i); 
+          if(i >= 0) playIndex(i); 
       };
 
       const playPause = () => {
@@ -540,17 +551,21 @@
         const a = audioRef.current; if(!a) return;
         
         a.loop=false;
-        if(!current && playlistRef.current.length){ playIndexSync(0); setNeedsStart(false); return; }
+        if(!current && playlistRef.current.length){ playIndex(0); setNeedsStart(false); return; }
         
+        ensureAudioContext();
+
         if(playing || (!a.paused && a.currentTime > 0)){ 
           if (document.visibilityState === 'visible') setPlaying(false); 
           a.pause(); 
+          releaseWakeLock();
           if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
         }
         else{ 
           if (document.visibilityState === 'visible') setPlaying(true); 
           setNeedsStart(false); 
           a.play().catch(()=>{}); 
+          requestWakeLock();
           if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
         }
       };
@@ -558,7 +573,7 @@
       const lastMediaSessionUpdateRef=useRef(0);
 
       // =========================================================================
-      // GIAO THỨC THE IRON CHAIN: ĐỒNG BỘ TUYỆT ĐỐI KHÔNG DÙNG AWAIT BÊN TRONG EVENT
+      // GIAO THỨC ĐỒNG BỘ NATIVE TỐI THƯỢNG (CHỐNG KẸT XIAOMI 03:27)
       // =========================================================================
       useEffect(()=>{
         const a = audioRef.current; 
@@ -578,6 +593,7 @@
           }
         };
 
+        // KHI BÀI HÁT CHÍNH THỨC KẾT THÚC (SỰ KIỆN CỦA TRÌNH DUYỆT)
         const onEndedNative = () => {
             const pl = playlistRef.current;
             const idx = currentIndexRef.current;
@@ -586,8 +602,7 @@
             const un = upNextRef.current;
 
             if (!pl.length) return;
-            a.loop = false;
-
+            
             if (rep === 'one') {
                 a.currentTime = 0;
                 a.play().catch(()=>{});
@@ -602,12 +617,13 @@
 
             if ((stopE || rep === 'off') && !un.length && nextIdx === 0 && idx === pl.length - 1) {
                 if (document.visibilityState === 'visible') setPlaying(false);
+                releaseWakeLock();
                 if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
                 return;
             }
 
-            // GỌI HÀM CHUYỂN BÀI LẬP TỨC
-            playIndexSync(nextIdx);
+            // GỌI HÀM ĐỒNG BỘ ĐỂ ÉP NỐI LUỒNG STREAM NGAY TRONG EVENT LOOP
+            playIndex(nextIdx);
         };
 
         const onPause = () => { 
@@ -615,7 +631,7 @@
                  save(RESUME_KEY,{index:currentIndexRef.current,id:current.id,currentTime:a.currentTime||0,volume:a.volume,rate:a.playbackRate,muted:a.muted,playing:false});
              }
         };
-
+        
         a.addEventListener('timeupdate',onTime);
         a.addEventListener('ended',onEndedNative);
         a.addEventListener('pause',onPause);
@@ -625,18 +641,19 @@
             a.removeEventListener('ended',onEndedNative);
             a.removeEventListener('pause',onPause);
         };
-      },[getNextIndexLogic, updateMediaSessionMeta, playIndexSync]); 
+      },[getNextIndexLogic, playIndex]); 
 
-      // BỌC THÉP API LOCKSCREEN (NGĂN VĂNG CHƯƠNG TRÌNH KHI MẤT MẠNG)
+      // BỌC THÉP API LOCKSCREEN (NGĂN VĂNG CHƯƠNG TRÌNH KHI BẤM NEXT)
       useEffect(()=>{
         if(!('mediaSession' in navigator)) return;
         try{
-          navigator.mediaSession.setActionHandler('play', () => { try{ playPause() }catch(e){} });
-          navigator.mediaSession.setActionHandler('pause', () => { try{ playPause() }catch(e){} });
-          navigator.mediaSession.setActionHandler('previoustrack', () => { try{ prevTrack() }catch(e){} });
-          navigator.mediaSession.setActionHandler('nexttrack', () => { try{ nextTrack() }catch(e){} });
+          // Dùng Try-Catch bắt gọn mọi lỗi Rejection
+          navigator.mediaSession.setActionHandler('play', () => { try{ playPause(); }catch(e){} });
+          navigator.mediaSession.setActionHandler('pause', () => { try{ playPause(); }catch(e){} });
+          navigator.mediaSession.setActionHandler('previoustrack', () => { try{ prevTrack(); }catch(e){} });
+          navigator.mediaSession.setActionHandler('nexttrack', () => { try{ handleNextTrackNative(); }catch(e){} });
         }catch(e){}
-      },[playPause, prevTrack, nextTrack]);
+      },[playPause, prevTrack, handleNextTrackNative]);
 
       useEffect(()=>{
         const a=audioRef.current; if(!a) return;
@@ -649,9 +666,6 @@
             if(a.src!==s.stream_url){ a.src=s.stream_url; }
             a.currentTime=Number(r.currentTime||0); a.volume=r.volume??volume; a.playbackRate=r.rate??playbackRate; a.muted=false; a.loop=false;
             if(r.playing){ setPlaying(true); }
-            // Tải trước bài tiếp theo luôn lúc khởi động
-            const nextIdx = getNextIndexLogic(idx);
-            executePreload(playlist[nextIdx]);
           },0);
         }
       },[playlist.length]);
@@ -705,11 +719,11 @@
         }
       }
 
-      const handleManualStart = async () => {
+      const handleManualStart = () => {
           haptic();
           setNeedsStart(false); 
           if (playlistRef.current.length > 0) {
-              playIndexSync(currentIndexRef.current);
+              playIndex(currentIndexRef.current);
           }
       };
 
@@ -722,13 +736,13 @@
                   setNeedsStart(false);
                   setTimeout(() => {
                       if (playlistRef.current.length > 0) {
-                          playIndexSync(currentIndexRef.current);
+                          playIndex(currentIndexRef.current);
                       }
                   }, 50);
               }
           }
           return () => clearTimeout(timer);
-      }, [needsStart, loading, startCountdown, playIndexSync]);
+      }, [needsStart, loading, startCountdown, playIndex]);
 
       const HomeTab=()=>{
         const list = filter.trim()
@@ -859,7 +873,7 @@
           e('label', {className: "flex items-center gap-2"},
             e('input', {type:"checkbox", checked:!!compressorOn, onChange:e=>{haptic();setCompressorOn(e.target.checked)}}), " Bật Dynamics Compressor"
           ),
-           e('p', {className: "text-xs text-emerald-500 mt-2 font-semibold"}, "✓ Chế độ Di động: Hệ thống kích hoạt KIẾN TRÚC SOUNDCLOUD (Tải RAM-Drive) chống HĐH cắt mạng ở giây cuối.")
+           e('p', {className: "text-xs text-emerald-500 mt-2 font-semibold"}, "✓ Chế độ Di động: Hệ thống kích hoạt KIẾN TRÚC IRON CHAIN (Đồng bộ tuyệt đối 0ms) và W3C WakeLock API để HĐH không cắt mạng.")
         ),
         e('div', {className: "p-3 rounded-2xl border border-[var(--border)]"},
           e('h3', {className: "font-semibold mb-3"}, "Hẹn giờ tắt nhạc"),
@@ -1022,7 +1036,7 @@
         e('div', {className: "p-5 rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-2xl text-center max-w-sm w-[90%]"},
           e('img', {src: LOGO_FALLBACK_URL, onError: (e) => { e.target.src = LOGO_PLACEHOLDER; e.target.onError = null; }, width: "64", height: "64", className: "mx-auto mb-3 rounded-xl", alt: "MSTQ logo"}),
           e('h2', {className: "font-bold text-lg mb-2"}, "MSTQ Music"),
-          e('p', {className: "text-sm text-[var(--muted)] mb-4"}, loading ? "Đang tải dữ liệu, vui lòng đợi..." : `Hộp thoại tự động đóng sau ${startCountdown} giây.`),
+          e('p', {className: "text-sm text-[var(--muted)] mb-4"}, loading ? "Đang tải dữ liệu, vui lòng đợi..." : `Hộp thoại sẽ tự động đóng và phát nhạc sau ${startCountdown} giây.`),
           e('div', {className: "flex gap-3 justify-center"},
             e('button', {className: "btn flex-1", onClick: askInstall}, "Cài đặt App"),
             e('button', {
@@ -1060,6 +1074,7 @@
     ReactDOM.createRoot(document.getElementById('root')).render(e(App, null));
   </script>
 
+  <!-- BẮT ĐẦU PWA ENGINE V29 -->
   <style>
       .install-fab {
           transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
