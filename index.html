@@ -107,7 +107,7 @@
 <body class="bg-[var(--bg)] text-[var(--text)] font-sans">
   <div id="root"></div>
 
-  <!-- NATIVE AUDIO: Đứng tĩnh tại đây. Không bao giờ bị xóa. -->
+  <!-- NATIVE AUDIO: Đứng tĩnh tại đây. -->
   <audio id="mstq-player" preload="auto" playsinline webkit-playsinline crossOrigin="anonymous"></audio>
 
   <script>
@@ -124,8 +124,8 @@
   <script type="text/javascript">
     const { useState, useEffect, useRef, useCallback, createElement: e } = React;
 
-    const SONGS_CACHE_KEY='mstq_songs_v40';
-    const RESUME_KEY='mstq_resume_v40'; 
+    const SONGS_CACHE_KEY='mstq_songs_v45';
+    const RESUME_KEY='mstq_resume_v45'; 
     const THEME_KEY='music-theme', SPEED_KEY='mstq_speed', MUTED_KEY='mstq_muted';
     const SHUFFLE_KEY='mstq_shuffle', REPEAT_KEY='mstq_repeat';
     const POWER_KEY='mstq_power_save', TIMER_KEY='mstq_sleep_timer', STOP_END_KEY='mstq_stop_at_end';
@@ -135,7 +135,6 @@
 
     const isMobileOS = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     
-    // ZERO CPU: Cấm I/O Disk khi màn hình tắt
     const save=(k,v)=>{
         try{ 
             if (document.visibilityState === 'hidden' && k !== TIMER_KEY) return; 
@@ -324,17 +323,6 @@
         }}catch{} 
       },[compressorOn]);
 
-      const fadeTo=async(target=1,ms=800)=>{
-        try{
-          if(!audioCtxRef.current || !gainRef.current || isMobileOS) return;
-          const g=gainRef.current;
-          const now=audioCtxRef.current.currentTime;
-          g.gain.cancelScheduledValues(now);
-          g.gain.setValueAtTime(g.gain.value, now);
-          g.gain.linearRampToValueAtTime(target, now + ms/1000);
-        }catch{}
-      };
-
       useEffect(()=>{
           if(audioRef.current) { audioRef.current.volume=volume; audioRef.current.playbackRate=playbackRate; audioRef.current.muted=muted; }
           localStorage.setItem(SPEED_KEY,String(playbackRate));
@@ -475,7 +463,38 @@
       const isTransitioningRef = useRef(false);
 
       // =========================================================================
-      // NATIVE PLAY FUNCTION: Tái thiết lập luồng mạng từ đầu
+      // CÔNG NGHỆ LÕI V25: THE RAM-DRIVE (BLOB PRELOADER) CHỐNG MIUI KILL MẠNG
+      // =========================================================================
+      const preloadedBlobRef = useRef({ id: null, url: null });
+
+      const preloadNextTrack = async (nextSong) => {
+          if (!nextSong || !isMobileOS) return; // Chỉ làm trên mobile
+          if (preloadedBlobRef.current.id === nextSong.id) return; // Đã tải rồi
+          
+          try {
+              console.log("[RAM-Drive] Đang kéo bài tiếp theo vào bộ nhớ RAM...");
+              const response = await fetch(nextSong.stream_url); // Dùng CORS chuẩn, không dùng no-cors
+              if (!response.ok) throw new Error("Lỗi tải mạng");
+              
+              const blob = await response.blob();
+              const objectUrl = URL.createObjectURL(blob);
+              
+              // Xóa RAM bài cũ nếu có
+              if (preloadedBlobRef.current.url) {
+                  URL.revokeObjectURL(preloadedBlobRef.current.url);
+              }
+              
+              preloadedBlobRef.current = { id: nextSong.id, url: objectUrl };
+              console.log("[RAM-Drive] Đã nạp đạn xong. Sẵn sàng bắn khi tắt màn hình.");
+          } catch(e) {
+              console.log("[RAM-Drive] Lỗi tải trước:", e);
+              // Lỗi thì thôi, lát nữa playNativeSync sẽ tự fetch link gốc
+              preloadedBlobRef.current = { id: null, url: null };
+          }
+      };
+
+      // =========================================================================
+      // NATIVE PLAY: Ép Rửa Trôi Bằng Súc Rửa Nguồn (Súc ruột phần cứng)
       // =========================================================================
       const playNativeSync = (i) => {
         const a = audioRef.current; 
@@ -494,24 +513,46 @@
 
         updateMediaSessionMeta(s);
         
+        // 1. TẠM DỪNG VÀ SÚC RỬA (FLUSH DECODER)
+        a.pause();
+        a.src = '';
+        a.load(); // Ép phần cứng xả sạch cặn của bài cũ
+        
+        // 2. TÌM NGUỒN PHÁT: Lấy trong RAM (Blob) nếu có, không thì lấy trên mạng
+        let targetUrl = s.stream_url;
+        if (preloadedBlobRef.current.id === s.id && preloadedBlobRef.current.url) {
+            targetUrl = preloadedBlobRef.current.url;
+            console.log("[Trình Phát] Đang phát từ RAM-Drive. Bất tử mạng!");
+        } else {
+            console.log("[Trình Phát] Đang phát từ Internet.");
+        }
+        
+        // 3. NẠP NGUỒN MỚI VÀ ÉP RESET LẦN 2
         a.loop = false; 
-        a.src = s.stream_url; 
+        a.src = targetUrl; 
+        a.load(); // Khởi tạo lại luồng Hardware Decoder chuẩn chỉnh
         
-        // CHỐT CHẶN: ÉP TẢI LẠI TRỰC TIẾP TỪ PHẦN CỨNG
-        a.load(); 
-        
+        // 4. PHÁT VÀ NẠP BÀI TIẾP THEO
         const playPromise = a.play();
         if (playPromise !== undefined) {
             playPromise.then(() => {
                 isTransitioningRef.current = false;
                 requestWakeLock();
                 if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
+                
+                // Ngay khi bài này hát thành công, tranh thủ CPU đang thức, tải luôn bài kế tiếp!
+                const nextIdx = getNextIndexLogic(i);
+                const nextSong = pl[nextIdx];
+                if (nextSong) preloadNextTrack(nextSong);
+
             }).catch(e => {
                 console.warn("Autoplay blocked/Network Stalled:", e);
                 isTransitioningRef.current = false;
-                // Nếu bị kẹt mạng lần đầu, thử kéo lại lần nữa
+                
+                // Nếu bị kẹt mạng, thử súc rửa kéo lại lần nữa
                 setTimeout(() => {
-                    a.load();
+                    a.src = ''; a.load();
+                    a.src = s.stream_url; a.load();
                     a.play().catch(()=>{});
                 }, 1000);
                 
@@ -523,10 +564,34 @@
         if (!isMobileOS) ensureAudioContext();
       }; 
 
+      // =========================================================================
+      // KHẮC PHỤC LIỆT NÚT PLAY/PAUSE (THE DE-GHOSTING PROTOCOL)
+      // =========================================================================
+      const handlePlayForcefully = () => {
+          const a = document.getElementById('mstq-player');
+          if (a) {
+              // Nếu đang bị Bóng ma (thanh chạy nhưng không tiếng, readyState thấp)
+              if (a.readyState < 3 && a.currentTime > 0) {
+                  console.log("🛠️ Phát hiện Bóng Ma (Ghost Audio). Đang ép súc rửa trình phát...");
+                  const currentUrl = a.src;
+                  a.src = ''; a.load(); // Súc rửa
+                  a.src = currentUrl; a.load(); // Nạp lại
+              }
+              
+              a.play().catch(() => { 
+                  // Cứu vãn cuối cùng nếu vẫn lỗi
+                  a.load(); a.play().catch(()=>{}); 
+              });
+              
+              if (document.visibilityState === 'visible') setPlaying(true);
+              if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
+              requestWakeLock();
+          }
+      };
+
       const playPauseUI = useCallback(() => {
           haptic();
           const a = audioRef.current; if(!a) return;
-          
           if(!playlistRef.current.length) return;
           if(!current && playlistRef.current.length){ playNativeSync(0); setNeedsStart(false); return; }
 
@@ -537,16 +602,8 @@
             if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
           }
           else{ 
-            if (document.visibilityState === 'visible') setPlaying(true); 
             setNeedsStart(false); 
-            
-            // Nếu bị "Bóng ma" (currentTime nhảy mà ko có tiếng), ép load lại khi user bấm Play
-            a.play().catch(()=>{ 
-                a.load(); 
-                a.play().catch(()=>{}); 
-            }); 
-            requestWakeLock();
-            if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
+            handlePlayForcefully(); // Gọi giao thức ép chạy
           }
       }, [current, playing]);
 
@@ -557,8 +614,7 @@
       };
 
       // =========================================================================
-      // GIAO THỨC CHUYỂN BÀI NGẦM CHỐNG MIUI (THE EARLY SWAP HACK)
-      // Không bao giờ để bài hát tự kết thúc, chuyển bài trước 0.4s
+      // GIAO THỨC CHUYỂN BÀI SỚM (EARLY SWAP) - Đánh lừa MIUI
       // =========================================================================
       useEffect(()=>{
         const a = audioRef.current; 
@@ -568,7 +624,6 @@
           const target = e.target;
           if(isNaN(target.duration) || target.duration <= 0) return;
           
-          // Vẽ UI tiết kiệm CPU
           if (document.visibilityState === 'visible') {
               const now = Date.now();
               if (now - lastUiUpdateRef.current > 500) {
@@ -577,15 +632,14 @@
               }
           }
           
-          // Cập nhật Lockscreen an toàn
           const currentSec = Math.floor(target.currentTime);
           if (currentSec !== lastMediaSessionUpdateRef.current) {
               updatePositionState(target); 
               lastMediaSessionUpdateRef.current = currentSec;
           }
 
-          // EARLY SWAP: Chuyển bài trước khi HĐH kịp bắt sự kiện kết thúc
-          if (target.duration > 2 && target.currentTime >= target.duration - 0.4) {
+          // EARLY SWAP: Chuyển bài trước khi HĐH kịp thấy 00:00
+          if (target.duration > 2 && target.currentTime >= target.duration - 0.5) {
               if (!isTransitioningRef.current) {
                   isTransitioningRef.current = true;
                   
@@ -597,13 +651,11 @@
                   const stopE = stopAtEndRef.current;
                   const un = upNextRef.current;
                   
-                  // Xóa hàng đợi
                   if (un.length > 0) {
                       upNextRef.current = un.slice(1);
                       if (document.visibilityState === 'visible') setUpNext(upNextRef.current); 
                   }
 
-                  // Kiểm tra dừng nhạc
                   if (stopE || (rep === 'off' && !un.length && nextIdx === 0 && idx === pl.length - 1)) {
                       target.pause();
                       isTransitioningRef.current = false;
@@ -613,13 +665,11 @@
                       return;
                   }
 
-                  // Chuyển bài 
                   playNativeSync(nextIdx);
               }
           }
         };
 
-        // Dự phòng: Nếu Early Swap bị trượt do lag
         const onEndedNative = () => {
             if (repeatRef.current === 'one') {
                 a.currentTime = 0;
@@ -661,23 +711,10 @@
       },[]); 
 
       // =========================================================================
-      // BỌC THÉP API LOCKSCREEN (NGĂN VĂNG CHƯƠNG TRÌNH)
-      // Loại bỏ hoàn toàn sự phụ thuộc vào React State (playing) để tránh Stale Closure
+      // BỌC THÉP API MÀN HÌNH KHÓA (CHỐNG VĂNG APP)
       // =========================================================================
       useEffect(()=>{
         if(!('mediaSession' in navigator)) return;
-
-        // Các hàm này được định nghĩa trực tiếp, không dựa vào State của React
-        const handlePlay = () => {
-            const a = document.getElementById('mstq-player');
-            if (a) {
-                // Ép load lại nếu bị kẹt bóng ma
-                a.play().catch(() => { a.load(); a.play().catch(()=>{}); });
-                if (document.visibilityState === 'visible') setPlaying(true);
-                navigator.mediaSession.playbackState = 'playing';
-                requestWakeLock();
-            }
-        };
 
         const handlePause = () => {
             const a = document.getElementById('mstq-player');
@@ -699,7 +736,8 @@
         const handlePrev = () => {
             if (!isTransitioningRef.current) {
                 const a = document.getElementById('mstq-player');
-                if (a && a.currentTime > 3) {
+                // Nếu thẻ bị lỗi (readyState 0), cấm tua, chuyển thẳng về bài trước
+                if (a && a.readyState >= 2 && a.currentTime > 3) {
                     a.currentTime = 0;
                 } else {
                     const prevIdx = getPrevIndexLogic(currentIndexRef.current);
@@ -709,7 +747,7 @@
         };
 
         try{
-          navigator.mediaSession.setActionHandler('play', handlePlay);
+          navigator.mediaSession.setActionHandler('play', handlePlayForcefully);
           navigator.mediaSession.setActionHandler('pause', handlePause);
           navigator.mediaSession.setActionHandler('nexttrack', handleNext);
           navigator.mediaSession.setActionHandler('previoustrack', handlePrev);
@@ -739,6 +777,11 @@
                   a.play().catch(()=>{}); 
                   requestWakeLock(); 
               }
+              
+              // Khởi động preloader cho bài đầu tiên luôn
+              const nextIdx = getNextIndexLogic(idx);
+              preloadNextTrack(playlist[nextIdx]);
+              
           },0);
         }
       },[playlist.length]); 
@@ -942,8 +985,11 @@
                  e('li', null, "Tắt mục 'Tạm dừng HĐ nếu không sử dụng'.")
              )
           ),
-          e('h3', {className: "font-semibold mb-2 mt-4"}, "Chống cắt mạng (Network Doze)"),
-          e('p', {className: "text-xs text-emerald-500 mt-2 font-semibold leading-relaxed"}, "✓ Đã kích hoạt Giao thức TITANIUM V24. MediaSession tách ly hoàn toàn khỏi React State. Tự động sửa lỗi Ghost Audio bằng Load() khi mất Decoder.")
+          e('h3', {className: "font-semibold mb-2 mt-4"}, "Kiến trúc Âm thanh"),
+          e('label', {className: "flex items-center gap-2"},
+            e('input', {type:"checkbox", checked:!!compressorOn, onChange:e=>{haptic();setCompressorOn(e.target.checked)}}), " Bật Dynamics Compressor"
+          ),
+           e('p', {className: "text-xs text-emerald-500 mt-2 font-semibold leading-relaxed"}, "✓ Chế độ Di động: Hệ thống kích hoạt GIAO THỨC RAM-DRIVE HOT-SWAP. Bài hát được nạp trước vào RAM. Nút Play/Pause tự động súc rửa phần cứng bị kẹt nếu HĐH Xiaomi gây lỗi câm loa.")
         ),
         e('div', {className: "p-3 rounded-2xl border border-[var(--border)]"},
           e('h3', {className: "font-semibold mb-3"}, "Hẹn giờ tắt nhạc"),
@@ -1004,12 +1050,14 @@
         const a=audioRef.current;
         const onSeek=(e)=>{ 
           if(!a||!isFinite(a.duration)) return; 
+          // Nếu thẻ đang bị kẹt (readyState < 2), cấm tua để tránh treo máy
+          if (a.readyState < 2) return;
           const newVal = parseFloat(e.target.value);
           a.currentTime=clamp(newVal,0,a.duration); 
           updatePositionState(a); 
         };
-        const dblLeft=()=>{ haptic(5); if(a) a.currentTime=Math.max(0,(a.currentTime||0)-10); updatePositionState(a);};
-        const dblRight=()=>{ haptic(5); if(a) a.currentTime=Math.min(a.duration||0,(a.currentTime||0)+10); updatePositionState(a);};
+        const dblLeft=()=>{ haptic(5); if(a && a.readyState >= 2) a.currentTime=Math.max(0,(a.currentTime||0)-10); updatePositionState(a);};
+        const dblRight=()=>{ haptic(5); if(a && a.readyState >= 2) a.currentTime=Math.min(a.duration||0,(a.currentTime||0)+10); updatePositionState(a);};
         
         const RepeatButton = () => {
           let label = 'Lặp: Tắt'; let className = 'btn';
