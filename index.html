@@ -9,8 +9,13 @@
   <meta name="application-name" content="MSTQ Music" />
   <title>MSTQ Music – Nghe nhạc liên tục</title>
 
+  <!-- PWA Link -->
   <link id="manifest-link" rel="manifest" href="/PlayMusic/manifest.webmanifest">
+
+  <!-- Tailwind CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- React 18 UMD -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
 
@@ -52,6 +57,7 @@
     .dropdown-item{display:flex;align-items:center;gap:.6rem;padding:.75rem .8rem;border-radius:10px;transition:background-color .1s; font-weight: 500; font-size: 0.95rem; color: var(--text); text-decoration: none;}
     .dropdown-item:active{background-color:var(--primary); color: var(--primary-fg);}
     
+    @keyframes slideUp { from {transform: translateY(100%);} to {transform: translateY(0);} }
     @keyframes fadeIn { from {opacity: 0; transform: scale(0.95);} to {opacity: 1; transform: scale(1);} }
     @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
 
@@ -101,7 +107,7 @@
 <body class="bg-[var(--bg)] text-[var(--text)] font-sans">
   <div id="root"></div>
 
-  <!-- NATIVE AUDIO V21: Cấm dùng preload="metadata", ép dùng "auto" để trình duyệt tự do kéo đệm mạng -->
+  <!-- NATIVE AUDIO: Trái tim vĩnh cửu của ứng dụng. Tuyệt đối trong sạch, không thẻ rác. -->
   <audio id="mstq-player" preload="auto" playsinline webkit-playsinline crossOrigin="anonymous"></audio>
 
   <script>
@@ -109,7 +115,6 @@
       const show=(m)=>{
         const str = String(m||'');
         if(str.includes('AbortError') || str.includes('NotAllowedError') || str.includes('Interrupted')) return;
-        // console.error('[GLOBAL ERROR]', m);
       };
       window.addEventListener('error',e=>show(e.error||e.message||e));
       window.addEventListener('unhandledrejection',e=>show(e.reason||e));
@@ -119,8 +124,8 @@
   <script type="text/javascript">
     const { useState, useEffect, useRef, useCallback, createElement: e } = React;
 
-    const SONGS_CACHE_KEY='mstq_songs_v32';
-    const RESUME_KEY='mstq_resume_v32'; 
+    const SONGS_CACHE_KEY='mstq_songs_final';
+    const RESUME_KEY='mstq_resume_final'; 
     const THEME_KEY='music-theme', SPEED_KEY='mstq_speed', MUTED_KEY='mstq_muted';
     const SHUFFLE_KEY='mstq_shuffle', REPEAT_KEY='mstq_repeat';
     const POWER_KEY='mstq_power_save', TIMER_KEY='mstq_sleep_timer', STOP_END_KEY='mstq_stop_at_end';
@@ -130,7 +135,7 @@
 
     const isMobileOS = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     
-    // TỐI ƯU CPU: Chặn IO khi màn hình tắt
+    // TỐI ƯU CPU NỀN: Ngăn chặn thao tác lưu đĩa vô ích khi tắt màn hình
     const save=(k,v)=>{
         try{ 
             if (document.visibilityState === 'hidden' && k !== TIMER_KEY) return; 
@@ -143,10 +148,7 @@
     const sanitizeRepeat=(r)=> (r==='off'||r==='all'||r==='one')?r:'all';
     const haptic=(ms=14)=>{ try{ navigator.vibrate?.(ms); }catch{} };
 
-    // V22: XÓA BỎ HOÀN TOÀN HÀM PREFETCH VÌ NÓ LÀM TRÀN RAM GÂY CÂM LOA Ở BÀI THỨ 3
-    // GIỮ LẠI WAKELOCK VÀ KHÔNG NHẢ RA GIỮA CHỪNG KHI CHUYỂN BÀI
-
-    // W3C WakeLock API chuẩn (Giữ CPU luôn thức khi nghe nhạc)
+    // WAKELOCK API: Duy trì sinh khí hệ thống
     let wakeLock = null;
     const requestWakeLock = async () => {
         if ('wakeLock' in navigator) {
@@ -291,10 +293,10 @@
       const [muted,setMuted]=useState(localStorage.getItem(MUTED_KEY)==='1');
       const [compressorOn,setCompressorOn]=useState(load(COMPRESSOR_KEY,true));
 
-      // V21: CẤM TUYỆT ĐỐI WEBAUDIO TRÊN MOBILE ĐỂ KHÔNG BỊ DETACH HARDWARE DECODER
       const audioCtxRef=useRef(null), gainRef=useRef(null), compNodeRef=useRef(null);
+      
       const ensureAudioContext = () => {
-        if (isMobileOS) return; 
+        if (isMobileOS) return; // CHỐT AN TOÀN SỐ 1: Tránh chết lặng AudioContext trên mobile
         try{
           if(!audioCtxRef.current){
             const ctx=new (window.AudioContext||window.webkitAudioContext)({latencyHint:'playback'});
@@ -322,7 +324,7 @@
         }}catch{} 
       },[compressorOn]);
 
-      const fadeTo=async(target=1,ms=800)=>{
+      const fadeTo = (target=1, ms=800) => {
         try{
           if(!audioCtxRef.current || !gainRef.current || isMobileOS) return;
           const g=gainRef.current;
@@ -429,7 +431,6 @@
       const updatePositionState = useCallback(() => {
           if ('mediaSession' in navigator && 'setPositionState' in navigator.mediaSession) {
               const a = audioRef.current;
-              // Phải check isFinite để tránh lỗi API khi audio chưa load xong length
               if (a && !isNaN(a.duration) && !isNaN(a.currentTime) && isFinite(a.duration) && a.duration > 0) {
                   try {
                       navigator.mediaSession.setPositionState({
@@ -465,7 +466,8 @@
       }, []);
 
       // =========================================================================
-      // NATIVE PLAY FUNCTION V22: KHÔI PHỤC AUDIO.LOAD() VÀ BỎ PREFETCH
+      // CỐT LÕI VĨNH CỬU: CHUYỂN BÀI NATIVE ĐỒNG BỘ 100%
+      // Không Timeout, Không Fetch Opaque, Không Async Await Delay.
       // =========================================================================
       const playIndexSync = useCallback((i) => {
         const a = audioRef.current; 
@@ -486,39 +488,25 @@
         a.loop = false; 
         if(a.src !== s.stream_url) {
             a.src = s.stream_url; 
-            // V22 FIX: BẮT BUỘC PHẢI CÓ LOAD() ĐỂ RESET BỘ GIẢI MÃ PHẦN CỨNG ANDROID
-            // Nếu không có dòng này, đến bài thứ 3 Decoder sẽ bị tràn và câm loa
-            a.load(); 
+            a.load(); // Khởi tạo luồng mạng MỚI, xóa rác luồng mạng CŨ.
         }
         
-        // Phát đồng bộ và bắt lỗi Promise gọn gàng
         const playPromise = a.play();
         if (playPromise !== undefined) {
             playPromise.then(() => {
                 requestWakeLock();
-                // V22: KHÔNG GỌI PREFETCH NỮA ĐỂ BẢO VỆ RAM CHỐNG CÂM LOA
             }).catch(e => {
                 console.warn("Autoplay blocked by OS:", e);
                 if (document.visibilityState === 'visible') {
                     setPlaying(false); 
-                    if (!document.getElementById('autoplay-toast')) {
-                       const tempMsg = document.createElement('div');
-                       tempMsg.id = 'autoplay-toast';
-                       tempMsg.className = 'fixed top-24 left-1/2 -translate-x-1/2 bg-rose-600 text-white font-bold px-5 py-3 rounded-2xl z-[9999] opacity-0 transition-opacity duration-300 shadow-xl text-sm flex items-center gap-2 pointer-events-none';
-                       tempMsg.innerHTML = '<span>Lỗi phát nhạc. Bấm Play lại.</span>';
-                       document.body.appendChild(tempMsg);
-                       setTimeout(() => { tempMsg.style.opacity = 1; }, 10);
-                       setTimeout(() => { tempMsg.style.opacity = 0; tempMsg.addEventListener('transitionend', () => tempMsg.remove()); }, 4000);
-                    }
                 }
                 if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
             });
         }
         
         if (!isMobileOS) ensureAudioContext();
-      }, [updateMediaSessionMeta, getNextIndexLogic]); 
+      }, [updateMediaSessionMeta]); 
 
-      // Hàm xử lý Màn hình khóa bọc giáp Try-Catch
       const handleNextTrackNative = () => {
           try {
               const nextIdx = getNextIndexLogic(currentIndexRef.current);
@@ -527,14 +515,11 @@
                   if (document.visibilityState === 'visible') setUpNext(upNextRef.current);
               }
               playIndexSync(nextIdx);
-          } catch(e) { console.error("Next Track Logic Error", e); }
+          } catch (e) {}
       };
 
       const nextTrack = useCallback(() => { 
-          try {
-              haptic(); 
-              handleNextTrackNative(); 
-          } catch(e) {}
+          try { haptic(); handleNextTrackNative(); } catch(e){} 
       }, [playIndexSync, getNextIndexLogic]);
 
       const prevTrack = useCallback(()=>{
@@ -546,7 +531,7 @@
             const idx = currentIndexRef.current;
             const nextIdx = (idx - 1 + playlistRef.current.length) % playlistRef.current.length;
             playIndexSync(nextIdx); 
-        } catch(e) {}
+        } catch(e){}
       },[playIndexSync]);
       
       const pickSong = (s) => { 
@@ -568,8 +553,7 @@
             if(playing || (!a.paused && a.currentTime > 0)){ 
               if (document.visibilityState === 'visible') setPlaying(false); 
               a.pause(); 
-              // V22: Chỉ nhả Wakelock khi người dùng chủ động BẤM PAUSE
-              releaseWakeLock(); 
+              releaseWakeLock();
               if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
             }
             else{ 
@@ -579,16 +563,12 @@
               requestWakeLock();
               if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
             }
-        } catch(e) {}
+        } catch(e){}
       };
       
       const lastMediaSessionUpdateRef=useRef(0);
-      const isTransitioningRef=useRef(false); // V22: Chốt chặn bảo vệ Early Swap
 
-      // =========================================================================
-      // GIAO THỨC EARLY SWAP V22: CHUYỂN BÀI TRƯỚC KHI MẤT AUDIO FOCUS
-      // Đánh lừa Xiaomi rằng bài hát chưa bao giờ kết thúc
-      // =========================================================================
+      // LẮNG NGHE SỰ KIỆN TRÌNH DUYỆT (TỰ ĐỘNG CHUYỂN BÀI MƯỢT MÀ)
       useEffect(()=>{
         const a = audioRef.current; 
         if(!a) return;
@@ -604,16 +584,6 @@
           if (currentSec !== lastMediaSessionUpdateRef.current) {
               updatePositionState(); 
               lastMediaSessionUpdateRef.current = currentSec;
-          }
-
-          // V22 EARLY SWAP: Chuyển bài khi còn 0.5s cuối cùng
-          // Lúc này âm thanh đang phát, HĐH Android sẽ không dám cắt mạng
-          if (a.duration > 3 && a.currentTime >= a.duration - 0.5) {
-              if (!isTransitioningRef.current) {
-                  isTransitioningRef.current = true;
-                  handleNextTrackNative();
-                  setTimeout(() => { isTransitioningRef.current = false; }, 2000); // Mở khóa sau 2s
-              }
           }
         };
 
@@ -633,12 +603,21 @@
                 return;
             }
 
-            // V22: onEnded chỉ hoạt động như một phương án dự phòng nếu Early Swap bị trượt
-            if (!isTransitioningRef.current) {
-                isTransitioningRef.current = true;
-                handleNextTrackNative();
-                setTimeout(() => { isTransitioningRef.current = false; }, 2000);
+            const nextIdx = getNextIndexLogic(idx);
+            if (un.length > 0) {
+                upNextRef.current = un.slice(1);
+                if (document.visibilityState === 'visible') setUpNext(upNextRef.current); 
             }
+
+            if ((stopE || rep === 'off') && !un.length && nextIdx === 0 && idx === pl.length - 1) {
+                if (document.visibilityState === 'visible') setPlaying(false);
+                releaseWakeLock();
+                if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
+                return;
+            }
+
+            // GỌI NỐI TIẾP TRONG CÙNG EVENT LOOP ĐỂ HỆ ĐIỀU HÀNH KHÔNG THẤY KHOẢNG HỞ
+            playIndexSync(nextIdx);
         };
 
         const onPause = () => { 
@@ -646,31 +625,19 @@
                  save(RESUME_KEY,{index:currentIndexRef.current,id:current.id,currentTime:a.currentTime||0,volume:a.volume,rate:a.playbackRate,muted:a.muted,playing:false});
              }
         };
-
-        // V22: BẮT LỖI ĐỂ TRÁNH KẸT VĨNH VIỄN
-        const onError = (e) => {
-            console.error("Audio Pipeline Error:", e);
-            if (!isTransitioningRef.current) {
-                isTransitioningRef.current = true;
-                handleNextTrackNative(); // Tự động nhảy bài nếu lỗi mạng
-                setTimeout(() => { isTransitioningRef.current = false; }, 2000);
-            }
-        };
         
         a.addEventListener('timeupdate',onTime);
         a.addEventListener('ended',onEndedNative);
         a.addEventListener('pause',onPause);
-        a.addEventListener('error',onError);
         
         return()=>{
             a.removeEventListener('timeupdate',onTime);
             a.removeEventListener('ended',onEndedNative);
             a.removeEventListener('pause',onPause);
-            a.removeEventListener('error',onError);
         };
       },[getNextIndexLogic, playIndexSync]); 
 
-      // API MEDIA SESSION TỐI THƯỢNG: BỌC TRY-CATCH CHO MỌI ACTION CHỐNG CRASH HĐH
+      // BỌC THÉP GIAO TIẾP VỚI MÀN HÌNH KHÓA (CHỐNG VĂNG APP DO TRY/CATCH)
       useEffect(()=>{
         if(!('mediaSession' in navigator)) return;
         try{
@@ -692,60 +659,9 @@
             if(a.src!==s.stream_url){ a.src=s.stream_url; }
             a.currentTime=Number(r.currentTime||0); a.volume=r.volume??volume; a.playbackRate=r.rate??playbackRate; a.muted=false; a.loop=false;
             if(r.playing){ setPlaying(true); requestWakeLock(); }
-            
-            // V22: BỎ PREFETCH TẠI ĐÂY LUÔN
           },0);
         }
-      },[playlist.length, getNextIndexLogic]);
-
-      async function shareTrack(s){
-        haptic();
-        try{
-          if(navigator.share){
-            await navigator.share({title:s.title, text:`Nghe: ${s.title} – ${s.artist||''}`, url:s.stream_url});
-          }else{
-            await navigator.clipboard.writeText(s.stream_url);
-            const tempMsg = document.createElement('div');
-            tempMsg.className = 'fixed bottom-[110px] left-1/2 -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg z-[1000] opacity-0 transition-opacity duration-300';
-            tempMsg.textContent = 'Đã sao chép link phát vào bộ nhớ tạm.';
-            document.body.appendChild(tempMsg);
-            setTimeout(() => { tempMsg.style.opacity = 1; }, 10);
-            setTimeout(() => { tempMsg.style.opacity = 0; tempMsg.addEventListener('transitionend', () => tempMsg.remove()); }, 2000);
-          }
-        }catch{}
-      }
-
-      async function downloadTrack(s) {
-        haptic();
-        setToast(`🧧 Đang chuẩn bị tải: "${s.title}"...`);
-        try {
-            if(!s.stream_url) throw new Error("No URL");
-            const response = await fetch(s.stream_url);
-            if (!response.ok) throw new Error('Network error');
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.style.display = 'none';
-            a.href = url;
-            a.download = `${s.title.replace(/[\/\\:*?"<>|]/g, '')}.mp3`;
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
-            setToast('✅ Đã tải xong! Chúc bạn nghe nhạc vui vẻ.');
-        } catch (e) {
-            setToast('⚠️ Đang chuyển hướng để tải...');
-            setTimeout(() => {
-                const a = document.createElement('a');
-                a.href = s.stream_url;
-                a.download = '';
-                a.target = '_blank';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-            }, 800);
-        }
-      }
+      },[playlist.length]);
 
       const handleManualStart = () => {
           haptic();
@@ -901,7 +817,7 @@
           e('label', {className: "flex items-center gap-2"},
             e('input', {type:"checkbox", checked:!!compressorOn, onChange:e=>{haptic();setCompressorOn(e.target.checked)}}), " Bật Dynamics Compressor"
           ),
-           e('p', {className: "text-xs text-emerald-500 mt-2 font-semibold"}, "✓ Chế độ Di động: Tự động vô hiệu hóa WebAudio và kích hoạt C++ Prefetching để bảo vệ Audio Focus.")
+           e('p', {className: "text-xs text-emerald-500 mt-2 font-semibold"}, "✓ Chế độ Di động: Hệ thống kích hoạt KIẾN TRÚC ĐỒNG BỘ W3C (Native Sync) và W3C WakeLock API để bảo vệ Audio Focus.")
         ),
         e('div', {className: "p-3 rounded-2xl border border-[var(--border)]"},
           e('h3', {className: "font-semibold mb-3"}, "Hẹn giờ tắt nhạc"),
@@ -1060,12 +976,14 @@
         );
       }
 
+      // THIẾT KẾ LẠI GIAO DIỆN POPUP CHÀO MỪNG (THE CELEBRATION GATE)
       const StartGate = () => needsStart && e('div', {className: "fixed inset-0 z-[99999] flex items-center justify-center bg-[var(--bg)]/95 backdrop-blur overflow-y-auto px-4 py-8"},
         e('div', {className: "p-6 rounded-3xl border border-[var(--border)] bg-[var(--card)] shadow-2xl text-center max-w-sm w-full m-auto"},
           e('img', {src: LOGO_FALLBACK_URL, onError: (e) => { e.target.src = LOGO_PLACEHOLDER; e.target.onError = null; }, width: "72", height: "72", className: "mx-auto mb-4 rounded-2xl shadow-lg border border-[var(--border)]", alt: "MSTQ logo"}),
           
           e('h2', {className: "font-black text-2xl mb-1 text-[var(--text)]"}, "MSTQ Music"),
           
+          // Khối text tôn vinh tác giả và công nghệ
           e('div', {className: "my-5 flex flex-col gap-3"},
             e('p', {className: "text-[0.9rem] text-[var(--text)] font-semibold leading-snug"}, 
                 "Bạn hãy chọn Cài đặt App để luôn có được ứng dụng trên máy của bạn."
