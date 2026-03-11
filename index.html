@@ -1032,15 +1032,38 @@
         );
       }
 
-      const StartGate = () => needsStart && e('div', {className: "fixed inset-0 z-[99999] flex items-center justify-center bg-[var(--bg)]/95 backdrop-blur"},
-        e('div', {className: "p-5 rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-2xl text-center max-w-sm w-[90%]"},
-          e('img', {src: LOGO_FALLBACK_URL, onError: (e) => { e.target.src = LOGO_PLACEHOLDER; e.target.onError = null; }, width: "64", height: "64", className: "mx-auto mb-3 rounded-xl", alt: "MSTQ logo"}),
-          e('h2', {className: "font-bold text-lg mb-2"}, "MSTQ Music"),
-          e('p', {className: "text-sm text-[var(--muted)] mb-4"}, loading ? "Đang tải dữ liệu, vui lòng đợi..." : `Hộp thoại sẽ tự động đóng và phát nhạc sau ${startCountdown} giây.`),
-          e('div', {className: "flex gap-3 justify-center"},
-            e('button', {className: "btn flex-1", onClick: askInstall}, "Cài đặt App"),
+      // THIẾT KẾ LẠI GIAO DIỆN POPUP CHÀO MỪNG (THE CELEBRATION GATE)
+      const StartGate = () => needsStart && e('div', {className: "fixed inset-0 z-[99999] flex items-center justify-center bg-[var(--bg)]/95 backdrop-blur overflow-y-auto px-4 py-8"},
+        e('div', {className: "p-6 rounded-3xl border border-[var(--border)] bg-[var(--card)] shadow-2xl text-center max-w-sm w-full m-auto"},
+          e('img', {src: LOGO_FALLBACK_URL, onError: (e) => { e.target.src = LOGO_PLACEHOLDER; e.target.onError = null; }, width: "72", height: "72", className: "mx-auto mb-4 rounded-2xl shadow-lg border border-[var(--border)]", alt: "MSTQ logo"}),
+          
+          e('h2', {className: "font-black text-2xl mb-1 text-[var(--text)]"}, "MSTQ Music"),
+          
+          // Khối text tôn vinh tác giả và công nghệ
+          e('div', {className: "my-5 flex flex-col gap-3"},
+            e('p', {className: "text-[0.9rem] text-[var(--text)] font-semibold leading-snug"}, 
+                "Bạn hãy chọn Cài đặt App để luôn có được ứng dụng trên máy của bạn."
+            ),
+            e('div', {className: "bg-[var(--border)]/30 p-4 rounded-2xl border border-[var(--border)]"},
+                e('p', {className: "text-[0.8rem] text-[var(--muted)] italic leading-relaxed text-justify"}, 
+                    "Sau nhiều năm nghiên cứu phát triển, chúng tôi đã sử dụng kỹ thuật công nghệ cập nhật mới nhất để bạn được nghe nhạc chạy nền liên tục, không bao giờ ngắt quãng."
+                ),
+                e('p', {className: "text-[0.75rem] font-bold mt-3 text-emerald-500 uppercase tracking-wide"}, 
+                    "Từ ngày 11 Tháng 3 Năm 2026"
+                ),
+                e('p', {className: "text-[0.85rem] font-bold text-[var(--primary)] mt-1"}, 
+                    "Bởi Tịnh Hải"
+                )
+            ),
+            e('p', {className: "text-xs font-medium text-rose-500 animate-pulse mt-1"}, 
+                loading ? "Đang tải dữ liệu, vui lòng đợi..." : `Hộp thoại sẽ tự động đóng sau ${startCountdown} giây...`
+            )
+          ),
+          
+          e('div', {className: "flex gap-3 justify-center mt-2"},
+            e('button', {className: "btn flex-1 bg-slate-800 text-white border-slate-700 hover:bg-slate-700 font-semibold", onClick: askInstall}, "Cài đặt App"),
             e('button', {
-                className: "btn btn-primary flex-1", 
+                className: "btn btn-primary flex-1 font-bold shadow-lg shadow-[var(--primary)]/20", 
                 disabled: loading,
                 onClick: handleManualStart
             }, loading ? "Đang tải..." : `Bắt đầu (${startCountdown}s)`)
