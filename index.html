@@ -9,13 +9,8 @@
   <meta name="application-name" content="MSTQ Music" />
   <title>MSTQ Music – Nghe nhạc liên tục</title>
 
-  <!-- PWA Link -->
   <link id="manifest-link" rel="manifest" href="/PlayMusic/manifest.webmanifest">
-
-  <!-- Tailwind CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- React 18 UMD -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
 
@@ -107,7 +102,7 @@
 <body class="bg-[var(--bg)] text-[var(--text)] font-sans">
   <div id="root"></div>
 
-  <!-- THE PHOENIX HUB: Nơi chứa thẻ Audio. Sẽ bị đập đi xây lại mỗi lần đổi bài -->
+  <!-- THE PHOENIX HUB: Lò ấp trứng. Sẽ sinh ra và tiêu diệt thẻ Audio ở đây -->
   <div id="audio-hub"></div>
 
   <script>
@@ -124,8 +119,8 @@
   <script type="text/javascript">
     const { useState, useEffect, useRef, useCallback, createElement: e } = React;
 
-    const SONGS_CACHE_KEY='mstq_songs_v33';
-    const RESUME_KEY='mstq_resume_v33'; 
+    const SONGS_CACHE_KEY='mstq_songs_v35';
+    const RESUME_KEY='mstq_resume_v35'; 
     const THEME_KEY='music-theme', SPEED_KEY='mstq_speed', MUTED_KEY='mstq_muted';
     const SHUFFLE_KEY='mstq_shuffle', REPEAT_KEY='mstq_repeat';
     const POWER_KEY='mstq_power_save', TIMER_KEY='mstq_sleep_timer', STOP_END_KEY='mstq_stop_at_end';
@@ -135,7 +130,7 @@
 
     const isMobileOS = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     
-    // TỐI ƯU CPU: Chặn mọi hành động ghi LocalStorage khi tắt màn hình
+    // ZERO CPU: Cấm I/O Disk khi màn hình tắt
     const save=(k,v)=>{
         try{ 
             if (document.visibilityState === 'hidden' && k !== TIMER_KEY) return; 
@@ -148,7 +143,7 @@
     const sanitizeRepeat=(r)=> (r==='off'||r==='all'||r==='one')?r:'all';
     const haptic=(ms=14)=>{ try{ navigator.vibrate?.(ms); }catch{} };
 
-    // W3C WakeLock API chuẩn (Giữ CPU luôn thức khi nghe nhạc)
+    // WAKELOCK: Chống HĐH ngủ
     let wakeLock = null;
     const requestWakeLock = async () => {
         if ('wakeLock' in navigator) {
@@ -423,7 +418,7 @@
 
       const lastMediaSessionUpdateRef = useRef(0);
 
-      // CÁC SỰ KIỆN DÀNH CHO THẺ AUDIO MỚI TẠO
+      // CÁC SỰ KIỆN GẮN CHO THẺ AUDIO (ĐƯỢC GỌI LẠI SAU MỖI LẦN TÁI SINH)
       const onTime = useCallback((e) => { 
           const a = e.target;
           if(!isFinite(a.duration) || a.duration <= 0) return;
@@ -447,13 +442,13 @@
       }, []);
 
       const onError = useCallback((e) => {
-          console.error("Audio Hardware Error:", e);
+          console.error("Audio Hardware Error (Bị HĐH cắt mạng):", e);
+          // Nếu lỗi mạng, tự động kích hoạt tiến trình nhảy bài để cứu vãn
           handleNextTrackNative();
       }, []);
 
       // =========================================================================
-      // GIAO THỨC TÁI SINH TRÌNH PHÁT (THE PHOENIX PROTOCOL)
-      // Hủy diệt thẻ cũ, sinh ra thẻ mới để ép Android cấp Hardware Decoder MỚI
+      // V23: THE PHOENIX BUSTER - TÁI SINH & PHÁ BĂNG MẠNG MIUI
       // =========================================================================
       const playIndexSync = useCallback((i) => {
         const pl = playlistRef.current;
@@ -468,34 +463,41 @@
         updateMediaSessionMeta(s);
         if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
         
-        // 1. TÌM VÀ HỦY DIỆT TẬN GỐC THẺ AUDIO CŨ (Giải phóng bộ giải mã kẹt của MIUI)
+        // 1. TÌM VÀ HỦY DIỆT TẬN GỐC THẺ AUDIO CŨ VÀ BỘ GIẢI MÃ BỊ KẸT CỦA XIAOMI
         const hub = document.getElementById('audio-hub');
         if (hub) {
             if (audioRef.current) {
                 audioRef.current.pause();
                 audioRef.current.removeAttribute('src');
-                audioRef.current.load(); // Flush buffer cũ
+                audioRef.current.load(); // Bơm luồng rỗng để cắt đứt cache
                 
-                // Gỡ bỏ sự kiện để chống rò rỉ RAM
                 audioRef.current.removeEventListener('timeupdate', onTime);
                 audioRef.current.removeEventListener('pause', onPause);
                 audioRef.current.removeEventListener('error', onError);
-                // Xóa cứng khỏi DOM
+                
+                // Xóa cứng khỏi giao diện
                 hub.innerHTML = '';
             }
 
-            // 2. SINH RA THẺ AUDIO MỚI TINH (Trinh nguyên 100%)
+            // 2. SINH RA THẺ AUDIO MỚI TINH (Phượng Hoàng Tái Sinh)
             const newAudio = document.createElement('audio');
             newAudio.id = 'mstq-player';
             newAudio.crossOrigin = 'anonymous';
             newAudio.playsInline = true;
-            newAudio.preload = 'auto';
+            newAudio.preload = 'auto'; // Ép tải data ngay lập tức
             newAudio.volume = volume;
             newAudio.playbackRate = playbackRate;
             newAudio.muted = muted;
-            newAudio.src = s.stream_url;
+            
+            // =====================================================
+            // VŨ KHÍ BUSTER: GẮN TIMESTAMP VÀO LINK ĐỂ PHÁ BĂNG CACHE
+            // =====================================================
+            // Bọn Xiaomi thường đóng băng HTTP Request khi chạy ngầm quá 10 phút (Bài thứ 3)
+            // Gắn ?v=thoi_gian sẽ khiến HĐH tưởng đây là request hoàn toàn mới và mở lại mạng!
+            const antiCacheUrl = s.stream_url + (s.stream_url.includes('?') ? '&' : '?') + 'buster=' + Date.now();
+            newAudio.src = antiCacheUrl;
 
-            // Gắn sự kiện kết thúc riêng biệt để nó gọi nextTrack chuẩn
+            // Gắn sự kiện kết thúc riêng biệt
             newAudio.addEventListener('ended', () => {
                 const currentIdx = currentIndexRef.current;
                 const rep = repeatRef.current;
@@ -521,7 +523,7 @@
                     return;
                 }
 
-                // GỌI CHUYỂN BÀI ĐỒNG BỘ
+                // Chuyển bài (Bắt đầu vòng đời Phượng Hoàng mới)
                 playIndexSync(nextIdx);
             });
 
@@ -539,7 +541,7 @@
                 playPromise.then(() => {
                     requestWakeLock();
                 }).catch(e => {
-                    console.warn("Autoplay blocked by OS:", e);
+                    console.warn("Autoplay blocked/Network Stalled:", e);
                     if (document.visibilityState === 'visible') {
                         setPlaying(false); 
                     }
@@ -617,14 +619,14 @@
         }catch(e){}
       },[playPause, prevTrack, handleNextTrackNative]);
 
-      // Khôi phục bài cũ
+      // Khôi phục bài cũ lúc mới vào web
       useEffect(()=>{
         const r=load(RESUME_KEY,null);
         if(r&&playlist.length){
           const idx=Math.min(Math.max(0,r.index||0),playlist.length-1);
           setCurrentIndex(idx);
           currentIndexRef.current = idx;
-          // Load bài đầu tiên vào HUB
+          
           setTimeout(()=>{ 
               const s=playlist[idx]; if(!s) return;
               
@@ -638,11 +640,14 @@
                   a.preload = 'auto';
                   a.src = s.stream_url;
                   
-                  // Chỉ cần gán các event cơ bản lúc khởi động, nếu bấm Next nó sẽ đập đi xây lại bằng hàm playIndexSync
                   a.addEventListener('timeupdate', onTime);
                   a.addEventListener('pause', onPause);
                   a.addEventListener('error', onError);
-                  a.addEventListener('ended', handleNextTrackNative);
+                  
+                  a.addEventListener('ended', () => {
+                       const nextIdx = getNextIndexLogic(currentIndexRef.current);
+                       playIndexSync(nextIdx);
+                  });
 
                   hub.appendChild(a);
                   audioRef.current = a;
@@ -660,7 +665,7 @@
               }
           },0);
         }
-      },[playlist.length]); // Chỉ chạy 1 lần khi load xong playlist
+      },[playlist.length]); 
 
       async function shareTrack(s){
         haptic();
@@ -861,11 +866,8 @@
                  e('li', null, "Tắt mục 'Tạm dừng HĐ nếu không sử dụng'.")
              )
           ),
-          e('h3', {className: "font-semibold mb-2 mt-4"}, "Kiến trúc Âm thanh"),
-          e('label', {className: "flex items-center gap-2"},
-            e('input', {type:"checkbox", checked:!!compressorOn, onChange:e=>{haptic();setCompressorOn(e.target.checked)}}), " Bật Dynamics Compressor"
-          ),
-           e('p', {className: "text-xs text-emerald-500 mt-2 font-semibold"}, "✓ Chế độ Di động: Hệ thống kích hoạt GIAO THỨC TÁI SINH TRÌNH PHÁT. Mỗi khi đổi bài, thẻ Audio được đập đi xây lại 100% để ép Xiaomi cấp phần cứng mới, chống kẹt mạng vĩnh viễn.")
+          e('h3', {className: "font-semibold mb-2 mt-4"}, "Chống cắt mạng (Network Doze)"),
+          e('p', {className: "text-xs text-emerald-500 mt-2 font-semibold leading-relaxed"}, "✓ Đã kích hoạt Giao thức PHOENIX BUSTER. Trình phát được tái sinh bằng DOM Injection kết hợp với Network Timestamp để phá vỡ giới hạn đóng băng mạng của Xiaomi MIUI/HyperOS.")
         ),
         e('div', {className: "p-3 rounded-2xl border border-[var(--border)]"},
           e('h3', {className: "font-semibold mb-3"}, "Hẹn giờ tắt nhạc"),
@@ -1024,14 +1026,12 @@
         );
       }
 
-      // THIẾT KẾ LẠI GIAO DIỆN POPUP CHÀO MỪNG (THE CELEBRATION GATE)
       const StartGate = () => needsStart && e('div', {className: "fixed inset-0 z-[99999] flex items-center justify-center bg-[var(--bg)]/95 backdrop-blur overflow-y-auto px-4 py-8"},
         e('div', {className: "p-6 rounded-3xl border border-[var(--border)] bg-[var(--card)] shadow-2xl text-center max-w-sm w-full m-auto"},
           e('img', {src: LOGO_FALLBACK_URL, onError: (e) => { e.target.src = LOGO_PLACEHOLDER; e.target.onError = null; }, width: "72", height: "72", className: "mx-auto mb-4 rounded-2xl shadow-lg border border-[var(--border)]", alt: "MSTQ logo"}),
           
           e('h2', {className: "font-black text-2xl mb-1 text-[var(--text)]"}, "MSTQ Music"),
           
-          // Khối text tôn vinh tác giả và công nghệ
           e('div', {className: "my-5 flex flex-col gap-3"},
             e('p', {className: "text-[0.9rem] text-[var(--text)] font-semibold leading-snug"}, 
                 "Bạn hãy chọn Cài đặt App để luôn có được ứng dụng trên máy của bạn."
@@ -1089,6 +1089,7 @@
     ReactDOM.createRoot(document.getElementById('root')).render(e(App, null));
   </script>
 
+  <!-- BẮT ĐẦU PWA ENGINE V29 -->
   <style>
       .install-fab {
           transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
