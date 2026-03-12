@@ -107,9 +107,12 @@
 <body class="bg-[var(--bg)] text-[var(--text)] font-sans">
   <div id="root"></div>
 
-  <!-- NATIVE AUDIO LÕI TĨNH: Gắn cố định ở ngoài React, tuân thủ Trụ 3 (Single Audio) -->
-  <!-- Cung cấp preload="auto" để trình duyệt tự do tối ưu mạng -->
+  <!-- NATIVE AUDIO: Trình phát nhạc chính -->
   <audio id="mstq-player" preload="auto" playsinline webkit-playsinline crossOrigin="anonymous"></audio>
+
+  <!-- MỎ NEO TĨNH LẶNG (SILENCE ANCHOR): Giữ Audio Focus bất tử khi tắt màn hình -->
+  <!-- Phát 1 đoạn âm thanh rỗng chuẩn WAV, lặp lại vô tận -->
+  <audio id="mstq-silence" loop playsinline webkit-playsinline src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA"></audio>
 
   <script>
     (function(){
@@ -125,8 +128,8 @@
   <script type="text/javascript">
     const { useState, useEffect, useRef, useCallback, createElement: e } = React;
 
-    const SONGS_CACHE_KEY='mstq_songs_v85';
-    const RESUME_KEY='mstq_resume_v85'; 
+    const SONGS_CACHE_KEY='mstq_songs_v90';
+    const RESUME_KEY='mstq_resume_v90'; 
     const THEME_KEY='music-theme', SPEED_KEY='mstq_speed', MUTED_KEY='mstq_muted';
     const SHUFFLE_KEY='mstq_shuffle', REPEAT_KEY='mstq_repeat';
     const POWER_KEY='mstq_power_save', TIMER_KEY='mstq_sleep_timer', STOP_END_KEY='mstq_stop_at_end';
@@ -136,7 +139,7 @@
 
     const isMobileOS = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     
-    // KIẾN TRÚC THIỀN ĐỊNH: Chặn ghi ổ cứng khi tắt màn hình
+    // ZERO CPU: Cấm ghi ổ cứng khi màn hình tắt
     const save=(k,v)=>{
         try{ 
             if (document.visibilityState === 'hidden' && k !== TIMER_KEY) return; 
@@ -271,9 +274,6 @@
       const [stopAtEnd,setStopAtEnd]=useState(load(STOP_END_KEY,false));
       const [upNext,setUpNext]=useState([]);
       
-      const current = playlist[currentIndex] || null;
-      
-      // Đồng bộ State ra Refs 
       const playlistRef = useRef(playlist); useEffect(()=>{playlistRef.current=playlist},[playlist]);
       const currentIndexRef = useRef(currentIndex); 
       const shuffleRef = useRef(shuffle); useEffect(()=>{shuffleRef.current=shuffle; save(SHUFFLE_KEY,shuffle);},[shuffle]);
@@ -297,10 +297,10 @@
       const [muted,setMuted]=useState(localStorage.getItem(MUTED_KEY)==='1');
       const [compressorOn,setCompressorOn]=useState(load(COMPRESSOR_KEY,true));
 
-      // QUY TẮC CẤM KỴ SỐ 2: WebAudio Bypass trên Mobile (CHỐNG OS SUSPEND)
+      // BỎ QUA WEBAUDIO TRÊN MOBILE ĐỂ KHÔNG BỊ MIUI SUSPEND LOA
       const audioCtxRef=useRef(null), gainRef=useRef(null), compNodeRef=useRef(null);
       const ensureAudioContext = () => {
-        if (isMobileOS) return; // CHỐT CHẶN BẢO VỆ OS SUSPEND
+        if (isMobileOS) return; 
         try{
           if(!audioCtxRef.current){
             const ctx=new (window.AudioContext||window.webkitAudioContext)({latencyHint:'playback'});
@@ -408,6 +408,8 @@
       
       useEffect(()=>{refetch()},[refetch]);
 
+      const currentSong = playlist[currentIndex] || null;
+
       const updateMediaSessionMeta = useCallback((song) => {
           if (!song || !('mediaSession' in navigator)) return;
           try {
@@ -464,9 +466,23 @@
       const lastMediaSessionUpdateRef = useRef(0);
       const lastUiUpdateRef = useRef(0);
       const isTransitioningRef = useRef(false);
+      
+      // =========================================================================
+      // VŨ KHÍ 2: KÉO MẠNG TÀNG HÌNH (PREFETCH VÀO CACHE TRÌNH DUYỆT)
+      // =========================================================================
+      const prefetchDoneRef = useRef(false);
+
+      const triggerNetworkPrefetch = (idx) => {
+          const nextSong = playlistRef.current[idx];
+          if (nextSong && nextSong.stream_url) {
+              console.log("📥 Đang kéo mồi bài tiếp theo vào Cache RAM:", nextSong.title);
+              // Kéo ẩn không cần CORS, nhét thẳng vào force-cache để dùng sau
+              fetch(nextSong.stream_url, { mode: 'no-cors', cache: 'force-cache' }).catch(()=>{});
+          }
+      };
 
       // =========================================================================
-      // TRỤ 1: NATIVE PLAY (THUẬN THEO TỰ NHIÊN) - CHỐNG CÂM LOA XIAOMI
+      // NATIVE PLAY: XUYÊN PHÁ ĐÓNG BĂNG HỆ ĐIỀU HÀNH
       // =========================================================================
       const playNativeSync = (i) => {
         const a = audioRef.current; 
@@ -476,6 +492,7 @@
         const s = pl[i]; if(!s) return; 
         
         isTransitioningRef.current = true;
+        prefetchDoneRef.current = false; // Reset cờ prefetch cho bài mới
         
         // Cập nhật State cho UI
         setCurrentIndex(i); 
@@ -484,17 +501,16 @@
             setPlaying(true); 
         }
 
-        // Bắt buộc cập nhật thẻ tên trước khi hát để Android không hiểu lầm
         updateMediaSessionMeta(s);
         
         a.loop = false; 
         
-        // Gán link thẳng, KHÔNG GỌI a.load() VÀ KHÔNG GỌI a.pause()
+        // Gán link. Do đã prefetch từ trước, file này có sẵn trong Cache
         if (a.src !== s.stream_url) {
             a.src = s.stream_url;
+            a.load(); // Gọi Load để OS chốt luồng từ Cache
         }
 
-        // Play đồng bộ lập tức (Sẽ hợp lệ nếu được gọi từ sự kiện 'ended')
         const playPromise = a.play();
         if (playPromise !== undefined) {
             playPromise.then(() => {
@@ -504,6 +520,13 @@
             }).catch(e => {
                 console.warn("Autoplay blocked by OS:", e);
                 isTransitioningRef.current = false;
+                
+                // Thuốc trợ tim nếu bị kẹt
+                setTimeout(() => {
+                    a.load();
+                    a.play().catch(()=>{});
+                }, 800);
+                
                 if (document.visibilityState === 'visible') setPlaying(false); 
                 if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
             });
@@ -516,10 +539,17 @@
           haptic();
           const a = audioRef.current; if(!a) return;
           
-          if(!playlistRef.current.length) return;
-          const currentSong = playlistRef.current[currentIndexRef.current];
+          // KÍCH HOẠT MỎ NEO TĨNH LẶNG (SILENCE ANCHOR) KHI NGƯỜI DÙNG BẤM PLAY LẦN ĐẦU
+          const anchor = document.getElementById('mstq-silence');
+          if (anchor && anchor.paused) {
+              anchor.play().catch(()=>{});
+              console.log("⚓ Mỏ neo tĩnh lặng đã cắm sâu. Audio Focus bất tử.");
+          }
 
-          if(!currentSong){ playNativeSync(0); setNeedsStart(false); return; }
+          if(!playlistRef.current.length) return;
+          const currentTrack = playlistRef.current[currentIndexRef.current];
+
+          if(!currentTrack){ playNativeSync(0); setNeedsStart(false); return; }
 
           if(playing || (!a.paused && a.currentTime > 0)){ 
             if (document.visibilityState === 'visible') setPlaying(false); 
@@ -529,7 +559,6 @@
           }
           else{ 
             setNeedsStart(false); 
-            // Nếu bị kẹt UI, ở đây ta mới dùng load() để cứu thương (Sốc điện)
             a.play().catch(()=>{
                 a.load();
                 a.play().catch(()=>{});
@@ -543,12 +572,14 @@
 
       const pickSong = (s) => { 
           haptic(); 
+          const anchor = document.getElementById('mstq-silence');
+          if (anchor && anchor.paused) anchor.play().catch(()=>{});
           const i = playlistRef.current.findIndex(x => x.id === s.id); 
           if(i >= 0) playNativeSync(i); 
       };
 
       // =========================================================================
-      // ĐẠO LUẬT CHROMIUM: CHỈ CHUYỂN BÀI QUA SỰ KIỆN `ENDED` (BỎ EARLY SWAP)
+      // LẮNG NGHE SỰ KIỆN: KHÔNG DÙNG EARLY SWAP, THUẬN THEO TỰ NHIÊN
       // =========================================================================
       useEffect(()=>{
         const a = audioRef.current; 
@@ -558,7 +589,7 @@
           const target = e.target;
           if(isNaN(target.duration) || target.duration <= 0) return;
           
-          // KIẾN TRÚC THIỀN ĐỊNH: Chỉ render UI khi màn hình SÁNG
+          // Render UI tiết kiệm CPU
           if (document.visibilityState === 'visible') {
               const now = Date.now();
               if (now - lastUiUpdateRef.current > 500) {
@@ -573,12 +604,17 @@
               lastMediaSessionUpdateRef.current = currentSec;
           }
           
-          // ĐÃ XÓA TÍNH NĂNG EARLY SWAP Ở ĐÂY. 
-          // TUYỆT ĐỐI KHÔNG CAN THIỆP TRƯỚC KHI BÀI HÁT KẾT THÚC.
+          // VŨ KHÍ 2: KHI BÀI HÁT CÒN 20 GIÂY, GỌI MẠNG TRƯỚC (PREFETCH)
+          if (target.duration > 30 && target.currentTime >= target.duration - 20) {
+              if (!prefetchDoneRef.current) {
+                  prefetchDoneRef.current = true;
+                  const nextIdx = getNextIndexLogic(currentIndexRef.current);
+                  triggerNetworkPrefetch(nextIdx);
+              }
+          }
         };
 
-        // ĐÂY LÀ CHÌA KHÓA: Hàm này được gọi tự nhiên khi hết bài.
-        // Trình duyệt đưa hàm này vào danh sách Trắng (Whitelist) cho phép Autoplay ngầm.
+        // KHI BÀI HÁT KẾT THÚC TỰ NHIÊN -> OS CHO PHÉP PLAY BÀI MỚI MÀ KHÔNG KHÓA
         const onEndedNative = () => {
             const rep = repeatRef.current;
             const stopE = stopAtEndRef.current;
@@ -600,7 +636,6 @@
                       if (document.visibilityState === 'visible') setUpNext(upNextRef.current); 
                  }
 
-                 // Kiểm tra Dừng khi hết bài
                  if (stopE || (rep === 'off' && !un.length && nextIdx === 0 && idx === pl.length - 1)) {
                       a.pause();
                       if (document.visibilityState === 'visible') setPlaying(false);
@@ -609,13 +644,11 @@
                       return;
                  }
                  
-                 // GỌI CHUYỂN BÀI ĐỒNG BỘ!
                  playNativeSync(nextIdx);
             }
         };
 
         const onPause = (e) => { 
-             // Zero CPU save
              if(playlistRef.current[currentIndexRef.current] && document.visibilityState === 'visible') {
                  const s = playlistRef.current[currentIndexRef.current];
                  save(RESUME_KEY,{index:currentIndexRef.current,id:s.id,currentTime:e.target.currentTime||0,volume:e.target.volume,rate:e.target.playbackRate,muted:e.target.muted,playing:false});
@@ -641,6 +674,9 @@
 
         const handlePlay = () => {
             const a = document.getElementById('mstq-player');
+            const anchor = document.getElementById('mstq-silence');
+            if (anchor && anchor.paused) anchor.play().catch(()=>{});
+            
             if (a) {
                 a.play().catch(()=>{
                     a.load();
@@ -785,6 +821,10 @@
       const handleManualStart = () => {
           haptic();
           setNeedsStart(false); 
+          
+          // BẬT MỎ NEO NGAY KHI NGƯỜI DÙNG BẤM NÚT START ĐỂ LẤY QUYỀN
+          const anchor = document.getElementById('mstq-silence');
+          if (anchor) anchor.play().catch(()=>{});
 
           if (playlistRef.current.length > 0) {
               const a = audioRef.current;
@@ -809,6 +849,8 @@
                   setTimeout(() => {
                       if (playlistRef.current.length > 0) {
                           playNativeSync(currentIndexRef.current);
+                          const anchor = document.getElementById('mstq-silence');
+                          if (anchor) anchor.play().catch(()=>{});
                       }
                   }, 50);
               }
@@ -820,9 +862,6 @@
         const list = filter.trim()
           ? playlist.filter(s => (s.title||'').toLowerCase().includes(filter.toLowerCase()) || (s.artist||'').toLowerCase().includes(filter.toLowerCase()))
           : playlist;
-
-        // ĐÃ XÓA KHỐI LỆNH TỰ ĐỘNG SCROLL VỀ BÀI ĐANG HÁT
-        // NGƯỜI DÙNG ĐƯỢC QUYỀN TỰ DO CUỘN DANH SÁCH MÀ KHÔNG BỊ GIẬT MÀN HÌNH NỮA
 
         const SongItem = (s, index) => {
             const isCurrent = currentIndexRef.current === playlist.findIndex(x => x.id === s.id);
@@ -931,7 +970,7 @@
              )
           ),
           e('h3', {className: "font-semibold mb-2 mt-4"}, "Kiến trúc Âm thanh"),
-          e('p', {className: "text-xs text-emerald-500 mt-2 font-semibold leading-relaxed"}, "✓ V33 ZEN PROTOCOL: Ứng dụng đạo luật Chromium Background Autoplay. Loại bỏ Early Swap. Tuân thủ tuyệt đối quy trình chuyển bài tự nhiên để hệ điều hành không nhận diện là hành vi chạy ngầm bất hợp pháp.")
+          e('p', {className: "text-xs text-emerald-500 mt-2 font-semibold leading-relaxed"}, "✓ V34 PREFETCH ANCHOR: Kích hoạt thành công Mỏ Neo Tĩnh Lặng duy trì phần cứng kết hợp bộ kéo đệm RAM (Network Prefetch) trước 20 giây. Xóa bỏ hoàn toàn khoảng gián đoạn gây câm loa của MIUI.")
         ),
         e('div', {className: "p-3 rounded-2xl border border-[var(--border)]"},
           e('h3', {className: "font-semibold mb-3"}, "Hẹn giờ tắt nhạc"),
@@ -1104,11 +1143,9 @@
                 e('p', {className: "text-[0.8rem] text-[var(--muted)] italic leading-relaxed text-justify"}, 
                     "Sau nhiều năm nghiên cứu phát triển, chúng tôi đã sử dụng kỹ thuật công nghệ cập nhật mới nhất để bạn được nghe nhạc chạy nền liên tục, không bao giờ ngắt quãng."
                 ),
-                e('p', {className: "text-[0.75rem] font-bold mt-3 text-emerald-500 uppercase tracking-wide"}, 
-                    "Từ ngày 11 Tháng 3 Năm 2026"
-                ),
-                e('p', {className: "text-[0.85rem] font-bold text-[var(--primary)] mt-1"}, 
-                    "Bởi Tịnh Hải"
+                // Lời chúc mới theo yêu cầu của Giám đốc
+                e('p', {className: "text-[0.85rem] font-bold text-emerald-500 mt-3 tracking-wide"}, 
+                    "Chúc bạn an lạc vui vẻ giải thoát phát triển mọi mặt."
                 )
             ),
             e('p', {className: "text-xs font-medium text-rose-500 animate-pulse mt-1"}, 
@@ -1129,7 +1166,7 @@
 
       const title = tab==='home'?'Trang chủ':tab==='search'?'Tìm kiếm':tab==='settings'?'Cài đặt':tab==='queue'?'Hàng đợi':'';
 
-      return e('div', {className: "min-h-screen", onClick: ()=>setLinksOpen(false), style:{paddingTop:64, paddingBottom:(current?188:104)}},
+      return e('div', {className: "min-h-screen", onClick: ()=>setLinksOpen(false), style:{paddingTop:64, paddingBottom:(currentSong?188:104)}},
         e(TopBar, {title, askInstall, linksOpen, setLinksOpen, setTheme}),
         e(StartGate, null),
         toast && e('div', {className: "toast-container"}, e('div', {className: "toast-tet"}, toast)),
