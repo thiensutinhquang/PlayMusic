@@ -107,8 +107,12 @@
 <body class="bg-[var(--bg)] text-[var(--text)] font-sans">
   <div id="root"></div>
 
-  <!-- NATIVE AUDIO LÕI TĨNH: Gắn cố định ở đây, chuẩn bị đón Blob MSE -->
-  <audio id="mstq-player" playsinline webkit-playsinline crossOrigin="anonymous"></audio>
+  <!-- NATIVE AUDIO: Trình phát chính -->
+  <audio id="mstq-player" preload="auto" playsinline webkit-playsinline crossOrigin="anonymous"></audio>
+
+  <!-- THE SILENCE ANCHOR (MỎ NEO TĨNH LẶNG V31) -->
+  <!-- File âm thanh rỗng 0.1s Base64. Lặp vô tận để giữ Audio Hardware luôn mở -->
+  <audio id="silence-anchor" loop playsinline webkit-playsinline src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA"></audio>
 
   <script>
     (function(){
@@ -124,8 +128,8 @@
   <script type="text/javascript">
     const { useState, useEffect, useRef, useCallback, createElement: e } = React;
 
-    const SONGS_CACHE_KEY='mstq_songs_v70';
-    const RESUME_KEY='mstq_resume_v70'; 
+    const SONGS_CACHE_KEY='mstq_songs_v80';
+    const RESUME_KEY='mstq_resume_v80'; 
     const THEME_KEY='music-theme', SPEED_KEY='mstq_speed', MUTED_KEY='mstq_muted';
     const SHUFFLE_KEY='mstq_shuffle', REPEAT_KEY='mstq_repeat';
     const POWER_KEY='mstq_power_save', TIMER_KEY='mstq_sleep_timer', STOP_END_KEY='mstq_stop_at_end';
@@ -135,7 +139,7 @@
 
     const isMobileOS = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     
-    // ZERO CPU: Cấm I/O Disk khi màn hình tắt
+    // ZERO CPU
     const save=(k,v)=>{
         try{ 
             if (document.visibilityState === 'hidden' && k !== TIMER_KEY) return; 
@@ -148,7 +152,7 @@
     const sanitizeRepeat=(r)=> (r==='off'||r==='all'||r==='one')?r:'all';
     const haptic=(ms=14)=>{ try{ navigator.vibrate?.(ms); }catch{} };
 
-    // WAKELOCK: Chống HĐH ngủ
+    // WAKELOCK
     let wakeLock = null;
     const requestWakeLock = async () => {
         if ('wakeLock' in navigator) {
@@ -291,9 +295,37 @@
       const [volume,setVolume]=useState(load(RESUME_KEY,{volume:.9}).volume??.9);
       const [playbackRate,setPlaybackRate]=useState(parseFloat(localStorage.getItem(SPEED_KEY)||'1')||1);
       const [muted,setMuted]=useState(localStorage.getItem(MUTED_KEY)==='1');
+      const [compressorOn,setCompressorOn]=useState(load(COMPRESSOR_KEY,true));
+
+      const audioCtxRef=useRef(null), gainRef=useRef(null), compNodeRef=useRef(null);
+      const ensureAudioContext = () => {
+        if (isMobileOS) return; 
+        try{
+          if(!audioCtxRef.current){
+            const ctx=new (window.AudioContext||window.webkitAudioContext)({latencyHint:'playback'});
+            const gain=ctx.createGain(); gain.gain.value=1;
+            const comp=ctx.createDynamicsCompressor();
+            comp.threshold.value=-18; comp.knee.value=24; comp.ratio.value=6; comp.attack.value=0.008; comp.release.value=0.25;
+            const src=ctx.createMediaElementSource(audioRef.current);
+            src.connect(gain);
+            if(compressorOn){ gain.connect(comp).connect(ctx.destination); } 
+            else { gain.connect(ctx.destination); }
+            audioCtxRef.current=ctx; gainRef.current=gain; compNodeRef.current=comp;
+          }
+          if (audioCtxRef.current.state === 'suspended') {
+             audioCtxRef.current.resume();
+          }
+        }catch(e){}
+      };
       
-      // TẮT WEBAUDIO (Vì chúng ta dùng MSE, WebAudio sẽ gây xung đột)
-      const ensureAudioContext = () => {};
+      useEffect(()=>{ try{
+        if(audioCtxRef.current && gainRef.current){
+          gainRef.current.disconnect();
+          const dst=audioCtxRef.current.destination;
+          if(compressorOn && !isMobileOS){ gainRef.current.connect(compNodeRef.current).connect(dst); }
+          else { gainRef.current.connect(dst); }
+        }}catch{} 
+      },[compressorOn]);
 
       useEffect(()=>{
           if(audioRef.current) { audioRef.current.volume=volume; audioRef.current.playbackRate=playbackRate; audioRef.current.muted=muted; }
@@ -435,48 +467,9 @@
       const isTransitioningRef = useRef(false);
 
       // =========================================================================
-      // V30: THE SUNO ENGINE - MEDIA SOURCE EXTENSIONS (MSE)
-      // Tạo 1 ống tủy duy nhất, nhồi data vào để Xiaomi tưởng chỉ đang hát 1 bài
+      // V31: NATIVE PLAY VỚI SỰ TRỢ GIÚP CỦA SILENCE ANCHOR
       // =========================================================================
-      const mseEngineRef = useRef({
-          mediaSource: null,
-          sourceBuffer: null,
-          isInitialized: false,
-          currentObjectId: null
-      });
-
-      const initMSEEngine = useCallback(async (audioEl) => {
-          if (!window.MediaSource || !isMobileOS) return false; // Chỉ dùng MSE trên mobile để chống Doze Mode
-          
-          return new Promise((resolve) => {
-              if (mseEngineRef.current.isInitialized && mseEngineRef.current.mediaSource.readyState === 'open') {
-                  resolve(true); return;
-              }
-              
-              const ms = new MediaSource();
-              mseEngineRef.current.mediaSource = ms;
-              
-              const url = URL.createObjectURL(ms);
-              audioEl.src = url; // Gán SRC 1 LẦN DUY NHẤT LÀ BLOB URL NÀY
-              mseEngineRef.current.currentObjectId = url;
-              
-              ms.addEventListener('sourceopen', () => {
-                  try {
-                      // Đa số nhạc MP3 Archive là mpeg, nếu m4a thì đổi thành audio/mp4
-                      const sb = ms.addSourceBuffer('audio/mpeg'); 
-                      mseEngineRef.current.sourceBuffer = sb;
-                      mseEngineRef.current.isInitialized = true;
-                      console.log("🔥 [MSE Engine] Đã tạo Ống tủy thành công! URL:", url);
-                      resolve(true);
-                  } catch (e) {
-                      console.error("MSE Init Error:", e);
-                      resolve(false);
-                  }
-              }, { once: true });
-          });
-      }, []);
-
-      const playNativeSync = async (i) => {
+      const playNativeSync = (i) => {
         const a = audioRef.current; 
         if(!a) return;
         
@@ -492,81 +485,40 @@
         }
 
         updateMediaSessionMeta(s);
-        if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
-
-        // --- CƠ CHẾ SUNO: DÙNG MSE (MediaSource Extensions) ---
-        if (isMobileOS && window.MediaSource) {
-            try {
-                // 1. Khởi tạo ống tủy nếu chưa có
-                const isReady = await initMSEEngine(a);
-                if (isReady) {
-                    const sb = mseEngineRef.current.sourceBuffer;
-                    
-                    // 2. Tải bài hát bằng Fetch (Cuốn chiếu vào RAM)
-                    console.log("📡 [Suno Hack] Đang kéo data mp3:", s.stream_url.substring(s.stream_url.lastIndexOf('/')+1));
-                    const response = await fetch(s.stream_url);
-                    if (!response.ok) throw new Error("Fetch failed");
-                    const arrayBuffer = await response.arrayBuffer();
-
-                    // 3. Nhồi data vào ống. Nếu ống đang kẹt thì đợi.
-                    if (sb && !sb.updating) {
-                        try {
-                            // Cắt bớt phần nhạc cũ nếu ống quá đầy (tránh tràn RAM gây văng app)
-                            if (a.buffered.length > 0 && a.currentTime > 10) {
-                                sb.remove(0, a.currentTime - 2); 
-                            }
-                            sb.appendBuffer(arrayBuffer);
-                        } catch (appendErr) {
-                            console.error("Lỗi nhồi ống (Quota Exceeded):", appendErr);
-                            // Nếu tràn RAM, đập ống làm lại từ đầu
-                            mseEngineRef.current.isInitialized = false;
-                            a.src = s.stream_url; 
-                            a.load();
-                        }
-                    }
-                } else {
-                    // Fallback nếu máy không hỗ trợ
-                    a.src = s.stream_url;
-                    a.load();
-                }
-            } catch (e) {
-                console.error("Lỗi MSE Engine, Fallback về mp3 thuần:", e);
-                a.src = s.stream_url;
-                a.load();
-            }
-        } else {
-            // Trên PC cứ hát bình thường, đổi SRC
-            if (a.src !== s.stream_url) {
-                a.src = s.stream_url;
-                a.load();
-            }
-        }
-
+        
         a.loop = false; 
+        
+        if (a.src !== s.stream_url) {
+            a.src = s.stream_url;
+            a.load();
+        }
 
         const playPromise = a.play();
         if (playPromise !== undefined) {
             playPromise.then(() => {
                 isTransitioningRef.current = false;
                 requestWakeLock();
+                if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
             }).catch(e => {
-                console.warn("Autoplay blocked/Network Stalled:", e);
+                console.warn("Autoplay blocked by OS:", e);
                 isTransitioningRef.current = false;
-                
-                // Mồi lại nếu bị chặn
-                setTimeout(() => {
-                    a.play().catch(()=>{});
-                }, 800);
                 
                 if (document.visibilityState === 'visible') setPlaying(false); 
                 if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
             });
         }
+        
+        if (!isMobileOS) ensureAudioContext();
       }; 
 
       const playPauseUI = useCallback(() => {
           haptic();
           const a = audioRef.current; if(!a) return;
+          
+          // KÍCH HOẠT MỎ NEO KHI NGƯỜI DÙNG BẤM PLAY
+          const anchor = document.getElementById('silence-anchor');
+          if (anchor) anchor.play().catch(()=>{});
+
           if(!playlistRef.current.length) return;
           if(!current && playlistRef.current.length){ playNativeSync(0); setNeedsStart(false); return; }
 
@@ -578,13 +530,8 @@
           }
           else{ 
             setNeedsStart(false); 
-            
-            // Ép họng súng nổ
             a.play().catch(()=>{
-                // Nếu đang dùng MSE mà bị kẹt, ép Play lại. Không gọi load() vì sẽ làm đứt kết nối Blob
-                if (!a.src.startsWith('blob:')) {
-                    a.load();
-                }
+                a.load();
                 a.play().catch(()=>{});
             });
             
@@ -596,15 +543,14 @@
 
       const pickSong = (s) => { 
           haptic(); 
+          const anchor = document.getElementById('silence-anchor');
+          if (anchor) anchor.play().catch(()=>{});
           const i = playlistRef.current.findIndex(x => x.id === s.id); 
           if(i >= 0) playNativeSync(i); 
       };
 
-      // Biến phục vụ Thuật toán Cứu thương
-      const stallDetectRef = useRef({ lastTime: -1, stallCount: 0 });
-
       // =========================================================================
-      // V30 GIAO THỨC CỨU THƯƠNG KẾT HỢP MSE (THE IMMORTAL GUARDIAN)
+      // GIAO THỨC CHUYỂN BÀI NGẦM
       // =========================================================================
       useEffect(()=>{
         const a = audioRef.current; 
@@ -627,73 +573,9 @@
               updatePositionState(target); 
               lastMediaSessionUpdateRef.current = currentSec;
           }
-
-          // -------------------------------------------------------------
-          // THE GHOST BUSTER: Phát hiện nhạc bị đứt bóng ma
-          // -------------------------------------------------------------
-          if (!target.paused && !isTransitioningRef.current) {
-              const currentT = target.currentTime;
-              const rdy = target.readyState;
-              
-              if (currentT === stallDetectRef.current.lastTime || (currentT > 0 && rdy < 2)) {
-                  stallDetectRef.current.stallCount += 1;
-                  
-                  if (stallDetectRef.current.stallCount > 8) { 
-                      console.error("🔥 BÁO ĐỘNG MIUI KILL AUDIO: Bơm máu!");
-                      stallDetectRef.current.stallCount = 0; 
-                      
-                      // Nếu đang dùng Blob MSE thì kệ nó, do mạng yếu kéo buffer chậm
-                      // Nếu dùng mp3 thuần, ép load lại
-                      if (!target.src.startsWith('blob:')) {
-                          target.pause();
-                          target.load(); 
-                          target.play().catch(()=>{});
-                      } else {
-                          // Với MSE, chỉ cần gọi play() liên tục để nhắc HĐH
-                          target.play().catch(()=>{});
-                      }
-                      
-                      if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
-                  }
-              } else {
-                  stallDetectRef.current.stallCount = 0;
-                  stallDetectRef.current.lastTime = currentT;
-              }
-          }
-
-          // EARLY SWAP: Chuyển bài trước 0.5s để đánh lừa MIUI
-          if (target.duration > 2 && target.currentTime >= target.duration - 0.5) {
-              if (!isTransitioningRef.current) {
-                  isTransitioningRef.current = true;
-                  stallDetectRef.current.stallCount = 0; 
-                  
-                  const idx = currentIndexRef.current;
-                  const nextIdx = getNextIndexLogic(idx);
-                  
-                  const pl = playlistRef.current;
-                  const rep = repeatRef.current;
-                  const stopE = stopAtEndRef.current;
-                  const un = upNextRef.current;
-                  
-                  if (un.length > 0) {
-                      upNextRef.current = un.slice(1);
-                      if (document.visibilityState === 'visible') setUpNext(upNextRef.current); 
-                  }
-
-                  if (stopE || (rep === 'off' && !un.length && nextIdx === 0 && idx === pl.length - 1)) {
-                      target.pause();
-                      isTransitioningRef.current = false;
-                      if (document.visibilityState === 'visible') setPlaying(false);
-                      releaseWakeLock();
-                      if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
-                      return;
-                  }
-
-                  playNativeSync(nextIdx);
-              }
-          }
         };
 
+        // Khi bài hát kết thúc tự nhiên, gọi bài mới
         const onEndedNative = () => {
             if (repeatRef.current === 'one') {
                 a.currentTime = 0;
@@ -712,25 +594,15 @@
                  save(RESUME_KEY,{index:currentIndexRef.current,id:s.id,currentTime:e.target.currentTime||0,volume:e.target.volume,rate:e.target.playbackRate,muted:e.target.muted,playing:false});
              }
         };
-
-        const onError = (e) => {
-            console.error("Audio Pipeline Error:", e);
-            if (!isTransitioningRef.current) {
-                 const nextIdx = getNextIndexLogic(currentIndexRef.current);
-                 playNativeSync(nextIdx);
-            }
-        };
         
         a.addEventListener('timeupdate',onTime);
         a.addEventListener('ended',onEndedNative);
         a.addEventListener('pause',onPause);
-        a.addEventListener('error',onError);
         
         return()=>{
             a.removeEventListener('timeupdate',onTime);
             a.removeEventListener('ended',onEndedNative);
             a.removeEventListener('pause',onPause);
-            a.removeEventListener('error',onError);
         };
       },[]); 
 
@@ -742,9 +614,12 @@
 
         const handlePlay = () => {
             const a = document.getElementById('mstq-player');
+            const anchor = document.getElementById('silence-anchor');
+            if (anchor) anchor.play().catch(()=>{});
+            
             if (a) {
                 a.play().catch(()=>{
-                    if (!a.src.startsWith('blob:')) a.load();
+                    a.load();
                     a.play().catch(()=>{});
                 });
                 if (document.visibilityState === 'visible') setPlaying(true);
@@ -803,7 +678,7 @@
         }catch(e){}
       },[]);
 
-      // Khôi phục bài cũ lúc mới vào web
+      // Khôi phục bài cũ
       useEffect(()=>{
         const r=load(RESUME_KEY,null);
         if(r&&playlist.length){
@@ -825,6 +700,8 @@
                   setPlaying(true); 
                   a.play().catch(()=>{}); 
                   requestWakeLock(); 
+                  const anchor = document.getElementById('silence-anchor');
+                  if (anchor) anchor.play().catch(()=>{});
               }
           },0);
         }
@@ -882,6 +759,11 @@
       const handleManualStart = () => {
           haptic();
           setNeedsStart(false); 
+          
+          // KÍCH HOẠT MỎ NEO ĐẦU TIÊN
+          const anchor = document.getElementById('silence-anchor');
+          if (anchor) anchor.play().catch(()=>{});
+
           if (playlistRef.current.length > 0) {
               const a = audioRef.current;
               if (a) {
@@ -905,6 +787,8 @@
                   setTimeout(() => {
                       if (playlistRef.current.length > 0) {
                           playNativeSync(currentIndexRef.current);
+                          const anchor = document.getElementById('silence-anchor');
+                          if (anchor) anchor.play().catch(()=>{});
                       }
                   }, 50);
               }
@@ -1038,7 +922,7 @@
              )
           ),
           e('h3', {className: "font-semibold mb-2 mt-4"}, "Kiến trúc Âm thanh"),
-           e('p', {className: "text-xs text-emerald-500 mt-2 font-semibold leading-relaxed"}, "✓ V30 THE SUNO ENGINE: Trình duyệt đang sử dụng công nghệ Blob MSE (Media Source Extensions) để nhồi dữ liệu nhạc. 1 Ống tủy duy nhất. Đánh lừa HĐH Xiaomi và duy trì Audio liên tục.")
+          e('p', {className: "text-xs text-emerald-500 mt-2 font-semibold leading-relaxed"}, "✓ V31 THE SILENCE ANCHOR: Kích hoạt mỏ neo tĩnh lặng lặp vô tận. Đánh lừa HĐH MIUI rằng loa luôn hoạt động, đảm bảo kết nối mạng và MediaSession không bao giờ bị cắt đứt khi tắt màn hình.")
         ),
         e('div', {className: "p-3 rounded-2xl border border-[var(--border)]"},
           e('h3', {className: "font-semibold mb-3"}, "Hẹn giờ tắt nhạc"),
@@ -1099,13 +983,12 @@
         const a=audioRef.current;
         const onSeek=(e)=>{ 
           if(!a||!isFinite(a.duration)) return; 
-          if (a.readyState < 1) return; 
           const newVal = parseFloat(e.target.value);
           a.currentTime=clamp(newVal,0,a.duration); 
           updatePositionState(a); 
         };
-        const dblLeft=()=>{ haptic(5); if(a && a.readyState >= 1) { a.currentTime=Math.max(0,(a.currentTime||0)-10); updatePositionState(a); }};
-        const dblRight=()=>{ haptic(5); if(a && a.readyState >= 1) { a.currentTime=Math.min(a.duration||0,(a.currentTime||0)+10); updatePositionState(a); }};
+        const dblLeft=()=>{ haptic(5); if(a) { a.currentTime=Math.max(0,(a.currentTime||0)-10); updatePositionState(a); }};
+        const dblRight=()=>{ haptic(5); if(a) { a.currentTime=Math.min(a.duration||0,(a.currentTime||0)+10); updatePositionState(a); }};
         
         const RepeatButton = () => {
           let label = 'Lặp: Tắt'; let className = 'btn';
@@ -1198,7 +1081,6 @@
         );
       }
 
-      // THIẾT KẾ LẠI GIAO DIỆN POPUP CHÀO MỪNG
       const StartGate = () => needsStart && e('div', {className: "fixed inset-0 z-[99999] flex items-center justify-center bg-[var(--bg)]/95 backdrop-blur overflow-y-auto px-4 py-8"},
         e('div', {className: "p-6 rounded-3xl border border-[var(--border)] bg-[var(--card)] shadow-2xl text-center max-w-sm w-full m-auto"},
           e('img', {src: LOGO_FALLBACK_URL, onError: (e) => { e.target.src = LOGO_PLACEHOLDER; e.target.onError = null; }, width: "72", height: "72", className: "mx-auto mb-4 rounded-2xl shadow-lg border border-[var(--border)]", alt: "MSTQ logo"}),
