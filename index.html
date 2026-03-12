@@ -107,8 +107,8 @@
 <body class="bg-[var(--bg)] text-[var(--text)] font-sans">
   <div id="root"></div>
 
-  <!-- V28 NATIVE AUDIO LÕI TĨNH: Gắn cố định ở đây, không bao giờ thay đổi vị trí -->
-  <audio id="mstq-player" preload="auto" playsinline webkit-playsinline crossOrigin="anonymous"></audio>
+  <!-- NATIVE AUDIO LÕI TĨNH: Gắn cố định ở đây, chuẩn bị đón Blob MSE -->
+  <audio id="mstq-player" playsinline webkit-playsinline crossOrigin="anonymous"></audio>
 
   <script>
     (function(){
@@ -124,8 +124,8 @@
   <script type="text/javascript">
     const { useState, useEffect, useRef, useCallback, createElement: e } = React;
 
-    const SONGS_CACHE_KEY='mstq_songs_v60';
-    const RESUME_KEY='mstq_resume_v60'; 
+    const SONGS_CACHE_KEY='mstq_songs_v70';
+    const RESUME_KEY='mstq_resume_v70'; 
     const THEME_KEY='music-theme', SPEED_KEY='mstq_speed', MUTED_KEY='mstq_muted';
     const SHUFFLE_KEY='mstq_shuffle', REPEAT_KEY='mstq_repeat';
     const POWER_KEY='mstq_power_save', TIMER_KEY='mstq_sleep_timer', STOP_END_KEY='mstq_stop_at_end';
@@ -291,38 +291,9 @@
       const [volume,setVolume]=useState(load(RESUME_KEY,{volume:.9}).volume??.9);
       const [playbackRate,setPlaybackRate]=useState(parseFloat(localStorage.getItem(SPEED_KEY)||'1')||1);
       const [muted,setMuted]=useState(localStorage.getItem(MUTED_KEY)==='1');
-      const [compressorOn,setCompressorOn]=useState(load(COMPRESSOR_KEY,true));
-
-      // V28: WebAudio bị vô hiệu hóa hoàn toàn trên Mobile
-      const audioCtxRef=useRef(null), gainRef=useRef(null), compNodeRef=useRef(null);
-      const ensureAudioContext = () => {
-        if (isMobileOS) return; 
-        try{
-          if(!audioCtxRef.current){
-            const ctx=new (window.AudioContext||window.webkitAudioContext)({latencyHint:'playback'});
-            const gain=ctx.createGain(); gain.gain.value=1;
-            const comp=ctx.createDynamicsCompressor();
-            comp.threshold.value=-18; comp.knee.value=24; comp.ratio.value=6; comp.attack.value=0.008; comp.release.value=0.25;
-            const src=ctx.createMediaElementSource(audioRef.current);
-            src.connect(gain);
-            if(compressorOn){ gain.connect(comp).connect(ctx.destination); } 
-            else { gain.connect(ctx.destination); }
-            audioCtxRef.current=ctx; gainRef.current=gain; compNodeRef.current=comp;
-          }
-          if (audioCtxRef.current.state === 'suspended') {
-             audioCtxRef.current.resume();
-          }
-        }catch(e){}
-      };
       
-      useEffect(()=>{ try{
-        if(audioCtxRef.current && gainRef.current){
-          gainRef.current.disconnect();
-          const dst=audioCtxRef.current.destination;
-          if(compressorOn && !isMobileOS){ gainRef.current.connect(compNodeRef.current).connect(dst); }
-          else { gainRef.current.connect(dst); }
-        }}catch{} 
-      },[compressorOn]);
+      // TẮT WEBAUDIO (Vì chúng ta dùng MSE, WebAudio sẽ gây xung đột)
+      const ensureAudioContext = () => {};
 
       useEffect(()=>{
           if(audioRef.current) { audioRef.current.volume=volume; audioRef.current.playbackRate=playbackRate; audioRef.current.muted=muted; }
@@ -464,9 +435,48 @@
       const isTransitioningRef = useRef(false);
 
       // =========================================================================
-      // V28 NATIVE PLAY LÕI TĨNH (Phát trực tiếp URL, không làm màu)
+      // V30: THE SUNO ENGINE - MEDIA SOURCE EXTENSIONS (MSE)
+      // Tạo 1 ống tủy duy nhất, nhồi data vào để Xiaomi tưởng chỉ đang hát 1 bài
       // =========================================================================
-      const playNativeSync = (i) => {
+      const mseEngineRef = useRef({
+          mediaSource: null,
+          sourceBuffer: null,
+          isInitialized: false,
+          currentObjectId: null
+      });
+
+      const initMSEEngine = useCallback(async (audioEl) => {
+          if (!window.MediaSource || !isMobileOS) return false; // Chỉ dùng MSE trên mobile để chống Doze Mode
+          
+          return new Promise((resolve) => {
+              if (mseEngineRef.current.isInitialized && mseEngineRef.current.mediaSource.readyState === 'open') {
+                  resolve(true); return;
+              }
+              
+              const ms = new MediaSource();
+              mseEngineRef.current.mediaSource = ms;
+              
+              const url = URL.createObjectURL(ms);
+              audioEl.src = url; // Gán SRC 1 LẦN DUY NHẤT LÀ BLOB URL NÀY
+              mseEngineRef.current.currentObjectId = url;
+              
+              ms.addEventListener('sourceopen', () => {
+                  try {
+                      // Đa số nhạc MP3 Archive là mpeg, nếu m4a thì đổi thành audio/mp4
+                      const sb = ms.addSourceBuffer('audio/mpeg'); 
+                      mseEngineRef.current.sourceBuffer = sb;
+                      mseEngineRef.current.isInitialized = true;
+                      console.log("🔥 [MSE Engine] Đã tạo Ống tủy thành công! URL:", url);
+                      resolve(true);
+                  } catch (e) {
+                      console.error("MSE Init Error:", e);
+                      resolve(false);
+                  }
+              }, { once: true });
+          });
+      }, []);
+
+      const playNativeSync = async (i) => {
         const a = audioRef.current; 
         if(!a) return;
         
@@ -482,29 +492,69 @@
         }
 
         updateMediaSessionMeta(s);
-        
-        a.loop = false; 
-        
-        // Tuyệt đối không nhét blob hay làm màu. 
-        // Thay link trực tiếp và ép load ngay lập tức.
-        if (a.src !== s.stream_url) {
-            a.src = s.stream_url;
-            a.load();
+        if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
+
+        // --- CƠ CHẾ SUNO: DÙNG MSE (MediaSource Extensions) ---
+        if (isMobileOS && window.MediaSource) {
+            try {
+                // 1. Khởi tạo ống tủy nếu chưa có
+                const isReady = await initMSEEngine(a);
+                if (isReady) {
+                    const sb = mseEngineRef.current.sourceBuffer;
+                    
+                    // 2. Tải bài hát bằng Fetch (Cuốn chiếu vào RAM)
+                    console.log("📡 [Suno Hack] Đang kéo data mp3:", s.stream_url.substring(s.stream_url.lastIndexOf('/')+1));
+                    const response = await fetch(s.stream_url);
+                    if (!response.ok) throw new Error("Fetch failed");
+                    const arrayBuffer = await response.arrayBuffer();
+
+                    // 3. Nhồi data vào ống. Nếu ống đang kẹt thì đợi.
+                    if (sb && !sb.updating) {
+                        try {
+                            // Cắt bớt phần nhạc cũ nếu ống quá đầy (tránh tràn RAM gây văng app)
+                            if (a.buffered.length > 0 && a.currentTime > 10) {
+                                sb.remove(0, a.currentTime - 2); 
+                            }
+                            sb.appendBuffer(arrayBuffer);
+                        } catch (appendErr) {
+                            console.error("Lỗi nhồi ống (Quota Exceeded):", appendErr);
+                            // Nếu tràn RAM, đập ống làm lại từ đầu
+                            mseEngineRef.current.isInitialized = false;
+                            a.src = s.stream_url; 
+                            a.load();
+                        }
+                    }
+                } else {
+                    // Fallback nếu máy không hỗ trợ
+                    a.src = s.stream_url;
+                    a.load();
+                }
+            } catch (e) {
+                console.error("Lỗi MSE Engine, Fallback về mp3 thuần:", e);
+                a.src = s.stream_url;
+                a.load();
+            }
+        } else {
+            // Trên PC cứ hát bình thường, đổi SRC
+            if (a.src !== s.stream_url) {
+                a.src = s.stream_url;
+                a.load();
+            }
         }
+
+        a.loop = false; 
 
         const playPromise = a.play();
         if (playPromise !== undefined) {
             playPromise.then(() => {
                 isTransitioningRef.current = false;
                 requestWakeLock();
-                if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
             }).catch(e => {
-                console.warn("Autoplay blocked by OS. Attempting to heal...", e);
+                console.warn("Autoplay blocked/Network Stalled:", e);
                 isTransitioningRef.current = false;
                 
                 // Mồi lại nếu bị chặn
                 setTimeout(() => {
-                    a.load();
                     a.play().catch(()=>{});
                 }, 800);
                 
@@ -512,8 +562,6 @@
                 if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
             });
         }
-        
-        if (!isMobileOS) ensureAudioContext();
       }; 
 
       const playPauseUI = useCallback(() => {
@@ -531,10 +579,12 @@
           else{ 
             setNeedsStart(false); 
             
-            // Ép họng súng nhả đạn (Fix lỗi bấm nút bị liệt)
+            // Ép họng súng nổ
             a.play().catch(()=>{
-                console.log("Cứu thương khi bấm Play: Nạp lại mã nguồn");
-                a.load();
+                // Nếu đang dùng MSE mà bị kẹt, ép Play lại. Không gọi load() vì sẽ làm đứt kết nối Blob
+                if (!a.src.startsWith('blob:')) {
+                    a.load();
+                }
                 a.play().catch(()=>{});
             });
             
@@ -554,8 +604,7 @@
       const stallDetectRef = useRef({ lastTime: -1, stallCount: 0 });
 
       // =========================================================================
-      // V28 GIAO THỨC CỨU THƯƠNG SUNO (SUNO HEALING ALGORITHM)
-      // Tự động nhận diện khi MIUI cắt loa và ép họng súng nổ lại
+      // V30 GIAO THỨC CỨU THƯƠNG KẾT HỢP MSE (THE IMMORTAL GUARDIAN)
       // =========================================================================
       useEffect(()=>{
         const a = audioRef.current; 
@@ -580,43 +629,43 @@
           }
 
           // -------------------------------------------------------------
-          // THUẬT TOÁN CỨU THƯƠNG: THE GHOST BUSTER (Tự Động F5 Ngầm)
+          // THE GHOST BUSTER: Phát hiện nhạc bị đứt bóng ma
           // -------------------------------------------------------------
           if (!target.paused && !isTransitioningRef.current) {
               const currentT = target.currentTime;
               const rdy = target.readyState;
               
-              // Nếu đang hát, mà time dậm chân tại chỗ ở 0.000 quá lâu HOẶC time chạy nhưng ReadyState quá thấp
-              if (currentT === stallDetectRef.current.lastTime || (currentT > 0 && rdy < 3)) {
+              if (currentT === stallDetectRef.current.lastTime || (currentT > 0 && rdy < 2)) {
                   stallDetectRef.current.stallCount += 1;
                   
-                  // Khoảng 2 giây bị kẹt
                   if (stallDetectRef.current.stallCount > 8) { 
-                      console.error("🔥 BÁO ĐỘNG MIUI KILL AUDIO: Kích hoạt Suno Healing Protocol!");
-                      stallDetectRef.current.stallCount = 0; // Reset
+                      console.error("🔥 BÁO ĐỘNG MIUI KILL AUDIO: Bơm máu!");
+                      stallDetectRef.current.stallCount = 0; 
                       
-                      // ÉP MẠNG MỞ KHÓA BẰNG CÁCH NẠP LẠI (Súc ruột)
-                      target.pause();
+                      // Nếu đang dùng Blob MSE thì kệ nó, do mạng yếu kéo buffer chậm
+                      // Nếu dùng mp3 thuần, ép load lại
+                      if (!target.src.startsWith('blob:')) {
+                          target.pause();
+                          target.load(); 
+                          target.play().catch(()=>{});
+                      } else {
+                          // Với MSE, chỉ cần gọi play() liên tục để nhắc HĐH
+                          target.play().catch(()=>{});
+                      }
                       
-                      // Nếu có Mạng, Load() sẽ cứu được.
-                      target.load(); 
-                      target.play().catch(()=>{});
-                      
-                      // Bơm lại thông tin cho Lockscreen
                       if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
                   }
               } else {
-                  // Nhạc hát bình thường, dọn dẹp cờ
                   stallDetectRef.current.stallCount = 0;
                   stallDetectRef.current.lastTime = currentT;
               }
           }
 
-          // EARLY SWAP: Chuyển bài trước 0.5s để không bị lọt vào hố đen
+          // EARLY SWAP: Chuyển bài trước 0.5s để đánh lừa MIUI
           if (target.duration > 2 && target.currentTime >= target.duration - 0.5) {
               if (!isTransitioningRef.current) {
                   isTransitioningRef.current = true;
-                  stallDetectRef.current.stallCount = 0; // Reset cờ cứu thương
+                  stallDetectRef.current.stallCount = 0; 
                   
                   const idx = currentIndexRef.current;
                   const nextIdx = getNextIndexLogic(idx);
@@ -694,10 +743,8 @@
         const handlePlay = () => {
             const a = document.getElementById('mstq-player');
             if (a) {
-                // Thuật toán cứu thương cho phím bấm Lockscreen
                 a.play().catch(()=>{
-                    console.log("MediaSession Play Bị Chặn. Đang hồi sinh...");
-                    a.load();
+                    if (!a.src.startsWith('blob:')) a.load();
                     a.play().catch(()=>{});
                 });
                 if (document.visibilityState === 'visible') setPlaying(true);
@@ -735,7 +782,6 @@
             }
         };
         
-        // V28 FIX TUA NHẠC MÀN HÌNH KHÓA (SEEK)
         const handleSeek = (details) => {
             const a = document.getElementById('mstq-player');
             if (a && a.readyState >= 1) {
@@ -745,11 +791,6 @@
                     a.currentTime = details.seekTime;
                 }
                 updatePositionState(a);
-            } else if (a) {
-                // Nếu bị câm mà user cố tua, ÉP HỒI SINH RỒI MỚI TUA!
-                a.load();
-                a.currentTime = details.seekTime || 0;
-                a.play().catch(()=>{});
             }
         };
 
@@ -997,10 +1038,7 @@
              )
           ),
           e('h3', {className: "font-semibold mb-2 mt-4"}, "Kiến trúc Âm thanh"),
-          e('label', {className: "flex items-center gap-2"},
-            e('input', {type:"checkbox", checked:!!compressorOn, onChange:e=>{haptic();setCompressorOn(e.target.checked)}}), " Bật Dynamics Compressor"
-          ),
-           e('p', {className: "text-xs text-emerald-500 mt-2 font-semibold leading-relaxed"}, "✓ V28 THE SUNO MOCK: Hệ thống tích hợp thuật toán Tự Động Cứu Thương (Auto-Healing). Nếu bị MIUI cắt mạng gây câm loa, nó sẽ tự động chích thuốc hồi sinh phần cứng trong 2 giây mà không cần User chạm tay vào.")
+           e('p', {className: "text-xs text-emerald-500 mt-2 font-semibold leading-relaxed"}, "✓ V30 THE SUNO ENGINE: Trình duyệt đang sử dụng công nghệ Blob MSE (Media Source Extensions) để nhồi dữ liệu nhạc. 1 Ống tủy duy nhất. Đánh lừa HĐH Xiaomi và duy trì Audio liên tục.")
         ),
         e('div', {className: "p-3 rounded-2xl border border-[var(--border)]"},
           e('h3', {className: "font-semibold mb-3"}, "Hẹn giờ tắt nhạc"),
@@ -1224,7 +1262,7 @@
     ReactDOM.createRoot(document.getElementById('root')).render(e(App, null));
   </script>
 
-  <!-- PWA ENGINE -->
+  <!-- PWA ENGINE V29 -->
   <style>
       .install-fab {
           transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
