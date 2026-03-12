@@ -1,198 +1,105 @@
 # -*- coding: utf-8 -*-
 """
-SENTINEL V20: THE SUPREME AUDITOR (ĐỒNG BỘ VỚI KIẾN TRÚC WEB V20)
-Triết lý: AI phải nhận thức được kiến trúc W3C Native mới nhất.
-Tính năng: 
-1. Quét tìm WakeLock API và thuật toán Zero CPU.
-2. Cấm AI Llama khuyên dùng Blob/RAM-Drive gây lỗi Xiaomi.
+SENTINEL V16.5: THE MSE CORE ANALYZER
+Mục tiêu: Đánh giá xem kiến trúc V30 (The Suno Engine) của MSTQ Music 
+có thực sự đã áp dụng thành công MediaSource Extensions và Blob URL hay chưa.
 """
 
 import os
 import time
-import tempfile
 import keyboard
-import html
 import json
-import uuid
 import traceback
-from datetime import datetime
+import html
 from bs4 import BeautifulSoup
 from llama_cpp import Llama
 from playwright.sync_api import sync_playwright
 
-try:
-    from gtts import gTTS
-    import pygame
-    from reportlab.lib.pagesizes import A4
-    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
-    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-    from reportlab.lib import colors
-    from reportlab.lib.units import cm
-    from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_JUSTIFY
-    from reportlab.pdfbase import pdfmetrics
-    from reportlab.pdfbase.ttfonts import TTFont
-except ImportError:
-    print("⚠️ Thiếu thư viện! Chạy: pip install llama-cpp-python reportlab playwright beautifulsoup4 keyboard gTTS pygame")
-    exit()
-
 # =====================================================================
 # CẤU HÌNH HỆ THỐNG
 # =====================================================================
-TARGET_URL = "https://thiensutinhquang.github.io/PlayMusic/index.html"
+TARGET_URL = "https://thiensutinhquang.github.io/PlayMusic/index.html" 
 MODEL_PATH = r"C:\AI Local\AI_Models\Ai Thuc chien\Meta-Llama-3.1-8B-Instruct-Q4_K_M.gguf"
 GPU_LAYERS = 20
 
 base_dir = os.path.dirname(os.path.abspath(__file__))
-PDF_REPORT_PATH = os.path.join(base_dir, "Ho_So_Kien_Truc_Thuc_Te_V20.pdf")
-HTML_REPORT_PATH = os.path.join(base_dir, "Ho_So_Sentinel_Live.html")
-MEMORY_FILE = os.path.join(base_dir, "sentinel_memory.json")
-stop_signal = False
+REPORT_PATH = os.path.join(base_dir, "Bao_Cao_Tinh_Bao_MSTQ_V30.html")
+
+spy_data = {
+    "network_requests": [],
+    "transition_logs": []
+}
+start_spy = False
+
+def on_f8_press():
+    global start_spy
+    if not start_spy:
+        start_spy = True
+        print("\n[ĐIỆP VIÊN] Đã nhận lệnh F8! Bắt đầu phân tích cấu trúc MSE của MSTQ Music...")
+
+def handle_network_request(request):
+    if not start_spy: return
+    url = request.url.lower()
+    if any(ext in url for ext in [".mp3", ".wav", ".m4a", ".m3u8", ".ts", "blob:", "stream", "audio"]):
+        req_info = f"[{request.method}] {request.url[:120]}..."
+        if req_info not in spy_data["network_requests"]:
+            spy_data["network_requests"].append(req_info)
+            print(f"   📡 [MSTQ Network] Kéo data: {request.url[:70]}...")
 
 # =====================================================================
-# HỆ THỐNG PHÁT GIỌNG NÓI
+# AI CORE - CHUYÊN GIA DỊCH NGƯỢC
 # =====================================================================
-def speak(text, block=True):
-    print(f"\n🔊 Sentinel: {text}")
-    try:
-        filename = f"voice_sentinel_{uuid.uuid4().hex}.mp3"
-        filepath = os.path.join(tempfile.gettempdir(), filename)
-        
-        tts = gTTS(text=text, lang='vi')
-        tts.save(filepath)
-        
-        pygame.mixer.init()
-        pygame.mixer.music.load(filepath)
-        pygame.mixer.music.play()
-        
-        if block:
-            while pygame.mixer.music.get_busy():
-                time.sleep(0.1)
-            pygame.mixer.music.unload()
-            pygame.mixer.quit()
-            try: os.remove(filepath) 
-            except: pass
-    except Exception as e:
-        pass 
-
-def on_f10_press():
-    global stop_signal
-    if not stop_signal:
-        stop_signal = True
-        print("\n[HỆ THỐNG] Đã nhận lệnh F10. Sẽ ngừng vòng lặp an toàn...")
-
-# =====================================================================
-# BỘ NHỚ TỰ HỌC
-# =====================================================================
-def load_memory():
-    if os.path.exists(MEMORY_FILE):
-        try:
-            with open(MEMORY_FILE, 'r', encoding='utf-8') as f:
-                return json.load(f)
-        except: return {"tested_uids": [], "facts": [], "blind_spots": []}
-    return {"tested_uids": [], "facts": [], "blind_spots": []}
-
-def save_memory(memory_data):
-    if "blind_spots" not in memory_data:
-        memory_data["blind_spots"] = []
-    if "tested_selectors" in memory_data:
-        memory_data["tested_uids"] = memory_data.pop("tested_selectors")
-    elif "tested_uids" not in memory_data:
-        memory_data["tested_uids"] = []
-        
-    with open(MEMORY_FILE, 'w', encoding='utf-8') as f:
-        json.dump(memory_data, f, ensure_ascii=False, indent=4)
-
-# =====================================================================
-# AI CORE - KIẾN TRÚC SƯ CẤP CAO V20
-# =====================================================================
-print(f"⏳ Khởi động Động cơ AI Llama 3.1 - Chế độ X-Ray (Nạp {GPU_LAYERS} Layers)...")
+print(f"⏳ Khởi động Động cơ AI Llama 3.1 - (Nạp {GPU_LAYERS} Layers)...")
 try:
-    llm = Llama(model_path=MODEL_PATH, n_ctx=4096, n_threads=14, n_gpu_layers=GPU_LAYERS, verbose=False)
+    llm = Llama(model_path=MODEL_PATH, n_ctx=8192, n_threads=14, n_gpu_layers=GPU_LAYERS, verbose=False)
 except Exception as e:
     print(f"⚠️ Lỗi khởi động AI: {e}")
     exit()
 
-def get_audio_skeleton(html_content):
-    soup = BeautifulSoup(html_content, 'html.parser')
-    for tag in soup(['script', 'style', 'noscript', 'meta', 'link']):
-        tag.decompose()
-    skeleton = ""
-    for tag in soup.find_all(['audio', 'video', 'button', 'ul', 'li', 'nav']):
-        classes = ".".join(tag.get('class', []))
-        tag_id = f"#{tag.get('id')}" if tag.get('id') else ""
-        text_preview = tag.text.strip()[:40].replace('\n', ' ')
-        if text_preview or tag.name == 'audio':
-            skeleton += f"<{tag.name} {tag_id} class='{classes}'> {text_preview}...\n"
-    return skeleton[:3000]
+def analyze_stolen_data(tech_specs, network_logs, transition_logs):
+    prompt = f"""You are an Elite Reverse Engineer evaluating the MSTQ Music App V30.
+Our goal is to confirm if the developer successfully implemented the "Suno Hack" (using MediaSource Extensions and Blob URLs) to prevent Android MIUI from muting audio in the background.
 
-def analyze_music_architecture(skeleton_text, behavioral_facts, deep_tech_specs):
-    # TIÊM CẤU TRÚC X-RAY MỚI NHẤT DÀNH RIÊNG CHO WEB V20
-    prompt = f"""You are a STRICT, elite Technical Architect reviewing a web application.
-I am providing you with the REAL extracted technology stack, DOM skeleton, and testing facts. 
-DO NOT GUESS. DO NOT HALLUCINATE. 
+1. DEEP TECH SPECS:
+{json.dumps(tech_specs, indent=2)}
 
-1. DEEP TECH SPECS (From Window context):
-{deep_tech_specs}
+2. NETWORK STREAMING LOGS:
+{chr(10).join(network_logs[-30:])}
 
-2. DOM SKELETON:
-{skeleton_text}
+3. TRACK TRANSITION LOGS (What happens when songs change in the dark):
+{chr(10).join(transition_logs)}
 
-3. TESTING FACTS:
-{behavioral_facts}
+[CRITICAL ANTI-HALLUCINATION RULES]:
+1. Read the Transition Logs carefully. Does the `src` of the audio tag start with 'blob:'? If yes, it means MSE is active!
+2. Do the Transition Logs show that the `src` stays exactly the same across track changes, while the network logs show new `.mp3` files being fetched? If yes, it means they are successfully appending buffer to a single Blob URL!
+3. Praise the developer if they achieved the "Suno Hack".
 
-[CRITICAL ANTI-HALLUCINATION RULES FOR V20 ARCHITECTURE]:
-1. The developer uses a single `<audio>` element with synchronous `a.load()` and `a.play()` to guarantee Android MIUI/HyperOS doesn't kill the network. YOU MUST PRAISE this "Iron Chain" (Synchronous) architecture.
-2. The developer uses W3C `navigator.wakeLock.request('screen')` to keep the CPU awake. PRAISE this standard implementation.
-3. The developer stops React re-renders using `document.visibilityState === 'hidden'`. PRAISE this "Zero CPU Background" feature.
-4. DO NOT suggest using Blob URLs, CORS Fetch, or Multiple audio tags. We have proven they cause Audio Focus issues on Xiaomi devices. DO NOT suggest Virtual DOM.
+Based ONLY on the evidence above, evaluate the architecture in VIETNAMESE.
 
-Based ONLY on this concrete data, write a brutal, highly technical Architecture Report in VIETNAMESE.
-
-Use EXACTLY these 4 headings (include the #):
-# KIẾN TRÚC TRÌNH PHÁT MEDIA (Đánh giá Single Audio Element & Synchronous Playback)
-# TỐI ƯU POCKET MODE & CHẠY NỀN (Đánh giá WakeLock API và MediaSession)
-# HIỆU SUẤT CHỐNG NÓNG MÁY & QUẢN LÝ RAM (Đánh giá Zero CPU React Render)
-# ĐỀ XUẤT CẢI TIẾN TỔNG THỂ (Gợi ý CỤ THỂ, không nói nhảm)"""
+Use EXACTLY these 3 headings (include the #):
+# XÁC NHẬN KIẾN TRÚC MSE (Xác nhận xem SRC của thẻ Audio có phải là Blob không)
+# ĐÁNH GIÁ LUỒNG CHUYỂN BÀI NGẦM (Khi qua bài 2, bài 3, SRC có giữ nguyên không? Mạng có kéo file mp3 mới không?)
+# KẾT LUẬN VỀ KHẢ NĂNG CHỐNG MIUI (Đánh giá mức độ thành công của kỹ thuật này so với Suno)"""
 
     try:
-        print("\n      [Kiểm Toán Llama] Đang thẩm định Kiến trúc V20... \n      ", end="", flush=True)
-        response = llm.create_chat_completion(messages=[{"role": "user", "content": prompt}], temperature=0.2, max_tokens=1500, stream=True)
+        print("\n      [AI Dịch Ngược] Đang đánh giá kỹ thuật MSE của MSTQ Music... \n      ", end="", flush=True)
+        response = llm.create_chat_completion(messages=[{"role": "user", "content": prompt}], temperature=0.1, max_tokens=1500, stream=True)
         full_text = ""
         for chunk in response:
             if "choices" in chunk and len(chunk["choices"]) > 0:
                 delta = chunk["choices"][0].get("delta", {})
                 if "content" in delta:
                     text = delta["content"]
-                    print(f"\033[96m{text}\033[0m", end="", flush=True) 
+                    print(f"\033[93m{text}\033[0m", end="", flush=True) 
                     full_text += text
         print("\n")
         return full_text.strip()
     except Exception as e: return f"Lỗi tổng hợp AI: {e}"
 
-def ask_ai_for_healing_advice(error_message, element_html):
-    clean_html = BeautifulSoup(element_html, "html.parser").prettify()[:300]
-    prompt = f"""A bot failed to click an element.
-Error: "{error_message}".
-HTML of element: {clean_html}
-
-What is the best strategy to fix this right now?
-Reply with ONLY ONE word:
-- "JS_CLICK" (If it's obscured by another element like a menu or popup).
-- "SCROLL" (If it's outside the viewport).
-- "FORCE" (Force playwright to click bypassing checks).
-- "SKIP" (If it's useless)."""
-    try:
-        response = llm.create_chat_completion(messages=[{"role": "user", "content": prompt}], temperature=0.1, max_tokens=15)
-        advice = response['choices'][0]['message']['content'].strip().upper()
-        for valid_cmd in ["JS_CLICK", "SCROLL", "FORCE", "SKIP"]:
-            if valid_cmd in advice: return valid_cmd
-        return "JS_CLICK"
-    except: return "JS_CLICK"
-
 # =====================================================================
-# MODULE XUẤT BÁO CÁO LIVE HTML VÀ PDF
+# XUẤT BÁO CÁO HTML
 # =====================================================================
-def create_html_live_dashboard(ai_report, memory_data):
+def generate_spy_report(tech_specs, network_logs, transition_logs, ai_report):
     ai_html = ""
     parts = ai_report.split('#')
     for part in parts:
@@ -200,333 +107,143 @@ def create_html_live_dashboard(ai_report, memory_data):
         lines = part.strip().split('\n')
         heading = lines[0].strip()
         body = '\n'.join(lines[1:]).strip()
-        ai_html += f"<h3 class='text-xl font-bold text-indigo-700 mt-6 mb-3'>{html.escape(heading)}</h3>"
+        ai_html += f"<h3 class='text-xl font-bold text-emerald-700 mt-6 mb-3'>🕵️ {html.escape(heading)}</h3>"
         body_formatted = html.escape(body).replace('\n- ', '<br>• ').replace('\n', '<br>')
-        ai_html += f"<p class='text-slate-700 leading-relaxed mb-4 p-4 bg-white rounded-lg border shadow-sm'>{body_formatted}</p>"
+        ai_html += f"<p class='text-slate-700 leading-relaxed mb-4 p-5 bg-emerald-50 rounded-lg border border-emerald-200 shadow-inner'>{body_formatted}</p>"
 
-    recent_facts = memory_data['facts'][-30:] if len(memory_data['facts']) > 30 else memory_data['facts']
-    facts_html = ""
-    for f in recent_facts:
-        color_class = "text-emerald-700 bg-emerald-50 border-emerald-200"
-        if "CẢNH BÁO" in f or "LỖ HỔNG" in f or "LỖI" in f: color_class = "text-orange-600 bg-orange-50 border-orange-200 font-bold"
-        if "CHUYỂN HƯỚNG" in f or "TAB MỚI" in f or "TỰ CHỮA LÀNH" in f: color_class = "text-purple-700 bg-purple-50 border-purple-200"
-        if "DEEP TECH" in f: color_class = "text-blue-700 bg-blue-50 border-blue-200 font-bold"
-        facts_html += f"<li class='p-3 mb-2 rounded-md border text-sm font-medium {color_class}'>{html.escape(f)}</li>"
+    net_html = "".join([f"<li class='py-1 font-mono text-[11px] text-blue-700 border-b border-slate-100'>{html.escape(req)}</li>" for req in network_logs])
+    trans_html = "".join([f"<li class='py-1 font-mono text-[12px] text-teal-700 border-b border-slate-100'>{html.escape(req)}</li>" for req in transition_logs])
 
-    total_elements = len(memory_data['tested_uids'])
-    current_time = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-
-    html_template = """<!DOCTYPE html>
+    html_template = f"""<!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8"><title>Live Dashboard - Sentinel V20</title>
+    <meta charset="UTF-8"><title>Hồ Sơ Giám Định - MSTQ Music V30</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }</style>
+    <style>body {{ font-family: 'Inter', sans-serif; background-color: #f0fdf4; }}</style>
 </head>
-<body class="text-slate-800 antialiased p-8">
-    <h1 class="text-3xl font-bold mb-2">Sentinel V20 <span class="text-blue-600">Supreme Auditor</span></h1>
-    <p class="text-slate-500 mb-8">Cập nhật cuối: %s | Đã cày cẩn thận: %d phần tử</p>
-    <div class="grid grid-cols-2 gap-8">
-        <div><h2 class="font-bold text-xl mb-4">Nhật Ký Tự Học & Quét X-Ray</h2><ul class="space-y-2">%s</ul></div>
-        <div class="bg-slate-50 p-6 rounded-xl border"><h2 class="font-bold text-xl mb-4 border-b pb-2">Báo Cáo AI Llama V20</h2>%s</div>
+<body class="text-slate-800 p-8">
+    <div class="max-w-6xl mx-auto bg-white p-8 rounded-2xl shadow-xl">
+        <h1 class="text-4xl font-black mb-2 text-slate-900 border-b-4 border-emerald-500 pb-4">Hồ Sơ Giám Định: <span class="text-emerald-600">MSTQ Music V30 (Suno Engine)</span></h1>
+        <p class="text-slate-500 mb-8 font-mono">Đo lường cấu trúc Blob MSE bởi Sentinel V16.5</p>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div class="lg:col-span-5 space-y-6">
+                <div class="bg-slate-900 text-green-400 p-4 rounded-xl shadow">
+                    <h2 class="font-bold text-white mb-2 border-b border-slate-700 pb-2">Thông Số Kỹ Thuật (Raw)</h2>
+                    <pre class="text-[10px] overflow-x-auto whitespace-pre-wrap">{html.escape(json.dumps(tech_specs, indent=2))}</pre>
+                </div>
+                <div class="bg-teal-50 border border-teal-200 p-4 rounded-xl shadow">
+                    <h2 class="font-bold text-teal-800 mb-2 border-b border-teal-200 pb-2">Nhật Ký Đổi Bài Trong Đêm</h2>
+                    <ul class="max-h-64 overflow-y-auto">{trans_html}</ul>
+                </div>
+                <div class="bg-white border border-slate-200 p-4 rounded-xl shadow">
+                    <h2 class="font-bold text-slate-800 mb-2 border-b pb-2">Luồng Network Stream</h2>
+                    <ul class="max-h-64 overflow-y-auto">{net_html}</ul>
+                </div>
+            </div>
+            
+            <div class="lg:col-span-7">
+                <h2 class="text-2xl font-bold mb-4 bg-emerald-100 text-emerald-900 p-3 rounded-lg border border-emerald-300">Báo Cáo Phân Tích Bí Thuật (AI Llama)</h2>
+                {ai_html}
+            </div>
+        </div>
     </div>
 </body></html>"""
-    with open(HTML_REPORT_PATH, 'w', encoding='utf-8') as f:
-        f.write(html_template % (current_time, total_elements, facts_html, ai_html))
 
-def setup_pdf_fonts():
-    font_paths = [r"C:\Windows\Fonts\arial.ttf", r"C:\Windows\Fonts\tahoma.ttf"]
-    bold_font_paths = [r"C:\Windows\Fonts\arialbd.ttf", r"C:\Windows\Fonts\tahomabd.ttf"]
-    reg_path = next((p for p in font_paths if os.path.exists(p)), None)
-    bold_path = next((p for p in bold_font_paths if os.path.exists(p)), None)
-    if reg_path and bold_path:
-        pdfmetrics.registerFont(TTFont('VietFont', reg_path))
-        pdfmetrics.registerFont(TTFont('VietFont-Bold', bold_path))
-        return 'VietFont', 'VietFont-Bold'
-    return 'Helvetica', 'Helvetica-Bold'
-
-def create_music_dossier(ai_report, memory_data):
-    font_reg, font_bold = setup_pdf_fonts()
-    doc = SimpleDocTemplate(PDF_REPORT_PATH, pagesize=A4, leftMargin=1.5*cm, rightMargin=1.5*cm, topMargin=2*cm, bottomMargin=2*cm)
-    story = []
-    title_style = ParagraphStyle('Title', fontName=font_bold, fontSize=20, alignment=TA_CENTER, textColor=colors.HexColor('#2E4053'), spaceAfter=15)
-    h2_style = ParagraphStyle('H2', fontName=font_bold, fontSize=12, textColor=colors.HexColor('#2980B9'), spaceBefore=10, spaceAfter=5)
-    normal_style = ParagraphStyle('Normal', fontName=font_reg, fontSize=11, leading=16, alignment=TA_JUSTIFY)
-    
-    story.append(Paragraph("HỒ SƠ TỐI ƯU HÓA HỆ THỐNG ÂM NHẠC TRỰC TUYẾN V20", title_style))
-    story.append(Paragraph(f"Đã thẩm định cẩn thận {len(memory_data['tested_uids'])} phần tử.", ParagraphStyle('Center', fontName=font_reg, alignment=TA_CENTER, spaceAfter=20)))
-    
-    parts = ai_report.split('#')
-    for part in parts:
-        if not part.strip(): continue
-        lines = part.strip().split('\n')
-        story.append(Paragraph(html.escape(lines[0].strip()), h2_style))
-        body = '\n'.join(lines[1:]).strip()
-        story.append(Paragraph(html.escape(body).replace('\n- ', '<br/>• ').replace('\n', '<br/>'), normal_style))
-    
-    doc.build(story)
+    with open(REPORT_PATH, 'w', encoding='utf-8') as f:
+        f.write(html_template)
+    print(f"\n[+] Đã xuất Hồ sơ Giám định tại: {REPORT_PATH}")
 
 # =====================================================================
-# THẦN VỆ MỆNH: QUẢN LÝ BÀN LÀM VIỆC SẠCH SẼ
+# LÕI ĐIỆP VIÊN: GIAO THỨC THEO DÕI GIẤC NGỦ SÂU
 # =====================================================================
-def assassinate_popups(page):
-    kill_words = ["Đóng lại", "Close", "Cancel", "Không, cảm ơn", "Bắt đầu nghe", "Bắt đầu ("]
-    for word in kill_words:
-        selectors = [f"text='{word}'", f"button:has-text('{word}')"]
-        for sel in selectors:
-            try:
-                killer = page.locator(sel).first
-                if killer.is_visible(timeout=50):
-                    killer.evaluate("node => node.click()")
-                    time.sleep(0.5)
-            except: pass
-
-def enforce_single_tab(context, main_page):
-    tabs_killed = 0
-    for p in context.pages:
-        if p != main_page:
-            try:
-                p.close()
-                tabs_killed += 1
-            except: pass
-    if tabs_killed > 0:
-        main_page.bring_to_front()
-        time.sleep(1) 
-    return tabs_killed
-
-def get_next_single_element(page, memory):
-    raw_locators = page.locator("a, button, li, [role='button'], [tabindex='0']").all()
-    for loc in raw_locators:
-        try:
-            if not loc.is_visible(): continue
-            tag_name = loc.evaluate('node => node.tagName.toLowerCase()')
-            el_class = loc.get_attribute("class") or ""
-            href = loc.get_attribute("href") or ""
-            text_content = loc.inner_text().strip()
-            name_identifier = text_content[:40] if text_content else loc.get_attribute("aria-label") or ""
-            
-            if not name_identifier:
-                svg_path = loc.evaluate("node => { const p = node.querySelector('path'); return p ? p.getAttribute('d') : null; }")
-                if svg_path:
-                    parent_id = loc.evaluate("node => node.parentElement ? node.parentElement.id : 'no-id'")
-                    name_identifier = f"SVG_[{svg_path[:15]}]_P[{parent_id}]"
-                else:
-                    continue
-
-            if not name_identifier: continue
-            
-            uid = f"{tag_name}|{el_class}|{href}|{name_identifier}"
-            if uid not in memory["tested_uids"] and uid not in memory.get("blind_spots", []):
-                return {
-                    "uid": uid,
-                    "locator": loc,
-                    "name": name_identifier,
-                    "html": loc.evaluate("node => node.outerHTML")
-                }
-        except: continue 
-    return None
-
-# =====================================================================
-# LÕI SUPERVISOR - V20 X-RAY VISION
-# =====================================================================
-def run_autonomous_music_auditor():
-    global stop_signal
-    keyboard.on_press_key('f10', lambda _: on_f10_press())
+def run_spy_mission():
+    keyboard.on_press_key('f8', lambda _: on_f8_press())
     
     os.system('cls' if os.name == 'nt' else 'clear')
     print("=" * 80)
-    print("🚀 SENTINEL V20: THE SUPREME AUDITOR (ĐỒNG BỘ HÓA VỚI CODE V20)".center(80))
+    print("🚀 SENTINEL V16.5: THE MSE CORE ANALYZER (GIÁM ĐỊNH V30)".center(80))
     print("=" * 80)
     
-    speak("Giao thức V 20 khởi động. Quét Radar kiểm tra WakeLock và kiến trúc Single Audio.", block=False)
-    
-    memory = load_memory()
-    cycle = 1
-    empty_runs_counter = 0 
-    deep_tech_specs_str = "None"
-    
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=False, slow_mo=300)
-        context = browser.new_context()
+        xiaomi_user_agent = "Mozilla/5.0 (Linux; Android 13; 2306EPN60G Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/116.0.0.0 Mobile Safari/537.36"
+        
+        browser = p.chromium.launch(headless=False)
+        context = browser.new_context(
+            user_agent=xiaomi_user_agent, 
+            viewport={"width": 412, "height": 915}, 
+            is_mobile=True, 
+            has_touch=True
+        )
+        
         page = context.new_page()
+        page.on("request", handle_network_request)
         
-        print("⏳ Đang thiết lập Mỏ Neo Trang Chính...")
-        page.goto(TARGET_URL, timeout=60000, wait_until="domcontentloaded")
-        time.sleep(3) 
+        print(f"⏳ Đang mở {TARGET_URL}...")
+        page.goto(TARGET_URL)
         
-        assassinate_popups(page)
+        print("\n" + "="*60)
+        print("🎯 BƯỚC TIẾP THEO: SẴN SÀNG THU THẬP TÌNH BÁO")
+        print("1. Hãy bấm Play một bài hát trên MSTQ Music V30.")
+        print("2. Khi nhạc ĐANG HÁT, nhấn phím F8 để Bot làm việc!")
+        print("="*60 + "\n")
         
-        while not stop_signal:
-            print(f"\n" + "="*50)
-            print(f"🔄 CHU KỲ {cycle}: ĐIỀU TRA TẠI CHỖ")
-            print("="*50)
+        while not start_spy:
+            time.sleep(0.5)
             
-            current_run_facts = []
+        print("🔍 ĐÃ KÍCH HOẠT CHẾ ĐỘ QUÉT NGẦM! VUI LÒNG BỎ TAY KHỎI CHUỘT.")
+        
+        tech_specs = page.evaluate("""() => {
+            const a = document.querySelector('audio, video');
+            return {
+                audio_src_initial: a ? a.src : 'No Audio Tag',
+                is_blob_initial: a && a.src ? a.src.startsWith('blob:') : false,
+                has_mse_code: document.documentElement.innerHTML.includes('MediaSource') && document.documentElement.innerHTML.includes('appendBuffer')
+            }
+        }""")
+
+        print("🌙 ÉP TRÌNH DUYỆT TẮT MÀN HÌNH (Visibility = Hidden)...")
+        page.evaluate("""() => {
+            Object.defineProperty(document, 'visibilityState', {value: 'hidden', writable: true});
+            document.dispatchEvent(new Event('visibilitychange'));
+        }""")
+        
+        # VÒNG LẶP TEST 3 BÀI
+        for i in range(1, 4):
+            print(f"\n▶️ BÀI SỐ {i}: Đang tua nhanh để ép đổi bài trong bóng tối...")
             
-            try:
-                # ==========================================
-                # ĐIỂM SÁNG V20: QUÉT X-RAY CÁC TÍNH NĂNG MỚI
-                # ==========================================
-                if cycle == 1:
-                    print("🩺 [Radar X-Ray] Chọc sâu vào nhân trình duyệt lấy cấu trúc công nghệ...")
-                    tech_specs = page.evaluate("""() => {
-                        return {
-                            framework: (window.React || document.querySelector('[data-reactroot], #root')) ? 'ReactJS' : 'Vanilla JS',
-                            hasZeroCPU: document.documentElement.innerHTML.includes("document.visibilityState === 'visible'") || document.documentElement.innerHTML.includes("document.visibilityState === 'hidden'"),
-                            hasWakeLock: document.documentElement.innerHTML.includes('wakeLock.request'),
-                            hasSyncLoad: document.documentElement.innerHTML.includes('a.load()'),
-                            mediaSession: 'mediaSession' in navigator
-                        }
-                    }""")
-                    
-                    deep_tech_specs_str = f"Framework: {tech_specs['framework']}\nHas Zero CPU Background Check: {tech_specs['hasZeroCPU']}\nW3C WakeLock API Used: {tech_specs['hasWakeLock']}\nSynchronous a.load() Call: {tech_specs['hasSyncLoad']}\nMediaSession API: {tech_specs['mediaSession']}"
-                    
-                    tech_fact = f"🔍 DEEP TECH SPECS: Zero CPU: {tech_specs['hasZeroCPU']}, WakeLock: {tech_specs['hasWakeLock']}, Sync Load: {tech_specs['hasSyncLoad']}."
-                    current_run_facts.append(tech_fact)
-                    print(f"   -> {tech_fact}")
-
-                target_item = get_next_single_element(page, memory)
-                
-                if not target_item:
-                    print("⏬ Không thấy nút mới. Cuộn trang tìm kiếm thêm...")
-                    page.evaluate("window.scrollBy(0, window.innerHeight / 2)")
-                    time.sleep(2)
-                    target_item = get_next_single_element(page, memory)
-                    
-                    if not target_item:
-                        empty_runs_counter += 1
-                        print(f"⚠️ [Bot] Vẫn không thấy gì. (Thử lại {empty_runs_counter}/3)")
-                        if empty_runs_counter >= 3:
-                            fact = f"✅ HOÀN TẤT CHIẾN DỊCH: Đã vét sạch {len(memory['tested_uids'])} phần tử cẩn thận."
-                            current_run_facts.append(fact)
-                            memory["facts"].extend(current_run_facts)
-                            save_memory(memory)
-                            speak("Đã cày nát toàn bộ trang web. Kết thúc chiến dịch.", block=True)
-                            break 
-                        continue 
-                
-                empty_runs_counter = 0 
-                uid = target_item['uid']
-                loc = target_item['locator']
-                text_name = target_item['name']
-                el_html = target_item['html']
-                
-                print(f"   🤖 [Thằng em Bot]: Phát hiện mục tiêu: [{text_name[:30]}]")
-                time.sleep(0.5)
-
-                success = False
-                attempts = 0
-                last_error = ""
-                
-                while attempts < 3 and not success:
-                    attempts += 1
-                    try:
-                        if not loc.is_visible(timeout=1000):
-                            raise Exception("Phần tử tàng hình hoặc trôi mất.")
-
-                        if attempts == 1:
-                            loc.scroll_into_view_if_needed(timeout=2000)
-                            loc.evaluate("node => node.style.border = '2px solid red'")
-                            time.sleep(1) 
-                            
-                            loc.click(timeout=2000)
-                            
-                        elif attempts > 1:
-                            print(f"      🤖 [Thằng em Bot]: Vấp rồi (Lỗi: {last_error[:25]}). Xin anh Llama chỉ đạo!")
-                            ai_advice = ask_ai_for_healing_advice(last_error, el_html)
-                            
-                            if "JS_CLICK" in ai_advice:
-                                print("      🧠 [Llama]: Dùng Javascript đâm xuyên qua cái menu/popup đè nó đi!")
-                                loc.evaluate("node => node.click()")
-                            elif "SCROLL" in ai_advice:
-                                print("      🧠 [Llama]: Cuộn nó ra giữa màn hình rồi bấm bạo lực vào!")
-                                loc.evaluate("node => node.scrollIntoView({block: 'center'})")
-                                time.sleep(1)
-                                loc.click(timeout=2000, force=True)
-                            elif "FORCE" in ai_advice:
-                                print("      🧠 [Llama]: Playwright đang ngại, ép nó click đi!")
-                                loc.click(force=True, timeout=2000)
-                            else:
-                                break
-                        
-                        print("   ⏳ [Chờ 3 giây để Web phản hồi... Không được phép thoát]")
-                        time.sleep(3) 
-                        success = True
-                        
-                        tabs_killed = enforce_single_tab(context, page)
-                        if tabs_killed > 0:
-                            res = f"🌐 TAB MỚI: '{text_name[:15]}' đẻ Tab. Đã tự động đóng."
-                            print("   🤖 [Thằng em Bot]: Nó nhảy Tab sếp ơi. Em đã tắt cái bụp!")
-                            current_run_facts.append(res)
-                            memory["tested_uids"].append(uid)
-                            break 
-                            
-                        clean_target = TARGET_URL.split('#')[0].rstrip('/')
-                        clean_current = page.url.split('#')[0].rstrip('/')
-                        if clean_target not in clean_current:
-                            res = f"🔄 CHUYỂN HƯỚNG: '{text_name[:15]}' làm mất trang chủ."
-                            print("   🤖 [Thằng em Bot]: Lạc đường rồi! Kéo về Trạm gốc...")
-                            current_run_facts.append(res)
-                            memory["tested_uids"].append(uid)
-                            try: page.go_back(wait_until="domcontentloaded", timeout=10000)
-                            except: page.goto(TARGET_URL, timeout=60000, wait_until="domcontentloaded")
-                            time.sleep(2)
-                            assassinate_popups(page)
-                            break 
-                        else:
-                            is_audio_playing = page.evaluate("Array.from(document.querySelectorAll('audio, video')).some(m => !m.paused)")
-                            if is_audio_playing:
-                                res = f"🎵 AUDIO: Click '{text_name[:20]}' -> Play."
-                            else:
-                                res = f"UI: Click '{text_name[:20]}' -> Tương tác OK."
-                            
-                            if attempts > 1: 
-                                res = f"✨ TỰ CHỮA LÀNH ({attempts}): {res}"
-                                print(f"   🤖 [Thằng em Bot]: Xong! Nhờ Llama mà bấm được rồi.")
-                                
-                            current_run_facts.append(res)
-                            memory["tested_uids"].append(uid)
-                            assassinate_popups(page)
-                            break
-
-                    except Exception as e:
-                        last_error = str(e)[:100].replace('\n', ' ')
-                        
-                if not success:
-                    print("   ❌ [Sentinel Đại ca]: Bỏ đi em, nút này chết rồi.")
-                    res = f"LỖI TƯƠNG TÁC (Góc Khuất): '{text_name[:20]}'"
-                    current_run_facts.append(res)
-                    memory["blind_spots"].append(uid)
-                    memory["tested_uids"].append(uid)
-
-                memory["facts"].extend(current_run_facts)
-                save_memory(memory)
-                
-                if cycle % 3 == 0:
-                    print("\n[AI ARCHITECT] Rút trích DOM & Cập nhật Dashboard...")
-                    latest_skeleton = get_audio_skeleton(page.content())
-                    context_facts = "\n".join(memory["facts"][-40:])
-                    ai_report_live = analyze_music_architecture(latest_skeleton, context_facts, deep_tech_specs_str)
-                    create_html_live_dashboard(ai_report_live, memory)
-
-                cycle += 1
-
-            except Exception as crash_err:
-                print(f"\n⚠️ [HỆ THỐNG LỖI VĂNG]: {str(crash_err)[:60]}... Đang tải lại trang...")
-                try: page.goto(TARGET_URL, timeout=60000, wait_until="domcontentloaded")
-                except: pass
-                time.sleep(3)
-
+            page.evaluate("""() => {
+                const a = document.querySelector('audio, video');
+                if(a && a.duration > 30) {
+                    a.currentTime = a.duration - 15;
+                }
+            }""")
+            
+            print("⏳ Đợi 25s để tự động chuyển bài và Append Buffer...")
+            time.sleep(25)
+            
+            state = page.evaluate("""() => {
+                const a = document.querySelector('audio, video');
+                return {
+                    src: a ? a.src : 'None',
+                    paused: a ? a.paused : true,
+                    readyState: a ? a.readyState : 0,
+                    currentTime: a ? a.currentTime : 0
+                }
+            }""")
+            
+            log_str = f"Chuyển sang Bài {i+1} | ReadyState: {state['readyState']} | Playing: {not state['paused']} | Src: {state['src'][:40]}..."
+            spy_data["transition_logs"].append(log_str)
+            print(f"   {log_str}")
+        
         browser.close()
-
-    speak("Chiến dịch kết thúc. Đang xuất báo cáo cuối cùng.")
-    if latest_skeleton == "":
-        latest_skeleton = "<html><body>No data gathered</body></html>"
-    context_facts = "\n".join(memory["facts"][-40:])
-    ai_report_final = analyze_music_architecture(latest_skeleton, context_facts, deep_tech_specs_str)
-    create_music_dossier(ai_report_final, memory)
-    create_html_live_dashboard(ai_report_final, memory)
-    speak("Hoàn tất. Chúc Sếp xem file báo cáo vui vẻ.")
+        
+    print("\n[+] Đã lấy đủ dữ liệu Giám định. Gọi Llama ra viết báo cáo...")
+    
+    ai_report = analyze_stolen_data(tech_specs, spy_data["network_requests"], spy_data["transition_logs"])
+    generate_spy_report(tech_specs, spy_data["network_requests"], spy_data["transition_logs"], ai_report)
+    
+    print("\n✅ HOÀN TẤT CHIẾN DỊCH GIÁM ĐỊNH. Báo cáo HTML đã được lưu!")
 
 if __name__ == "__main__":
-    run_autonomous_music_auditor()
+    run_spy_mission()
